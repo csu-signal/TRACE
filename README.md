@@ -42,6 +42,7 @@ In order to save the camera calibration settings I updated the Azure SDK offline
     }
 ```
 
-Example Python Code to read in Calibration Information can be found in the "azureOverlay" folder
+Example Python Code to read in Calibration Information can be found in the "azureOverlay" folder.
+
 Feel free to reach out to Hannah VanderHoeven with any questions (Hannah.VanderHoeven@colostate.edu)
 
