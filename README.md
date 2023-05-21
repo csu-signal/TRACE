@@ -2,12 +2,12 @@
 
 In order to save the camera calibration settings I updated the Azure SDK offline processor to include the camera calibration settings directly from Azure. 
 
- - See main.cpp line 97
+ - See offline_processor/main.cpp line 97
  - Usage: (build the offline processor project in visual studio) 
-    - build/Debug/offline_processor.exe videoPath outputPath
+    - offline_processor/build/Debug/offline_processor.exe videoPath outputPath
 
 
-# Example Json Output
+# Example Additional Json Output
 
 ```
      "camera_calibration": {
