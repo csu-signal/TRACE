@@ -13,7 +13,9 @@
 
 #include <BodyTrackingHelpers.h>
 #include <Utilities.h>
+#include <opencv2/opencv.hpp>
 
+using namespace cv;
 using namespace std;
 using namespace nlohmann;
 
@@ -74,6 +76,26 @@ bool check_depth_image_exists(k4a_capture_t capture)
     k4a_image_t depth = k4a_capture_get_depth_image(capture);
     if (depth != nullptr)
     {
+        // you can check the format with this function
+        k4a_image_format_t format = k4a_image_get_format(depth); // K4A_IMAGE_FORMAT_DEPTH16 
+
+        // get raw buffer
+        uint8_t* buffer = k4a_image_get_buffer(depth);
+
+        // convert the raw buffer to cv::Mat
+        int rows = k4a_image_get_height_pixels(depth);
+        int cols = k4a_image_get_width_pixels(depth);
+        cv::Mat depthMat(rows, cols, CV_16U, (void*)buffer, cv::Mat::AUTO_STEP);
+
+        // Declare what you need
+        cv::FileStorage file("F:\\Weights_Task\\Data\\test.exr", cv::FileStorage::WRITE);
+
+        // Write to file!
+        file << "depthMat" << depthMat;
+
+        //Close the file and release all the memory buffers
+        file.release();
+
         k4a_image_release(depth);
         return true;
     }
@@ -320,8 +342,8 @@ bool ProcessArguments(k4abt_tracker_configuration_t &tracker_config, int argc, c
 int main(int argc, char **argv)
 {
     k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT;
-    if (!ProcessArguments(tracker_config, argc, argv))
+  /*  if (!ProcessArguments(tracker_config, argc, argv))
         return -1;
-    return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;
-    //return process_mkv_offline("E:\\output\\Data\\Group_09-sub2.mkv", "E:\\output\\Data\\test.json", tracker_config) ? 0 : -1;
+    return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
+    return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-sub1.mkv", "F:\\Weights_Task\\Data\\test.json", tracker_config) ? 0 : -1;
 }
