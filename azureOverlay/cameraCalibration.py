@@ -166,7 +166,7 @@ parser.add_argument('--minTrackingConfidence', nargs='?', default=0.6)
 parser.add_argument('--videoPath', nargs='?', default="F:\\Weights_Task\\Data\\Fib_weights_original_videos\\")
 parser.add_argument('--jsonPath', nargs='?', default="F:\\Weights_Task\\Data\\")
 parser.add_argument('--fileName', nargs='?', default="Group_03-sub1")
-parser.add_argument('--initialFrame', nargs='?', default=7000)
+parser.add_argument('--initialFrame', nargs='?', default=0)
 
 args = parser.parse_args()
 
@@ -182,7 +182,7 @@ cameraCalibration = skeletonData["camera_calibration"]
 #BGR
 # Red, Green, Orange, Blue, Purple
 colors = [(0, 0, 255), (0, 255, 0), (0, 140, 255), (255, 0, 0), (139,34,104)]
-dotColor = [(0, 0, 139), (20,128,48), (71,130,170), (205,95,58), (205,150,205)]
+dotColors = [(0, 0, 139), (20,128,48), (71,130,170), (205,95,58), (205,150,205)]
 
 if(cameraCalibration != None):
     cameraMatrix = np.array([np.array([float(cameraCalibration["fx"]),0,float(cameraCalibration["cx"])]), 
@@ -224,27 +224,29 @@ while cap.isOpened():
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     framergb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    result_hands = hands.process(framergb)
-    if result_hands.multi_hand_landmarks:
-        landmarks = []
-        for index, handslms in enumerate(result_hands.multi_hand_landmarks):
-            for lm in handslms.landmark:
-                # print(id, lm)
-                lmx = int(lm.x * w)
-                lmy = int(lm.y * h)
+    # result_hands = hands.process(framergb)
+    # if result_hands.multi_hand_landmarks:
+    #     landmarks = []
+    #     for index, handslms in enumerate(result_hands.multi_hand_landmarks):
+    #         for lm in handslms.landmark:
+    #             # print(id, lm)
+    #             lmx = int(lm.x * w)
+    #             lmy = int(lm.y * h)
 
-                landmarks.append([lmx, lmy])
+    #             landmarks.append([lmx, lmy])
 
-            # Drawing landmarks on frames
-            mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS)
+    #         # Drawing landmarks on frames
+    #         mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS)
 
     if cameraCalibration != None:
         bodies = frameData[args.initialFrame + frameCount]["bodies"]
-        for body in bodies:
+        for bodyIndex, body in enumerate(bodies):  
+            bodyId = int(body["body_id"])
+            dotColor = dotColors[bodyId % len(dotColors)]; 
+            color = colors[bodyId % len(colors)]; 
             dictionary = {}
             for jointIndex, joint in enumerate(body["joint_positions"]):
                 bodyLocation = getPointSubcategory(Joint(jointIndex))
-                bodyId = int(body["body_id"])
                 print(f"{bodyId}")
                 if(bodyLocation != BodyCategory.RIGHT_LEG and bodyLocation != BodyCategory.LEFT_LEG):
                     points2D, _ = cv2.projectPoints(
@@ -256,16 +258,17 @@ while cap.isOpened():
                     
                     point = (int(points2D[0][0][0] * 2**shift),int(points2D[0][0][1] * 2**shift))
                     dictionary[Joint(jointIndex)] = point
-                    cv2.circle(frame, point, radius=15, color=dotColor[bodyId % len(dotColor)], thickness=15, shift=shift)
+                    cv2.circle(frame, point, radius=15, color=dotColor, thickness=15, shift=shift)
             for bone in bone_list:
-                 cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=colors[bodyId % len(colors)], thickness=3, shift=shift)
+                 cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=color, thickness=3, shift=shift)
+            cv2.putText(frame, str(bodyId), (50, 100 + (50 * bodyIndex)), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
                  
 
     cv2.putText(frame, "Frame: " + str(frameCount + args.initialFrame), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
     frame = cv2.resize(frame, (960, 540))
     cv2.imshow("Frame", frame)
     
-    if cv2.waitKey(10) == ord('q'):
+    if cv2.waitKey() == ord('q'):
         break
        
 # release the webcam and destroy all active windows
