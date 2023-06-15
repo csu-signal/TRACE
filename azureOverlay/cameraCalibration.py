@@ -42,20 +42,24 @@ class Joint(Enum):
 class BodyCategory(Enum):
         HEAD = 0
         RIGHT_ARM = 1
+        RIGHT_HAND = 7
         LEFT_ARM = 2
+        LEFT_HAND = 6
         TORSO = 3
         RIGHT_LEG = 4
-        LEFT_LEG = 4
+        LEFT_LEG = 5
 
 def getPointSubcategory(joint):
      if(joint == Joint.PELVIS or joint == Joint.NECK or joint == Joint.SPINE_NAVEL or joint == Joint.SPINE_CHEST):
           return BodyCategory.TORSO
-     if(joint == Joint.CLAVICLE_LEFT or joint == Joint.SHOULDER_LEFT or joint == Joint.ELBOW_LEFT 
-        or joint == Joint.WRIST_LEFT or joint == Joint.HAND_LEFT or joint == Joint.HANDTIP_LEFT or joint == Joint.THUMB_LEFT):
-          return BodyCategory.LEFT_ARM
-     if(joint == Joint.CLAVICLE_RIGHT or joint == Joint.SHOULDER_RIGHT or joint == Joint.ELBOW_RIGHT 
-        or joint == Joint.WRIST_RIGHT or joint == Joint.HAND_RIGHT or joint == Joint.HANDTIP_RIGHT or joint == Joint.THUMB_RIGHT):
-          return BodyCategory.RIGHT_ARM
+     if(joint == Joint.WRIST_LEFT or joint == Joint.CLAVICLE_LEFT or joint == Joint.SHOULDER_LEFT or joint == Joint.ELBOW_LEFT):
+           return BodyCategory.LEFT_ARM
+     if(joint == Joint.HAND_LEFT or joint == Joint.HANDTIP_LEFT or joint == Joint.THUMB_LEFT):
+          return BodyCategory.LEFT_HAND
+     if(joint == Joint.WRIST_RIGHT or joint == Joint.CLAVICLE_RIGHT or joint == Joint.SHOULDER_RIGHT or joint == Joint.ELBOW_RIGHT):
+        return BodyCategory.RIGHT_ARM
+     if(joint == Joint.HAND_RIGHT or joint == Joint.HANDTIP_RIGHT or joint == Joint.THUMB_RIGHT):
+          return BodyCategory.RIGHT_HAND
      if(joint == Joint.HIP_LEFT or joint == Joint.KNEE_LEFT or joint == Joint.ANKLE_LEFT or joint == Joint.FOOT_LEFT):
           return BodyCategory.LEFT_LEG
      if(joint == Joint.HIP_RIGHT or joint == Joint.KNEE_RIGHT or joint == Joint.ANKLE_RIGHT or joint == Joint.FOOT_RIGHT):
@@ -102,18 +106,6 @@ bone_list = [
             Joint.WRIST_LEFT
         ],
         [
-            Joint.WRIST_LEFT,
-            Joint.HAND_LEFT
-        ],
-        [
-            Joint.HAND_LEFT,
-            Joint.HANDTIP_LEFT
-        ],
-        [
-            Joint.WRIST_LEFT,
-            Joint.THUMB_LEFT
-        ],
-        [
             Joint.NOSE,
             Joint.EYE_LEFT
         ],
@@ -138,18 +130,6 @@ bone_list = [
             Joint.WRIST_RIGHT
         ],
         [
-            Joint.WRIST_RIGHT,
-            Joint.HAND_RIGHT
-        ],
-        [
-            Joint.HAND_RIGHT,
-            Joint.HANDTIP_RIGHT
-        ],
-        [
-            Joint.WRIST_RIGHT,
-            Joint.THUMB_RIGHT
-        ],
-        [
             Joint.NOSE,
             Joint.EYE_RIGHT
         ],
@@ -166,13 +146,13 @@ parser.add_argument('--minTrackingConfidence', nargs='?', default=0.6)
 parser.add_argument('--videoPath', nargs='?', default="F:\\Weights_Task\\Data\\Fib_weights_original_videos\\")
 parser.add_argument('--jsonPath', nargs='?', default="F:\\Weights_Task\\Data\\")
 parser.add_argument('--fileName', nargs='?', default="Group_03-sub1")
-parser.add_argument('--initialFrame', nargs='?', default=0)
+parser.add_argument('--initialFrame', nargs='?', default=0) #start counting from frame 0 because opencv is zero based
 
 args = parser.parse_args()
 
 # file
 cap = cv2.VideoCapture("{}{}.mkv".format(args.videoPath, args.fileName))
-cap.set(cv2.CAP_PROP_POS_FRAMES, args.initialFrame)
+cap.set(cv2.CAP_PROP_POS_FRAMES, args.initialFrame) # this is zero based
 jsonFile = open("{}{}.json".format(args.jsonPath, args.fileName))
 
 skeletonData = json.load(jsonFile)
@@ -220,7 +200,6 @@ while cap.isOpened():
         print("Ignoring empty camera frame.")
         continue
 
-    frameCount+=1
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     framergb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -248,7 +227,8 @@ while cap.isOpened():
             for jointIndex, joint in enumerate(body["joint_positions"]):
                 bodyLocation = getPointSubcategory(Joint(jointIndex))
                 print(f"{bodyId}")
-                if(bodyLocation != BodyCategory.RIGHT_LEG and bodyLocation != BodyCategory.LEFT_LEG):
+                if(bodyLocation != BodyCategory.RIGHT_LEG and bodyLocation != BodyCategory.LEFT_LEG
+                   and bodyLocation != BodyCategory.RIGHT_HAND and bodyLocation != BodyCategory.LEFT_HAND):
                     points2D, _ = cv2.projectPoints(
                         np.array(joint), 
                         rotation,
@@ -260,13 +240,17 @@ while cap.isOpened():
                     dictionary[Joint(jointIndex)] = point
                     cv2.circle(frame, point, radius=15, color=dotColor, thickness=15, shift=shift)
             for bone in bone_list:
-                 cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=color, thickness=3, shift=shift)
+                 if(getPointSubcategory(bone[0]) == BodyCategory.RIGHT_ARM or getPointSubcategory(bone[1]) == BodyCategory.RIGHT_ARM):
+                    cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=(255,255,255), thickness=3, shift=shift)
+                 else:
+                    cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=color, thickness=3, shift=shift)
             cv2.putText(frame, str(bodyId), (50, 100 + (50 * bodyIndex)), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
                  
 
     cv2.putText(frame, "Frame: " + str(frameCount + args.initialFrame), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
     frame = cv2.resize(frame, (960, 540))
     cv2.imshow("Frame", frame)
+    frameCount+=1
     
     if cv2.waitKey() == ord('q'):
         break

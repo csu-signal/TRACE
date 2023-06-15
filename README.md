@@ -6,6 +6,15 @@ In order to save the camera calibration settings I updated the Azure SDK offline
  - Usage: (build the offline processor project in visual studio) 
     - offline_processor/build/Debug/offline_processor.exe videoPath outputPath
 
+# Python Package Versions
+
+- "python" 3.9.12
+- "argparse" 1.1
+- "cv2" (opencv) 4.5.1 
+- "numpy" 1.21.5
+- "json" 2.0.9
+- "mediapipe" 0.8.9.1
+
 
 # Example Additional Json Output
 
