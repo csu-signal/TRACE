@@ -71,7 +71,7 @@ bool predict_joints(json &frames_json, int frame_count, k4abt_tracker_t tracker,
     return true;
 }
 
-bool check_depth_image_exists(k4a_capture_t capture)
+bool check_depth_image_exists(k4a_capture_t capture, const char* output_path, const char* output_file_name)
 {
     k4a_image_t depth = k4a_capture_get_depth_image(capture);
     if (depth != nullptr)
@@ -85,16 +85,28 @@ bool check_depth_image_exists(k4a_capture_t capture)
         // convert the raw buffer to cv::Mat
         int rows = k4a_image_get_height_pixels(depth);
         int cols = k4a_image_get_width_pixels(depth);
-        cv::Mat depthMat(rows, cols, CV_16U, (void*)buffer, cv::Mat::AUTO_STEP);
+        cv::Mat depthMat(rows, cols, CV_16U, (void*)buffer);
 
-        // Declare what you need
-        cv::FileStorage file("F:\\Weights_Task\\Data\\test.exr", cv::FileStorage::WRITE);
+        char output[1000];
+        strcpy_s(output, output_path);
+        strcat_s(output, output_file_name);
+        strcat_s(output, ".exr");
+       
 
-        // Write to file!
-        file << "depthMat" << depthMat;
+        try {
+          cv::imwrite(output, depthMat);
+        }
+        catch (cv::Exception& e) {
+          std::cout << e.msg << std::endl;
+        }
 
-        //Close the file and release all the memory buffers
-        file.release();
+        //cv::FileStorage file(output, cv::FileStorage::WRITE);
+
+        //// Write to file!
+        //file << "depthMat" << depthMat;
+
+        ////Close the file and release all the memory buffers
+        //file.release();
 
         k4a_image_release(depth);
         return true;
@@ -105,7 +117,7 @@ bool check_depth_image_exists(k4a_capture_t capture)
     }
 }
 
-bool process_mkv_offline(const char* input_path, const char* output_path, k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT )
+bool process_mkv_offline(const char* input_path, const char* output_path, const char* output_file_name, k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT )
 {
     k4a_playback_t playback_handle = nullptr;
     k4a_result_t result = k4a_playback_open(input_path, &playback_handle);
@@ -244,7 +256,7 @@ bool process_mkv_offline(const char* input_path, const char* output_path, k4abt_
         if (stream_result == K4A_STREAM_RESULT_SUCCEEDED)
         {
             // Only try to predict joints when capture contains depth image
-            if (check_depth_image_exists(capture_handle))
+            if (check_depth_image_exists(capture_handle, output_path, output_file_name))
             {
                 success = predict_joints(frames_json, frame_count, tracker, capture_handle);
                 k4a_capture_release(capture_handle);
@@ -271,9 +283,15 @@ bool process_mkv_offline(const char* input_path, const char* output_path, k4abt_
         cout << endl << "DONE " << endl;
 
         cout << "Total read " << frame_count << " frames" << endl;
-        std::ofstream output_file(output_path);
+ 
+        char output[1000];
+        strcpy_s(output, output_path);
+        strcat_s(output, output_file_name);
+        strcat_s(output, ".json");
+
+        std::ofstream output_file(output);
         output_file << std::setw(4) << json_output << std::endl;
-        cout << "Results saved in " << output_path;
+        cout << "Results saved in " << output;
     }
 
     k4abt_tracker_shutdown(tracker);
@@ -345,5 +363,5 @@ int main(int argc, char **argv)
   /*  if (!ProcessArguments(tracker_config, argc, argv))
         return -1;
     return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
-    return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-sub1.mkv", "F:\\Weights_Task\\Data\\test.json", tracker_config) ? 0 : -1;
+    return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-sub1.mkv", "F:\\Weights_Task\\Data\\", "Group_03-sub1", tracker_config) ? 0 : -1;
 }
