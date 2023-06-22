@@ -143,17 +143,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--maxHands', nargs='?', default=6)
 parser.add_argument('--minDetectionConfidence', nargs='?', default=0.6)
 parser.add_argument('--minTrackingConfidence', nargs='?', default=0.6)
-parser.add_argument('--videoPath', nargs='?', default="F:\\Weights_Task\\Data\\Fib_weights_original_videos\\")
-parser.add_argument('--jsonPath', nargs='?', default="F:\\Weights_Task\\Data\\")
-parser.add_argument('--fileName', nargs='?', default="Group_03-sub1")
-parser.add_argument('--initialFrame', nargs='?', default=0) #start counting from frame 0 because opencv is zero based
+parser.add_argument('--videoPath', nargs='?', default="F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-master.mkv")
+parser.add_argument('--jsonPath', nargs='?', default="F:\\Weights_Task\\Data\\Group_03-master.json")
+parser.add_argument('--initialFrame', nargs='?', default=500) #start counting from frame 0 because opencv is zero based
 
 args = parser.parse_args()
 
 # file
-cap = cv2.VideoCapture("{}{}.mkv".format(args.videoPath, args.fileName))
+cap = cv2.VideoCapture(args.videoPath)
 cap.set(cv2.CAP_PROP_POS_FRAMES, args.initialFrame) # this is zero based
-jsonFile = open("{}{}.json".format(args.jsonPath, args.fileName))
+jsonFile = open(args.jsonPath)
 
 skeletonData = json.load(jsonFile)
 frameData = skeletonData["frames"]
@@ -168,6 +167,12 @@ if(cameraCalibration != None):
     cameraMatrix = np.array([np.array([float(cameraCalibration["fx"]),0,float(cameraCalibration["cx"])]), 
                              np.array([0,float(cameraCalibration["fy"]),float(cameraCalibration["cy"])]), 
                              np.array([0,0,1])])
+    
+    # cameraMatrix = np.zeros((3, 3), dtype='float64')
+    # cameraMatrix[0, 0], cameraMatrix[0, 2] = 953.29252639, 960.9015407
+    # cameraMatrix[1, 1], cameraMatrix[1, 2] = 963.089628316, 540.12083963
+    # cameraMatrix[2, 2] = 1.
+
     rotation = np.array([
         np.array([float(cameraCalibration["rotation"][0]),float(cameraCalibration["rotation"][1]),float(cameraCalibration["rotation"][2])]), 
         np.array([float(cameraCalibration["rotation"][3]),float(cameraCalibration["rotation"][4]),float(cameraCalibration["rotation"][5])]), 
@@ -218,7 +223,7 @@ while cap.isOpened():
     #         mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS)
 
     if cameraCalibration != None:
-        bodies = frameData[args.initialFrame + frameCount]["bodies"]
+        bodies = frameData[frameCount + args.initialFrame]["bodies"]
         for bodyIndex, body in enumerate(bodies):  
             bodyId = int(body["body_id"])
             dotColor = dotColors[bodyId % len(dotColors)]; 
