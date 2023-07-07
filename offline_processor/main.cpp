@@ -85,16 +85,20 @@ bool check_depth_image_exists(k4a_capture_t capture, const char* output_path, co
         // convert the raw buffer to cv::Mat
         int rows = k4a_image_get_height_pixels(depth);
         int cols = k4a_image_get_width_pixels(depth);
-        cv::Mat depthMat(rows, cols, CV_16U, (void*)buffer);
+        cv::Mat depthMat(rows, cols, CV_32F, (void*)buffer);
 
         char output[1000];
         strcpy_s(output, output_path);
         strcat_s(output, output_file_name);
         strcat_s(output, ".exr");
-       
 
+        vector<int> compression_params;
+        /*compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+        compression_params.push_back(9);*/
+       
         try {
-          cv::imwrite(output, depthMat);
+          _putenv_s("OPENCV_IO_ENABLE_OPENEXR", "1");
+          cv::imwrite(output, depthMat, compression_params);
         }
         catch (cv::Exception& e) {
           std::cout << e.msg << std::endl;
