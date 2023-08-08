@@ -143,9 +143,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--maxHands', nargs='?', default=6)
 parser.add_argument('--minDetectionConfidence', nargs='?', default=0.6)
 parser.add_argument('--minTrackingConfidence', nargs='?', default=0.6)
-parser.add_argument('--videoPath', nargs='?', default="F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-master.mkv")
-parser.add_argument('--jsonPath', nargs='?', default="F:\\Weights_Task\\Data\\Group_03-master.json")
-parser.add_argument('--initialFrame', nargs='?', default=500) #start counting from frame 0 because opencv is zero based
+parser.add_argument('--videoPath', nargs='?', default="F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_04-master.mkv")
+parser.add_argument('--jsonPath', nargs='?', default="F:\\Weights_Task\\Data\\Group_04-master.json")
+parser.add_argument('--initialFrame', nargs='?', default=2000) #start counting from frame 0 because opencv is zero based
 
 args = parser.parse_args()
 
@@ -164,14 +164,14 @@ colors = [(0, 0, 255), (0, 255, 0), (0, 140, 255), (255, 0, 0), (139,34,104)]
 dotColors = [(0, 0, 139), (20,128,48), (71,130,170), (205,95,58), (205,150,205)]
 
 if(cameraCalibration != None):
-    cameraMatrix = np.array([np.array([float(cameraCalibration["fx"]),0,float(cameraCalibration["cx"])]), 
-                             np.array([0,float(cameraCalibration["fy"]),float(cameraCalibration["cy"])]), 
-                             np.array([0,0,1])])
+    # cameraMatrix = np.array([np.array([float(cameraCalibration["fx"]),0,float(cameraCalibration["cx"])]), 
+    #                          np.array([0,float(cameraCalibration["fy"]),float(cameraCalibration["cy"])]), 
+    #                          np.array([0,0,1])])
     
-    # cameraMatrix = np.zeros((3, 3), dtype='float64')
-    # cameraMatrix[0, 0], cameraMatrix[0, 2] = 953.29252639, 960.9015407
-    # cameraMatrix[1, 1], cameraMatrix[1, 2] = 963.089628316, 540.12083963
-    # cameraMatrix[2, 2] = 1.
+    cameraMatrix = np.zeros((3, 3), dtype='float64')
+    cameraMatrix[0, 0], cameraMatrix[0, 2] = 880.7237639, 951.9401562
+    cameraMatrix[1, 1], cameraMatrix[1, 2] = 882.9017308, 554.4583557
+    cameraMatrix[2, 2] = 1.
 
     rotation = np.array([
         np.array([float(cameraCalibration["rotation"][0]),float(cameraCalibration["rotation"][1]),float(cameraCalibration["rotation"][2])]), 
@@ -190,75 +190,77 @@ if(cameraCalibration != None):
         float(cameraCalibration["k5"]),
         float(cameraCalibration["k6"])])
 
-_, frame = cap.read()
-h, w, c = frame.shape
-frameCount = 0
-shift = 7
+success, frame = cap.read()
 
-mpHands = mp.solutions.hands
-mpDraw = mp.solutions.drawing_utils
-hands = mpHands.Hands(max_num_hands=args.maxHands, min_detection_confidence=args.minDetectionConfidence, min_tracking_confidence=args.minTrackingConfidence)
+if success:
+    h, w, c = frame.shape
+    frameCount = 0
+    shift = 7
 
-while cap.isOpened():
-    success, frame = cap.read()
-    if not success:
-        print("Ignoring empty camera frame.")
-        continue
+    mpHands = mp.solutions.hands
+    mpDraw = mp.solutions.drawing_utils
+    hands = mpHands.Hands(max_num_hands=args.maxHands, min_detection_confidence=args.minDetectionConfidence, min_tracking_confidence=args.minTrackingConfidence)
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    framergb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    while cap.isOpened():
+        success, frame = cap.read()
+        if not success:
+            print("Ignoring empty camera frame.")
+            continue
 
-    # result_hands = hands.process(framergb)
-    # if result_hands.multi_hand_landmarks:
-    #     landmarks = []
-    #     for index, handslms in enumerate(result_hands.multi_hand_landmarks):
-    #         for lm in handslms.landmark:
-    #             # print(id, lm)
-    #             lmx = int(lm.x * w)
-    #             lmy = int(lm.y * h)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        framergb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    #             landmarks.append([lmx, lmy])
+        # result_hands = hands.process(framergb)
+        # if result_hands.multi_hand_landmarks:
+        #     landmarks = []
+        #     for index, handslms in enumerate(result_hands.multi_hand_landmarks):
+        #         for lm in handslms.landmark:
+        #             # print(id, lm)
+        #             lmx = int(lm.x * w)
+        #             lmy = int(lm.y * h)
 
-    #         # Drawing landmarks on frames
-    #         mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS)
+        #             landmarks.append([lmx, lmy])
 
-    if cameraCalibration != None:
-        bodies = frameData[frameCount + args.initialFrame]["bodies"]
-        for bodyIndex, body in enumerate(bodies):  
-            bodyId = int(body["body_id"])
-            dotColor = dotColors[bodyId % len(dotColors)]; 
-            color = colors[bodyId % len(colors)]; 
-            dictionary = {}
-            for jointIndex, joint in enumerate(body["joint_positions"]):
-                bodyLocation = getPointSubcategory(Joint(jointIndex))
-                print(f"{bodyId}")
-                if(bodyLocation != BodyCategory.RIGHT_LEG and bodyLocation != BodyCategory.LEFT_LEG
-                   and bodyLocation != BodyCategory.RIGHT_HAND and bodyLocation != BodyCategory.LEFT_HAND):
-                    points2D, _ = cv2.projectPoints(
-                        np.array(joint), 
-                        rotation,
-                        translation,
-                        cameraMatrix,
-                        dist)  
+        #         # Drawing landmarks on frames
+        #         mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS)
+
+        if cameraCalibration != None:
+            bodies = frameData[frameCount + args.initialFrame]["bodies"]
+            for bodyIndex, body in enumerate(bodies):  
+                bodyId = int(body["body_id"])
+                dotColor = dotColors[bodyId % len(dotColors)]; 
+                color = colors[bodyId % len(colors)]; 
+                dictionary = {}
+                for jointIndex, joint in enumerate(body["joint_positions"]):
+                    bodyLocation = getPointSubcategory(Joint(jointIndex))
+                    print(f"{bodyId}")
+                    if(bodyLocation != BodyCategory.RIGHT_LEG and bodyLocation != BodyCategory.LEFT_LEG
+                    and bodyLocation != BodyCategory.RIGHT_HAND and bodyLocation != BodyCategory.LEFT_HAND):
+                        points2D, _ = cv2.projectPoints(
+                            np.array(joint), 
+                            rotation,
+                            translation,
+                            cameraMatrix,
+                            dist)  
+                        
+                        point = (int(points2D[0][0][0] * 2**shift),int(points2D[0][0][1] * 2**shift))
+                        dictionary[Joint(jointIndex)] = point
+                        cv2.circle(frame, point, radius=15, color=dotColor, thickness=15, shift=shift)
+                for bone in bone_list:
+                    if(getPointSubcategory(bone[0]) == BodyCategory.RIGHT_ARM or getPointSubcategory(bone[1]) == BodyCategory.RIGHT_ARM):
+                        cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=(255,255,255), thickness=3, shift=shift)
+                    else:
+                        cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=color, thickness=3, shift=shift)
+                cv2.putText(frame, str(bodyId), (50, 100 + (50 * bodyIndex)), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
                     
-                    point = (int(points2D[0][0][0] * 2**shift),int(points2D[0][0][1] * 2**shift))
-                    dictionary[Joint(jointIndex)] = point
-                    cv2.circle(frame, point, radius=15, color=dotColor, thickness=15, shift=shift)
-            for bone in bone_list:
-                 if(getPointSubcategory(bone[0]) == BodyCategory.RIGHT_ARM or getPointSubcategory(bone[1]) == BodyCategory.RIGHT_ARM):
-                    cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=(255,255,255), thickness=3, shift=shift)
-                 else:
-                    cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=color, thickness=3, shift=shift)
-            cv2.putText(frame, str(bodyId), (50, 100 + (50 * bodyIndex)), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
-                 
 
-    cv2.putText(frame, "Frame: " + str(frameCount + args.initialFrame), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
-    frame = cv2.resize(frame, (960, 540))
-    cv2.imshow("Frame", frame)
-    frameCount+=1
-    
-    if cv2.waitKey() == ord('q'):
-        break
+        cv2.putText(frame, "Frame: " + str(frameCount + args.initialFrame), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+        frame = cv2.resize(frame, (960, 540))
+        cv2.imshow("Frame", frame)
+        frameCount+=1
+        
+        if cv2.waitKey(5) == ord('q'):
+            break
        
 # release the webcam and destroy all active windows
 cap.release()
