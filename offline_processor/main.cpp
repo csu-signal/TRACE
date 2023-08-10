@@ -71,7 +71,7 @@ bool predict_joints(json& frames_json, int frame_count, k4abt_tracker_t tracker,
   return true;
 }
 
-bool check_depth_image_exists(k4a_capture_t capture, const char* output_path, k4a_calibration_t calibration, k4a_transformation_t transformation, const char* output_file_name)
+bool check_depth_image_exists(k4a_capture_t capture, k4a_calibration_t calibration, k4a_transformation_t transformation, int frame_count, const char* output_path)
 {
   k4a_image_t transformed_depth_image = NULL;
   k4a_image_t depth = k4a_capture_get_depth_image(capture);
@@ -122,7 +122,7 @@ bool check_depth_image_exists(k4a_capture_t capture, const char* output_path, k4
 
       char output[1000];
       strcpy_s(output, output_path);
-      strcat_s(output, output_file_name);
+      strcat_s(output, std::to_string(frame_count).c_str());
       strcat_s(output, ".png");
 
       vector<int> compression_params;
@@ -160,7 +160,7 @@ bool check_depth_image_exists(k4a_capture_t capture, const char* output_path, k4
   }
 }
 
-bool process_mkv_offline(const char* input_path, const char* output_path, const char* output_file_name, k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT)
+bool process_mkv_offline(const char* input_path, const char* output_path, const char* depth_output_path, const char* output_file_name, k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT)
 {
   k4a_playback_t playback_handle = nullptr;
   k4a_result_t result = k4a_playback_open(input_path, &playback_handle);
@@ -301,7 +301,7 @@ bool process_mkv_offline(const char* input_path, const char* output_path, const 
     if (stream_result == K4A_STREAM_RESULT_SUCCEEDED)
     {
       // Only try to predict joints when capture contains depth image
-      if (check_depth_image_exists(capture_handle, output_path, calibration, transformation, output_file_name))
+      if (check_depth_image_exists(capture_handle, calibration, transformation, frame_count, depth_output_path))
       {
         success = predict_joints(frames_json, frame_count, tracker, capture_handle);
         k4a_capture_release(capture_handle);
@@ -408,5 +408,5 @@ int main(int argc, char** argv)
   /*  if (!ProcessArguments(tracker_config, argc, argv))
         return -1;
     return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
-  return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-sub1.mkv", "F:\\Weights_Task\\Data\\", "Group_03-sub1", tracker_config) ? 0 : -1;
+  return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-sub1.mkv", "F:\\Weights_Task\\Data\\", "F:\\Weights_Task\\Data\\Depth\\Group_03-sub1\\", "Group_03-sub1", tracker_config) ? 0 : -1;
 }
