@@ -4,6 +4,7 @@ import numpy as np
 import json
 from enum import Enum
 import mediapipe as mp
+import utils
 
 class Joint(Enum):
         PELVIS = 0
@@ -149,46 +150,21 @@ parser.add_argument('--initialFrame', nargs='?', default=2000) #start counting f
 
 args = parser.parse_args()
 
-# file
+# video file
 cap = cv2.VideoCapture(args.videoPath)
 cap.set(cv2.CAP_PROP_POS_FRAMES, args.initialFrame) # this is zero based
 jsonFile = open(args.jsonPath)
 
+# read in azure skeleton data
 skeletonData = json.load(jsonFile)
 frameData = skeletonData["frames"]
-cameraCalibration = skeletonData["camera_calibration"]
+_, rotation, translation, dist = utils.getCalibrationFromFile(skeletonData["camera_calibration"])
+cameraMatrix = utils.getMasterCameraMatrix()
 
 #BGR
 # Red, Green, Orange, Blue, Purple
 colors = [(0, 0, 255), (0, 255, 0), (0, 140, 255), (255, 0, 0), (139,34,104)]
 dotColors = [(0, 0, 139), (20,128,48), (71,130,170), (205,95,58), (205,150,205)]
-
-if(cameraCalibration != None):
-    # cameraMatrix = np.array([np.array([float(cameraCalibration["fx"]),0,float(cameraCalibration["cx"])]), 
-    #                          np.array([0,float(cameraCalibration["fy"]),float(cameraCalibration["cy"])]), 
-    #                          np.array([0,0,1])])
-    
-    cameraMatrix = np.zeros((3, 3), dtype='float64')
-    cameraMatrix[0, 0], cameraMatrix[0, 2] = 880.7237639, 951.9401562
-    cameraMatrix[1, 1], cameraMatrix[1, 2] = 882.9017308, 554.4583557
-    cameraMatrix[2, 2] = 1.
-
-    rotation = np.array([
-        np.array([float(cameraCalibration["rotation"][0]),float(cameraCalibration["rotation"][1]),float(cameraCalibration["rotation"][2])]), 
-        np.array([float(cameraCalibration["rotation"][3]),float(cameraCalibration["rotation"][4]),float(cameraCalibration["rotation"][5])]), 
-        np.array([float(cameraCalibration["rotation"][6]),float(cameraCalibration["rotation"][7]),float(cameraCalibration["rotation"][8])])])
-    
-    translation = np.array([float(cameraCalibration["translation"][0]), float(cameraCalibration["translation"][1]), float(cameraCalibration["translation"][2])])
-
-    dist = np.array([
-        float(cameraCalibration["k1"]), 
-        float(cameraCalibration["k2"]),
-        float(cameraCalibration["p1"]),
-        float(cameraCalibration["p2"]),
-        float(cameraCalibration["k3"]),
-        float(cameraCalibration["k4"]),
-        float(cameraCalibration["k5"]),
-        float(cameraCalibration["k6"])])
 
 success, frame = cap.read()
 
@@ -224,7 +200,7 @@ if success:
         #         # Drawing landmarks on frames
         #         mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS)
 
-        if cameraCalibration != None:
+        if cameraMatrix != None:
             bodies = frameData[frameCount + args.initialFrame]["bodies"]
             for bodyIndex, body in enumerate(bodies):  
                 bodyId = int(body["body_id"])

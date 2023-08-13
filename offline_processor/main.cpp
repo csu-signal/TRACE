@@ -94,21 +94,10 @@ bool check_depth_image_exists(k4a_capture_t capture, k4a_calibration_t calibrati
       return false;
     }
 
-    //// you can check the format with this function
-    //// k4a_image_format_t format = k4a_image_get_format(depth); // K4A_IMAGE_FORMAT_DEPTH16 
-
-    //// get raw buffer
-    //uint8_t* buffer = k4a_image_get_buffer(depth);
-
-    //// convert the raw buffer to cv::Mat
-    //int rows = k4a_image_get_height_pixels(depth);
-    //int cols = k4a_image_get_width_pixels(depth);
-    //cv::Mat depthMat(rows, cols, CV_16U, (void*)buffer, cv::Mat::AUTO_STEP);
-
     if (transformed_depth_image != NULL)
     {
       // you can check the format with this function
-      k4a_image_format_t format = k4a_image_get_format(transformed_depth_image); // K4A_IMAGE_FORMAT_COLOR_BGRA32 
+      k4a_image_format_t format = k4a_image_get_format(transformed_depth_image);
 
       // get raw buffer
       uint8_t* buffer = k4a_image_get_buffer(transformed_depth_image);
@@ -139,16 +128,6 @@ bool check_depth_image_exists(k4a_capture_t capture, k4a_calibration_t calibrati
         std::cout << e.msg << std::endl;
       }
     }
-
-
-
-    //cv::FileStorage file(output, cv::FileStorage::WRITE);
-
-    //// Write to file!
-    //file << "depthMat" << depthMat;
-
-    ////Close the file and release all the memory buffers
-    //file.release();
 
     k4a_image_release(depth);
     k4a_image_release(transformed_depth_image);
@@ -408,5 +387,5 @@ int main(int argc, char** argv)
   /*  if (!ProcessArguments(tracker_config, argc, argv))
         return -1;
     return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
-  return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-sub1.mkv", "F:\\Weights_Task\\Data\\", "F:\\Weights_Task\\Data\\Depth\\Group_03-sub1\\", "Group_03-sub1", tracker_config) ? 0 : -1;
+  return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-master.mkv", "F:\\Weights_Task\\Data\\", "F:\\Weights_Task\\Data\\Depth\\Group_03-master\\", "Group_03-master", tracker_config) ? 0 : -1;
 }
