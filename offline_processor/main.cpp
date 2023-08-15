@@ -387,5 +387,5 @@ int main(int argc, char** argv)
   /*  if (!ProcessArguments(tracker_config, argc, argv))
         return -1;
     return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
-  return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-master.mkv", "F:\\Weights_Task\\Data\\", "F:\\Weights_Task\\Data\\Depth\\Group_03-master\\", "Group_03-master", tracker_config) ? 0 : -1;
+  return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_04-master.mkv", "F:\\Weights_Task\\Data\\", "F:\\Weights_Task\\Data\\Depth\\Group_04-master\\", "Group_04-master", tracker_config) ? 0 : -1;
 }
