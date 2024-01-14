@@ -5,6 +5,8 @@
 #include <fstream>
 #include <string>
 #include <iomanip>
+#include <stdio.h>
+#include <conio.h>
 
 #include <k4a/k4a.h>
 #include <k4arecord/playback.h>
@@ -14,6 +16,8 @@
 #include <BodyTrackingHelpers.h>
 #include <Utilities.h>
 #include <opencv2/opencv.hpp>
+
+#include <Python.h>
 
 using namespace cv;
 using namespace std;
@@ -141,16 +145,41 @@ bool check_depth_image_exists(k4a_capture_t capture, k4a_calibration_t calibrati
 
 bool process_mkv_offline(const char* input_path, const char* output_path, const char* depth_output_path, const char* output_file_name, k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT)
 {
-  k4a_playback_t playback_handle = nullptr;
-  k4a_result_t result = k4a_playback_open(input_path, &playback_handle);
-  if (result != K4A_RESULT_SUCCEEDED)
-  {
-    cerr << "Cannot open recording at " << input_path << endl;
-    return false;
-  }
+  //File Playback
+  //k4a_playback_t playback_handle = nullptr;
+  //k4a_result_t result = k4a_playback_open(input_path, &playback_handle);
+  //if (result != K4A_RESULT_SUCCEEDED)
+  //{
+  //  cerr << "Cannot open recording at " << input_path << endl;
+  //  return false;
+  //}
+
+  //Video Playback
+  k4a_device_t device = nullptr;
+  int test = k4a_device_open(0, &device);
+  VERIFY(test, "Open K4A Device failed!");
+
+  // Start camera. Make sure depth camera is enabled.
+  k4a_device_configuration_t deviceConfig = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
+  deviceConfig.depth_mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
+  deviceConfig.color_resolution = K4A_COLOR_RESOLUTION_1080P;
+  VERIFY(k4a_device_start_cameras(device, &deviceConfig), "Start K4A cameras failed!");
 
   k4a_calibration_t calibration;
-  result = k4a_playback_get_calibration(playback_handle, &calibration);
+  VERIFY(k4a_device_get_calibration(device, deviceConfig.depth_mode, deviceConfig.color_resolution, &calibration),
+    "Get depth camera calibration failed!");
+
+  int depthWidth = calibration.depth_camera_calibration.resolution_width;
+  int depthHeight = calibration.depth_camera_calibration.resolution_height;
+
+  //File calibration
+  //result = k4a_playback_get_calibration(playback_handle, &calibration);
+  //if (result != K4A_RESULT_SUCCEEDED)
+  //{
+  //  cerr << "Failed to get calibration" << endl;
+  //  return false;
+  //}
+
   //calibration.color_resolution = K4A_COLOR_RESOLUTION_1080P;
   k4a_transformation_t transformation = k4a_transformation_create(&calibration);
 
@@ -201,12 +230,6 @@ bool process_mkv_offline(const char* input_path, const char* output_path, const 
     calibration.color_camera_calibration.intrinsics.parameters.param.k5 <<
     "," <<
     calibration.color_camera_calibration.intrinsics.parameters.param.k6 << endl;
-
-  if (result != K4A_RESULT_SUCCEEDED)
-  {
-    cerr << "Failed to get calibration" << endl;
-    return false;
-  }
 
   k4abt_tracker_t tracker = NULL;
   if (K4A_RESULT_SUCCEEDED != k4abt_tracker_create(&calibration, tracker_config, &tracker))
@@ -270,7 +293,11 @@ bool process_mkv_offline(const char* input_path, const char* output_path, const 
   while (true)
   {
     k4a_capture_t capture_handle = nullptr;
-    k4a_stream_result_t stream_result = k4a_playback_get_next_capture(playback_handle, &capture_handle);
+    //File Based next capture
+    //k4a_stream_result_t stream_result = k4a_playback_get_next_capture(playback_handle, &capture_handle);
+    // 
+    //Camera Based Next capture
+    k4a_wait_result_t stream_result = k4a_device_get_capture(device, &capture_handle, 0);
     if (stream_result == K4A_STREAM_RESULT_EOF)
     {
       break;
@@ -320,7 +347,11 @@ bool process_mkv_offline(const char* input_path, const char* output_path, const 
 
   k4abt_tracker_shutdown(tracker);
   k4abt_tracker_destroy(tracker);
-  k4a_playback_close(playback_handle);
+  //Close File
+  //k4a_playback_close(playback_handle);
+
+  //Close Camera
+  k4a_device_close(device);
 
   return success;
 }
@@ -387,5 +418,34 @@ int main(int argc, char** argv)
   /*  if (!ProcessArguments(tracker_config, argc, argv))
         return -1;
     return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
-  return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_04-master.mkv", "F:\\Weights_Task\\Data\\", "F:\\Weights_Task\\Data\\Depth\\Group_04-master\\", "Group_04-master", tracker_config) ? 0 : -1;
+  //return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-master.mkv", "..", "..\\Camera1\\", "Camera1", tracker_config) ? 0 : -1;
+
+  PyObject* pInt;
+  if (-1 == _putenv("PYTHONHOME=C:\\Users\\Devin\\anaconda3\\envs\\handTrackingEnviroment")) {
+    printf("putenv failed \n");
+    return EXIT_FAILURE;
+  }
+
+  //Py_SetPythonHome(L"C:\\Users\\vanderh\\AppData\\Local\\Programs\\Python\\Python311");
+  Py_Initialize();
+  PyRun_SimpleString("import sys");
+  PyRun_SimpleString("import os");
+  PyRun_SimpleString("sys.path.append(os.getcwd())");
+  //PyRun_SimpleString("sys.path.append(C:\\Users\\vanderh\\AppData\\Local\\Programs\\Python\\Python311)");
+  //PyRun_SimpleString("print('Hello World from Embedded Python!!!')");
+
+  PyObject* myModule = PyImport_ImportModule("pythonCalls");
+
+  PyObject* myFunction = PyObject_GetAttrString(myModule, (char*)"myabs");
+  PyObject* args = PyTuple_Pack(1, PyFloat_FromDouble(-2.0));
+
+  PyObject* myResult = PyObject_CallObject(myFunction, args);
+  double result = PyFloat_AsDouble(myResult);
+
+  Py_Finalize();
+
+  printf("\nResult from python:%lf", result);
+  printf("\nPress any key to exit...\n");
+  if (!_getch()) _getch();
+  return 0;
 }
