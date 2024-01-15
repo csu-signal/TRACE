@@ -412,6 +412,38 @@ bool ProcessArguments(k4abt_tracker_configuration_t& tracker_config, int argc, c
   return true;
 }
 
+PyObject* initalizePython()
+{
+  PyObject* pInt;
+  if (-1 == _putenv("PYTHONHOME=C:\\Users\\Devin\\anaconda3\\envs\\handTrackingEnviroment")) {
+    printf("putenv failed \n");
+    return NULL;
+  }
+
+  Py_Initialize();
+  PyRun_SimpleString("import sys");
+  PyRun_SimpleString("import os");
+  PyRun_SimpleString("sys.path.append(os.getcwd())");
+  PyRun_SimpleString("print('Initalizing Embedded Python')");
+
+  PyObject* myModule = PyImport_ImportModule("pythonCalls");
+  return myModule;
+}
+
+void finalizePython()
+{
+  PyRun_SimpleString("print('Finalizing Embedded Python')");
+  Py_Finalize();
+}
+
+void callOpenFrame(PyObject* module, char* path)
+{
+  PyObject* myFunction = PyObject_GetAttrString(module, (char*)"openFrame");
+  PyObject* args = PyBytes_FromString(path);
+
+  PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, args, NULL);
+}
+
 int main(int argc, char** argv)
 {
   k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT;
@@ -420,31 +452,12 @@ int main(int argc, char** argv)
     return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
   //return process_mkv_offline("F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-master.mkv", "..", "..\\Camera1\\", "Camera1", tracker_config) ? 0 : -1;
 
-  PyObject* pInt;
-  if (-1 == _putenv("PYTHONHOME=C:\\Users\\Devin\\anaconda3\\envs\\handTrackingEnviroment")) {
-    printf("putenv failed \n");
-    return EXIT_FAILURE;
-  }
+  PyObject* module = initalizePython();
+  callOpenFrame(module, (char*)"C:\\Users\\Devin\\Desktop\\GitHub\\isat_handTracking\\Screenshot_95.png");
+  callOpenFrame(module, (char*)"C:\\Users\\Devin\\Downloads\\handSample.png");
 
-  //Py_SetPythonHome(L"C:\\Users\\vanderh\\AppData\\Local\\Programs\\Python\\Python311");
-  Py_Initialize();
-  PyRun_SimpleString("import sys");
-  PyRun_SimpleString("import os");
-  PyRun_SimpleString("sys.path.append(os.getcwd())");
-  //PyRun_SimpleString("sys.path.append(C:\\Users\\vanderh\\AppData\\Local\\Programs\\Python\\Python311)");
-  //PyRun_SimpleString("print('Hello World from Embedded Python!!!')");
+  finalizePython();
 
-  PyObject* myModule = PyImport_ImportModule("pythonCalls");
-
-  PyObject* myFunction = PyObject_GetAttrString(myModule, (char*)"myabs");
-  PyObject* args = PyTuple_Pack(1, PyFloat_FromDouble(-2.0));
-
-  PyObject* myResult = PyObject_CallObject(myFunction, args);
-  double result = PyFloat_AsDouble(myResult);
-
-  Py_Finalize();
-
-  printf("\nResult from python:%lf", result);
   printf("\nPress any key to exit...\n");
   if (!_getch()) _getch();
   return 0;
