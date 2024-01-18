@@ -1,10 +1,16 @@
 import math
 import cv2
 import mediapipe as mp
+import os
+import shutil
+
+if os.path.exists("./Camera1"):
+        shutil.rmtree("./Camera1")
+os.makedirs("./Camera1")
 
 # initialize mediapipe
 mpHands = mp.solutions.hands
-hands = mpHands.Hands(max_num_hands=1, min_detection_confidence=0.7)
+hands = mpHands.Hands(max_num_hands=6, min_detection_confidence=0.2)
 mpDraw = mp.solutions.drawing_utils
 
 def myabs(x):
@@ -45,7 +51,7 @@ def openFrame(data):
         # Show the final output
         frame = cv2.resize(frame, (960, 640))
         cv2.imshow("Output", frame)
-        cv2.waitKey()
+        cv2.waitKey(250)
         cv2.destroyAllWindows()
         return 1
     except Exception as e:
