@@ -1,4 +1,4 @@
-name: termProject
+name: handTrackingEnvironment
 channels:
   - pytorch
   - conda-forge
