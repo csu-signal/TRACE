@@ -14,10 +14,16 @@
 #include <BodyTrackingHelpers.h>
 #include <Utilities.h>
 #include <opencv2/opencv.hpp>
-
 #include<Python.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
+
 #include <stdio.h>
 #include <conio.h>
+
+#ifdef _DEBUG
+#   define Py_DEBUG
+#endif
 
 using namespace cv;
 using namespace std;
@@ -32,6 +38,9 @@ PyObject* initalizePython()
   }
 
   Py_Initialize();
+  #ifndef _DEBUG
+    import_array();
+  #endif
   PyRun_SimpleString("import sys");
   PyRun_SimpleString("import os");
   PyRun_SimpleString("sys.path.append(os.getcwd())");
@@ -47,12 +56,21 @@ void finalizePython()
   Py_Finalize();
 }
 
-void callOpenFrame(PyObject* pyModule, char* path)
+void callOpenFrame(PyObject* pyModule, char* path, int frame_count)
 {
   PyObject* myFunction = PyObject_GetAttrString(pyModule, (char*)"openFrame");
   PyObject* args = PyBytes_FromString(path);
+  PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, args, PyFloat_FromDouble(frame_count), NULL);
+}
 
-  PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, args, NULL);
+void callOpenFrameBytes(PyObject* pyModule, cv::Mat image, int frame_count)
+{
+  PyObject* myFunction = PyObject_GetAttrString(pyModule, (char*)"openFrameBytes");
+
+  npy_intp dimensions[3] = { image.rows, image.cols, image.channels() };
+  PyObject* pyObject = PyArray_SimpleNewFromData(image.dims + 1, (npy_intp*)&dimensions, NPY_UINT8, image.data);
+
+  PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, pyObject, PyFloat_FromDouble(frame_count), NULL);
 }
 
 bool predict_joints(json& frames_json, int frame_count, k4abt_tracker_t tracker, k4a_capture_t capture_handle)
@@ -125,27 +143,34 @@ void check_color_image_exists(PyObject* pyModule, k4a_capture_t capture, k4a_cal
   int color_image_height_pixels = k4a_image_get_height_pixels(color_image);
   imBGRA = cv::Mat(color_image_height_pixels, color_image_width_pixels, CV_8UC4, (void*)k4a_image_get_buffer(color_image));
 
-  char output[1000];
-  strcpy_s(output, output_path);
-  strcat_s(output, std::to_string(frame_count).c_str());
-  strcat_s(output, ".png");
+  #ifndef _DEBUG
+    callOpenFrameBytes(pyModule, imBGRA, frame_count);
+  #endif
 
-  vector<int> compression_params;
-  compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-  compression_params.push_back(0);
+  #ifdef _DEBUG
+    char output[1000];
+    strcpy_s(output, output_path);
+    strcat_s(output, std::to_string(frame_count).c_str());
+    strcat_s(output, ".png");
 
-  try {
-    //_putenv_s("OPENCV_IO_ENABLE_OPENEXR", "1");
-    //_putenv_s("DWITH_JPEG", "1");
-    cv::imwrite(output, imBGRA, compression_params);
-    //cv::imshow("test", depthMat);
-  }
-  catch (cv::Exception& e) {
-    std::cout << e.msg << std::endl;
-  }
+    vector<int> compression_params;
+    compression_params.push_back(IMWRITE_PNG_COMPRESSION);
+    compression_params.push_back(0);
+
+    try {
+      //_putenv_s("OPENCV_IO_ENABLE_OPENEXR", "1");
+      //_putenv_s("DWITH_JPEG", "1");
+      cv::imwrite(output, imBGRA, compression_params);
+      //cv::imshow("test", depthMat);
+    }
+    catch (cv::Exception& e) {
+      std::cout << e.msg << std::endl;
+    }
+
+    callOpenFrame(pyModule, output, frame_count);
+  #endif
 
   k4a_image_release(color_image);
-  callOpenFrame(pyModule, output);
 }
 
 bool check_depth_image_exists(PyObject* pyModule, k4a_capture_t capture, k4a_calibration_t calibration, k4a_transformation_t transformation, int frame_count, const char* output_path)
@@ -316,7 +341,7 @@ bool process_mkv_offline(PyObject* pyModule, bool camera, const char* input_path
 
   json json_output;
   json_output["k4abt_sdk_version"] = K4ABT_VERSION_STR;
-  if (camera) 
+  if (camera)
   {
     json_output["source_file"] = "Camera";
   }
@@ -521,7 +546,7 @@ int main(int argc, char** argv)
         return -1;
     return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
 
-  return process_mkv_offline(pyModule, true, "F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-master.mkv", "\\", "Camera1_Depth\\", "Camera1_RGB\\", "Camera1", tracker_config) ? 0 : -1;
+  return process_mkv_offline(pyModule, true, "F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-master.mkv", "\\", "Camera1_Depth\\", "Camera1_Rgb\\", "Camera1", tracker_config) ? 0 : -1;
   //callOpenFrame(pyModule, (char*)"Camera1_testData\\0.png");
   //callOpenFrame(pyModule, (char*)"Camera1_testData\\27.png");
   //callOpenFrame(pyModule, (char*)"Camera1_testData\\110.png");
