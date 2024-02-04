@@ -24,6 +24,10 @@
     <None Include="dnn_model_2_0.onnx" />
     <None Include="$(MSBuildThisFileDirectory)..\..\content\**\*.*" />
     <None Include="pythonCalls.py" />
+    <None Include="bestModel.pkl" />
+    <None Include="utilities\__init__.py" />
+    <None Include="utilities\utils.py" />
+    <None Include="utils.py" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
