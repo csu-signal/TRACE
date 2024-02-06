@@ -144,9 +144,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--maxHands', nargs='?', default=6)
 parser.add_argument('--minDetectionConfidence', nargs='?', default=0.6)
 parser.add_argument('--minTrackingConfidence', nargs='?', default=0.6)
-parser.add_argument('--videoPath', nargs='?', default="F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_02-master.mkv")
+parser.add_argument('--videoPath', nargs='?', default="F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_02-sub2.mkv")
 parser.add_argument('--jsonPath', nargs='?', default="F:\\Weights_Task\\Data\\Group_02-master.json")
-parser.add_argument('--initialFrame', nargs='?', default=4294) #start counting from frame 0 because opencv is zero based
+parser.add_argument('--initialFrame', nargs='?', default=5000) #start counting from frame 0 because opencv is zero based
 
 args = parser.parse_args()
 
@@ -227,8 +227,8 @@ while cap.isOpened():
                 
 
     cv2.putText(frame, "Frame: " + str(frameCount + args.initialFrame), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+    cv2.imwrite("C:\\Users\\vanderh\\Desktop\\Paper\\" + str(frameCount + args.initialFrame) + "sub2.png", frame) 
     frame = cv2.resize(frame, (960, 540))
-    cv2.imwrite("C:\\Users\\vanderh\\Desktop\\Paper\\" + str(frameCount + args.initialFrame) + ".png", frame) 
     cv2.imshow("Frame", frame)
     frameCount+=1
     
