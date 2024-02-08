@@ -14,7 +14,7 @@
 #include <BodyTrackingHelpers.h>
 #include <Utilities.h>
 #include <opencv2/opencv.hpp>
-#include<Python.h>
+#include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
@@ -32,7 +32,8 @@ using namespace nlohmann;
 PyObject* initalizePython()
 {
   PyObject* pInt;
-  if (-1 == _putenv("PYTHONHOME=C:\\Users\\vanderh\\Anaconda3\\envs\\handTrackingEnviroment\\")) {
+  //if (-1 == _putenv("PYTHONHOME=C:\\ProgramData\\anaconda3\\envs\\handTrackingEnvironment\\")) { //Stops, because admin rights?
+  if (-1 == _putenv("PYTHONHOME=C:\\Users\\vanderh\\Anaconda3\\envs\\handTrackingEnvironment\\")) {
     printf("putenv failed \n");
     return NULL;
   }
@@ -443,6 +444,7 @@ inputSettings openDevice(int deviceID, PyObject* pyModule, bool camera, const ch
 
 bool process_mkv_offline(PyObject* pyModule, bool camera, const char* input_path, const char* output_path, k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT)
 {
+  printf("Made it to offline");
   int frame_count = 0;
 
   inputSettings device0 = openDevice(0, pyModule, camera, input_path, "Camera0", "Camera0_Depth\\", "Camera0_Rgb\\", tracker_config);

@@ -15,6 +15,11 @@ In order to save the camera calibration settings I updated the Azure SDK offline
 - "json" 2.0.9
 - "mediapipe" 0.8.9.1
 
+# Build Instructions
+
+- open a powershell at "C:\GitHub\Camera_Calibration\offline_processor\build\bin\Release"
+- activate hand tracking enviroment "conda activate C:\ProgramData\anaconda3\envs\handTrackingEnvironment"
+- run ".\offline_processor.exe"
 
 # Example Additional Json Output
 

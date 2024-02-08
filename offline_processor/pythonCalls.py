@@ -28,6 +28,7 @@ def openFrame(data, frameCount):
 
 def createFolder(data):
     try:
+        print("Made it to create folder")
         encoding = 'utf-8'
         path = data.decode(encoding)   
         print(path)
