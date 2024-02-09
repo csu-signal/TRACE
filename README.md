@@ -17,6 +17,7 @@ In order to save the camera calibration settings I updated the Azure SDK offline
 
 # Build Instructions
 
+- if conda doesn't work on your account in powershell (specifically if activate isn't a valid command) try calling "conda init powershell" and run activate again
 - open a powershell at "C:\GitHub\Camera_Calibration\offline_processor\build\bin\Release"
 - activate hand tracking enviroment "conda activate C:\ProgramData\anaconda3\envs\handTrackingEnvironment"
 - run ".\offline_processor.exe"
