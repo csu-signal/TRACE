@@ -423,7 +423,10 @@ inputSettings openDevice(int deviceID, PyObject* pyModule, bool camera, const ch
                                          g_jointNames.find(g_boneList[i].second)->second });
   }
 
-  cout << "Tracking " << input_path << endl;
+  if (!camera) {
+    cout << "Tracking " << input_path << endl;
+  }
+
   inputSettings settings = {
    true,
    deviceID,
@@ -444,12 +447,11 @@ inputSettings openDevice(int deviceID, PyObject* pyModule, bool camera, const ch
 
 bool process_mkv_offline(PyObject* pyModule, bool camera, const char* input_path, const char* output_path, k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT)
 {
-  printf("Made it to offline");
   int frame_count = 0;
 
-  inputSettings device0 = openDevice(0, pyModule, camera, input_path, "Camera0", "Camera0_Depth\\", "Camera0_Rgb\\", tracker_config);
   inputSettings device1 = openDevice(1, pyModule, camera, input_path, "Camera1", "Camera1_Depth\\", "Camera1_Rgb\\", tracker_config);
   inputSettings device2 = openDevice(2, pyModule, camera, input_path, "Camera2", "Camera2_Depth\\", "Camera2_Rgb\\", tracker_config);
+  inputSettings device0 = openDevice(0, pyModule, camera, input_path, "Camera0", "Camera0_Depth\\", "Camera0_Rgb\\", tracker_config);
 
   inputSettings devices[] = { device0, device1, device2 };
   while (true)

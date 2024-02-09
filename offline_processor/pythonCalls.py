@@ -12,6 +12,7 @@ mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=4, min_detection_confidence=0.6)
 mpDraw = mp.solutions.drawing_utils
 loaded_model = joblib.load(".\\bestModel.pkl")
+devicePoints = {}
 
 def myabs(x):
     return math.fabs(x)
@@ -28,7 +29,6 @@ def openFrame(data, frameCount):
 
 def createFolder(data):
     try:
-        print("Made it to create folder")
         encoding = 'utf-8'
         path = data.decode(encoding)   
         print(path)
@@ -57,6 +57,7 @@ def openFrameBytes(bytes, frameCount, deviceId):
         print(e)   
 
 def processFrame(frame, frameCount, deviceId):
+    points = []
     x , y, c = frame.shape
 
     # Flip the frame horizontal
@@ -71,45 +72,53 @@ def processFrame(frame, frameCount, deviceId):
 
     # post process the result
     if result.multi_hand_landmarks:
-            landmarks = []
+            #landmarks = []
             for handslms in result.multi_hand_landmarks:
-                for lm in handslms.landmark:
-                    # print(id, lm)
-                    lmx = int(lm.x * x)
-                    lmy = int(lm.y * y)
+                # for lm in handslms.landmark:
+                #     # print(id, lm)
+                #     lmx = int(lm.x * x)
+                #     lmy = int(lm.y * y)
 
-                    landmarks.append([lmx, lmy])
+                #     landmarks.append([lmx, lmy])
 
                 # Drawing landmarks on frames
                 normalized = processHands(frame, handslms)
                 prediction = loaded_model.predict([normalized])
-                mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS)
+                #mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS)
                 for i in range(len(prediction)):
                     if prediction[i] == 0:
-                        cv2.putText(frame, "POINT, HOLD", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
-                    else:
-                        cv2.putText(frame, "POINT, NO HOLD", (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
-    else:
-         cv2.putText(frame, "NO HANDS DETECTED", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+                        points.append(handslms)
+
+    devicePoints[deviceId] = points
+    if(deviceId == 0):
+        cv2.putText(frame, "FRAME:" + str(int(frameCount)), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+        for key in devicePoints:
+            if(len(devicePoints[key]) == 0):
+                cv2.putText(frame, "NO POINTS, DEVICE:" + str(int(key)), (50,100 + (50 * int(key))), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+            else:
+                cv2.putText(frame, "POINTS DETECTED, DEVICE:" + str(int(key)), (50,100 + (50 * int(key))), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+            for hand in devicePoints[key]:
+                mpDraw.draw_landmarks(frame, hand, mpHands.HAND_CONNECTIONS)
+
+        frame = cv2.resize(frame, (960, 640))
+        cv2.imshow("CAMERA " + str(int(deviceId)), frame)
+        cv2.waitKey(1)
 
     # Show the final output
-    if(deviceId == 0):
-        overlay = cv2.imread('5131.png')
-    if(deviceId == 2):
-        overlay = cv2.imread('5131sub1.png')
-    if(deviceId == 1):
-        overlay = cv2.imread('5131sub2.png')
-    vis = cv2.addWeighted(overlay,0.5,frame,0.7,0)
+    # if(deviceId == 0):
+    #     overlay = cv2.imread('5131.png')
+    # if(deviceId == 2):
+    #     overlay = cv2.imread('5131sub1.png')
+    # if(deviceId == 1):
+    #     overlay = cv2.imread('5131sub2.png')
+    # vis = cv2.addWeighted(overlay,0.5,frame,0.7,0)
 
     #cv2.imwrite(".\\Camera1_output\\" + str(frameCount) + ".png", frame)
 
-    vis = cv2.resize(vis, (960, 640))
-    cv2.imshow("OVERLAY " + str(deviceId), vis)
-
-    frame = cv2.resize(frame, (960, 640))
-    cv2.imshow("CAMERA " + str(deviceId), frame)
-
-    cv2.waitKey(1)
+    # vis = cv2.resize(vis, (960, 640))
+    # cv2.imshow("OVERLAY " + str(deviceId), vis)
+    # cv2.waitKey(1)
+                
     return 1   
 
 # for x in range(125):
