@@ -29,6 +29,11 @@ using namespace cv;
 using namespace std;
 using namespace nlohmann;
 
+struct jointPredictions {
+  bool success;
+  json frame_result_json;
+};
+
 PyObject* initalizePython()
 {
   PyObject* pInt;
@@ -71,23 +76,28 @@ void callCreateFolder(PyObject* pyModule, const char* path)
   PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, args, NULL);
 }
 
-void callOpenFrameBytes(PyObject* pyModule, int deviceId, cv::Mat image, int frame_count)
+void callOpenFrameBytes(PyObject* pyModule, int deviceId, json calibrations, jointPredictions predictions, cv::Mat image, int frame_count)
 {
+  //cout << "Made it to call open bytes" << endl;
+  //cout << predictions.frame_result_json.dump() << endl;
+  //cout << calibrations.dump() << endl;
+
   PyObject* myFunction = PyObject_GetAttrString(pyModule, (char*)"openFrameBytes");
 
   npy_intp dimensions[3] = { image.rows, image.cols, image.channels() };
   PyObject* pyObject = PyArray_SimpleNewFromData(image.dims + 1, (npy_intp*)&dimensions, NPY_UINT8, image.data);
-
-  PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, pyObject, PyFloat_FromDouble(frame_count), PyFloat_FromDouble(deviceId), NULL);
+  PyObject* joints = PyBytes_FromString(predictions.frame_result_json.dump().c_str());
+  PyObject* cameraSettings = PyBytes_FromString(calibrations.dump().c_str());
+  PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, pyObject, PyFloat_FromDouble(frame_count), PyFloat_FromDouble(deviceId), joints, cameraSettings, NULL);
 }
 
-bool predict_joints(json& frames_json, int frame_count, k4abt_tracker_t tracker, k4a_capture_t capture_handle)
+jointPredictions predict_joints(json& frames_json, int frame_count, k4abt_tracker_t tracker, k4a_capture_t capture_handle)
 {
   k4a_wait_result_t queue_capture_result = k4abt_tracker_enqueue_capture(tracker, capture_handle, K4A_WAIT_INFINITE);
   if (queue_capture_result != K4A_WAIT_RESULT_SUCCEEDED)
   {
     cerr << "Error! Adding capture to tracker process queue failed!" << endl;
-    return false;
+    return jointPredictions{ false, json() };
   }
 
   k4abt_frame_t body_frame = nullptr;
@@ -95,7 +105,7 @@ bool predict_joints(json& frames_json, int frame_count, k4abt_tracker_t tracker,
   if (pop_frame_result != K4A_WAIT_RESULT_SUCCEEDED)
   {
     cerr << "Error! Popping body tracking result failed!" << endl;
-    return false;
+    return jointPredictions{ false, json() };
   }
 
   uint32_t num_bodies = k4abt_frame_get_num_bodies(body_frame);
@@ -130,55 +140,55 @@ bool predict_joints(json& frames_json, int frame_count, k4abt_tracker_t tracker,
   frames_json.push_back(frame_result_json);
   k4abt_frame_release(body_frame);
 
-  return true;
+  return jointPredictions{ true, frame_result_json };
 }
 
-void check_color_image_exists(PyObject* pyModule, int deviceId, k4a_capture_t capture, k4a_calibration_t calibration, k4a_transformation_t transformation, int frame_count, const char* output_path)
+void check_color_image_exists(PyObject* pyModule, int deviceId, json calibrations, jointPredictions predictions, k4a_capture_t capture, k4a_calibration_t calibration, k4a_transformation_t transformation, int frame_count, const char* output_path)
 {
   cv::Mat imBGRA;
   k4a_image_t color_image = NULL;
-  k4a_image_t ir_image = NULL;
 
   // Get a color image
   color_image = k4a_capture_get_color_image(capture);
-
   if (color_image == 0)
   {
     cout << "Failed to get color image from capture" << endl;
-
   }
-  int color_image_width_pixels = k4a_image_get_width_pixels(color_image);
-  int color_image_height_pixels = k4a_image_get_height_pixels(color_image);
-  imBGRA = cv::Mat(color_image_height_pixels, color_image_width_pixels, CV_8UC4, (void*)k4a_image_get_buffer(color_image));
+  else
+  {
+    int color_image_width_pixels = k4a_image_get_width_pixels(color_image);
+    int color_image_height_pixels = k4a_image_get_height_pixels(color_image);
+    imBGRA = cv::Mat(color_image_height_pixels, color_image_width_pixels, CV_8UC4, (void*)k4a_image_get_buffer(color_image));
 
 #ifndef _DEBUG
-  callOpenFrameBytes(pyModule, deviceId, imBGRA, frame_count);
+    callOpenFrameBytes(pyModule, deviceId, calibrations, predictions, imBGRA, frame_count);
 #endif
 
 #ifdef _DEBUG
-  char output[1000];
-  strcpy_s(output, output_path);
-  strcat_s(output, std::to_string(frame_count).c_str());
-  strcat_s(output, ".png");
+    char output[1000];
+    strcpy_s(output, output_path);
+    strcat_s(output, std::to_string(frame_count).c_str());
+    strcat_s(output, ".png");
 
-  vector<int> compression_params;
-  compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-  compression_params.push_back(0);
+    vector<int> compression_params;
+    compression_params.push_back(IMWRITE_PNG_COMPRESSION);
+    compression_params.push_back(0);
 
-  try {
-    //_putenv_s("OPENCV_IO_ENABLE_OPENEXR", "1");
-    //_putenv_s("DWITH_JPEG", "1");
-    cv::imwrite(output, imBGRA, compression_params);
-    //cv::imshow("test", depthMat);
-  }
-  catch (cv::Exception& e) {
-    std::cout << e.msg << std::endl;
-  }
+    try {
+      //_putenv_s("OPENCV_IO_ENABLE_OPENEXR", "1");
+      //_putenv_s("DWITH_JPEG", "1");
+      cv::imwrite(output, imBGRA, compression_params);
+      //cv::imshow("test", depthMat);
+    }
+    catch (cv::Exception& e) {
+      std::cout << e.msg << std::endl;
+    }
 
-  callOpenFrame(pyModule, output, frame_count);
+    callOpenFrame(pyModule, output, frame_count);
 #endif
 
-  k4a_image_release(color_image);
+    k4a_image_release(color_image);
+  }
 }
 
 bool check_depth_image_exists(PyObject* pyModule, k4a_capture_t capture, k4a_calibration_t calibration, k4a_transformation_t transformation, int frame_count, const char* output_path)
@@ -280,7 +290,7 @@ inputSettings openDevice(int deviceID, PyObject* pyModule, bool camera, const ch
     if (result != K4A_RESULT_SUCCEEDED)
     {
       cerr << "Cannot open recording at " << input_path << endl;
-      return inputSettings{ false, deviceID};
+      return inputSettings{ false, deviceID };
     }
 
     //File calibration
@@ -288,13 +298,14 @@ inputSettings openDevice(int deviceID, PyObject* pyModule, bool camera, const ch
     if (result != K4A_RESULT_SUCCEEDED)
     {
       cerr << "Failed to get calibration" << endl;
-      return inputSettings{ false, deviceID};
+      return inputSettings{ false, deviceID };
     }
+
+    k4a_playback_set_color_conversion(playback_handle, K4A_IMAGE_FORMAT_COLOR_BGRA32);
   }
   else
   {
-    //Video Playback
-    //TODO can we get all camera perspectives
+    //Camera Playback
     VERIFY(k4a_device_open(deviceID, &device), "Open K4A Device failed!");
 
     // Start camera. Make sure depth camera is enabled.
@@ -365,7 +376,7 @@ inputSettings openDevice(int deviceID, PyObject* pyModule, bool camera, const ch
   if (K4A_RESULT_SUCCEEDED != k4abt_tracker_create(&calibration, tracker_config, &tracker))
   {
     cerr << "Body tracker initialization failed!" << endl;
-    return inputSettings{ false, deviceID};
+    return inputSettings{ false, deviceID };
   }
 
   json json_output;
@@ -448,12 +459,28 @@ inputSettings openDevice(int deviceID, PyObject* pyModule, bool camera, const ch
 bool process_mkv_offline(PyObject* pyModule, bool camera, const char* input_path, const char* output_path, k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT)
 {
   int frame_count = 0;
+  vector<inputSettings> devices = {};
 
-  inputSettings device1 = openDevice(1, pyModule, camera, input_path, "Camera1", "Camera1_Depth\\", "Camera1_Rgb\\", tracker_config);
-  inputSettings device2 = openDevice(2, pyModule, camera, input_path, "Camera2", "Camera2_Depth\\", "Camera2_Rgb\\", tracker_config);
-  inputSettings device0 = openDevice(0, pyModule, camera, input_path, "Camera0", "Camera0_Depth\\", "Camera0_Rgb\\", tracker_config);
+  int deviceId = camera ? 1 : 0;
+  inputSettings device1;
+  if (camera)
+  {
+    device1 = openDevice(1, pyModule, camera, input_path, "Camera1", "Camera1_Depth\\", "Camera1_Rgb\\", tracker_config);
+  }
+  else
+  {
+    device1 = openDevice(0, pyModule, camera, input_path, "Playback", "Playback_Depth\\", "Playback_Rgb\\", tracker_config);
+  }
 
-  inputSettings devices[] = { device0, device1, device2 };
+  devices.push_back(device1);
+  if (camera)
+  {
+    inputSettings device2 = openDevice(2, pyModule, camera, input_path, "Camera2", "Camera2_Depth\\", "Camera2_Rgb\\", tracker_config);
+    inputSettings device0 = openDevice(0, pyModule, camera, input_path, "Camera0", "Camera0_Depth\\", "Camera0_Rgb\\", tracker_config);
+    devices.push_back(device2);
+    devices.push_back(device0);
+  }
+
   while (true)
   {
     for (inputSettings d : devices)
@@ -483,14 +510,10 @@ bool process_mkv_offline(PyObject* pyModule, bool camera, const char* input_path
         {
           if (check_depth_image_exists(pyModule, capture_handle, d.calibration, d.transformation, frame_count, d.depth_output_path))
           {
-            if (camera)
-            {
-              check_color_image_exists(pyModule, d.deviceId, capture_handle, d.calibration, d.transformation, frame_count, d.rgb_output_path);
-            }
-
-            d.success = predict_joints(d.frames_json, frame_count, d.tracker, capture_handle);
+            jointPredictions predictions = predict_joints(d.frames_json, frame_count, d.tracker, capture_handle);
+            check_color_image_exists(pyModule, d.deviceId, d.json_output["camera_calibration"], predictions, capture_handle, d.calibration, d.transformation, frame_count, d.rgb_output_path);
             k4a_capture_release(capture_handle);
-            if (!d.success)
+            if (!predictions.success)
             {
               cerr << "Predict joints failed for clip at frame " << frame_count << endl;
               break;
@@ -610,7 +633,7 @@ int main(int argc, char** argv)
         return -1;
     return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
 
-  return process_mkv_offline(pyModule, true, "F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_03-master.mkv", "\\", tracker_config) ? 0 : -1;
+  return process_mkv_offline(pyModule, true, "C:\\Users\\vanderh\\Desktop\\OutputTest\\pointDemo-master.mkv", "\\", tracker_config) ? 0 : -1;
   //callOpenFrame(pyModule, (char*)"Camera1_testData\\0.png");
   //callOpenFrame(pyModule, (char*)"Camera1_testData\\27.png");
   //callOpenFrame(pyModule, (char*)"Camera1_testData\\110.png");

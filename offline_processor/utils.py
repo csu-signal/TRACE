@@ -160,6 +160,7 @@ def getAverageHandLocations(body, w, h, rotation, translation, cameraMatrix, dis
     rightYTotal = 0
     leftYTotal = 0
 
+    #print(body["joint_positions"])
     for jointIndex, joint in enumerate(body["joint_positions"]):
         bodyLocation = getPointSubcategory(Joint(jointIndex))
         if(bodyLocation == BodyCategory.LEFT_HAND): #this should really be a method
