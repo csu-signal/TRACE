@@ -76,7 +76,7 @@ void callCreateFolder(PyObject* pyModule, const char* path)
   PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, args, NULL);
 }
 
-void callOpenFrameBytes(PyObject* pyModule, int deviceId, json calibrations, jointPredictions predictions, cv::Mat image, int frame_count)
+void callOpenFrameBytes(PyObject* pyModule, int deviceId, bool overlay, json calibrations, jointPredictions predictions, cv::Mat image, int frame_count)
 {
   //cout << "Made it to call open bytes" << endl;
   //cout << predictions.frame_result_json.dump() << endl;
@@ -88,7 +88,7 @@ void callOpenFrameBytes(PyObject* pyModule, int deviceId, json calibrations, joi
   PyObject* pyObject = PyArray_SimpleNewFromData(image.dims + 1, (npy_intp*)&dimensions, NPY_UINT8, image.data);
   PyObject* joints = PyBytes_FromString(predictions.frame_result_json.dump().c_str());
   PyObject* cameraSettings = PyBytes_FromString(calibrations.dump().c_str());
-  PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, pyObject, PyFloat_FromDouble(frame_count), PyFloat_FromDouble(deviceId), joints, cameraSettings, NULL);
+  PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, pyObject, PyFloat_FromDouble(frame_count), PyFloat_FromDouble(deviceId), PyBool_FromLong((long)overlay), joints, cameraSettings, NULL);
 }
 
 jointPredictions predict_joints(json& frames_json, int frame_count, k4abt_tracker_t tracker, k4a_capture_t capture_handle)
@@ -143,7 +143,7 @@ jointPredictions predict_joints(json& frames_json, int frame_count, k4abt_tracke
   return jointPredictions{ true, frame_result_json };
 }
 
-void check_color_image_exists(PyObject* pyModule, int deviceId, json calibrations, jointPredictions predictions, k4a_capture_t capture, k4a_calibration_t calibration, k4a_transformation_t transformation, int frame_count, const char* output_path)
+void check_color_image_exists(PyObject* pyModule, int deviceId, bool overlay, json calibrations, jointPredictions predictions, k4a_capture_t capture, k4a_calibration_t calibration, k4a_transformation_t transformation, int frame_count, const char* output_path)
 {
   cv::Mat imBGRA;
   k4a_image_t color_image = NULL;
@@ -161,7 +161,7 @@ void check_color_image_exists(PyObject* pyModule, int deviceId, json calibration
     imBGRA = cv::Mat(color_image_height_pixels, color_image_width_pixels, CV_8UC4, (void*)k4a_image_get_buffer(color_image));
 
 #ifndef _DEBUG
-    callOpenFrameBytes(pyModule, deviceId, calibrations, predictions, imBGRA, frame_count);
+    callOpenFrameBytes(pyModule, deviceId, overlay, calibrations, predictions, imBGRA, frame_count);
 #endif
 
 #ifdef _DEBUG
@@ -456,7 +456,7 @@ inputSettings openDevice(int deviceID, PyObject* pyModule, bool camera, const ch
   return settings;
 }
 
-bool process_mkv_offline(PyObject* pyModule, bool camera, const char* input_path, const char* output_path, k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT)
+bool process_mkv_offline(PyObject* pyModule, bool camera, bool overlay, const char* input_path, const char* output_path, k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT)
 {
   int frame_count = 0;
   vector<inputSettings> devices = {};
@@ -511,7 +511,7 @@ bool process_mkv_offline(PyObject* pyModule, bool camera, const char* input_path
           if (check_depth_image_exists(pyModule, capture_handle, d.calibration, d.transformation, frame_count, d.depth_output_path))
           {
             jointPredictions predictions = predict_joints(d.frames_json, frame_count, d.tracker, capture_handle);
-            check_color_image_exists(pyModule, d.deviceId, d.json_output["camera_calibration"], predictions, capture_handle, d.calibration, d.transformation, frame_count, d.rgb_output_path);
+            check_color_image_exists(pyModule, d.deviceId, overlay, d.json_output["camera_calibration"], predictions, capture_handle, d.calibration, d.transformation, frame_count, d.rgb_output_path);
             k4a_capture_release(capture_handle);
             if (!predictions.success)
             {
@@ -629,12 +629,10 @@ int main(int argc, char** argv)
 {
   PyObject* pyModule = initalizePython();
   k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT;
+  //TODO make it so you can pass in the camera and overlay flag (for now, eventually have everything)
   /*  if (!ProcessArguments(tracker_config, argc, argv))
         return -1;
     return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
 
-  return process_mkv_offline(pyModule, true, "C:\\Users\\vanderh\\Desktop\\OutputTest\\pointDemo-master.mkv", "\\", tracker_config) ? 0 : -1;
-  //callOpenFrame(pyModule, (char*)"Camera1_testData\\0.png");
-  //callOpenFrame(pyModule, (char*)"Camera1_testData\\27.png");
-  //callOpenFrame(pyModule, (char*)"Camera1_testData\\110.png");
+  return process_mkv_offline(pyModule, true, true, "C:\\Users\\vanderh\\Desktop\\OutputTest\\pointDemo-master.mkv", "\\", tracker_config) ? 0 : -1;
 }
