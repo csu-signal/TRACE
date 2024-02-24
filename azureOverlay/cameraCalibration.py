@@ -144,7 +144,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--maxHands', nargs='?', default=6)
 parser.add_argument('--minDetectionConfidence', nargs='?', default=0.6)
 parser.add_argument('--minTrackingConfidence', nargs='?', default=0.6)
-parser.add_argument('--videoPath', nargs='?', default="F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_02-sub2.mkv")
+parser.add_argument('--videoPath', nargs='?', default="F:\\Weights_Task\\Data\\Fib_weights_original_videos\\Group_02-master.mkv")
 parser.add_argument('--jsonPath', nargs='?', default="F:\\Weights_Task\\Data\\Group_02-master.json")
 parser.add_argument('--initialFrame', nargs='?', default=5000) #start counting from frame 0 because opencv is zero based
 
@@ -197,37 +197,37 @@ while cap.isOpened():
     #         # Drawing landmarks on frames
     #         mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS)
 
-    # bodies = frameData[frameCount + args.initialFrame]["bodies"]
-    # for bodyIndex, body in enumerate(bodies):  
-    #     bodyId = int(body["body_id"])
-    #     dotColor = dotColors[bodyId % len(dotColors)]; 
-    #     color = colors[bodyId % len(colors)]; 
-    #     dictionary = {}
-    #     for jointIndex, joint in enumerate(body["joint_positions"]):
-    #         bodyLocation = getPointSubcategory(Joint(jointIndex))
-    #         print(f"{bodyId}")
-    #         if(bodyLocation != BodyCategory.RIGHT_LEG and bodyLocation != BodyCategory.LEFT_LEG
-    #         and bodyLocation != BodyCategory.RIGHT_HAND and bodyLocation != BodyCategory.LEFT_HAND):
-    #             points2D, _ = cv2.projectPoints(
-    #                 np.array(joint), 
-    #                 rotation,
-    #                 translation,
-    #                 cameraMatrix,
-    #                 dist)  
+    bodies = frameData[frameCount + args.initialFrame]["bodies"]
+    for bodyIndex, body in enumerate(bodies):  
+        bodyId = int(body["body_id"])
+        dotColor = dotColors[bodyId % len(dotColors)]; 
+        color = colors[bodyId % len(colors)]; 
+        dictionary = {}
+        for jointIndex, joint in enumerate(body["joint_positions"]):
+            bodyLocation = getPointSubcategory(Joint(jointIndex))
+            print(f"{bodyId}")
+            if(bodyLocation != BodyCategory.RIGHT_LEG and bodyLocation != BodyCategory.LEFT_LEG
+            and bodyLocation != BodyCategory.RIGHT_HAND and bodyLocation != BodyCategory.LEFT_HAND):
+                points2D, _ = cv2.projectPoints(
+                    np.array(joint), 
+                    rotation,
+                    translation,
+                    cameraMatrix,
+                    dist)  
                 
-    #             point = (int(points2D[0][0][0] * 2**shift),int(points2D[0][0][1] * 2**shift))
-    #             dictionary[Joint(jointIndex)] = point
-    #             cv2.circle(frame, point, radius=15, color=dotColor, thickness=15, shift=shift)
-    #     for bone in bone_list:
-    #         if(getPointSubcategory(bone[0]) == BodyCategory.RIGHT_ARM or getPointSubcategory(bone[1]) == BodyCategory.RIGHT_ARM):
-    #             cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=(255,255,255), thickness=3, shift=shift)
-    #         else:
-    #             cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=color, thickness=3, shift=shift)
-    #     cv2.putText(frame, str(bodyId), (50, 100 + (50 * bodyIndex)), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+                point = (int(points2D[0][0][0] * 2**shift),int(points2D[0][0][1] * 2**shift))
+                dictionary[Joint(jointIndex)] = point
+                cv2.circle(frame, point, radius=15, color=dotColor, thickness=15, shift=shift)
+        for bone in bone_list:
+            if(getPointSubcategory(bone[0]) == BodyCategory.RIGHT_ARM or getPointSubcategory(bone[1]) == BodyCategory.RIGHT_ARM):
+                cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=(255,255,255), thickness=3, shift=shift)
+            else:
+                cv2.line(frame, dictionary[bone[0]], dictionary[bone[1]], color=color, thickness=3, shift=shift)
+        cv2.putText(frame, str(bodyId), (50, 100 + (50 * bodyIndex)), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
                 
 
     cv2.putText(frame, "Frame: " + str(frameCount + args.initialFrame), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
-    cv2.imwrite("C:\\Users\\vanderh\\Desktop\\Paper\\" + str(frameCount + args.initialFrame) + "sub2.png", frame) 
+    # cv2.imwrite("C:\\Users\\vanderh\\Desktop\\Paper\\" + str(frameCount + args.initialFrame) + "sub2.png", frame) 
     frame = cv2.resize(frame, (960, 540))
     cv2.imshow("Frame", frame)
     frameCount+=1
