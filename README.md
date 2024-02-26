@@ -2,10 +2,6 @@
 
 In order to save the camera calibration settings I updated the Azure SDK offline processor to include the camera calibration settings directly from Azure. 
 
- - See offline_processor/main.cpp line 97
- - Usage: (build the offline processor project in visual studio) 
-    - offline_processor/build/Debug/offline_processor.exe videoPath outputPath
-
 # Python Package Versions
 
 - "python" 3.9.12
@@ -14,6 +10,37 @@ In order to save the camera calibration settings I updated the Azure SDK offline
 - "numpy" 1.21.5
 - "json" 2.0.9
 - "mediapipe" 0.8.9.1
+
+# Demo Setup 
+
+- see the "Code Help" folder for video demos and additional Demo setup notes.
+- I recommend copying the "offline_processor.vcxproj" from the code help to the "offline_processor" file and then editing it following these steps (it won't be committed if any changes are made so the build settings won't get wiped out for each setup)
+
+- Camera_Calibration Repo: https://github.com/Blanchard-lab/Camera_Calibration
+- Sanity Check Open Camera Script: https://github.com/Blanchard-lab/Camera_Calibration/blob/main/azureOverlay/checkCameraUtil.py 
+
+## Visual Studio Install
+- Make sure the C++ compiler for visual studio is installed
+	 
+## Install OpenCV
+- https://github.com/opencv/opencv
+- https://github.com/opencv/opencv/releases/tag/4.5.5 
+- Place the “opencv” folder one directory above the “Camera_Calibration” folder (the build is setup to look for it there)
+- Add opencv to the path variable (example from my configuration):      
+- - “C:\Users\Devin\Desktop\GitHub\opencv\build\x64\vc16\bin”
+
+## CONDA
+- Make sure conda is installed and the path to the exe is added to the path:
+- Create a virtual environment using the “handTrackingEnvironment.yaml” (In the repository)
+
+## Linking Python
+- Set the include and libs to the directory of the python libs relative to the virtual environment you are using 
+- Add the virtual environment location to the path variable
+- If python##_d.lib doesn’t exist copy python##.lib and rename it
+
+## Linking NUMPY
+- Add the path to numpy from the virtual environment to the includes:
+- C:\Users\vanderh\Anaconda3\envs\handTrackingEnvironment\Lib\site-packages\numpy\core\include
 
 # Build Instructions
 

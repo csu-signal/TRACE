@@ -629,7 +629,7 @@ int main(int argc, char** argv)
 {
   PyObject* pyModule = initalizePython();
   k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT;
-  //TODO make it so you can pass in the camera and overlay flag (for now, eventually have everything)
+  //TODO make it so you can pass in the args
   /*  if (!ProcessArguments(tracker_config, argc, argv))
         return -1;
     return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
