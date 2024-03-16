@@ -16,13 +16,13 @@
 #include <opencv2/opencv.hpp>
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
 
 #include <stdio.h>
 #include <conio.h>
 
 #ifdef _DEBUG
-#   define Py_DEBUG
+  #include <numpy/arrayobject.h>
+  #define Py_DEBUG
 #endif
 
 using namespace cv;
@@ -68,11 +68,14 @@ void finalizePython()
   Py_Finalize();
 }
 
-void callOpenFrame(PyObject* pyModule, char* path, int frame_count)
+void callOpenFrame(PyObject* pyModule, char* path, int deviceId, bool overlay, json calibrations, jointPredictions predictions, const char* depth, int frame_count)
 {
   PyObject* myFunction = PyObject_GetAttrString(pyModule, (char*)"openFrame");
-  PyObject* args = PyBytes_FromString(path);
-  PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, args, PyFloat_FromDouble(frame_count), NULL);
+  PyObject* framePath = PyBytes_FromString(path);
+  PyObject* depthPath = PyBytes_FromString(depth);
+  PyObject* joints = PyBytes_FromString(predictions.frame_result_json.dump().c_str());
+  PyObject* cameraSettings = PyBytes_FromString(calibrations.dump().c_str());
+  PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, framePath, depthPath, PyFloat_FromDouble(frame_count), PyFloat_FromDouble(deviceId), PyBool_FromLong((long)overlay), joints, cameraSettings, NULL);
 }
 
 void callCreateFolder(PyObject* pyModule, const char* path)
@@ -195,7 +198,7 @@ void check_color_image_exists(PyObject* pyModule, int deviceId, int overlay, con
       std::cout << e.msg << std::endl;
     }
 
-    callOpenFrame(pyModule, output, frame_count);
+    callOpenFrame(pyModule, output, deviceId, overlay, calibrations, predictions, depth, frame_count);
 #endif
 
     k4a_image_release(color_image);
