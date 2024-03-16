@@ -27,15 +27,22 @@ keyFrame[3] = np.zeros((360, 640, 3), dtype = "uint8")
 def myabs(x):
     return math.fabs(x)
 
-def openFrame(data, frameCount):
+def openFrame(data, depthPath, frameCount, deviceId, showOverlay, frameJson, cameraJson):
     try:
         encoding = 'utf-8'
         path = data.decode(encoding)   
-        print(path)
+        frameData = frameJson.decode(encoding) 
+        calibration = cameraJson.decode(encoding)
+        pathDepth = depthPath.decode(encoding)
+        cameraMatrix, rotation, translation, dist = getCalibrationFromFile(json.loads(calibration))  
         frame = cv2.imread(path)
-        print("TODO setup azure based path rendering")
+    
+        processFrameAzureBased(frame, pathDepth, frameCount, deviceId, showOverlay, json.loads(frameData), rotation, translation, cameraMatrix, dist)
+        os.remove(path)
+        return 1
     except Exception as e:
         print(e) 
+        print(traceback.format_exc()) 
 
 def createFolder(data):
     try:
