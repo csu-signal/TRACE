@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <conio.h>
 
-#ifdef _DEBUG
+#ifndef _DEBUG
   #include <numpy/arrayobject.h>
   #define Py_DEBUG
 #endif
