@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <conio.h>
+#include <thread>
 
 #ifndef _DEBUG
   #include <numpy/arrayobject.h>
@@ -66,6 +67,12 @@ void finalizePython()
 {
   PyRun_SimpleString("print('Finalizing Embedded Python')");
   Py_Finalize();
+}
+
+void callDisplayOutput(PyObject* pyModule)
+{
+  PyObject* myFunction = PyObject_GetAttrString(pyModule, (char*)"showOutput");
+  PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, NULL);
 }
 
 void callOpenFrame(PyObject* pyModule, char* path, int deviceId, bool overlay, json calibrations, jointPredictions predictions, const char* depth, int frame_count)
@@ -472,6 +479,57 @@ inputSettings openDevice(int deviceID, PyObject* pyModule, bool camera, const ch
   return settings;
 }
 
+void handleFrame(inputSettings& d, int frame_count, PyObject* pyModule, bool overlay)
+{
+  if (d.success)
+  {
+    cout << "\nHandle frame " << frame_count;
+    k4a_capture_t capture_handle = nullptr;
+    int stream_result;
+
+    if (!d.camera)
+    {
+      //File Based next capture
+      stream_result = k4a_playback_get_next_capture(d.playback_handle, &capture_handle);
+    }
+    else {
+      //Camera Based Next capture
+      stream_result = k4a_device_get_capture(d.device, &capture_handle, 0);
+    }
+
+    if (stream_result == K4A_STREAM_RESULT_EOF)
+    {
+      return;
+    }
+
+    cout << "\nframe " << frame_count << '\r';
+    if (stream_result == K4A_STREAM_RESULT_SUCCEEDED)
+    {
+      depthOutput dO = check_depth_image_exists(pyModule, capture_handle, d.calibration, d.transformation, frame_count, d.depth_output_path);
+      if (dO.success)
+      {
+        jointPredictions predictions = predict_joints(d.frames_json, frame_count, d.tracker, capture_handle);
+        cout << "\nMade to predictions";
+        check_color_image_exists(pyModule, d.deviceId, overlay, dO.output, d.json_output["camera_calibration"], predictions, capture_handle, d.calibration, d.transformation, frame_count, d.rgb_output_path);
+        cout << "\nMade to color";
+        k4a_capture_release(capture_handle);
+        if (!predictions.success)
+        {
+          cerr << "Predict joints failed for clip at frame " << frame_count << endl;
+          return;
+        }
+      }
+      cout << "\nMade to stream result";
+    }
+    else
+    {
+      d.success = false;
+      cerr << "Stream error for clip at frame " << frame_count << endl;
+      return;
+    }
+  }
+}
+
 bool process_mkv_offline(PyObject* pyModule, bool camera, bool overlay, const char* input_path[], const char* output_path, k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT)
 {
   int frame_count = 0;
@@ -500,52 +558,19 @@ bool process_mkv_offline(PyObject* pyModule, bool camera, bool overlay, const ch
   {
     for (inputSettings d : devices)
     {
-      if (d.success)
-      {
-        k4a_capture_t capture_handle = nullptr;
-        int stream_result;
+      /*std::thread t(handleFrame, std::ref(d), frame_count, pyModule, overlay);
+      t.join();*/
 
-        if (!d.camera)
-        {
-          //File Based next capture
-          stream_result = k4a_playback_get_next_capture(d.playback_handle, &capture_handle);
-        }
-        else {
-          //Camera Based Next capture
-          stream_result = k4a_device_get_capture(d.device, &capture_handle, 0);
-        }
-
-        if (stream_result == K4A_STREAM_RESULT_EOF)
-        {
-          break;
-        }
-
-        cout << "frame " << frame_count << '\r';
-        if (stream_result == K4A_STREAM_RESULT_SUCCEEDED)
-        {
-          depthOutput dO = check_depth_image_exists(pyModule, capture_handle, d.calibration, d.transformation, frame_count, d.depth_output_path);
-          if (dO.success)
-          {
-            jointPredictions predictions = predict_joints(d.frames_json, frame_count, d.tracker, capture_handle);
-            check_color_image_exists(pyModule, d.deviceId, overlay, dO.output, d.json_output["camera_calibration"], predictions, capture_handle, d.calibration, d.transformation, frame_count, d.rgb_output_path);
-            k4a_capture_release(capture_handle);
-            if (!predictions.success)
-            {
-              cerr << "Predict joints failed for clip at frame " << frame_count << endl;
-              break;
-            }
-          }
-        }
-        else
-        {
-          d.success = false;
-          cerr << "Stream error for clip at frame " << frame_count << endl;
-          break;
-        }
-      }
+      handleFrame(std::ref(d), frame_count, pyModule, overlay);
     }
 
     frame_count++;
+    callDisplayOutput(pyModule);
+
+    /*  std::thread t(callDisplayOutput, pyModule);
+      t.join();*/
+
+    cout << "\nMade it out of display output";
   }
 
   for (inputSettings d : devices)
@@ -657,5 +682,5 @@ int main(int argc, char** argv)
     "C:\\Users\\vanderh\\Desktop\\OutputTest\\nsf-demo-scene2-sub2.mkv"
   };
 
-  return process_mkv_offline(pyModule, true, false, input_path, "\\", tracker_config) ? 0 : -1;
+  return process_mkv_offline(pyModule, false, false, input_path, "\\", tracker_config) ? 0 : -1;
 }

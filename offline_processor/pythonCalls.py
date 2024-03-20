@@ -12,8 +12,8 @@ import traceback
 
 # initialize mediapipe
 mpHands = mp.solutions.hands
-hands = mpHands.Hands(max_num_hands=4, min_detection_confidence=0.6)
-mpDraw = mp.solutions.drawing_utils
+# hands = mpHands.Hands(max_num_hands=4, min_detection_confidence=0.6)
+# mpDraw = mp.solutions.drawing_utils
 loaded_model = joblib.load(".\\bestModel.pkl")
 devicePoints = {}
 keyFrame = {}
@@ -23,6 +23,11 @@ keyFrame[0] = np.zeros((360, 640, 3), dtype = "uint8")
 keyFrame[1] = np.zeros((360, 640, 3), dtype = "uint8")
 keyFrame[2] = np.zeros((360, 640, 3), dtype = "uint8")
 keyFrame[3] = np.zeros((360, 640, 3), dtype = "uint8")
+
+depthPaths = {}
+depthPaths[0] = []
+depthPaths[1] = []
+depthPaths[2] = []
 
 def myabs(x):
     return math.fabs(x)
@@ -63,6 +68,7 @@ def openFrameBytes(bytes, depthPath, frameCount, deviceId, showOverlay, frameJso
         calibration = cameraJson.decode(encoding)
         pathDepth = depthPath.decode(encoding)
         cameraMatrix, rotation, translation, dist = getCalibrationFromFile(json.loads(calibration))  
+        #print(bytes)
     
         return processFrameAzureBased(bytes, pathDepth, frameCount, deviceId, showOverlay, json.loads(frameData), rotation, translation, cameraMatrix, dist)
     except Exception as e:
@@ -130,18 +136,32 @@ def concat_vh(list_2d):
     return cv2.vconcat([cv2.hconcat(list_h)  
                         for list_h in list_2d]) 
 
+def showOutput():
+    concat = concat_vh([[keyFrame[1], keyFrame[0]], [keyFrame[2], keyFrame[3]]])
+    cv2.imshow("OUTPUT", concat)
+    cv2.waitKey(1)
+
 def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, json, rotation, translation, cameraMatrix, dist):
+    print("\nProcess frames azure based")
     points = []
     h, w, c = frame.shape
     depthPath = depthPath + str(int(frameCount)) + ".png"
+    print("\n" + depthPath)
 
+    #print(frame)
+    depthPaths[deviceId].append(depthPath)
     framergb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     frame = cv2.cvtColor(frame, cv2.IMREAD_COLOR)
+
+    print("\nFrame")
 
     try:
         depth = cv2.imread(depthPath, cv2.IMREAD_UNCHANGED)
     except Exception as e:
+        print(e)
         return
+    
+    print("\nDepth")
 
     if showOverlay:
         # Show the final output
@@ -159,6 +179,7 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
 
     bodies = json["bodies"]
     for bodyIndex, body in enumerate(bodies):  
+        #print(body)
         leftXAverage, leftYAverage, rightXAverage, rightYAverage = getAverageHandLocations(body, w, h, rotation, translation, cameraMatrix, dist)
         rightBox = createBoundingBox(rightXAverage, rightYAverage)
         leftBox = createBoundingBox(leftXAverage, leftYAverage)
@@ -196,13 +217,11 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                     cv2.circle(frame, point, radius=2, thickness= 2, color=(0,255,0))
 
     keyFrame[deviceId] = cv2.resize(frame, (640, 360))
-    cv2.waitKey(1)
-    
-    if(deviceId == 0):
-        concat = concat_vh([[keyFrame[1], keyFrame[0]], [keyFrame[2], keyFrame[3]]])
-        cv2.imshow("OUTPUT", concat)
-        cv2.waitKey(1)
 
-    try: 
-        os.remove(depthPath)
-    except: pass
+    if(frameCount % 100 == 0):
+        for path in depthPaths[deviceId]:
+            try: 
+                os.remove(path)
+            except Exception as e:
+                 print(e)
+        depthPaths[deviceId].clear()
