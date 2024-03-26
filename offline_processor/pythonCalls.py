@@ -5,17 +5,25 @@ import os
 import shutil
 import joblib
 from utils import *
-import numpy
 import traceback
+import numpy as np
+import cv2
+import os
+import torch
+
+from model import create_model
+from config import (
+    NUM_CLASSES, DEVICE, CLASSES
+)
 
 #TODO python dialog with check boxes to show different overlays
 
-# initialize python #########################################################################
+#region initialize python
 
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.6, min_tracking_confidence= 0)
 
-loaded_model = joblib.load(".\\bestModel.pkl")
+loaded_model = joblib.load(".\\bestModel-pointing.pkl")
 devicePoints = {}
 keyFrame = {}
 shift = 7
@@ -30,11 +38,26 @@ depthPaths[0] = []
 depthPaths[1] = []
 depthPaths[2] = []
 
-#############################################################################################
+#region initalize object detections 
 
-# point process utils #######################################################################
+print("Torch Device " + str(DEVICE))
+# load the best model and trained weights - for object detection
+model = create_model(num_classes=NUM_CLASSES)
+checkpoint = torch.load('.\\best_model-objects.pth', map_location=DEVICE)
+model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+model.to(DEVICE).eval()
 
-def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth):   
+# define the detection threshold...
+# ... any detection having score below this will be discarded
+detection_threshold = 0.6
+RESIZE_TO = (512, 512)
+
+#endregion
+#endregion
+
+#region point process utils
+
+def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth, blocks):   
     # dotColor = dotColors[bodyId % len(dotColors)]
     # cv2.rectangle(frame, 
     #     (box[0]* 2**shift, box[1]* 2**shift), 
@@ -42,6 +65,7 @@ def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, di
     #     color=dotColor,
     #     thickness=3, 
     #     shift=shift)
+
     #media pipe on the sub box only
     frameBox = framergb[box[1]:box[3], box[0]:box[2]]
     h, w, c = frameBox.shape
@@ -56,7 +80,7 @@ def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, di
                 if(returned_handedness.label == handedness.value):
                     normalized = processHands(frame, handslms)
                     prediction = loaded_model.predict_proba([normalized])
-                    print(prediction)
+                    #print(prediction)
 
                     landmarks = []
                     for lm in handslms.landmark:
@@ -67,7 +91,7 @@ def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, di
                     if prediction[0][0] >= 0.2:
                         points.append(landmarks)
                         tx, ty, tip3D, bx, by, base3D, nextPoint, success = processPoint(handslms, box, w, h, cameraMatrix, dist, depth)
-                        cv2.putText(frame, str(success), (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+                        #cv2.putText(frame, str(success), (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
 
                         if success == ParseResult.Success:
                             pointTip2D = convert2D(tip3D, cameraMatrix, dist)
@@ -89,6 +113,35 @@ def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, di
 
                             cone = ConeShape(base3D, nextPoint, 25, 75, cameraMatrix, dist)
                             cone.projectRadiusLines(shift, frame, True, False)
+
+                            for block in blocks:
+                                targetPoint = [(block.p1[0]),(block.p1[1])]
+
+                                try:
+                                    object3D, success = convertTo3D(cameraMatrix, dist, depth, int(targetPoint[0]), int(targetPoint[1]))
+                                    if(success == ParseResult.InvalidDepth):
+                                        print("Ignoring invalid depth")
+                                        continue
+                                except:
+                                    continue
+
+                                block.target = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, True)
+                                if(block.target):
+                                    cv2.rectangle(frame, 
+                                        (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
+                                        (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
+                                        color=(255,0,0),
+                                        thickness=5, 
+                                        shift=shift)
+                                    cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)
+                                else:
+                                    cv2.rectangle(frame, 
+                                        (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
+                                        (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
+                                        color=(0,0,255),
+                                        thickness=5, 
+                                        shift=shift)
+                                    cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)  
 
 def concat_vh(list_2d): 
     return cv2.vconcat([cv2.hconcat(list_h)  
@@ -123,8 +176,58 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
         cv2.imshow("OVERLAY " + str(deviceId), vis)
         cv2.waitKey(1)
 
+    #region object detections
+        
+    image = cv2.resize(framergb, RESIZE_TO)
+    image = framergb.astype(np.float32)
+    # make the pixel range between 0 and 1
+    image /= 255.0
+    # bring color channels to front
+    image = np.transpose(image, (2, 0, 1)).astype(np.float32)
+    # convert to tensor
+    image = torch.tensor(image, dtype=torch.float).cuda()
+    # add batch dimension
+    image = torch.unsqueeze(image, 0)
+    with torch.no_grad():
+        # get predictions for the current frame
+        outputs = model(image.to(DEVICE))
+    
+    # object rendering
+    # load all detection to CPU for further operations
+    outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]  
+    blocks = []
+    if len(outputs[0]['boxes']) != 0:
+        boxes = outputs[0]['boxes'].data.numpy()
+        scores = outputs[0]['scores'].data.numpy()
+        boxes = boxes[scores >= detection_threshold].astype(np.int32)
+        draw_boxes = boxes.copy()
+        # get all the predicited class names
+        pred_classes = [CLASSES[i] for i in outputs[0]['labels'].cpu().numpy()]
+
+        # draw the bounding boxes and write the class name on top of it
+        for j, box in enumerate(draw_boxes):
+            class_name = pred_classes[j]
+            p1 = [box[0], box[1]]
+            p2 = [box[2], box[3]]
+            
+            block = Block(float(class_name), p1, p2)
+            blocks.append(block)
+            
+            print("Found Block: " + str(block.description))
+            # print(str(p1))
+            # print(str(p2))
+
+            cv2.rectangle(frame, 
+                (int(p1[0] * 2**shift), int(p1[1] * 2**shift)),
+                (int(p2[0] * 2**shift), int(p2[1] * 2**shift)),
+                color=(255,255,255),
+                thickness=3, 
+                shift=shift)
+
+    #endregion
+
     bodies = json["bodies"]
-    for bodyIndex, body in enumerate(bodies):  
+    for _, body in enumerate(bodies):  
         leftXAverage, leftYAverage, rightXAverage, rightYAverage = getAverageHandLocations(body, w, h, rotation, translation, cameraMatrix, dist)
         rightBox = createBoundingBox(rightXAverage, rightYAverage)
         leftBox = createBoundingBox(leftXAverage, leftYAverage)
@@ -136,7 +239,8 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                 points,
                 cameraMatrix,
                 dist,
-                depth) 
+                depth,
+                blocks) 
         findHands(frame,
                 framergb,
                 int(body['body_id']),
@@ -145,7 +249,8 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                 points,
                 cameraMatrix,
                 dist,
-                depth)
+                depth,
+                blocks)
     devicePoints[deviceId] = points
 
     cv2.putText(frame, "FRAME:" + str(int(frameCount)), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
@@ -171,9 +276,9 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                  print(e)
         depthPaths[deviceId].clear()
 
-#############################################################################################
+#endregion
         
-# cpp process call ins (for point detection) ################################################    
+#region cpp process call ins (for point detection)    
 
 def callOpenFrameHardDrive(data, depthPath, frameCount, deviceId, showOverlay, frameJson, cameraJson):
     try:
@@ -222,4 +327,4 @@ def showOutput():
     cv2.imshow("OUTPUT", concat)
     cv2.waitKey(1)
 
-#############################################################################################
+#endregion

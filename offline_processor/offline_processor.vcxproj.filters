@@ -24,10 +24,13 @@
     <None Include="dnn_model_2_0.onnx" />
     <None Include="$(MSBuildThisFileDirectory)..\..\content\**\*.*" />
     <None Include="pythonCalls.py" />
-    <None Include="bestModel.pkl" />
     <None Include="utilities\__init__.py" />
     <None Include="utilities\utils.py" />
     <None Include="utils.py" />
+    <None Include="bestModel-pointing.pkl" />
+    <None Include="config.py" />
+    <None Include="model.py" />
+    <None Include="objectDetectionModels\best_model-objects.pth" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">

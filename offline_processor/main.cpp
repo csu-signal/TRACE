@@ -543,11 +543,11 @@ bool process_mkv_offline(PyObject* pyModule, bool camera, bool overlay, const ch
   else
   {
     inputSettings device1 = openDevice(1, pyModule, camera, input_path[1], "Playback1", "Playback1_Depth\\", "Playback1_Rgb\\", tracker_config);
-    inputSettings device2 = openDevice(2, pyModule, camera, input_path[2], "Playback2", "Playback2_Depth\\", "Playback2_Rgb\\", tracker_config);
-    inputSettings device0 = openDevice(0, pyModule, camera, input_path[0], "Playback0", "Playback0_Depth\\", "Playback0_Rgb\\", tracker_config);
+    //inputSettings device2 = openDevice(2, pyModule, camera, input_path[2], "Playback2", "Playback2_Depth\\", "Playback2_Rgb\\", tracker_config);
+    //inputSettings device0 = openDevice(0, pyModule, camera, input_path[0], "Playback0", "Playback0_Depth\\", "Playback0_Rgb\\", tracker_config);
     devices.push_back(device1);
-    devices.push_back(device2);
-    devices.push_back(device0);
+    //devices.push_back(device2);
+    //devices.push_back(device0);
   }
 
   while (true)
@@ -676,5 +676,5 @@ int main(int argc, char** argv)
     "C:\\Users\\vanderh\\Desktop\\OutputTest\\nsf-demo-scene2-sub2.mkv"
   };
 
-  return process_mkv_offline(pyModule, true, false, input_path, "\\", tracker_config) ? 0 : -1;
+  return process_mkv_offline(pyModule, false, false, input_path, "\\", tracker_config) ? 0 : -1;
 }

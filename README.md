@@ -49,6 +49,16 @@ In order to save the camera calibration settings I updated the Azure SDK offline
 - activate hand tracking enviroment "conda activate C:\ProgramData\anaconda3\envs\handTrackingEnvironment"
 - run ".\offline_processor.exe"
 
+- if the torch device isn't the GPU (cuda), you might need to uninstall and reinstall torch and torchvision in the virtual env for windows
+- "pip uninstall torchvision"
+- "pip uninstall torch"
+- "pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121"
+
+# Object Detection Model
+- reach out to Jack Fitzgerald or Hannah VanderHoeven for access to the object detection model
+- hannah.vanderhoeven@colostate.edu
+- jack.fitzgerald@colostate.edu
+
 # Example Additional Json Output
 
 ```

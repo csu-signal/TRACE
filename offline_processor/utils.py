@@ -769,11 +769,11 @@ class BlockEncoder(json.JSONEncoder):
         return o.__dict__
 
 class Block:
-    def __init__(self, description, x, y, width, height):
-        self.x = x - (width / 2)
-        self.y = y - (height / 2)
-        self.height = height
-        self.width = width
+    def __init__(self, description, p1, p2):
+        self.p1 = p1
+        self.p2 = p2
+        # self.height = height
+        # self.width = width
         self.target = False
 
         if(description == 0):
