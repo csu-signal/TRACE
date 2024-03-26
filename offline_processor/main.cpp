@@ -75,9 +75,9 @@ void callDisplayOutput(PyObject* pyModule)
   PyObject* myResult = PyObject_CallFunctionObjArgs(myFunction, NULL);
 }
 
-void callOpenFrame(PyObject* pyModule, char* path, int deviceId, bool overlay, json calibrations, jointPredictions predictions, const char* depth, int frame_count)
+void callOpenFrameHardDrive(PyObject* pyModule, char* path, int deviceId, bool overlay, json calibrations, jointPredictions predictions, const char* depth, int frame_count)
 {
-  PyObject* myFunction = PyObject_GetAttrString(pyModule, (char*)"openFrame");
+  PyObject* myFunction = PyObject_GetAttrString(pyModule, (char*)"openFrameHardDrive");
   PyObject* framePath = PyBytes_FromString(path);
   PyObject* depthPath = PyBytes_FromString(depth);
   PyObject* joints = PyBytes_FromString(predictions.frame_result_json.dump().c_str());
@@ -205,7 +205,7 @@ void check_color_image_exists(PyObject* pyModule, int deviceId, int overlay, con
       std::cout << e.msg << std::endl;
     }
 
-    callOpenFrame(pyModule, output, deviceId, overlay, calibrations, predictions, depth, frame_count);
+    callOpenFrameHardDrive(pyModule, output, deviceId, overlay, calibrations, predictions, depth, frame_count);
 #endif
 
     k4a_image_release(color_image);
@@ -483,7 +483,6 @@ void handleFrame(inputSettings& d, int frame_count, PyObject* pyModule, bool ove
 {
   if (d.success)
   {
-    cout << "\nHandle frame " << frame_count;
     k4a_capture_t capture_handle = nullptr;
     int stream_result;
 
@@ -502,16 +501,14 @@ void handleFrame(inputSettings& d, int frame_count, PyObject* pyModule, bool ove
       return;
     }
 
-    cout << "\nframe " << frame_count << '\r';
+    cout << "\nDevice:" << d.deviceId << " Frame: " << frame_count << '\n';
     if (stream_result == K4A_STREAM_RESULT_SUCCEEDED)
     {
       depthOutput dO = check_depth_image_exists(pyModule, capture_handle, d.calibration, d.transformation, frame_count, d.depth_output_path);
       if (dO.success)
       {
         jointPredictions predictions = predict_joints(d.frames_json, frame_count, d.tracker, capture_handle);
-        cout << "\nMade to predictions";
         check_color_image_exists(pyModule, d.deviceId, overlay, dO.output, d.json_output["camera_calibration"], predictions, capture_handle, d.calibration, d.transformation, frame_count, d.rgb_output_path);
-        cout << "\nMade to color";
         k4a_capture_release(capture_handle);
         if (!predictions.success)
         {
@@ -519,7 +516,6 @@ void handleFrame(inputSettings& d, int frame_count, PyObject* pyModule, bool ove
           return;
         }
       }
-      cout << "\nMade to stream result";
     }
     else
     {
@@ -538,10 +534,10 @@ bool process_mkv_offline(PyObject* pyModule, bool camera, bool overlay, const ch
   if (camera)
   {
     inputSettings device1 = openDevice(1, pyModule, camera, "", "Camera1", "Camera1_Depth\\", "Camera1_Rgb\\", tracker_config);
-    inputSettings device2 = openDevice(2, pyModule, camera, "", "Camera2", "Camera2_Depth\\", "Camera2_Rgb\\", tracker_config);
+    //inputSettings device2 = openDevice(2, pyModule, camera, "", "Camera2", "Camera2_Depth\\", "Camera2_Rgb\\", tracker_config);
     inputSettings device0 = openDevice(0, pyModule, camera, "", "Camera0", "Camera0_Depth\\", "Camera0_Rgb\\", tracker_config);
     devices.push_back(device1);
-    devices.push_back(device2);
+    //devices.push_back(device2);
     devices.push_back(device0);
   }
   else
@@ -569,8 +565,6 @@ bool process_mkv_offline(PyObject* pyModule, bool camera, bool overlay, const ch
 
     /*  std::thread t(callDisplayOutput, pyModule);
       t.join();*/
-
-    cout << "\nMade it out of display output";
   }
 
   for (inputSettings d : devices)
@@ -682,5 +676,5 @@ int main(int argc, char** argv)
     "C:\\Users\\vanderh\\Desktop\\OutputTest\\nsf-demo-scene2-sub2.mkv"
   };
 
-  return process_mkv_offline(pyModule, false, false, input_path, "\\", tracker_config) ? 0 : -1;
+  return process_mkv_offline(pyModule, true, false, input_path, "\\", tracker_config) ? 0 : -1;
 }

@@ -10,10 +10,11 @@ import traceback
 
 #TODO python dialog with check boxes to show different overlays
 
-# initialize mediapipe
+# initialize python #########################################################################
+
 mpHands = mp.solutions.hands
-# hands = mpHands.Hands(max_num_hands=4, min_detection_confidence=0.6)
-# mpDraw = mp.solutions.drawing_utils
+hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.6, min_tracking_confidence= 0)
+
 loaded_model = joblib.load(".\\bestModel.pkl")
 devicePoints = {}
 keyFrame = {}
@@ -29,51 +30,9 @@ depthPaths[0] = []
 depthPaths[1] = []
 depthPaths[2] = []
 
-def myabs(x):
-    return math.fabs(x)
+#############################################################################################
 
-def openFrame(data, depthPath, frameCount, deviceId, showOverlay, frameJson, cameraJson):
-    try:
-        encoding = 'utf-8'
-        path = data.decode(encoding)   
-        frameData = frameJson.decode(encoding) 
-        calibration = cameraJson.decode(encoding)
-        pathDepth = depthPath.decode(encoding)
-        cameraMatrix, rotation, translation, dist = getCalibrationFromFile(json.loads(calibration))  
-        frame = cv2.imread(path)
-    
-        processFrameAzureBased(frame, pathDepth, frameCount, deviceId, showOverlay, json.loads(frameData), rotation, translation, cameraMatrix, dist)
-        os.remove(path)
-        return 1
-    except Exception as e:
-        print(e) 
-        print(traceback.format_exc()) 
-
-def createFolder(data):
-    try:
-        encoding = 'utf-8'
-        path = data.decode(encoding)   
-        print(path)
-
-        if os.path.exists(path):
-            shutil.rmtree(path)
-        os.makedirs(path)
-    except Exception as e:
-        print(e) 
-
-def openFrameBytes(bytes, depthPath, frameCount, deviceId, showOverlay, frameJson, cameraJson):
-    try:
-        encoding = 'utf-8'
-        frameData = frameJson.decode(encoding) 
-        calibration = cameraJson.decode(encoding)
-        pathDepth = depthPath.decode(encoding)
-        cameraMatrix, rotation, translation, dist = getCalibrationFromFile(json.loads(calibration))  
-        #print(bytes)
-    
-        return processFrameAzureBased(bytes, pathDepth, frameCount, deviceId, showOverlay, json.loads(frameData), rotation, translation, cameraMatrix, dist)
-    except Exception as e:
-        print(e) 
-        print(traceback.format_exc())
+# point process utils #######################################################################
 
 def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth):   
     # dotColor = dotColors[bodyId % len(dotColors)]
@@ -83,85 +42,72 @@ def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, di
     #     color=dotColor,
     #     thickness=3, 
     #     shift=shift)
-        
-    with mpHands.Hands(max_num_hands=1, min_detection_confidence=0.6) as hands:
-        #media pipe on the sub box only
-        frameBox = framergb[box[1]:box[3], box[0]:box[2]]
-        h, w, c = frameBox.shape
+    #media pipe on the sub box only
+    frameBox = framergb[box[1]:box[3], box[0]:box[2]]
+    h, w, c = frameBox.shape
 
-        if(h > 0 and w > 0):
-            results = hands.process(frameBox)
-            handedness_result = results.multi_handedness
-            if results.multi_hand_landmarks:
-                for index, handslms in enumerate(results.multi_hand_landmarks):
-                    returned_handedness = handedness_result[index].classification[0]
-                    if(returned_handedness.label == handedness.value):
-                        normalized = processHands(frame, handslms)
-                        prediction = loaded_model.predict_proba([normalized])
-                        landmarks = []
-                        for lm in handslms.landmark:
-                            lmx, lmy = int(lm.x * w) + box[0], int(lm.y * h) + box[1] 
-                            #cv2.circle(frame, (lmx, lmy), radius=2, thickness= 2, color=(0,0,255))
-                            landmarks.append([lmx, lmy])
+    if(h > 0 and w > 0):
+        results = hands.process(frameBox)
 
-                        print(prediction)
-                        if prediction[0][0] >= 0.2:
-                            print("Point Found")
-                            points.append(landmarks)
-                            tx, ty, tip3D, bx, by, base3D, nextPoint, success = processPoint(handslms, box, w, h, cameraMatrix, dist, depth)
-                            cv2.putText(frame, str(success), (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        handedness_result = results.multi_handedness
+        if results.multi_hand_landmarks:
+            for index, handslms in enumerate(results.multi_hand_landmarks):
+                returned_handedness = handedness_result[index].classification[0]
+                if(returned_handedness.label == handedness.value):
+                    normalized = processHands(frame, handslms)
+                    prediction = loaded_model.predict_proba([normalized])
+                    print(prediction)
 
-                            if success == ParseResult.Success:
-                                pointTip2D = convert2D(tip3D, cameraMatrix, dist)
-                                pointBase2D = convert2D(base3D, cameraMatrix, dist) 
-                                pointNext2D = convert2D(nextPoint, cameraMatrix, dist)
+                    landmarks = []
+                    for lm in handslms.landmark:
+                        lmx, lmy = int(lm.x * w) + box[0], int(lm.y * h) + box[1] 
+                        #cv2.circle(frame, (lmx, lmy), radius=2, thickness= 2, color=(0,0,255))
+                        landmarks.append([lmx, lmy])
 
-                                pointTip = (int(pointTip2D[0] * 2**shift),int(pointTip2D[1] * 2**shift))
-                                pointBase = (int(pointBase2D[0] * 2**shift),int(pointBase2D[1] * 2**shift))
-                                pointNext = (int(pointNext2D[0] * 2**shift),int(pointNext2D[1] * 2**shift))
+                    if prediction[0][0] >= 0.2:
+                        points.append(landmarks)
+                        tx, ty, tip3D, bx, by, base3D, nextPoint, success = processPoint(handslms, box, w, h, cameraMatrix, dist, depth)
+                        cv2.putText(frame, str(success), (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
 
-                                cv2.line(frame, pointTip, pointNext, color=(0, 165, 255), thickness=5, shift=shift)
-                                cv2.line(frame, pointBase, pointTip, color=(0, 165, 255), thickness=5, shift=shift)
+                        if success == ParseResult.Success:
+                            pointTip2D = convert2D(tip3D, cameraMatrix, dist)
+                            pointBase2D = convert2D(base3D, cameraMatrix, dist) 
+                            pointNext2D = convert2D(nextPoint, cameraMatrix, dist)
 
-                                cv2.circle(frame, pointTip, radius=15, color=(255,0,0), thickness=15, shift=shift)
-                                cv2.circle(frame, (int(tx), int(ty)), radius=4, color=(0, 0, 255), thickness=-1)
-                                cv2.circle(frame, pointBase, radius=15, color=(255,0,0), thickness=15, shift=shift)
-                                cv2.circle(frame, (int(bx), int(by)), radius=4, color=(0, 0, 255), thickness=-1)
-                                cv2.circle(frame, pointNext, radius=15, color=(255,0,0), thickness=15, shift=shift)
+                            pointTip = (int(pointTip2D[0] * 2**shift),int(pointTip2D[1] * 2**shift))
+                            pointBase = (int(pointBase2D[0] * 2**shift),int(pointBase2D[1] * 2**shift))
+                            pointNext = (int(pointNext2D[0] * 2**shift),int(pointNext2D[1] * 2**shift))
 
-                                cone = ConeShape(base3D, nextPoint, 25, 75, cameraMatrix, dist)
-                                cone.projectRadiusLines(shift, frame, True, False)
+                            cv2.line(frame, pointTip, pointNext, color=(0, 165, 255), thickness=5, shift=shift)
+                            cv2.line(frame, pointBase, pointTip, color=(0, 165, 255), thickness=5, shift=shift)
+
+                            cv2.circle(frame, pointTip, radius=15, color=(255,0,0), thickness=15, shift=shift)
+                            cv2.circle(frame, (int(tx), int(ty)), radius=4, color=(0, 0, 255), thickness=-1)
+                            cv2.circle(frame, pointBase, radius=15, color=(255,0,0), thickness=15, shift=shift)
+                            cv2.circle(frame, (int(bx), int(by)), radius=4, color=(0, 0, 255), thickness=-1)
+                            cv2.circle(frame, pointNext, radius=15, color=(255,0,0), thickness=15, shift=shift)
+
+                            cone = ConeShape(base3D, nextPoint, 25, 75, cameraMatrix, dist)
+                            cone.projectRadiusLines(shift, frame, True, False)
 
 def concat_vh(list_2d): 
     return cv2.vconcat([cv2.hconcat(list_h)  
                         for list_h in list_2d]) 
 
-def showOutput():
-    concat = concat_vh([[keyFrame[1], keyFrame[0]], [keyFrame[2], keyFrame[3]]])
-    cv2.imshow("OUTPUT", concat)
-    cv2.waitKey(1)
-
 def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, json, rotation, translation, cameraMatrix, dist):
-    print("\nProcess frames azure based")
     points = []
     h, w, c = frame.shape
     depthPath = depthPath + str(int(frameCount)) + ".png"
-    print("\n" + depthPath)
-
-    #print(frame)
+    
     depthPaths[deviceId].append(depthPath)
     framergb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     frame = cv2.cvtColor(frame, cv2.IMREAD_COLOR)
-
-    print("\nFrame")
 
     try:
         depth = cv2.imread(depthPath, cv2.IMREAD_UNCHANGED)
     except Exception as e:
         print(e)
         return
-    
-    print("\nDepth")
 
     if showOverlay:
         # Show the final output
@@ -179,7 +125,6 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
 
     bodies = json["bodies"]
     for bodyIndex, body in enumerate(bodies):  
-        #print(body)
         leftXAverage, leftYAverage, rightXAverage, rightYAverage = getAverageHandLocations(body, w, h, rotation, translation, cameraMatrix, dist)
         rightBox = createBoundingBox(rightXAverage, rightYAverage)
         leftBox = createBoundingBox(leftXAverage, leftYAverage)
@@ -218,10 +163,63 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
 
     keyFrame[deviceId] = cv2.resize(frame, (640, 360))
 
-    if(frameCount % 100 == 0):
+    if(frameCount == 0 or frameCount % 500 == 0):
         for path in depthPaths[deviceId]:
             try: 
                 os.remove(path)
             except Exception as e:
                  print(e)
         depthPaths[deviceId].clear()
+
+#############################################################################################
+        
+# cpp process call ins (for point detection) ################################################    
+
+def callOpenFrameHardDrive(data, depthPath, frameCount, deviceId, showOverlay, frameJson, cameraJson):
+    try:
+        encoding = 'utf-8'
+        path = data.decode(encoding)   
+        frameData = frameJson.decode(encoding) 
+        calibration = cameraJson.decode(encoding)
+        pathDepth = depthPath.decode(encoding)
+        cameraMatrix, rotation, translation, dist = getCalibrationFromFile(json.loads(calibration))  
+        frame = cv2.imread(path)
+    
+        processFrameAzureBased(frame, pathDepth, frameCount, deviceId, showOverlay, json.loads(frameData), rotation, translation, cameraMatrix, dist)
+        os.remove(path)
+        return 1
+    except Exception as e:
+        print(e) 
+        print(traceback.format_exc()) 
+
+def openFrameBytes(bytes, depthPath, frameCount, deviceId, showOverlay, frameJson, cameraJson):
+    try:
+        encoding = 'utf-8'
+        frameData = frameJson.decode(encoding) 
+        calibration = cameraJson.decode(encoding)
+        pathDepth = depthPath.decode(encoding)
+        cameraMatrix, rotation, translation, dist = getCalibrationFromFile(json.loads(calibration))  
+    
+        return processFrameAzureBased(bytes, pathDepth, frameCount, deviceId, showOverlay, json.loads(frameData), rotation, translation, cameraMatrix, dist)
+    except Exception as e:
+        print(e) 
+        print(traceback.format_exc())
+
+def createFolder(data):
+    try:
+        encoding = 'utf-8'
+        path = data.decode(encoding)   
+        print(path)
+
+        if os.path.exists(path):
+            shutil.rmtree(path)
+        os.makedirs(path)
+    except Exception as e:
+        print(e) 
+
+def showOutput():
+    concat = concat_vh([[keyFrame[1], keyFrame[0]], [keyFrame[2], keyFrame[3]]])
+    cv2.imshow("OUTPUT", concat)
+    cv2.waitKey(1)
+
+#############################################################################################
