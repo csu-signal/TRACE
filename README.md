@@ -59,6 +59,9 @@ In order to save the camera calibration settings I updated the Azure SDK offline
 - hannah.vanderhoeven@colostate.edu
 - jack.fitzgerald@colostate.edu
 
+# ASR detection script
+- Additional packages are needed (install using pip): sounddevice, espnet, espnet_model_zoo
+
 # Example Additional Json Output
 
 ```

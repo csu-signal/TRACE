@@ -10,6 +10,7 @@ import numpy as np
 import cv2
 import os
 import torch
+import platform;
 
 from model import create_model
 from config import (
@@ -41,6 +42,7 @@ depthPaths[2] = []
 #region initalize object detections 
 
 print("Torch Device " + str(DEVICE))
+print("Python version " + str(platform.python_version()))
 # load the best model and trained weights - for object detection
 model = create_model(num_classes=NUM_CLASSES)
 checkpoint = torch.load('.\\best_model-objects.pth', map_location=DEVICE)
@@ -130,7 +132,7 @@ def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, di
                                     cv2.rectangle(frame, 
                                         (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
                                         (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
-                                        color=(255,0,0),
+                                        color=(0,255,0),
                                         thickness=5, 
                                         shift=shift)
                                     cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)
@@ -268,7 +270,7 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
 
     keyFrame[deviceId] = cv2.resize(frame, (640, 360))
 
-    if(frameCount == 0 or frameCount % 500 == 0):
+    if(frameCount == 0 or frameCount % 100 == 0):
         for path in depthPaths[deviceId]:
             try: 
                 os.remove(path)
