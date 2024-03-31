@@ -389,3 +389,4 @@ sysinfo.txt
 /offline_processor/.vs/offline_processor/v17/Browse.VC.db-shm
 /offline_processor/.vs/offline_processor/v17/Browse.VC.opendb
 /offline_processor/offline_processor.vcxproj
+/offline_processor/objectDetectionModels/best_model-objects.pth
