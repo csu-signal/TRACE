@@ -390,3 +390,4 @@ sysinfo.txt
 /offline_processor/.vs/offline_processor/v17/Browse.VC.opendb
 /offline_processor/offline_processor.vcxproj
 /offline_processor/objectDetectionModels/best_model-objects.pth
+/offline_processor/objectDetectionModels/best_model-objects-archieve.pth
