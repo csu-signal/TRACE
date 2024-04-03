@@ -297,14 +297,16 @@ def getDirectionalVector2D(terminal, initial):
       vectorY = terminal[1] - initial[1]
       return (vectorX, vectorY)
 
-def convertTo3D(cameraMatrix, dist, depth, u, v, width = None, height = None):
-    du, dv = depth.shape
+def convertTo3D(cameraMatrix, dist, depth, u, v):
+    dv, du = depth.shape
 
     ## ignore frames with invalid depth info
     if(u > du - 1 or v > dv - 1):
         return [], ParseResult.InvalidDepth
     
-    z = depth[u, v]
+    z = depth[v, u]
+    # print("X: " + str(u) + " Y: " + str(v))
+    # print("Z: " + str(z))
 
     f_x = cameraMatrix[0, 0]
     f_y = cameraMatrix[1, 1]
@@ -323,12 +325,8 @@ def convertTo3D(cameraMatrix, dist, depth, u, v, width = None, height = None):
             y = (points_undistorted[idx, 1] - c_y) / f_y * z
             result.append(x.astype(float))
             result.append(y.astype(float))
-
-            if(width != None and height != None):
-                average = (width + height) /2
-                result.append((z - (average / 2)).astype(float))
-            else:
-                result.append(z.astype(float))
+            result.append(z.astype(float))
+            
         # except:
         #     print("An exception occurred")  
     return result, ParseResult.Success
@@ -336,13 +334,13 @@ def convertTo3D(cameraMatrix, dist, depth, u, v, width = None, height = None):
 def getVectorPoint(terminal, vector):
      return (terminal[0] + vector[0], terminal[1] + vector[1], terminal[2] + vector[2])
 
-def processPoint(handslms, box, w, h, cameraMatrix, dist, depth):
+def processPoint(landmarks, box, w, h, cameraMatrix, dist, depth):
     try:
-        for index, lm in enumerate(handslms.landmark): 
-            if(index == 5):
-                bx, by = int(lm.x * w) + box[0], int(lm.y * h) + box[1] 
+        for index, lm in enumerate(landmarks): 
+            if(index == 0):
+                bx, by = lm[0], lm[1] 
             if(index == 8):  
-                tx, ty = int(lm.x * w) + box[0], int(lm.y * h) + box[1]
+                tx, ty = lm[0], lm[1]
 
 
         tip3D, tSuccess = convertTo3D(cameraMatrix, dist, depth, tx, ty)
@@ -417,8 +415,12 @@ def isInside(x1, y1, x2, y2, x3, y3, x, y):
 # 3D Object Location
 
 def distance3D(point1, point2):
-    return math.sqrt(((point2[0] - point1[0]) ** 2) + ((point2[1] - point1[1]) ** 2) + ((point2[2] - point1[2]) ** 2))
-
+    # TODO fix depth with the z channel
+    # print(point1)
+    # print(point2)
+    #return math.sqrt(((point2[0] - point1[0]) ** 2) + ((point2[1] - point1[1]) ** 2) + ((point2[2] - point1[2]) ** 2))
+    return math.sqrt(((point2[0] - point1[0]) ** 2) + ((point2[1] - point1[1]) ** 2))
+                     
 # get point on vector perpendicular to block
 def projectedPoint(p1, p2, p3):
     P12 = getDirectionalVector(p2,p1) #pointing vector
@@ -529,7 +531,7 @@ class ConeShape:
         print(("Cone Radius: {0:0.2f}").format(coneRadius))
 
         # point radius relative to the plane/vector
-        pointRadius = distance3D([x,y,z], proj)
+        pointRadius = distance3D(proj, [x,y,z])
         print(("Point Radius: {0:0.2f}").format(pointRadius))
 
         if (pointRadius <= coneRadius):

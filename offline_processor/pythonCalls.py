@@ -51,7 +51,7 @@ model.to(DEVICE).eval()
 
 # define the detection threshold...
 # ... any detection having score below this will be discarded
-detection_threshold = 0.6
+detection_threshold = 0.8
 RESIZE_TO = (512, 512)
 
 #endregion
@@ -60,6 +60,7 @@ RESIZE_TO = (512, 512)
 #region point process utils
 
 def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth, blocks):   
+    ## to help visualize where the hand localization is focused
     # dotColor = dotColors[bodyId % len(dotColors)]
     # cv2.rectangle(frame, 
     #     (box[0]* 2**shift, box[1]* 2**shift), 
@@ -84,40 +85,40 @@ def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, di
                     prediction = loaded_model.predict_proba([normalized])
                     #print(prediction)
 
-                    landmarks = []
-                    for lm in handslms.landmark:
-                        lmx, lmy = int(lm.x * w) + box[0], int(lm.y * h) + box[1] 
-                        #cv2.circle(frame, (lmx, lmy), radius=2, thickness= 2, color=(0,0,255))
-                        landmarks.append([lmx, lmy])
-
                     if prediction[0][0] >= 0.2:
+                        landmarks = []
+                        for lm in handslms.landmark:
+                            lmx, lmy = int(lm.x * w) + box[0], int(lm.y * h) + box[1] 
+                            #cv2.circle(frame, (lmx, lmy), radius=2, thickness= 2, color=(0,0,255))
+                            landmarks.append([lmx, lmy])
+
                         points.append(landmarks)
-                        tx, ty, tip3D, bx, by, base3D, nextPoint, success = processPoint(handslms, box, w, h, cameraMatrix, dist, depth)
+                        tx, ty, mediaPipe8, bx, by, mediaPipe5, nextPoint, success = processPoint(landmarks, box, w, h, cameraMatrix, dist, depth)
                         #cv2.putText(frame, str(success), (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
 
                         if success == ParseResult.Success:
-                            pointTip2D = convert2D(tip3D, cameraMatrix, dist)
-                            pointBase2D = convert2D(base3D, cameraMatrix, dist) 
-                            pointNext2D = convert2D(nextPoint, cameraMatrix, dist)
+                            point8_2D = convert2D(mediaPipe8, cameraMatrix, dist)
+                            point5_2D = convert2D(mediaPipe5, cameraMatrix, dist) 
+                            pointExtended_2D = convert2D(nextPoint, cameraMatrix, dist)
 
-                            pointTip = (int(pointTip2D[0] * 2**shift),int(pointTip2D[1] * 2**shift))
-                            pointBase = (int(pointBase2D[0] * 2**shift),int(pointBase2D[1] * 2**shift))
-                            pointNext = (int(pointNext2D[0] * 2**shift),int(pointNext2D[1] * 2**shift))
+                            point_8 = (int(point8_2D[0] * 2**shift),int(point8_2D[1] * 2**shift))
+                            point_5 = (int(point5_2D[0] * 2**shift),int(point5_2D[1] * 2**shift))
+                            point_Extended = (int(pointExtended_2D[0] * 2**shift),int(pointExtended_2D[1] * 2**shift))
 
-                            cv2.line(frame, pointTip, pointNext, color=(0, 165, 255), thickness=5, shift=shift)
-                            cv2.line(frame, pointBase, pointTip, color=(0, 165, 255), thickness=5, shift=shift)
+                            cv2.line(frame, point_8, point_Extended, color=(0, 165, 255), thickness=5, shift=shift)
+                            cv2.line(frame, point_5, point_8, color=(0, 165, 255), thickness=5, shift=shift)
 
-                            cv2.circle(frame, pointTip, radius=15, color=(255,0,0), thickness=15, shift=shift)
+                            cv2.circle(frame, point_8, radius=15, color=(255,0,0), thickness=15, shift=shift)
                             cv2.circle(frame, (int(tx), int(ty)), radius=4, color=(0, 0, 255), thickness=-1)
-                            cv2.circle(frame, pointBase, radius=15, color=(255,0,0), thickness=15, shift=shift)
+                            cv2.circle(frame, point_5, radius=15, color=(255,0,0), thickness=15, shift=shift)
                             cv2.circle(frame, (int(bx), int(by)), radius=4, color=(0, 0, 255), thickness=-1)
-                            cv2.circle(frame, pointNext, radius=15, color=(255,0,0), thickness=15, shift=shift)
+                            cv2.circle(frame, point_Extended, radius=15, color=(255,0,0), thickness=15, shift=shift)
 
-                            cone = ConeShape(base3D, nextPoint, 25, 75, cameraMatrix, dist)
+                            cone = ConeShape(mediaPipe5, nextPoint, 80, 100, cameraMatrix, dist)
                             cone.projectRadiusLines(shift, frame, True, False)
 
                             for block in blocks:
-                                targetPoint = [(block.p1[0]),(block.p1[1])]
+                                targetPoint = [(block.p1[0] + block.p2[0])/2,(block.p1[1] + block.p2[1]) / 2]
 
                                 try:
                                     object3D, success = convertTo3D(cameraMatrix, dist, depth, int(targetPoint[0]), int(targetPoint[1]))
@@ -198,6 +199,7 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
     # load all detection to CPU for further operations
     outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]  
     blocks = []
+    found = []
     if len(outputs[0]['boxes']) != 0:
         boxes = outputs[0]['boxes'].data.numpy()
         scores = outputs[0]['scores'].data.numpy()
@@ -209,6 +211,10 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
         # draw the bounding boxes and write the class name on top of it
         for j, box in enumerate(draw_boxes):
             class_name = pred_classes[j]
+            if(found.__contains__(class_name)):
+                continue
+
+            found.append(class_name)
             p1 = [box[0], box[1]]
             p2 = [box[2], box[3]]
             
