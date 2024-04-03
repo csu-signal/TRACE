@@ -70,12 +70,16 @@
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
-      <Command>xcopy "$(SolutionDir)pythonCalls.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)bestModel.pkl" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)utils.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)5131.png" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)5131sub1.png" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)5131sub2.png" "$(TargetDir)" /F /R /Y /I</Command>
+      <Command>
+        xcopy "$(SolutionDir)pythonCalls.py" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)bestModel-pointing.pkl" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)objectDetectionModels\best_model-objects.pth" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)utils.py" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)config.py" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)model.py" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)5131.png" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)5131sub1.png" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)5131sub2.png" "$(TargetDir)" /F /R /Y /I</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -86,7 +90,7 @@ xcopy "$(SolutionDir)5131sub2.png" "$(TargetDir)" /F /R /Y /I</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\opencv\build\include;C:\ProgramData\anaconda3\envs\handTrackingEnvironment\Lib\site-packages\numpy\core\include;C:\ProgramData\anaconda3\envs\handTrackingEnvironment\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\opencv\build\include;C:\ProgramData\anaconda3\envs\handTrackingEnvironment\Lib\site-packages\numpy\core\include;C:\ProgramData\anaconda3\envs\handTrackingEnvironment\include;C:\Users\carlosjm\.conda\envs\handTrackingEnvironment\include; C:\Users\carlosjm\.conda\envs\handTrackingEnvironment\Lib\site-packages\numpy\core\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -95,20 +99,28 @@ xcopy "$(SolutionDir)5131sub2.png" "$(TargetDir)" /F /R /Y /I</Command>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
-      <Command>xcopy "$(SolutionDir)pythonCalls.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)bestModel.pkl" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)utils.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)5131.png" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)5131sub1.png" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)5131sub2.png" "$(TargetDir)" /F /R /Y /I</Command>
+      <Command>
+        xcopy "$(SolutionDir)pythonCalls.py" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)bestModel-pointing.pkl" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)objectDetectionModels\best_model-objects.pth" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)utils.py" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)config.py" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)model.py" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)5131.png" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)5131sub1.png" "$(TargetDir)" /F /R /Y /I
+        xcopy "$(SolutionDir)5131sub2.png" "$(TargetDir)" /F /R /Y /I
+      </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="bestModel.pkl" />
+    <None Include="bestModel-pointing.pkl" />
+    <None Include="config.py" />
     <None Include="dnn_model_2_0.onnx" />
+    <None Include="model.py" />
+    <None Include="objectDetectionModels\best_model-objects.pth" />
     <None Include="packages.config" />
     <None Include="pythonCalls.py">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -121,6 +133,7 @@ xcopy "$(SolutionDir)5131sub2.png" "$(TargetDir)" /F /R /Y /I</Command>
     <None Include="utils.py" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="main.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
