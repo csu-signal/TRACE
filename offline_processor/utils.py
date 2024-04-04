@@ -306,7 +306,10 @@ def convertTo3D(cameraMatrix, dist, depth, u, v):
     
     z = depth[v, u]
     # print("X: " + str(u) + " Y: " + str(v))
-    # print("Z: " + str(z))
+    print("Z: " + str(z))
+    if(z == 0):
+        print("Invalid Depth, Z returned 0")
+        return [], ParseResult.InvalidDepth 
 
     f_x = cameraMatrix[0, 0]
     f_y = cameraMatrix[1, 1]
