@@ -12,7 +12,9 @@ import numpy as np
 import wave
 
 tag='D-Keqi/espnet_asr_train_asr_streaming_transformer_raw_en_bpe500_sp_valid.acc.ave'
+print("in")
 d=ModelDownloader()
+print("downloader set")
 speech2text = Speech2TextStreaming(
     **d.download_and_unpack(tag),
     token_type=None,
@@ -29,7 +31,7 @@ speech2text = Speech2TextStreaming(
     decoder_text_length_limit=0,
     encoded_feat_length_limit=0
 )
-
+print("speech instance created")
 prev_lines = 0
 def progress_output(text):
     global prev_lines

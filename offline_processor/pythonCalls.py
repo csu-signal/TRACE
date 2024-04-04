@@ -10,7 +10,11 @@ import numpy as np
 import cv2
 import os
 import torch
-import platform;
+import platform
+from tensorflow import keras
+from tensorflow.keras.metrics import categorical_accuracy
+from Face_Detection import load_frame, load_frame_azure
+from mtcnn import MTCNN
 
 from model import create_model
 from config import (
@@ -18,6 +22,17 @@ from config import (
 )
 
 #TODO python dialog with check boxes to show different overlays
+
+#region gaze util methods
+
+def euclideanLoss(y_true, y_pred):
+    return K.mean(K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1)))
+
+def predict_gaze(model, image, faces, heads):
+    preds = model.predict([np.array(image),np.array(faces),np.array(heads)])
+    return preds
+
+#endregion
 
 #region initialize python
 
@@ -43,16 +58,24 @@ depthPaths[2] = []
 
 print("Torch Device " + str(DEVICE))
 print("Python version " + str(platform.python_version()))
-# load the best model and trained weights - for object detection
-model = create_model(num_classes=NUM_CLASSES)
+# load the best objectModel and trained weights - for object detection
+objectModel = create_model(num_classes=NUM_CLASSES)
 checkpoint = torch.load('.\\best_model-objects.pth', map_location=DEVICE)
-model.load_state_dict(checkpoint['model_state_dict'], strict=False)
-model.to(DEVICE).eval()
+objectModel.load_state_dict(checkpoint['model_state_dict'], strict=False)
+objectModel.to(DEVICE).eval()
 
 # define the detection threshold...
 # ... any detection having score below this will be discarded
 detection_threshold = 0.8
 RESIZE_TO = (512, 512)
+
+#endregion
+
+#region initalize gaze detections
+
+# faceDetector = MTCNN()
+# gazeModel = keras.models.load_model(".\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
+#                                                                  'categorical_accuracy': categorical_accuracy})
 
 #endregion
 #endregion
@@ -193,7 +216,7 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
     image = torch.unsqueeze(image, 0)
     with torch.no_grad():
         # get predictions for the current frame
-        outputs = model(image.to(DEVICE))
+        outputs = objectModel(image.to(DEVICE))
     
     # object rendering
     # load all detection to CPU for further operations
@@ -235,6 +258,21 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
     #endregion
 
     bodies = json["bodies"]
+    #region gaze detections
+
+    #faces,heads,images=load_frame(frame,framergb,faceDetector,shift)
+    #faces,heads,images=load_frame_azure(frame,framergb,bodies, rotation, translation, cameraMatrix, dist, shift)
+    # preds = predict_gaze(gazeModel, images, faces, heads)
+    # for index, head in enumerate(heads):
+    #     head_p1 = int((heads[index][0] * w) * 2**shift)
+    #     head_p2 = int((heads[index][1] * h) * 2**shift)
+    #     pred_p1 = int((preds[0][index][0] * w) * 2**shift)
+    #     pred_p2 = int((preds[0][index][1] * h) * 2**shift)
+
+    #     cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
+
+    #endregion 
+
     for _, body in enumerate(bodies):  
         leftXAverage, leftYAverage, rightXAverage, rightYAverage = getAverageHandLocations(body, w, h, rotation, translation, cameraMatrix, dist)
         rightBox = createBoundingBox(rightXAverage, rightYAverage)
