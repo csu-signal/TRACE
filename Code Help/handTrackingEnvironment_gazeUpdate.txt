@@ -35,3 +35,15 @@ Location: c:\users\isata\miniconda3\envs\handtrackingenvironment\lib\site-packag
 Requires: absl-py, rich, numpy, namex, ml-dtypes, h5py, optree
 Required-by: tensorflow, mtcnn
 (handTrackingEnvironment) PS C:\Users\isata>
+
+pip install keras==2.6
+
+Device:0 Frame: 10
+(0.4875, 0.32731481481481484)
+(883, 288, 989, 419)
+
+(0.66796875, 0.3296296296296296)
+(1228, 274, 1337, 438)
+
+(0.23385416666666667, 0.38796296296296295)
+(378, 351, 520, 487)

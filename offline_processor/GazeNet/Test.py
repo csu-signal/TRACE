@@ -11,9 +11,9 @@ import collections
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--img_dir', default="C:\\gitProject\\Camera_Calibration\\offline_processor\\GazeNet\\Demo_img")
-parser.add_argument('--out_dir', default="C:\\gitProject\\Camera_Calibration\\offline_processor\\GazeNet\\Demo_res")
-parser.add_argument('--out_file', default="C:\\gitProject\\Camera_Calibration\\offline_processor\\GazeNet\\Demo_res\\gaze_result3.npy")
+parser.add_argument('--img_dir', default="C:\\GitHub\\Camera_Calibration\\offline_processor\\GazeNet\\Demo_img")
+parser.add_argument('--out_dir', default="C:\\GitHub\\Camera_Calibration\\offline_processor\\GazeNet\\Demo_res")
+parser.add_argument('--out_file', default="C:\\GitHub\\Camera_Calibration\\offline_processor\\GazeNet\\Demo_res\\gaze_result3.npy")
 args = parser.parse_args()
 
 IMG_DIR  = args.img_dir
@@ -24,7 +24,7 @@ OUT_FILE_NAME = args.out_file
 
 
 def load_model():
-    model = keras.models.load_model("C:\\gitProject\\Camera_Calibration\\offline_processor\\GazeNet\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
+    model = keras.models.load_model("C:\\GitHub\\Camera_Calibration\\offline_processor\\GazeNet\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
                                                                'categorical_accuracy': categorical_accuracy})
     return model
 

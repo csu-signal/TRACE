@@ -73,9 +73,9 @@ RESIZE_TO = (512, 512)
 
 #region initalize gaze detections
 
-# faceDetector = MTCNN()
-# gazeModel = keras.models.load_model(".\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
-#                                                                  'categorical_accuracy': categorical_accuracy})
+faceDetector = MTCNN()
+gazeModel = keras.models.load_model(".\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
+                                                                 'categorical_accuracy': categorical_accuracy})
 
 #endregion
 #endregion
@@ -261,15 +261,16 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
     #region gaze detections
 
     #faces,heads,images=load_frame(frame,framergb,faceDetector,shift)
-    #faces,heads,images=load_frame_azure(frame,framergb,bodies, rotation, translation, cameraMatrix, dist, shift)
-    # preds = predict_gaze(gazeModel, images, faces, heads)
-    # for index, head in enumerate(heads):
-    #     head_p1 = int((heads[index][0] * w) * 2**shift)
-    #     head_p2 = int((heads[index][1] * h) * 2**shift)
-    #     pred_p1 = int((preds[0][index][0] * w) * 2**shift)
-    #     pred_p2 = int((preds[0][index][1] * h) * 2**shift)
+    faces,heads,images=load_frame_azure(frame,framergb,bodies, rotation, translation, cameraMatrix, dist, shift)
+    if(len(faces) > 0):
+        preds = predict_gaze(gazeModel, images, faces, heads)
+        for index, head in enumerate(heads):
+            head_p1 = int((heads[index][0] * w) * 2**shift)
+            head_p2 = int((heads[index][1] * h) * 2**shift)
+            pred_p1 = int((preds[0][index][0] * w) * 2**shift)
+            pred_p2 = int((preds[0][index][1] * h) * 2**shift)
 
-    #     cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
+            cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
 
     #endregion 
 
