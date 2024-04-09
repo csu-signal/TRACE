@@ -62,6 +62,12 @@ PyObject* initalizePython()
   return myModule;
 }
 
+PyObject* initalizeGui()
+{
+  PyObject* myModule = PyImport_ImportModule("guiCalls");
+  return myModule;
+}
+
 void finalizePython()
 {
   PyRun_SimpleString("print('Finalizing Embedded Python')");
@@ -662,6 +668,7 @@ bool ProcessArguments(k4abt_tracker_configuration_t& tracker_config, int argc, c
 int main(int argc, char** argv)
 {
   PyObject* pyModule = initalizePython();
+  PyObject* guiModule = initalizeGui();
   k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT;
   //TODO make it so you can pass in the args
   /*  if (!ProcessArguments(tracker_config, argc, argv))

@@ -15,6 +15,7 @@ from tensorflow import keras
 from tensorflow.keras.metrics import categorical_accuracy
 from Face_Detection import load_frame, load_frame_azure
 from mtcnn import MTCNN
+from tkinter import *
 
 from model import create_model
 from config import (
@@ -76,6 +77,45 @@ RESIZE_TO = (512, 512)
 faceDetector = MTCNN()
 gazeModel = keras.models.load_model(".\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
                                                                  'categorical_accuracy': categorical_accuracy})
+
+#endregion
+
+#region GUI setup
+
+# create root window
+root = Tk()
+
+IncludePointing = IntVar(value=1)   
+IncludeObjects = IntVar(value=1)   
+IncludeGaze = IntVar(value=1)
+ 
+# root window title and dimension
+root.title("Output Options")
+root.geometry('350x200')
+Button1 = Checkbutton(root, text = "Pointing",  
+                      variable = IncludePointing, 
+                      onvalue = 1, 
+                      offvalue = 0, 
+                      height = 2, 
+                      width = 10) 
+
+Button2 = Checkbutton(root, text = "Objects", 
+                      variable = IncludeObjects, 
+                      onvalue = 1, 
+                      offvalue = 0, 
+                      height = 2, 
+                      width = 10) 
+
+Button3 = Checkbutton(root, text = "Gaze", 
+                      variable = IncludeGaze, 
+                      onvalue = 1, 
+                      offvalue = 0, 
+                      height = 2, 
+                      width = 10) 
+
+Button1.pack()
+Button2.pack()
+Button3.pack()
 
 #endregion
 #endregion
@@ -177,6 +217,8 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
     points = []
     h, w, c = frame.shape
     depthPath = depthPath + str(int(frameCount)) + ".png"
+
+    root.update()
     
     depthPaths[deviceId].append(depthPath)
     framergb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -203,116 +245,119 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
         cv2.waitKey(1)
 
     #region object detections
+    if(IncludeObjects.get() == 1):
+        image = cv2.resize(framergb, RESIZE_TO)
+        image = framergb.astype(np.float32)
+        # make the pixel range between 0 and 1
+        image /= 255.0
+        # bring color channels to front
+        image = np.transpose(image, (2, 0, 1)).astype(np.float32)
+        # convert to tensor
+        image = torch.tensor(image, dtype=torch.float).cuda()
+        # add batch dimension
+        image = torch.unsqueeze(image, 0)
+        with torch.no_grad():
+            # get predictions for the current frame
+            outputs = objectModel(image.to(DEVICE))
         
-    image = cv2.resize(framergb, RESIZE_TO)
-    image = framergb.astype(np.float32)
-    # make the pixel range between 0 and 1
-    image /= 255.0
-    # bring color channels to front
-    image = np.transpose(image, (2, 0, 1)).astype(np.float32)
-    # convert to tensor
-    image = torch.tensor(image, dtype=torch.float).cuda()
-    # add batch dimension
-    image = torch.unsqueeze(image, 0)
-    with torch.no_grad():
-        # get predictions for the current frame
-        outputs = objectModel(image.to(DEVICE))
-    
-    # object rendering
-    # load all detection to CPU for further operations
-    outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]  
-    blocks = []
-    found = []
-    if len(outputs[0]['boxes']) != 0:
-        boxes = outputs[0]['boxes'].data.numpy()
-        scores = outputs[0]['scores'].data.numpy()
-        boxes = boxes[scores >= detection_threshold].astype(np.int32)
-        draw_boxes = boxes.copy()
-        # get all the predicited class names
-        pred_classes = [CLASSES[i] for i in outputs[0]['labels'].cpu().numpy()]
+        # object rendering
+        # load all detection to CPU for further operations
+        outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]  
+        blocks = []
+        found = []
+        if len(outputs[0]['boxes']) != 0:
+            boxes = outputs[0]['boxes'].data.numpy()
+            scores = outputs[0]['scores'].data.numpy()
+            boxes = boxes[scores >= detection_threshold].astype(np.int32)
+            draw_boxes = boxes.copy()
+            # get all the predicited class names
+            pred_classes = [CLASSES[i] for i in outputs[0]['labels'].cpu().numpy()]
 
-        # draw the bounding boxes and write the class name on top of it
-        for j, box in enumerate(draw_boxes):
-            class_name = pred_classes[j]
-            if(found.__contains__(class_name)):
-                continue
+            # draw the bounding boxes and write the class name on top of it
+            for j, box in enumerate(draw_boxes):
+                class_name = pred_classes[j]
+                if(found.__contains__(class_name)):
+                    continue
 
-            found.append(class_name)
-            p1 = [box[0], box[1]]
-            p2 = [box[2], box[3]]
-            
-            block = Block(float(class_name), p1, p2)
-            blocks.append(block)
-            
-            print("Found Block: " + str(block.description))
-            # print(str(p1))
-            # print(str(p2))
+                found.append(class_name)
+                p1 = [box[0], box[1]]
+                p2 = [box[2], box[3]]
+                
+                block = Block(float(class_name), p1, p2)
+                blocks.append(block)
+                
+                print("Found Block: " + str(block.description))
+                # print(str(p1))
+                # print(str(p2))
 
-            cv2.rectangle(frame, 
-                (int(p1[0] * 2**shift), int(p1[1] * 2**shift)),
-                (int(p2[0] * 2**shift), int(p2[1] * 2**shift)),
-                color=(255,255,255),
-                thickness=3, 
-                shift=shift)
+                cv2.rectangle(frame, 
+                    (int(p1[0] * 2**shift), int(p1[1] * 2**shift)),
+                    (int(p2[0] * 2**shift), int(p2[1] * 2**shift)),
+                    color=(255,255,255),
+                    thickness=3, 
+                    shift=shift)
 
     #endregion
 
     bodies = json["bodies"]
+
     #region gaze detections
 
-    #faces,heads,images=load_frame(frame,framergb,faceDetector,shift)
-    faces,heads,images=load_frame_azure(frame,framergb,bodies, rotation, translation, cameraMatrix, dist, shift)
-    if(len(faces) > 0):
-        preds = predict_gaze(gazeModel, images, faces, heads)
-        for index, head in enumerate(heads):
-            head_p1 = int((heads[index][0] * w) * 2**shift)
-            head_p2 = int((heads[index][1] * h) * 2**shift)
-            pred_p1 = int((preds[0][index][0] * w) * 2**shift)
-            pred_p2 = int((preds[0][index][1] * h) * 2**shift)
+    if(IncludeGaze.get() == 1):
+        #faces,heads,images=load_frame(frame,framergb,faceDetector,shift)
+        faces,heads,images=load_frame_azure(frame,framergb,bodies, rotation, translation, cameraMatrix, dist, shift)
+        if(len(faces) > 0):
+            preds = predict_gaze(gazeModel, images, faces, heads)
+            for index, head in enumerate(heads):
+                head_p1 = int((heads[index][0] * w) * 2**shift)
+                head_p2 = int((heads[index][1] * h) * 2**shift)
+                pred_p1 = int((preds[0][index][0] * w) * 2**shift)
+                pred_p2 = int((preds[0][index][1] * h) * 2**shift)
 
-            cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
+                cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
 
     #endregion 
 
-    for _, body in enumerate(bodies):  
-        leftXAverage, leftYAverage, rightXAverage, rightYAverage = getAverageHandLocations(body, w, h, rotation, translation, cameraMatrix, dist)
-        rightBox = createBoundingBox(rightXAverage, rightYAverage)
-        leftBox = createBoundingBox(leftXAverage, leftYAverage)
-        findHands(frame,
-                framergb,
-                int(body['body_id']),
-                Handedness.Left, 
-                leftBox,
-                points,
-                cameraMatrix,
-                dist,
-                depth,
-                blocks) 
-        findHands(frame,
-                framergb,
-                int(body['body_id']),
-                Handedness.Right, 
-                rightBox,
-                points,
-                cameraMatrix,
-                dist,
-                depth,
-                blocks)
-    devicePoints[deviceId] = points
+    if(IncludePointing.get() == 1):
+        for _, body in enumerate(bodies):  
+            leftXAverage, leftYAverage, rightXAverage, rightYAverage = getAverageHandLocations(body, w, h, rotation, translation, cameraMatrix, dist)
+            rightBox = createBoundingBox(rightXAverage, rightYAverage)
+            leftBox = createBoundingBox(leftXAverage, leftYAverage)
+            findHands(frame,
+                    framergb,
+                    int(body['body_id']),
+                    Handedness.Left, 
+                    leftBox,
+                    points,
+                    cameraMatrix,
+                    dist,
+                    depth,
+                    blocks) 
+            findHands(frame,
+                    framergb,
+                    int(body['body_id']),
+                    Handedness.Right, 
+                    rightBox,
+                    points,
+                    cameraMatrix,
+                    dist,
+                    depth,
+                    blocks)
+        devicePoints[deviceId] = points
+
+        for key in devicePoints:
+            if(key == deviceId):
+                if(len(devicePoints[key]) == 0):
+                    cv2.putText(frame, "NO POINTS", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+                else:
+                    cv2.putText(frame, "POINTS DETECTED", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+                for hand in devicePoints[key]:
+                    for point in hand:
+                        cv2.circle(frame, point, radius=2, thickness= 2, color=(0,255,0))
 
     cv2.putText(frame, "FRAME:" + str(int(frameCount)), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
     cv2.putText(frame, "DEVICE:" + str(int(deviceId)), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
     
-    for key in devicePoints:
-        if(key == deviceId):
-            if(len(devicePoints[key]) == 0):
-                cv2.putText(frame, "NO POINTS", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
-            else:
-                cv2.putText(frame, "POINTS DETECTED", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
-            for hand in devicePoints[key]:
-                for point in hand:
-                    cv2.circle(frame, point, radius=2, thickness= 2, color=(0,255,0))
-
     keyFrame[deviceId] = cv2.resize(frame, (640, 360))
 
     if(frameCount == 0 or frameCount % 100 == 0):
