@@ -223,6 +223,16 @@ def createBoundingBox(xAverage, yAverage):
 
     return [int(xMin - (xSpan)), int(yMin - (ySpan)), int(xMax + (xSpan)), int(yMax + (ySpan))]  
 
+def createHeadBoundingBox(xAverage, yAverage, xRange, yRange):
+    xMax = xAverage + xRange
+    xMin = xAverage - xRange 
+    yMax = yAverage + yRange
+    yMin = yAverage - yRange
+    xSpan = xMax - xMin
+    ySpan = yMax - yMin
+
+    return [int(xMin - (xSpan)), int(yMin - (ySpan)), int(xMax + (xSpan)), int(yMax + (ySpan))]  
+
 def getPointSubcategory(joint):
      if(joint == Joint.PELVIS or joint == Joint.NECK or joint == Joint.SPINE_NAVEL or joint == Joint.SPINE_CHEST):
           return BodyCategory.TORSO

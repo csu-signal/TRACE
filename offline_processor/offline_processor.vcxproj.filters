@@ -31,6 +31,7 @@
     <None Include="config.py" />
     <None Include="model.py" />
     <None Include="objectDetectionModels\best_model-objects.pth" />
+    <None Include="Face_Detection.py" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">

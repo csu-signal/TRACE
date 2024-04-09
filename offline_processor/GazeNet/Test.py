@@ -11,9 +11,9 @@ import collections
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--img_dir')
-parser.add_argument('--out_dir')
-parser.add_argument('--out_file')
+parser.add_argument('--img_dir', default="C:\\GitHub\\Camera_Calibration\\offline_processor\\GazeNet\\Demo_img")
+parser.add_argument('--out_dir', default="C:\\GitHub\\Camera_Calibration\\offline_processor\\GazeNet\\Demo_res")
+parser.add_argument('--out_file', default="C:\\GitHub\\Camera_Calibration\\offline_processor\\GazeNet\\Demo_res\\gaze_result3.npy")
 args = parser.parse_args()
 
 IMG_DIR  = args.img_dir
@@ -24,7 +24,7 @@ OUT_FILE_NAME = args.out_file
 
 
 def load_model():
-    model = keras.models.load_model("Model/1", custom_objects={'euclideanLoss': euclideanLoss,
+    model = keras.models.load_model("C:\\GitHub\\Camera_Calibration\\offline_processor\\GazeNet\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
                                                                'categorical_accuracy': categorical_accuracy})
     return model
 
@@ -43,6 +43,10 @@ def visualize_save(filenames,faces,heads, preds):
         ima = Image.open(osp.join(IMG_DIR,k))
         w = np.size(ima)[0]
         h = np.size(ima)[1]
+
+        print(w)
+        print(h)
+        
         fa_in = grouped_df[k]
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
@@ -50,8 +54,11 @@ def visualize_save(filenames,faces,heads, preds):
         img_heads = []
         img_gazes = []
         for res in fa_in:
-            plt.arrow(heads[res][0] * w, heads[res][1] * h, preds[0][res][0] * w - heads[res][0] * w,
-                      preds[0][res][1] * h - heads[res][1] * h, color="red", width=1, head_width=20)
+            plt.arrow(heads[res][0] * w,
+                       heads[res][1] * h,
+                       preds[0][res][0] * w - heads[res][0] * w,
+                        preds[0][res][1] * h - heads[res][1] * h,
+                        color="red", width=1, head_width=20)
             img_faces.append(faces[res]) # shape:(32, 32, 3)
             img_heads.append(heads[res]) # here the cordinate can be computed by multiply 
             img_gazes.append(preds[0][res]) 
