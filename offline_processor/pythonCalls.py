@@ -245,6 +245,7 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
         cv2.waitKey(1)
 
     #region object detections
+    blocks = []
     if(IncludeObjects.get() == 1):
         image = cv2.resize(framergb, RESIZE_TO)
         image = framergb.astype(np.float32)
@@ -263,7 +264,6 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
         # object rendering
         # load all detection to CPU for further operations
         outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]  
-        blocks = []
         found = []
         if len(outputs[0]['boxes']) != 0:
             boxes = outputs[0]['boxes'].data.numpy()
