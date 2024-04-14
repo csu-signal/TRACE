@@ -16,6 +16,10 @@ from tensorflow.keras.metrics import categorical_accuracy
 from Face_Detection import load_frame, load_frame_azure
 from mtcnn import MTCNN
 from tkinter import *
+import socket
+import errno
+from time import sleep
+import textwrap 
 
 from model import create_model
 from config import (
@@ -44,6 +48,8 @@ loaded_model = joblib.load(".\\bestModel-pointing.pkl")
 devicePoints = {}
 keyFrame = {}
 shift = 7
+lastASR = "NO ASR DATA"
+print(lastASR)
 
 keyFrame[0] = np.zeros((360, 640, 3), dtype = "uint8")
 keyFrame[1] = np.zeros((360, 640, 3), dtype = "uint8")
@@ -77,7 +83,6 @@ RESIZE_TO = (512, 512)
 faceDetector = MTCNN()
 gazeModel = keras.models.load_model(".\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
                                                                  'categorical_accuracy': categorical_accuracy})
-
 #endregion
 
 #region GUI setup
@@ -88,6 +93,7 @@ root = Tk()
 IncludePointing = IntVar(value=1)   
 IncludeObjects = IntVar(value=1)   
 IncludeGaze = IntVar(value=1)
+IncludeASR = IntVar(value=1)
  
 # root window title and dimension
 root.title("Output Options")
@@ -113,9 +119,31 @@ Button3 = Checkbutton(root, text = "Gaze",
                       height = 2, 
                       width = 10) 
 
+Button4 = Checkbutton(root, text = "ASR", 
+                      variable = IncludeASR, 
+                      onvalue = 1, 
+                      offvalue = 0, 
+                      height = 2, 
+                      width = 10) 
+
 Button1.pack()
 Button2.pack()
 Button3.pack()
+Button4.pack()
+
+#endregion
+
+#region ASR socket 
+
+try: 
+   connected = True
+   print("Attempting socket connection")
+   s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+   s.settimeout(0.1)
+   s.connect(('127.0.0.1', 9999))
+except socket.error:
+    connected = False
+    print("failed to connect to ASR socket")
 
 #endregion
 #endregion
@@ -243,6 +271,26 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
         vis = cv2.resize(vis, (960, 640))
         cv2.imshow("OVERLAY " + str(deviceId), vis)
         cv2.waitKey(1)
+
+    if(connected == True and IncludeASR.get() == 1):
+        try:
+            msg = s.recv(4096)
+        except socket.error as e:
+            err = e.args[0]
+            if err != errno.EAGAIN and err != errno.EWOULDBLOCK:
+                print(e)
+        else:
+            encoding = 'utf-8'
+            output = msg.decode(encoding)  
+            print(output)
+
+            wrapped_text = textwrap.wrap(output, width=50)
+            asrFrame = np.zeros((1080, 1920, 3), dtype = "uint8")
+
+            for i, line in enumerate(wrapped_text):
+                cv2.putText(asrFrame, str(line), (75,75 * (1+i)), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2, cv2.LINE_AA)
+
+            keyFrame[1] = cv2.resize(asrFrame, (640, 360))
 
     #region object detections
     blocks = []
@@ -415,7 +463,8 @@ def createFolder(data):
         print(e) 
 
 def showOutput():
-    concat = concat_vh([[keyFrame[1], keyFrame[0]], [keyFrame[2], keyFrame[3]]])
+    # concat = concat_vh([[keyFrame[1], keyFrame[0]], [keyFrame[2], keyFrame[3]]])
+    concat = concat_vh([[keyFrame[1], keyFrame[0]]])
     cv2.imshow("OUTPUT", concat)
     cv2.waitKey(1)
 
