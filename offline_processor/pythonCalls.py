@@ -365,36 +365,52 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
             gazeCount[0] += 1 
             for index, head in enumerate(heads):
                 key = bodyIds[index]
-                print(key)
-                if(gazeCount[0] < 5):
-                    if key in gazeHead:
-                        gazeHead[key][0] += (heads[index][0] * w)
-                        gazeHead[key][1] += (heads[index][1] * h)
-
-                        gazePred[key][0] += (preds[0][index][0] * w)
-                        gazePred[key][1] += (preds[0][index][1] * h)
-                    else:
-                        gazeHead[key] = [(heads[index][0] * w), (heads[index][1] * h)]
-                        gazePred[key] = [(preds[0][index][0] * w), (preds[0][index][1] * h)]
+                #print(key)
+                if key not in gazeHead:
+                    gazeHead[key] = []
+                    gazePred[key] = []
+                    
+                gazeHead[key].append([(heads[index][0] * w), (heads[index][1] * h)])
+                gazePred[key].append([(preds[0][index][0] * w), (preds[0][index][1] * h)])
         
-                if(gazeCount[0] == 5):
-                    gazeHeadAverage[key] = ((gazeHead[key][0] / 5), (gazeHead[key][1] / 5))
-                    print(gazeHeadAverage[key])
-                    gazePredAverage[key] = ((gazePred[key][0] / 5), (gazePred[key][1] / 5))
-                    print(gazePredAverage[key])
+                if(len(gazePred[key]) == 5):
+                    sumx = 0
+                    sumy = 0
+                    for point in gazeHead[key]: 
+                        sumx += point[0]
+                        sumy += point[1]
 
-                    gazeHead[key] = [(heads[index][0] * w), (heads[index][1] * h)]
-                    gazePred[key] = [(preds[0][index][0] * w), (preds[0][index][1] * h)]
+                    head_p1 = int((sumx / 5) * 2**shift)
+                    head_p2 = int((sumy / 5) * 2**shift)
 
-                if key in gazeHeadAverage:
-                    head_p1 = int(gazeHeadAverage[key][0] * 2**shift)
-                    head_p2 = int(gazeHeadAverage[key][1] * 2**shift)
-                    pred_p1 = int(gazePredAverage[key][0] * 2**shift)
-                    pred_p2 = int(gazePredAverage[key][1] * 2**shift)
+                    sumx = 0
+                    sumy = 0
+                    for point in gazePred[key]: 
+                        sumx += point[0]
+                        sumy += point[1]
+
+                    pred_p1 = int((sumx / 5) * 2**shift)
+                    pred_p2 = int((sumy / 5) * 2**shift)
 
                     cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
-            if(gazeCount[0] == 5):
-                gazeCount[0] = 0
+
+                    # for key in gazeHead:
+                    #     print(key)
+                    copyHead = gazeHead[key]
+                    #print(copyHead)
+
+                    gazeHead[key] = []
+                    gazeHead[key].append(copyHead[1]) 
+                    gazeHead[key].append(copyHead[2])
+                    gazeHead[key].append(copyHead[3])
+                    gazeHead[key].append(copyHead[4])
+
+                    copyPred = gazePred[key]
+                    gazePred[key] = []
+                    gazePred[key].append(copyPred[1]) 
+                    gazePred[key].append(copyPred[2])
+                    gazePred[key].append(copyPred[3])
+                    gazePred[key].append(copyPred[4])
 
     #endregion 
 
