@@ -33,6 +33,7 @@ def load_frame_azure(frame, framergb, bodies, rotation, translation, cameraMatri
     faces_li = []
     heads = []
     images = []
+    bodyIds = []
 
     im = cv2.resize(framergb, (256,256))
     im_ar = np.array(im)
@@ -41,13 +42,13 @@ def load_frame_azure(frame, framergb, bodies, rotation, translation, cameraMatri
         box, nosex, nosey = headBoundingBox(body,rotation, translation, cameraMatrix, dist)
         h, w, c = framergb.shape
         (head_x,head_y) = head_cord_azure(box)
-        print((head_x/w,head_y/h))
+        #print((head_x/w,head_y/h))
         heads.append((head_x/w,head_y/h))
         ltx = int(box[0])
         lty = int(box[1])
         rbx = int(box[2])
         rby = int(box[3])
-        print((ltx,lty,rbx,rby))
+        #print((ltx,lty,rbx,rby))
 
         # cv2.rectangle(frame, 
         #     (int(ltx* 2**shift), int(lty * 2**shift)), 
@@ -62,8 +63,9 @@ def load_frame_azure(frame, framergb, bodies, rotation, translation, cameraMatri
         face_ar = np.array(face_ima)/ 255.0
         faces_li.append(face_ar)
         images.append(im_ar.astype("float") / 255.0)
+        bodyIds.append(int(body['body_id']))
 
-    return faces_li,heads,images
+    return faces_li,heads,images,bodyIds
 
 def load_frame(frame, framergb, detector, shift):
     faces_li = []

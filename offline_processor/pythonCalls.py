@@ -43,13 +43,19 @@ def predict_gaze(model, image, faces, heads):
 
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.6, min_tracking_confidence= 0)
+gazeCount = []
+gazeCount.append(0)
 
 loaded_model = joblib.load(".\\bestModel-pointing.pkl")
 devicePoints = {}
 keyFrame = {}
+gazeHead = {}
+gazePred = {}
+
+gazeHeadAverage = {}
+gazePredAverage = {}
+
 shift = 7
-lastASR = "NO ASR DATA"
-print(lastASR)
 
 keyFrame[0] = np.zeros((360, 640, 3), dtype = "uint8")
 keyFrame[1] = np.zeros((360, 640, 3), dtype = "uint8")
@@ -353,16 +359,42 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
 
     if(IncludeGaze.get() == 1):
         #faces,heads,images=load_frame(frame,framergb,faceDetector,shift)
-        faces,heads,images=load_frame_azure(frame,framergb,bodies, rotation, translation, cameraMatrix, dist, shift)
+        faces,heads,images,bodyIds=load_frame_azure(frame,framergb,bodies, rotation, translation, cameraMatrix, dist, shift)
         if(len(faces) > 0):
             preds = predict_gaze(gazeModel, images, faces, heads)
+            gazeCount[0] += 1 
             for index, head in enumerate(heads):
-                head_p1 = int((heads[index][0] * w) * 2**shift)
-                head_p2 = int((heads[index][1] * h) * 2**shift)
-                pred_p1 = int((preds[0][index][0] * w) * 2**shift)
-                pred_p2 = int((preds[0][index][1] * h) * 2**shift)
+                key = bodyIds[index]
+                print(key)
+                if(gazeCount[0] < 5):
+                    if key in gazeHead:
+                        gazeHead[key][0] += (heads[index][0] * w)
+                        gazeHead[key][1] += (heads[index][1] * h)
 
-                cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
+                        gazePred[key][0] += (preds[0][index][0] * w)
+                        gazePred[key][1] += (preds[0][index][1] * h)
+                    else:
+                        gazeHead[key] = [(heads[index][0] * w), (heads[index][1] * h)]
+                        gazePred[key] = [(preds[0][index][0] * w), (preds[0][index][1] * h)]
+        
+                if(gazeCount[0] == 5):
+                    gazeHeadAverage[key] = ((gazeHead[key][0] / 5), (gazeHead[key][1] / 5))
+                    print(gazeHeadAverage[key])
+                    gazePredAverage[key] = ((gazePred[key][0] / 5), (gazePred[key][1] / 5))
+                    print(gazePredAverage[key])
+
+                    gazeHead[key] = [(heads[index][0] * w), (heads[index][1] * h)]
+                    gazePred[key] = [(preds[0][index][0] * w), (preds[0][index][1] * h)]
+
+                if key in gazeHeadAverage:
+                    head_p1 = int(gazeHeadAverage[key][0] * 2**shift)
+                    head_p2 = int(gazeHeadAverage[key][1] * 2**shift)
+                    pred_p1 = int(gazePredAverage[key][0] * 2**shift)
+                    pred_p2 = int(gazePredAverage[key][1] * 2**shift)
+
+                    cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
+            if(gazeCount[0] == 5):
+                gazeCount[0] = 0
 
     #endregion 
 
