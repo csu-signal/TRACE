@@ -675,5 +675,5 @@ int main(int argc, char** argv)
     "C:\\Users\\vanderh\\Desktop\\OutputTest\\nsf-demo-scene2-sub2.mkv"
   };
 
-  return process_mkv_offline(pyModule, true, false, input_path, "\\", tracker_config) ? 0 : -1;
+  return process_mkv_offline(pyModule, false, false, input_path, "\\", tracker_config) ? 0 : -1;
 }

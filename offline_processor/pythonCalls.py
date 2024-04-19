@@ -43,13 +43,19 @@ def predict_gaze(model, image, faces, heads):
 
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.6, min_tracking_confidence= 0)
+gazeCount = []
+gazeCount.append(0)
 
 loaded_model = joblib.load(".\\bestModel-pointing.pkl")
 devicePoints = {}
 keyFrame = {}
+gazeHead = {}
+gazePred = {}
+
+gazeHeadAverage = {}
+gazePredAverage = {}
+
 shift = 7
-lastASR = "NO ASR DATA"
-print(lastASR)
 
 keyFrame[0] = np.zeros((360, 640, 3), dtype = "uint8")
 keyFrame[1] = np.zeros((360, 640, 3), dtype = "uint8")
@@ -353,16 +359,58 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
 
     if(IncludeGaze.get() == 1):
         #faces,heads,images=load_frame(frame,framergb,faceDetector,shift)
-        faces,heads,images=load_frame_azure(frame,framergb,bodies, rotation, translation, cameraMatrix, dist, shift)
+        faces,heads,images,bodyIds=load_frame_azure(frame,framergb,bodies, rotation, translation, cameraMatrix, dist, shift)
         if(len(faces) > 0):
             preds = predict_gaze(gazeModel, images, faces, heads)
+            gazeCount[0] += 1 
             for index, head in enumerate(heads):
-                head_p1 = int((heads[index][0] * w) * 2**shift)
-                head_p2 = int((heads[index][1] * h) * 2**shift)
-                pred_p1 = int((preds[0][index][0] * w) * 2**shift)
-                pred_p2 = int((preds[0][index][1] * h) * 2**shift)
+                key = bodyIds[index]
+                #print(key)
+                if key not in gazeHead:
+                    gazeHead[key] = []
+                    gazePred[key] = []
+                    
+                gazeHead[key].append([(heads[index][0] * w), (heads[index][1] * h)])
+                gazePred[key].append([(preds[0][index][0] * w), (preds[0][index][1] * h)])
+        
+                if(len(gazePred[key]) == 5):
+                    sumx = 0
+                    sumy = 0
+                    for point in gazeHead[key]: 
+                        sumx += point[0]
+                        sumy += point[1]
 
-                cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
+                    head_p1 = int((sumx / 5) * 2**shift)
+                    head_p2 = int((sumy / 5) * 2**shift)
+
+                    sumx = 0
+                    sumy = 0
+                    for point in gazePred[key]: 
+                        sumx += point[0]
+                        sumy += point[1]
+
+                    pred_p1 = int((sumx / 5) * 2**shift)
+                    pred_p2 = int((sumy / 5) * 2**shift)
+
+                    cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
+
+                    # for key in gazeHead:
+                    #     print(key)
+                    copyHead = gazeHead[key]
+                    #print(copyHead)
+
+                    gazeHead[key] = []
+                    gazeHead[key].append(copyHead[1]) 
+                    gazeHead[key].append(copyHead[2])
+                    gazeHead[key].append(copyHead[3])
+                    gazeHead[key].append(copyHead[4])
+
+                    copyPred = gazePred[key]
+                    gazePred[key] = []
+                    gazePred[key].append(copyPred[1]) 
+                    gazePred[key].append(copyPred[2])
+                    gazePred[key].append(copyPred[3])
+                    gazePred[key].append(copyPred[4])
 
     #endregion 
 
