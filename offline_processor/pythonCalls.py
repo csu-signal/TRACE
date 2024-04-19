@@ -146,7 +146,7 @@ try:
    print("Attempting socket connection")
    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
    s.settimeout(0.1)
-   s.connect(('127.0.0.1', 9999))
+   s.connect(('10.84.208.54', 9999)) #ipv4 address of rosch
 except socket.error:
     connected = False
     print("failed to connect to ASR socket")
