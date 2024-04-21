@@ -670,7 +670,7 @@ int main(int argc, char** argv)
 
   const char* input_path[3] =
   {
-    "F:\\TempBaselineISAT\\TempBaselineISAT\\baseline-master.mkv",
+    "F:\\TempBaselineISAT\\DemoVideo_baseline2\\demoyeti2-sub2.mkv",
     "C:\\Users\\vanderh\\Desktop\\OutputTest\\nsf-demo-scene2-sub1.mkv",
     "C:\\Users\\vanderh\\Desktop\\OutputTest\\nsf-demo-scene2-sub2.mkv"
   };

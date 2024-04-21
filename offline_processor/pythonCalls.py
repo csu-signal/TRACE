@@ -20,6 +20,7 @@ import socket
 import errno
 from time import sleep
 import textwrap 
+import math
 
 from model import create_model
 from config import (
@@ -42,7 +43,7 @@ def predict_gaze(model, image, faces, heads):
 #region initialize python
 
 mpHands = mp.solutions.hands
-hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.6, min_tracking_confidence= 0)
+hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.4, min_tracking_confidence= 0)
 gazeCount = []
 gazeCount.append(0)
 
@@ -54,6 +55,8 @@ gazePred = {}
 
 gazeHeadAverage = {}
 gazePredAverage = {}
+
+blockStatus = {}
 
 shift = 7
 
@@ -182,7 +185,7 @@ def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, di
                     prediction = loaded_model.predict_proba([normalized])
                     #print(prediction)
 
-                    if prediction[0][0] >= 0.2:
+                    if prediction[0][0] >= 0.3:
                         landmarks = []
                         for lm in handslms.landmark:
                             lmx, lmy = int(lm.x * w) + box[0], int(lm.y * h) + box[1] 
@@ -212,36 +215,8 @@ def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, di
                             cv2.circle(frame, point_Extended, radius=15, color=(255,0,0), thickness=15, shift=shift)
 
                             cone = ConeShape(mediaPipe5, nextPoint, 80, 100, cameraMatrix, dist)
-                            cone.projectRadiusLines(shift, frame, True, False)
-
-                            for block in blocks:
-                                targetPoint = [(block.p1[0] + block.p2[0])/2,(block.p1[1] + block.p2[1]) / 2]
-
-                                try:
-                                    object3D, success = convertTo3D(cameraMatrix, dist, depth, int(targetPoint[0]), int(targetPoint[1]))
-                                    if(success == ParseResult.InvalidDepth):
-                                        print("Ignoring invalid depth")
-                                        continue
-                                except:
-                                    continue
-
-                                block.target = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, True)
-                                if(block.target):
-                                    cv2.rectangle(frame, 
-                                        (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
-                                        (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
-                                        color=(0,255,0),
-                                        thickness=5, 
-                                        shift=shift)
-                                    cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)
-                                else:
-                                    cv2.rectangle(frame, 
-                                        (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
-                                        (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
-                                        color=(0,0,255),
-                                        thickness=5, 
-                                        shift=shift)
-                                    cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)  
+                            cone.projectRadiusLines(shift, frame, True, False, False)
+                            checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shift, False)
 
 def concat_vh(list_2d): 
     return cv2.vconcat([cv2.hconcat(list_h)  
@@ -251,6 +226,7 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
     points = []
     h, w, c = frame.shape
     depthPath = depthPath + str(int(frameCount)) + ".png"
+    blockStatus = {}
 
     root.update()
     
@@ -380,8 +356,8 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                         sumx += point[0]
                         sumy += point[1]
 
-                    head_p1 = int((sumx / 5) * 2**shift)
-                    head_p2 = int((sumy / 5) * 2**shift)
+                    headX_average = int(sumx / 5)
+                    headY_average = int(sumy / 5)
 
                     sumx = 0
                     sumy = 0
@@ -389,11 +365,46 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                         sumx += point[0]
                         sumy += point[1]
 
-                    pred_p1 = int((sumx / 5) * 2**shift)
-                    pred_p2 = int((sumy / 5) * 2**shift)
+                    predX_average = int(sumx / 5)
+                    predY_average = int(sumy / 5)
 
-                    cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
+                    lenAB = math.sqrt(pow(headX_average - predX_average, 2.0) + pow(headY_average - predY_average, 2.0))
+                    print(lenAB)
 
+                    length = 500
+                    if(lenAB < length):
+                        # print("Made it into the length update")
+                        # print("Before")
+                        # print(predX_average)
+                        # print(predY_average)
+                        unitSlopeX = (predX_average-headX_average) / lenAB
+                        unitSlopeY = (predY_average-headY_average) / lenAB
+
+                        predX_average = int(headX_average + (unitSlopeX * length))
+                        predY_average = int(headY_average + (unitSlopeY * length))
+                        # print("After")
+                        # print(predX_average)
+                        # print(predY_average)
+
+                        # predX_average = int(predX_average + (predX_average - headX_average) / lenAB * (length - lenAB))
+                        # predY_average = int(predY_average + (predY_average - predX_average) / lenAB * (length - lenAB))
+
+                    head3D, h_Success = convertTo3D(cameraMatrix, dist, depth, headX_average, headY_average)
+                    pred3D, p_Success = convertTo3D(cameraMatrix, dist, depth, predX_average, predY_average)
+
+                    if(h_Success == ParseResult.Success and p_Success == ParseResult.Success):
+                        pred_p1 = int((predX_average) * 2**shift)
+                        pred_p2 = int((predY_average) * 2**shift)
+
+                        head_p1 = int((headX_average) * 2**shift)
+                        head_p2 = int((headY_average) * 2**shift)
+                        cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(107,190,255))
+
+                        cone = ConeShape(head3D, pred3D, 80, 100, cameraMatrix, dist)
+                        cone.projectRadiusLines(shift, frame, True, False, True)
+                        
+                        checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shift, True)
+                    
                     # for key in gazeHead:
                     #     print(key)
                     copyHead = gazeHead[key]
