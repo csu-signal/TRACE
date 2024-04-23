@@ -21,6 +21,7 @@ import errno
 from time import sleep
 import textwrap 
 import math
+import torch.nn as nn
 
 from model import create_model
 from config import (
@@ -37,6 +38,25 @@ def euclideanLoss(y_true, y_pred):
 def predict_gaze(model, image, faces, heads):
     preds = model.predict([np.array(image),np.array(faces),np.array(heads)])
     return preds
+
+class SkeletonPoseClassifier(nn.Module):
+    """
+    Base model, input single body, binary output. Two feedforward layers.
+    Note: label of a frame is a very strong predictor of the next, how to incorporate without risk?
+    """
+    def __init__(self, input_size, hidden_size, output_size):
+        super(SkeletonPoseClassifier, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size, output_size)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.relu1(x)
+        x = self.fc2(x)
+        x = self.sigmoid(x)
+        return x
 
 #endregion
 
@@ -87,6 +107,28 @@ RESIZE_TO = (512, 512)
 
 #endregion
 
+#region initalize pose models
+
+#  required arguments
+input_size = 224
+hidden_size = 300
+output_size = 1
+  
+# initialize a model 
+leftModel = SkeletonPoseClassifier(input_size = input_size,hidden_size=hidden_size,output_size=output_size)
+leftModel.load_state_dict(torch.load(".\\skeleton_pose_classifier_left.pt"))
+leftModel.eval()
+
+middleModel = SkeletonPoseClassifier(input_size = input_size,hidden_size=hidden_size,output_size=output_size)
+middleModel.load_state_dict(torch.load(".\\skeleton_pose_classifier_middle.pt"))
+middleModel.eval()
+
+rightModel = SkeletonPoseClassifier(input_size = input_size,hidden_size=hidden_size,output_size=output_size)
+rightModel.load_state_dict(torch.load(".\\skeleton_pose_classifier_right.pt"))
+rightModel.eval()
+
+#endregion
+
 #region initalize gaze detections
 
 faceDetector = MTCNN()
@@ -103,6 +145,7 @@ IncludePointing = IntVar(value=1)
 IncludeObjects = IntVar(value=1)   
 IncludeGaze = IntVar(value=1)
 IncludeASR = IntVar(value=1)
+IncludePose = IntVar(value=1)
  
 # root window title and dimension
 root.title("Output Options")
@@ -135,10 +178,18 @@ Button4 = Checkbutton(root, text = "ASR",
                       height = 2, 
                       width = 10) 
 
+Button5 = Checkbutton(root, text = "Pose", 
+                      variable = IncludePose, 
+                      onvalue = 1, 
+                      offvalue = 0, 
+                      height = 2, 
+                      width = 10) 
+
 Button1.pack()
 Button2.pack()
 Button3.pack()
 Button4.pack()
+Button5.pack()
 
 #endregion
 
@@ -323,6 +374,61 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
     #endregion
 
     bodies = json["bodies"]
+
+    #region pose detection
+    if(IncludePose.get() == 1):
+        left_position = 800
+        middle_position = 1200
+
+        cv2.circle(frame, (int(left_position), 800), radius=15, color=(255,0,0), thickness=15)
+        cv2.circle(frame, (int(middle_position), 800), radius=15, color=(255,0,0), thickness=15)
+
+        for b in bodies:
+            points2D, _ = cv2.projectPoints(
+                    np.array(b['joint_positions'][1]), 
+                    rotation,
+                    translation,
+                    cameraMatrix,
+                    dist)  
+            x = points2D[0][0][0]
+            print(x)
+
+            if x < left_position:
+                print("left")
+                poseModel = leftModel
+                body = b
+                position = "left"
+            elif x > left_position and x < middle_position:
+                print("middle")
+                poseModel = middleModel
+                body = b
+                position = "middle"
+            else:
+                print("right")
+                poseModel = rightModel
+                body = b
+                position = "right"
+
+            tensors = []
+            orientation_data = body['joint_orientations']
+            position_data = body['joint_positions']
+            o = torch.tensor(orientation_data).flatten()
+            p = torch.tensor(position_data).flatten() / 1000 # normalize to scale of orientations
+            tensors.append(torch.concat([o, p])) # concatenating orientation to position
+
+            output = poseModel(torch.stack(tensors))
+            prediction = int(torch.argmax(output))
+            print("Prediction: " + str(prediction))
+
+            engagement = "disengaged" if prediction == 0 else "engaged"
+            if position == "left":
+                cv2.putText(frame, "P3: " + engagement, (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+            elif position == "middle":
+                cv2.putText(frame, "P2: " + engagement, (50,250), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+            else:
+                cv2.putText(frame, "P1: " + engagement, (50,300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+
+    #endregion
 
     #region gaze detections
 
