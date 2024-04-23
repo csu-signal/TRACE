@@ -320,13 +320,6 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                 # print(str(p1))
                 # print(str(p2))
 
-                cv2.rectangle(frame, 
-                    (int(p1[0] * 2**shift), int(p1[1] * 2**shift)),
-                    (int(p2[0] * 2**shift), int(p2[1] * 2**shift)),
-                    color=(255,255,255),
-                    thickness=3, 
-                    shift=shift)
-
     #endregion
 
     bodies = json["bodies"]
@@ -401,7 +394,7 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                         cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(107,190,255))
 
                         cone = ConeShape(head3D, pred3D, 80, 100, cameraMatrix, dist)
-                        cone.projectRadiusLines(shift, frame, True, False, True)
+                        cone.projectRadiusLines(shift, frame, False, False, True)
                         
                         checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shift, True)
                     

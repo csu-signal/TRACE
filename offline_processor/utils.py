@@ -459,17 +459,25 @@ def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shi
             if(success == ParseResult.InvalidDepth):
                 print("Ignoring invalid depth")
 
-                if block.description not in blockStatus:
-                    cv2.rectangle(frame, 
-                        (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
-                        (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
-                        color=(0,0,0),
-                        thickness=5, 
-                        shift=shift)
-                    cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)  
+                # if block.description not in blockStatus:
+                #     cv2.rectangle(frame, 
+                #         (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
+                #         (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
+                #         color=(0,0,0),
+                #         thickness=5, 
+                #         shift=shift)
+                #     cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)  
                 continue
         except:
             continue
+
+        if block.description not in blockStatus:
+            cv2.rectangle(frame, 
+            (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
+            (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
+            color=(255,255,255),
+            thickness=3, 
+            shift=shift)
 
         block.target = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, True)
         if(block.target):
