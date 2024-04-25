@@ -377,20 +377,24 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
 
     #region pose detection
     if(IncludePose.get() == 1):
-        left_position = 800
-        middle_position = 1200
+        left_position = -400
+        middle_position = 400
 
-        cv2.circle(frame, (int(left_position), 800), radius=15, color=(255,0,0), thickness=15)
-        cv2.circle(frame, (int(middle_position), 800), radius=15, color=(255,0,0), thickness=15)
+        # left_position = 800
+        # middle_position = 1200
+
+        # cv2.circle(frame, (int(left_position), 800), radius=15, color=(255,0,0), thickness=15)
+        # cv2.circle(frame, (int(middle_position), 800), radius=15, color=(255,0,0), thickness=15)
 
         for b in bodies:
-            points2D, _ = cv2.projectPoints(
-                    np.array(b['joint_positions'][1]), 
-                    rotation,
-                    translation,
-                    cameraMatrix,
-                    dist)  
-            x = points2D[0][0][0]
+            # points2D, _ = cv2.projectPoints(
+            #         np.array(b['joint_positions'][1]), 
+            #         rotation,
+            #         translation,
+            #         cameraMatrix,
+            #         dist)  
+            #x = points2D[0][0][0]
+            x = b['joint_positions'][1][0]
             print(x)
 
             if x < left_position:
@@ -409,6 +413,23 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                 body = b
                 position = "right"
 
+            # print(b['joint_positions'][1][0])
+            # if b['joint_positions'][1][0] > left_position:
+            #     print("left")
+            #     poseModel = leftModel
+            #     body = b
+            #     position = "left"
+            # elif b['joint_positions'][1][0] < middle_position:
+            #     print("middle")
+            #     poseModel = middleModel
+            #     body = b
+            #     position = "middle"
+            # else:
+            #     print("right")
+            #     poseModel = rightModel
+            #     body = b
+            #     position = "right"
+
             tensors = []
             orientation_data = body['joint_orientations']
             position_data = body['joint_positions']
@@ -422,11 +443,11 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
 
             engagement = "disengaged" if prediction == 0 else "engaged"
             if position == "left":
-                cv2.putText(frame, "P3: " + engagement, (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+                cv2.putText(frame, "P1: " + engagement, (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
             elif position == "middle":
                 cv2.putText(frame, "P2: " + engagement, (50,250), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
             else:
-                cv2.putText(frame, "P1: " + engagement, (50,300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+                cv2.putText(frame, "P3: " + engagement, (50,300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
 
     #endregion
 
