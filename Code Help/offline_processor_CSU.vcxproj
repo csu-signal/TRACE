@@ -78,6 +78,7 @@ xcopy "$(SolutionDir)guiCalls.py" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)bestModel-pointing.pkl" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)objectDetectionModels" "$(TargetDir)" /E /R /Y /I
 xcopy "$(SolutionDir)gazeDetectionModels" "$(TargetDir)" /E /R /Y /I
+xcopy "$(SolutionDir)poseModels" "$(TargetDir)" /E /R /Y /I
 xcopy "$(SolutionDir)utils.py" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)5131.png" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)5131sub1.png" "$(TargetDir)" /F /R /Y /I
@@ -109,6 +110,7 @@ xcopy "$(SolutionDir)guiCalls.py" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)bestModel-pointing.pkl" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)objectDetectionModels" "$(TargetDir)" /E /R /Y /I
 xcopy "$(SolutionDir)gazeDetectionModels" "$(TargetDir)" /E /R /Y /I
+xcopy "$(SolutionDir)poseModels" "$(TargetDir)" /E /R /Y /I
 xcopy "$(SolutionDir)utils.py" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)5131.png" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)5131sub1.png" "$(TargetDir)" /F /R /Y /I

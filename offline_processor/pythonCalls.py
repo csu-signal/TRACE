@@ -438,16 +438,19 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
             tensors.append(torch.concat([o, p])) # concatenating orientation to position
 
             output = poseModel(torch.stack(tensors))
-            prediction = int(torch.argmax(output))
+            # prediction = int(torch.argmax(output))
+            prediction = output.detach().numpy()[0][0] > 0.5
             print("Prediction: " + str(prediction))
+            # print("Output: " + str(output))
 
-            engagement = "disengaged" if prediction == 0 else "engaged"
+            engagement = "leaning out" if prediction == 0 else "leaning in"
+            color = (255,0,0) if prediction == 0 else (39,142,37)
             if position == "left":
-                cv2.putText(frame, "P1: " + engagement, (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+                cv2.putText(frame, "P1: " + engagement, (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
             elif position == "middle":
-                cv2.putText(frame, "P2: " + engagement, (50,250), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+                cv2.putText(frame, "P2: " + engagement, (50,250), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
             else:
-                cv2.putText(frame, "P3: " + engagement, (50,300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+                cv2.putText(frame, "P3: " + engagement, (50,300), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
 
     #endregion
 
@@ -518,7 +521,7 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
 
                         head_p1 = int((headX_average) * 2**shift)
                         head_p2 = int((headY_average) * 2**shift)
-                        cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(107,190,255))
+                        cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(255, 107, 170))
 
                         cone = ConeShape(head3D, pred3D, 80, 100, cameraMatrix, dist)
                         cone.projectRadiusLines(shift, frame, False, False, True)
