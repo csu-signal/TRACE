@@ -44,7 +44,7 @@ struct depthOutput {
 PyObject* initalizePython()
 {
   PyObject* pInt;
-  if (-1 == _putenv("PYTHONHOME=C:\\Users\\vanderh\\Anaconda3\\envs\\handTrackingEnvironment\\")) {
+  if (-1 == _putenv("PYTHONHOME=c:\\users\\isata\\miniconda3\\envs\\handtrackingenvironment\\")) {
       printf("putenv failed \n");
       return NULL;
   }

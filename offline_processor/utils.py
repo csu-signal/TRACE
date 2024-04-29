@@ -321,9 +321,9 @@ def convertTo3D(cameraMatrix, dist, depth, u, v):
     
     z = depth[v, u]
     # print("X: " + str(u) + " Y: " + str(v))
-    print("Z: " + str(z))
+    # print("Z: " + str(z))
     if(z == 0):
-        print("Invalid Depth, Z returned 0")
+        # print("Invalid Depth, Z returned 0")
         return [], ParseResult.InvalidDepth 
 
     f_x = cameraMatrix[0, 0]
@@ -452,12 +452,12 @@ def projectedPoint(p1, p2, p3):
 def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shift, gaze):
     for block in blocks:
         targetPoint = [(block.p1[0] + block.p2[0])/2,(block.p1[1] + block.p2[1]) / 2]
-        print("Check Block: " + str(block.description))
+        # print("Check Block: " + str(block.description))
 
         try:
             object3D, success = convertTo3D(cameraMatrix, dist, depth, int(targetPoint[0]), int(targetPoint[1]))
             if(success == ParseResult.InvalidDepth):
-                print("Ignoring invalid depth")
+                # print("Ignoring invalid depth")
 
                 # if block.description not in blockStatus:
                 #     cv2.rectangle(frame, 
@@ -540,7 +540,7 @@ class ConeShape:
         self.dist = dist
 
         self.Height = distance3D(vertex, base)
-        print(("Height: {0:0.2f}\n").format(self.Height))
+        # print(("Height: {0:0.2f}\n").format(self.Height))
 
     def conePointsBase(self):
         return [self.BaseX, self.BaseY + self.farRadius, self.BaseZ], [self.BaseX, self.BaseY - self.farRadius, self.BaseZ], [self.BaseX, self.BaseY, self.BaseZ + self.farRadius], [self.BaseX, self.BaseY, self.BaseZ - self.farRadius]
@@ -606,21 +606,21 @@ class ConeShape:
             return False
             
         distVertex = distance3D(proj, self.vertex)
-        print(("Distance on Vector: {0:0.2f}").format(distVertex))
+        # print(("Distance on Vector: {0:0.2f}").format(distVertex))
         if (distVertex > self.Height):
             return False
 
         coneRadius = self.nearRadius + (self.farRadius - self.nearRadius) * (distVertex / self.Height)
-        print(("Cone Radius: {0:0.2f}").format(coneRadius))
+        # print(("Cone Radius: {0:0.2f}").format(coneRadius))
 
         # point radius relative to the plane/vector
         pointRadius = distance3D(proj, [x,y,z])
-        print(("Point Radius: {0:0.2f}").format(pointRadius))
+        # print(("Point Radius: {0:0.2f}").format(pointRadius))
 
         if (pointRadius <= coneRadius):
-            print("Target\n")
+            # print("Target\n")
             return True
-        print("\n")
+        # print("\n")
         return False
 
 ##############################################################################################

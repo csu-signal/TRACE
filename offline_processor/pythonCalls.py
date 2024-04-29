@@ -22,6 +22,7 @@ from time import sleep
 import textwrap 
 import math
 import torch.nn as nn
+import select
 
 from model import create_model
 from config import (
@@ -102,7 +103,7 @@ objectModel.to(DEVICE).eval()
 
 # define the detection threshold...
 # ... any detection having score below this will be discarded
-detection_threshold = 0.8
+detection_threshold = 0.6
 RESIZE_TO = (512, 512)
 
 #endregion
@@ -195,15 +196,29 @@ Button5.pack()
 
 #region ASR socket 
 
-try: 
-   connected = True
-   print("Attempting socket connection")
-   s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-   s.settimeout(0.1)
-   s.connect(('10.84.208.54', 9999)) #ipv4 address of rosch
-except socket.error:
-    connected = False
-    print("failed to connect to ASR socket")
+# try: 
+connected = []
+connected.append(False)
+
+last_data = []
+last_data.append(None)
+
+client = []
+client.append(None)
+
+# next create a socket object 
+server_ip='192.168.0.113'
+server_port=9999
+s = socket.socket()         
+print ("Server Socket successfully created")
+
+s.bind((server_ip, server_port))         
+print ("socket binded to %s" %(server_port))
+print ("Server IP address:", server_ip)
+
+# put the socket into listening mode 
+s.listen(2)     
+print ("socket is listening")    
 
 #endregion
 #endregion
@@ -305,25 +320,33 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
         cv2.imshow("OVERLAY " + str(deviceId), vis)
         cv2.waitKey(1)
 
-    if(connected == True and IncludeASR.get() == 1):
+    if(IncludeASR.get() == 1):
         try:
-            msg = s.recv(4096)
+            if(connected[0] == False):
+                client[0], addr = s.accept()  
+                print ('Got connection from', addr )
+                connected[0] = True
+                client[0].send('Thank you for connecting'.encode())
+                client[0].setblocking(0)
+            else:
+                ready = select.select([client[0]], [], [], 0.1)
+                if ready[0]:
+                    data = client[0].recv(1024).decode()
+
+                    # Only print the data if it's new
+                    if data != last_data[0]:
+                        last_data[0] = data  # Update the last received data 
+                        print(data)
+                          
+                        # wrapped_text = textwrap.wrap(data, width=50)
+                        # asrFrame = np.zeros((1080, 1920, 3), dtype = "uint8")
+
+                        # for i, line in enumerate(wrapped_text):
+                        #     cv2.putText(asrFrame, str(line), (75,75 * (1+i)), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2, cv2.LINE_AA)
+
+                        # keyFrame[1] = cv2.resize(asrFrame, (640, 360))
         except socket.error as e:
-            err = e.args[0]
-            if err != errno.EAGAIN and err != errno.EWOULDBLOCK:
-                print(e)
-        else:
-            encoding = 'utf-8'
-            output = msg.decode(encoding)  
-            print(output)
-
-            wrapped_text = textwrap.wrap(output, width=50)
-            asrFrame = np.zeros((1080, 1920, 3), dtype = "uint8")
-
-            for i, line in enumerate(wrapped_text):
-                cv2.putText(asrFrame, str(line), (75,75 * (1+i)), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2, cv2.LINE_AA)
-
-            keyFrame[1] = cv2.resize(asrFrame, (640, 360))
+            print(e.args[0])
 
     #region object detections
     blocks = []
@@ -367,7 +390,7 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                 block = Block(float(class_name), p1, p2)
                 blocks.append(block)
                 
-                print("Found Block: " + str(block.description))
+                # print("Found Block: " + str(block.description))
                 # print(str(p1))
                 # print(str(p2))
 
@@ -395,20 +418,20 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
             #         dist)  
             #x = points2D[0][0][0]
             x = b['joint_positions'][1][0]
-            print(x)
+            #print(x)
 
             if x < left_position:
-                print("left")
+               # print("left")
                 poseModel = leftModel
                 body = b
                 position = "left"
             elif x > left_position and x < middle_position:
-                print("middle")
+                #print("middle")
                 poseModel = middleModel
                 body = b
                 position = "middle"
             else:
-                print("right")
+                #print("right")
                 poseModel = rightModel
                 body = b
                 position = "right"
@@ -440,7 +463,8 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
             output = poseModel(torch.stack(tensors))
             # prediction = int(torch.argmax(output))
             prediction = output.detach().numpy()[0][0] > 0.5
-            print("Prediction: " + str(prediction))
+            
+            # print("Prediction: " + str(prediction))
             # print("Output: " + str(output))
 
             engagement = "leaning out" if prediction == 0 else "leaning in"
@@ -492,7 +516,7 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                     predY_average = int(sumy / 5)
 
                     lenAB = math.sqrt(pow(headX_average - predX_average, 2.0) + pow(headY_average - predY_average, 2.0))
-                    print(lenAB)
+                    #print(lenAB)
 
                     length = 500
                     if(lenAB < length):
@@ -646,8 +670,8 @@ def createFolder(data):
 
 def showOutput():
     # concat = concat_vh([[keyFrame[1], keyFrame[0]], [keyFrame[2], keyFrame[3]]])
-    concat = concat_vh([[keyFrame[1], keyFrame[0]]])
-    cv2.imshow("OUTPUT", concat)
+    # concat = concat_vh([[keyFrame[1], keyFrame[0]]])
+    cv2.imshow("OUTPUT", keyFrame[0])
     cv2.waitKey(1)
 
 #endregion
