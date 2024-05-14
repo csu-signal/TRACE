@@ -27,17 +27,10 @@
     <None Include="utilities\__init__.py" />
     <None Include="utilities\utils.py" />
     <None Include="utils.py" />
-    <None Include="bestModel-pointing.pkl" />
-    <None Include="config.py" />
-    <None Include="model.py" />
-    <None Include="objectDetectionModels\best_model-objects.pth" />
-    <None Include="Face_Detection.py" />
+    <None Include="bestModel.pkl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -214,10 +214,15 @@ def getAverageHandLocations(body, w, h, rotation, translation, cameraMatrix, dis
     return leftXAverage, leftYAverage, rightXAverage, rightYAverage
 
 def createBoundingBox(xAverage, yAverage):
-    xMax = xAverage + (xAverage * 0.05)
-    xMin = xAverage - (xAverage * 0.05)  
-    yMax = yAverage + (yAverage * 0.05) 
-    yMin = yAverage - (yAverage * 0.05)
+    # xMax = xAverage + (xAverage * 0.05)
+    # xMin = xAverage - (xAverage * 0.05)  
+    # yMax = yAverage + (yAverage * 0.05) 
+    # yMin = yAverage - (yAverage * 0.05)
+
+    xMax = xAverage + (32)
+    xMin = xAverage - (32)  
+    yMax = yAverage + (32) 
+    yMin = yAverage - (32)
     xSpan = xMax - xMin
     ySpan = yMax - yMin
 
@@ -316,9 +321,9 @@ def convertTo3D(cameraMatrix, dist, depth, u, v):
     
     z = depth[v, u]
     # print("X: " + str(u) + " Y: " + str(v))
-    print("Z: " + str(z))
+    # print("Z: " + str(z))
     if(z == 0):
-        print("Invalid Depth, Z returned 0")
+        # print("Invalid Depth, Z returned 0")
         return [], ParseResult.InvalidDepth 
 
     f_x = cameraMatrix[0, 0]
@@ -444,6 +449,64 @@ def projectedPoint(p1, p2, p3):
 
     return getVectorPoint(p3, perpendicular) 
 
+def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shift, gaze):
+    for block in blocks:
+        targetPoint = [(block.p1[0] + block.p2[0])/2,(block.p1[1] + block.p2[1]) / 2]
+        # print("Check Block: " + str(block.description))
+
+        try:
+            object3D, success = convertTo3D(cameraMatrix, dist, depth, int(targetPoint[0]), int(targetPoint[1]))
+            if(success == ParseResult.InvalidDepth):
+                # print("Ignoring invalid depth")
+
+                # if block.description not in blockStatus:
+                #     cv2.rectangle(frame, 
+                #         (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
+                #         (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
+                #         color=(0,0,0),
+                #         thickness=5, 
+                #         shift=shift)
+                #     cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)  
+                continue
+        except:
+            continue
+
+        if block.description not in blockStatus:
+            cv2.rectangle(frame, 
+            (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
+            (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
+            color=(255,255,255),
+            thickness=3, 
+            shift=shift)
+
+        block.target = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, True)
+        if(block.target):
+            width = 5
+            if gaze:
+                if block.description not in blockStatus:
+                    blockStatus[block.description] = 1
+                else:
+                    blockStatus[block.description] += 1
+                width *= blockStatus[block.description]
+
+            cv2.rectangle(frame, 
+                (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
+                (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
+                color=(0,255,0),
+                thickness=width, 
+                shift=shift)
+            cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)
+        else:
+            if block.description not in blockStatus:
+                cv2.rectangle(frame, 
+                    (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
+                    (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
+                    color=(0,0,255),
+                    thickness=5, 
+                    shift=shift)
+                cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)  
+    #return blockStatus
+
 class ConeShape:
     def __init__(self, vertex, base, nearRadius, farRadius, cameraMatrix, dist):
         vector = getDirectionalVector(vertex, base)
@@ -456,15 +519,15 @@ class ConeShape:
         self.BaseX = base[0]
         self.BaseY = base[1]
         self.BaseZ = base[2]
-        print(("Vertex X: {0:0.2f}").format(self.VertexX))
-        print(("Vertex Y: {0:0.2f}").format(self.VertexY))
-        print(("Vertex Z: {0:0.2f}\n").format(self.VertexZ))
-        print(("Vector X: {0:0.2f}").format(self.VectorX))
-        print(("Vector Y: {0:0.2f}").format(self.VectorY))
-        print(("Vector Z: {0:0.2f}\n").format(self.VectorZ))
-        print(("Base X: {0:0.2f}").format(self.BaseX))
-        print(("Base Y: {0:0.2f}").format(self.BaseY))
-        print(("Base Z: {0:0.2f}\n").format(self.BaseZ))
+        # print(("Vertex X: {0:0.2f}").format(self.VertexX))
+        # print(("Vertex Y: {0:0.2f}").format(self.VertexY))
+        # print(("Vertex Z: {0:0.2f}\n").format(self.VertexZ))
+        # print(("Vector X: {0:0.2f}").format(self.VectorX))
+        # print(("Vector Y: {0:0.2f}").format(self.VectorY))
+        # print(("Vector Z: {0:0.2f}\n").format(self.VectorZ))
+        # print(("Base X: {0:0.2f}").format(self.BaseX))
+        # print(("Base Y: {0:0.2f}").format(self.BaseY))
+        # print(("Base Z: {0:0.2f}\n").format(self.BaseZ))
 
         self.farRadius = farRadius
         self.nearRadius = nearRadius
@@ -477,7 +540,7 @@ class ConeShape:
         self.dist = dist
 
         self.Height = distance3D(vertex, base)
-        print(("Height: {0:0.2f}\n").format(self.Height))
+        # print(("Height: {0:0.2f}\n").format(self.Height))
 
     def conePointsBase(self):
         return [self.BaseX, self.BaseY + self.farRadius, self.BaseZ], [self.BaseX, self.BaseY - self.farRadius, self.BaseZ], [self.BaseX, self.BaseY, self.BaseZ + self.farRadius], [self.BaseX, self.BaseY, self.BaseZ - self.farRadius]
@@ -485,9 +548,16 @@ class ConeShape:
     def conePointsVertex(self):
         return [self.VertexX, self.VertexY + self.nearRadius, self.VertexZ], [self.VertexX, self.VertexY - self.nearRadius, self.VertexZ], [self.VertexX, self.VertexY, self.VertexZ + self.nearRadius], [self.VertexX, self.VertexY, self.VertexZ - self.nearRadius]
     
-    def projectRadiusLines(self, shift, frame, includeY, includeZ):
+    def projectRadiusLines(self, shift, frame, includeY, includeZ, gaze):
         baseUpY, baseDownY, baseUpZ, baseDownZ = self.conePointsBase()
         vertexUpY, vertexDownY, vertexUpZ, vertexDownZ = self.conePointsVertex()
+
+        if(gaze):
+            yColor = (255, 107, 170)
+            ZColor = (107, 255, 138)
+        else:
+            yColor = (255, 255, 0)
+            ZColor = (243, 82, 121)
 
         if includeY:
             baseUp2DY = convert2D(baseUpY, self.cameraMatrix, self.dist)       
@@ -501,8 +571,8 @@ class ConeShape:
             vertexPointUpY = (int(vertexUp2DY[0] * 2**shift),int(vertexUp2DY[1] * 2**shift))
             vertexPointDownY = (int(vertexDown2DY[0] * 2**shift),int(vertexDown2DY[1] * 2**shift))
             
-            cv2.line(frame, vertexPointUpY, pointUpY, color=(255, 255, 0), thickness=5, shift=shift)
-            cv2.line(frame, vertexPointDownY, pointDownY, color=(255, 255, 0), thickness=5, shift=shift)
+            cv2.line(frame, vertexPointUpY, pointUpY, color=yColor, thickness=5, shift=shift)
+            cv2.line(frame, vertexPointDownY, pointDownY, color=yColor, thickness=5, shift=shift)
 
         if includeZ:
             vertexUp2DZ = convert2D(vertexUpZ, self.cameraMatrix, self.dist)
@@ -516,8 +586,8 @@ class ConeShape:
             vertexPointUpZ = (int(vertexUp2DZ[0] * 2**shift),int(vertexUp2DZ[1] * 2**shift))
             vertexPpointDownZ = (int(vertexDown2DZ[0] * 2**shift),int(vertexDown2DZ[1] * 2**shift))
 
-            cv2.line(frame, vertexPointUpZ, pointUpZ, color=(243, 82, 121), thickness=5, shift=shift)
-            cv2.line(frame, vertexPpointDownZ, pointDownZ, color=(243, 82, 121), thickness=5, shift=shift)
+            cv2.line(frame, vertexPointUpZ, pointUpZ, color=ZColor, thickness=5, shift=shift)
+            cv2.line(frame, vertexPpointDownZ, pointDownZ, color=ZColor, thickness=5, shift=shift)
 
     def ContainsPoint(self, x, y, z, frame, includeOverlay = False, shift = 7):        
         # cone radius relative to the height at perpindicular point on vector
@@ -536,21 +606,21 @@ class ConeShape:
             return False
             
         distVertex = distance3D(proj, self.vertex)
-        print(("Distance on Vector: {0:0.2f}").format(distVertex))
+        # print(("Distance on Vector: {0:0.2f}").format(distVertex))
         if (distVertex > self.Height):
             return False
 
         coneRadius = self.nearRadius + (self.farRadius - self.nearRadius) * (distVertex / self.Height)
-        print(("Cone Radius: {0:0.2f}").format(coneRadius))
+        # print(("Cone Radius: {0:0.2f}").format(coneRadius))
 
         # point radius relative to the plane/vector
         pointRadius = distance3D(proj, [x,y,z])
-        print(("Point Radius: {0:0.2f}").format(pointRadius))
+        # print(("Point Radius: {0:0.2f}").format(pointRadius))
 
         if (pointRadius <= coneRadius):
-            print("Target\n")
+            # print("Target\n")
             return True
-        print("\n")
+        # print("\n")
         return False
 
 ##############################################################################################

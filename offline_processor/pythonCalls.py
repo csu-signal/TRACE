@@ -20,6 +20,9 @@ import socket
 import errno
 from time import sleep
 import textwrap 
+import math
+import torch.nn as nn
+import select
 
 from model import create_model
 from config import (
@@ -37,12 +40,31 @@ def predict_gaze(model, image, faces, heads):
     preds = model.predict([np.array(image),np.array(faces),np.array(heads)])
     return preds
 
+class SkeletonPoseClassifier(nn.Module):
+    """
+    Base model, input single body, binary output. Two feedforward layers.
+    Note: label of a frame is a very strong predictor of the next, how to incorporate without risk?
+    """
+    def __init__(self, input_size, hidden_size, output_size):
+        super(SkeletonPoseClassifier, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size, output_size)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.relu1(x)
+        x = self.fc2(x)
+        x = self.sigmoid(x)
+        return x
+
 #endregion
 
 #region initialize python
 
 mpHands = mp.solutions.hands
-hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.6, min_tracking_confidence= 0)
+hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.4, min_tracking_confidence= 0)
 gazeCount = []
 gazeCount.append(0)
 
@@ -54,6 +76,8 @@ gazePred = {}
 
 gazeHeadAverage = {}
 gazePredAverage = {}
+
+blockStatus = {}
 
 shift = 7
 
@@ -79,8 +103,30 @@ objectModel.to(DEVICE).eval()
 
 # define the detection threshold...
 # ... any detection having score below this will be discarded
-detection_threshold = 0.8
+detection_threshold = 0.6
 RESIZE_TO = (512, 512)
+
+#endregion
+
+#region initalize pose models
+
+#  required arguments
+input_size = 224
+hidden_size = 300
+output_size = 1
+  
+# initialize a model 
+leftModel = SkeletonPoseClassifier(input_size = input_size,hidden_size=hidden_size,output_size=output_size)
+leftModel.load_state_dict(torch.load(".\\skeleton_pose_classifier_left.pt"))
+leftModel.eval()
+
+middleModel = SkeletonPoseClassifier(input_size = input_size,hidden_size=hidden_size,output_size=output_size)
+middleModel.load_state_dict(torch.load(".\\skeleton_pose_classifier_middle.pt"))
+middleModel.eval()
+
+rightModel = SkeletonPoseClassifier(input_size = input_size,hidden_size=hidden_size,output_size=output_size)
+rightModel.load_state_dict(torch.load(".\\skeleton_pose_classifier_right.pt"))
+rightModel.eval()
 
 #endregion
 
@@ -100,6 +146,7 @@ IncludePointing = IntVar(value=1)
 IncludeObjects = IntVar(value=1)   
 IncludeGaze = IntVar(value=1)
 IncludeASR = IntVar(value=1)
+IncludePose = IntVar(value=1)
  
 # root window title and dimension
 root.title("Output Options")
@@ -132,24 +179,46 @@ Button4 = Checkbutton(root, text = "ASR",
                       height = 2, 
                       width = 10) 
 
+Button5 = Checkbutton(root, text = "Pose", 
+                      variable = IncludePose, 
+                      onvalue = 1, 
+                      offvalue = 0, 
+                      height = 2, 
+                      width = 10) 
+
 Button1.pack()
 Button2.pack()
 Button3.pack()
 Button4.pack()
+Button5.pack()
 
 #endregion
 
 #region ASR socket 
 
-try: 
-   connected = True
-   print("Attempting socket connection")
-   s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-   s.settimeout(0.1)
-   s.connect(('127.0.0.1', 9999))
-except socket.error:
-    connected = False
-    print("failed to connect to ASR socket")
+# try: 
+connected = []
+connected.append(False)
+
+last_data = []
+last_data.append(None)
+
+client = []
+client.append(None)
+
+# next create a socket object 
+server_ip='192.168.0.113'
+server_port=9999
+s = socket.socket()         
+print ("Server Socket successfully created")
+
+s.bind((server_ip, server_port))         
+print ("socket binded to %s" %(server_port))
+print ("Server IP address:", server_ip)
+
+# put the socket into listening mode 
+s.listen(2)     
+print ("socket is listening")    
 
 #endregion
 #endregion
@@ -182,7 +251,7 @@ def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, di
                     prediction = loaded_model.predict_proba([normalized])
                     #print(prediction)
 
-                    if prediction[0][0] >= 0.2:
+                    if prediction[0][0] >= 0.3:
                         landmarks = []
                         for lm in handslms.landmark:
                             lmx, lmy = int(lm.x * w) + box[0], int(lm.y * h) + box[1] 
@@ -212,36 +281,8 @@ def findHands(frame, framergb, bodyId, handedness, box, points, cameraMatrix, di
                             cv2.circle(frame, point_Extended, radius=15, color=(255,0,0), thickness=15, shift=shift)
 
                             cone = ConeShape(mediaPipe5, nextPoint, 80, 100, cameraMatrix, dist)
-                            cone.projectRadiusLines(shift, frame, True, False)
-
-                            for block in blocks:
-                                targetPoint = [(block.p1[0] + block.p2[0])/2,(block.p1[1] + block.p2[1]) / 2]
-
-                                try:
-                                    object3D, success = convertTo3D(cameraMatrix, dist, depth, int(targetPoint[0]), int(targetPoint[1]))
-                                    if(success == ParseResult.InvalidDepth):
-                                        print("Ignoring invalid depth")
-                                        continue
-                                except:
-                                    continue
-
-                                block.target = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, True)
-                                if(block.target):
-                                    cv2.rectangle(frame, 
-                                        (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
-                                        (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
-                                        color=(0,255,0),
-                                        thickness=5, 
-                                        shift=shift)
-                                    cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)
-                                else:
-                                    cv2.rectangle(frame, 
-                                        (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
-                                        (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
-                                        color=(0,0,255),
-                                        thickness=5, 
-                                        shift=shift)
-                                    cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)  
+                            cone.projectRadiusLines(shift, frame, True, False, False)
+                            checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shift, False)
 
 def concat_vh(list_2d): 
     return cv2.vconcat([cv2.hconcat(list_h)  
@@ -251,6 +292,7 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
     points = []
     h, w, c = frame.shape
     depthPath = depthPath + str(int(frameCount)) + ".png"
+    blockStatus = {}
 
     root.update()
     
@@ -278,25 +320,33 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
         cv2.imshow("OVERLAY " + str(deviceId), vis)
         cv2.waitKey(1)
 
-    if(connected == True and IncludeASR.get() == 1):
+    if(IncludeASR.get() == 1):
         try:
-            msg = s.recv(4096)
+            if(connected[0] == False):
+                client[0], addr = s.accept()  
+                print ('Got connection from', addr )
+                connected[0] = True
+                client[0].send('Thank you for connecting'.encode())
+                client[0].setblocking(0)
+            else:
+                ready = select.select([client[0]], [], [], 0.1)
+                if ready[0]:
+                    data = client[0].recv(1024).decode()
+
+                    # Only print the data if it's new
+                    if data != last_data[0]:
+                        last_data[0] = data  # Update the last received data 
+                        print(data)
+                          
+                        # wrapped_text = textwrap.wrap(data, width=50)
+                        # asrFrame = np.zeros((1080, 1920, 3), dtype = "uint8")
+
+                        # for i, line in enumerate(wrapped_text):
+                        #     cv2.putText(asrFrame, str(line), (75,75 * (1+i)), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2, cv2.LINE_AA)
+
+                        # keyFrame[1] = cv2.resize(asrFrame, (640, 360))
         except socket.error as e:
-            err = e.args[0]
-            if err != errno.EAGAIN and err != errno.EWOULDBLOCK:
-                print(e)
-        else:
-            encoding = 'utf-8'
-            output = msg.decode(encoding)  
-            print(output)
-
-            wrapped_text = textwrap.wrap(output, width=50)
-            asrFrame = np.zeros((1080, 1920, 3), dtype = "uint8")
-
-            for i, line in enumerate(wrapped_text):
-                cv2.putText(asrFrame, str(line), (75,75 * (1+i)), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2, cv2.LINE_AA)
-
-            keyFrame[1] = cv2.resize(asrFrame, (640, 360))
+            print(e.args[0])
 
     #region object detections
     blocks = []
@@ -340,20 +390,93 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                 block = Block(float(class_name), p1, p2)
                 blocks.append(block)
                 
-                print("Found Block: " + str(block.description))
+                # print("Found Block: " + str(block.description))
                 # print(str(p1))
                 # print(str(p2))
-
-                cv2.rectangle(frame, 
-                    (int(p1[0] * 2**shift), int(p1[1] * 2**shift)),
-                    (int(p2[0] * 2**shift), int(p2[1] * 2**shift)),
-                    color=(255,255,255),
-                    thickness=3, 
-                    shift=shift)
 
     #endregion
 
     bodies = json["bodies"]
+
+    #region pose detection
+    if(IncludePose.get() == 1):
+        left_position = -400
+        middle_position = 400
+
+        # left_position = 800
+        # middle_position = 1200
+
+        # cv2.circle(frame, (int(left_position), 800), radius=15, color=(255,0,0), thickness=15)
+        # cv2.circle(frame, (int(middle_position), 800), radius=15, color=(255,0,0), thickness=15)
+
+        for b in bodies:
+            # points2D, _ = cv2.projectPoints(
+            #         np.array(b['joint_positions'][1]), 
+            #         rotation,
+            #         translation,
+            #         cameraMatrix,
+            #         dist)  
+            #x = points2D[0][0][0]
+            x = b['joint_positions'][1][0]
+            #print(x)
+
+            if x < left_position:
+               # print("left")
+                poseModel = leftModel
+                body = b
+                position = "left"
+            elif x > left_position and x < middle_position:
+                #print("middle")
+                poseModel = middleModel
+                body = b
+                position = "middle"
+            else:
+                #print("right")
+                poseModel = rightModel
+                body = b
+                position = "right"
+
+            # print(b['joint_positions'][1][0])
+            # if b['joint_positions'][1][0] > left_position:
+            #     print("left")
+            #     poseModel = leftModel
+            #     body = b
+            #     position = "left"
+            # elif b['joint_positions'][1][0] < middle_position:
+            #     print("middle")
+            #     poseModel = middleModel
+            #     body = b
+            #     position = "middle"
+            # else:
+            #     print("right")
+            #     poseModel = rightModel
+            #     body = b
+            #     position = "right"
+
+            tensors = []
+            orientation_data = body['joint_orientations']
+            position_data = body['joint_positions']
+            o = torch.tensor(orientation_data).flatten()
+            p = torch.tensor(position_data).flatten() / 1000 # normalize to scale of orientations
+            tensors.append(torch.concat([o, p])) # concatenating orientation to position
+
+            output = poseModel(torch.stack(tensors))
+            # prediction = int(torch.argmax(output))
+            prediction = output.detach().numpy()[0][0] > 0.5
+            
+            # print("Prediction: " + str(prediction))
+            # print("Output: " + str(output))
+
+            engagement = "leaning out" if prediction == 0 else "leaning in"
+            color = (255,0,0) if prediction == 0 else (39,142,37)
+            if position == "left":
+                cv2.putText(frame, "P1: " + engagement, (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+            elif position == "middle":
+                cv2.putText(frame, "P2: " + engagement, (50,250), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+            else:
+                cv2.putText(frame, "P3: " + engagement, (50,300), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+
+    #endregion
 
     #region gaze detections
 
@@ -380,8 +503,8 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                         sumx += point[0]
                         sumy += point[1]
 
-                    head_p1 = int((sumx / 5) * 2**shift)
-                    head_p2 = int((sumy / 5) * 2**shift)
+                    headX_average = int(sumx / 5)
+                    headY_average = int(sumy / 5)
 
                     sumx = 0
                     sumy = 0
@@ -389,11 +512,46 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
                         sumx += point[0]
                         sumy += point[1]
 
-                    pred_p1 = int((sumx / 5) * 2**shift)
-                    pred_p2 = int((sumy / 5) * 2**shift)
+                    predX_average = int(sumx / 5)
+                    predY_average = int(sumy / 5)
 
-                    cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(0,0,255))
+                    lenAB = math.sqrt(pow(headX_average - predX_average, 2.0) + pow(headY_average - predY_average, 2.0))
+                    #print(lenAB)
 
+                    length = 500
+                    if(lenAB < length):
+                        # print("Made it into the length update")
+                        # print("Before")
+                        # print(predX_average)
+                        # print(predY_average)
+                        unitSlopeX = (predX_average-headX_average) / lenAB
+                        unitSlopeY = (predY_average-headY_average) / lenAB
+
+                        predX_average = int(headX_average + (unitSlopeX * length))
+                        predY_average = int(headY_average + (unitSlopeY * length))
+                        # print("After")
+                        # print(predX_average)
+                        # print(predY_average)
+
+                        # predX_average = int(predX_average + (predX_average - headX_average) / lenAB * (length - lenAB))
+                        # predY_average = int(predY_average + (predY_average - predX_average) / lenAB * (length - lenAB))
+
+                    head3D, h_Success = convertTo3D(cameraMatrix, dist, depth, headX_average, headY_average)
+                    pred3D, p_Success = convertTo3D(cameraMatrix, dist, depth, predX_average, predY_average)
+
+                    if(h_Success == ParseResult.Success and p_Success == ParseResult.Success):
+                        pred_p1 = int((predX_average) * 2**shift)
+                        pred_p2 = int((predY_average) * 2**shift)
+
+                        head_p1 = int((headX_average) * 2**shift)
+                        head_p2 = int((headY_average) * 2**shift)
+                        cv2.line(frame, (head_p1, head_p2), (pred_p1, pred_p2), thickness=5, shift=shift, color=(255, 107, 170))
+
+                        cone = ConeShape(head3D, pred3D, 80, 100, cameraMatrix, dist)
+                        cone.projectRadiusLines(shift, frame, False, False, True)
+                        
+                        checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shift, True)
+                    
                     # for key in gazeHead:
                     #     print(key)
                     copyHead = gazeHead[key]
@@ -512,8 +670,8 @@ def createFolder(data):
 
 def showOutput():
     # concat = concat_vh([[keyFrame[1], keyFrame[0]], [keyFrame[2], keyFrame[3]]])
-    concat = concat_vh([[keyFrame[1], keyFrame[0]]])
-    cv2.imshow("OUTPUT", concat)
+    # concat = concat_vh([[keyFrame[1], keyFrame[0]]])
+    cv2.imshow("OUTPUT", keyFrame[0])
     cv2.waitKey(1)
 
 #endregion
