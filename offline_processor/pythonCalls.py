@@ -4,6 +4,7 @@ import mediapipe as mp
 import os
 import shutil
 from featureModules.gesture.GestureFeature import *
+from featureModules.objects.ObjectFeature import *
 from utils import *
 import traceback
 import numpy as np
@@ -23,11 +24,6 @@ import textwrap
 import math
 import torch.nn as nn
 import select
-
-from model import create_model
-from config import (
-    NUM_CLASSES, DEVICE, CLASSES
-)
 
 #region gaze util methods
 
@@ -85,22 +81,9 @@ depthPaths[0] = []
 depthPaths[1] = []
 depthPaths[2] = []
 
-#region initalize object detections 
-
-print("Torch Device " + str(DEVICE))
-print("Python version " + str(platform.python_version()))
-# load the best objectModel and trained weights - for object detection
-objectModel = create_model(num_classes=NUM_CLASSES)
-checkpoint = torch.load('.\\best_model-objects.pth', map_location=DEVICE)
-objectModel.load_state_dict(checkpoint['model_state_dict'], strict=False)
-objectModel.to(DEVICE).eval()
-
-# define the detection threshold...
-# ... any detection having score below this will be discarded
-detection_threshold = 0.6
-RESIZE_TO = (512, 512)
-
-#endregion
+# feature modules
+gesture = GestureFeature(shift)
+objects = ObjectFeature()
 
 #region initalize pose models
 
@@ -139,7 +122,7 @@ root = Tk()
 IncludePointing = IntVar(value=1)   
 IncludeObjects = IntVar(value=1)   
 IncludeGaze = IntVar(value=1)
-IncludeASR = IntVar(value=1)
+IncludeASR = IntVar(value=0)
 IncludePose = IntVar(value=1)
  
 # root window title and dimension
@@ -191,36 +174,28 @@ Button5.pack()
 #region ASR socket 
 
 # try: 
-connected = []
-connected.append(False)
+# connected = []
+# connected.append(False)
 
-last_data = []
-last_data.append(None)
+# last_data = []
+# last_data.append(None)
 
-client = []
-client.append(None)
+# client = []
+# client.append(None)
 
-#next create a socket object 
-server_ip='192.168.0.113'
-server_port=9999
-s = socket.socket()         
-print ("Server Socket successfully created")
+# #next create a socket object 
+# server_ip='192.168.0.113'
+# server_port=9999
+# s = socket.socket()         
+# print ("Server Socket successfully created")
 
-s.bind((server_ip, server_port))         
-print ("socket binded to %s" %(server_port))
-print ("Server IP address:", server_ip)
+# s.bind((server_ip, server_port))         
+# print ("socket binded to %s" %(server_port))
+# print ("Server IP address:", server_ip)
 
-# put the socket into listening mode 
-s.listen(2)     
-print ("socket is listening")    
-
-#endregion
-
-#region Gesture Feature Init 
-
-print("before gestures")
-gesture = GestureFeature(shift)
-print("after gestures")
+# # put the socket into listening mode 
+# s.listen(2)     
+# print ("socket is listening")    
 
 #endregion
 
@@ -261,81 +236,39 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
         cv2.imshow("OVERLAY " + str(deviceId), vis)
         cv2.waitKey(1)
 
-    if(IncludeASR.get() == 1):
-        try:
-            if(connected[0] == False):
-                client[0], addr = s.accept()  
-                print ('Got connection from', addr )
-                connected[0] = True
-                client[0].send('Thank you for connecting'.encode())
-                client[0].setblocking(0)
-            else:
-                ready = select.select([client[0]], [], [], 0.1)
-                if ready[0]:
-                    data = client[0].recv(1024).decode()
+    # if(IncludeASR.get() == 1):
+    #     try:
+    #         if(connected[0] == False):
+    #             client[0], addr = s.accept()  
+    #             print ('Got connection from', addr )
+    #             connected[0] = True
+    #             client[0].send('Thank you for connecting'.encode())
+    #             client[0].setblocking(0)
+    #         else:
+    #             ready = select.select([client[0]], [], [], 0.1)
+    #             if ready[0]:
+    #                 data = client[0].recv(1024).decode()
 
-                    # Only print the data if it's new
-                    if data != last_data[0]:
-                        last_data[0] = data  # Update the last received data 
-                        print(data)
+    #                 # Only print the data if it's new
+    #                 if data != last_data[0]:
+    #                     last_data[0] = data  # Update the last received data 
+    #                     print(data)
                           
-                        # wrapped_text = textwrap.wrap(data, width=50)
-                        # asrFrame = np.zeros((1080, 1920, 3), dtype = "uint8")
+    #                     # wrapped_text = textwrap.wrap(data, width=50)
+    #                     # asrFrame = np.zeros((1080, 1920, 3), dtype = "uint8")
 
-                        # for i, line in enumerate(wrapped_text):
-                        #     cv2.putText(asrFrame, str(line), (75,75 * (1+i)), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2, cv2.LINE_AA)
+    #                     # for i, line in enumerate(wrapped_text):
+    #                     #     cv2.putText(asrFrame, str(line), (75,75 * (1+i)), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2, cv2.LINE_AA)
 
-                        # keyFrame[1] = cv2.resize(asrFrame, (640, 360))
-        except socket.error as e:
-            print(e.args[0])
+    #                     # keyFrame[1] = cv2.resize(asrFrame, (640, 360))
+    #     except socket.error as e:
+    #         print(e.args[0])
 
-    #region object detections
+    #region process features
+
     blocks = []
     if(IncludeObjects.get() == 1):
-        image = cv2.resize(framergb, RESIZE_TO)
-        image = framergb.astype(np.float32)
-        # make the pixel range between 0 and 1
-        image /= 255.0
-        # bring color channels to front
-        image = np.transpose(image, (2, 0, 1)).astype(np.float32)
-        # convert to tensor
-        image = torch.tensor(image, dtype=torch.float).cuda()
-        # add batch dimension
-        image = torch.unsqueeze(image, 0)
-        with torch.no_grad():
-            # get predictions for the current frame
-            outputs = objectModel(image.to(DEVICE))
-        
-        # object rendering
-        # load all detection to CPU for further operations
-        outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]  
-        found = []
-        if len(outputs[0]['boxes']) != 0:
-            boxes = outputs[0]['boxes'].data.numpy()
-            scores = outputs[0]['scores'].data.numpy()
-            boxes = boxes[scores >= detection_threshold].astype(np.int32)
-            draw_boxes = boxes.copy()
-            # get all the predicited class names
-            pred_classes = [CLASSES[i] for i in outputs[0]['labels'].cpu().numpy()]
-
-            # draw the bounding boxes and write the class name on top of it
-            for j, box in enumerate(draw_boxes):
-                class_name = pred_classes[j]
-                if(found.__contains__(class_name)):
-                    continue
-
-                found.append(class_name)
-                p1 = [box[0], box[1]]
-                p2 = [box[2], box[3]]
-                
-                block = Block(float(class_name), p1, p2)
-                blocks.append(block)
-                
-                # print("Found Block: " + str(block.description))
-                # print(str(p1))
-                # print(str(p2))
-
-    #endregion
+        blocks = objects.processFrame(framergb)
 
     bodies = json["bodies"]
 
@@ -515,7 +448,9 @@ def processFrameAzureBased(frame, depthPath, frameCount, deviceId, showOverlay, 
 
     if(IncludePointing.get() == 1):
         gesture.processFrame(deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus)
-       
+
+    #endregion 
+
     cv2.putText(frame, "FRAME:" + str(int(frameCount)), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
     cv2.putText(frame, "DEVICE:" + str(int(deviceId)), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
     

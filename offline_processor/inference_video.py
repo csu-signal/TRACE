@@ -6,8 +6,8 @@ import time
 import argparse
 import pathlib
 
-from model import create_model
-from config import (
+from offline_processor.featureModules.objects.model import create_model
+from offline_processor.featureModules.objects.config import (
     NUM_CLASSES, DEVICE, CLASSES
 )
 
