@@ -67,8 +67,8 @@ In order to save the camera calibration settings I updated the Azure SDK offline
 # Modular Feature Interface
 - "featureModules/featureName" - contains all data/relevant files for a feature of interest and gets auto copied to the output folder each build
 - IFeature
--- __init__ - initalize any models, setup code
--- processFrame - runs each time a frame is processed
+  - __init__ - initalize any models, setup code
+  - __processFrame__ - runs each time a frame is processed
 
 - note that the paths to the any models or loaded data needs to be realive to the location of "offline_professor.exe"
 
@@ -110,6 +110,4 @@ In order to save the camera calibration settings I updated the Azure SDK offline
 Example Python Code to read in Calibration Information can be found in the "azureOverlay" folder.
 
 Feel free to reach out to Hannah VanderHoeven with any questions (Hannah.VanderHoeven@colostate.edu)
-
-https://colostate-my.sharepoint.com/personal/jhfitzg_colostate_edu/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fjhfitzg%5Fcolostate%5Fedu%2FDocuments%2Ffasterrcnn%2Dbest%2Dmodel%2Dsub1%2Dannotations%2Fbest%5Fmodel%5Fwith%5Fsub1%5Fannotations%2Epth&parent=%2Fpersonal%2Fjhfitzg%5Fcolostate%5Fedu%2FDocuments%2Ffasterrcnn%2Dbest%2Dmodel%2Dsub1%2Dannotations&ga=1
 
