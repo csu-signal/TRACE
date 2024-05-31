@@ -71,14 +71,7 @@
     </Link>
     <PreBuildEvent>
       <Command>xcopy "$(SolutionDir)pythonCalls.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)Face_Detection.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)model.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)config.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)guiCalls.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)bestModel-pointing.pkl" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)objectDetectionModels" "$(TargetDir)" /E /R /Y /I
-xcopy "$(SolutionDir)gazeDetectionModels" "$(TargetDir)" /E /R /Y /I
-xcopy "$(SolutionDir)poseModels" "$(TargetDir)" /E /R /Y /I
+xcopy "$(SolutionDir)featureModules" "$(TargetDir)/featureModules" /E /R /Y /I
 xcopy "$(SolutionDir)utils.py" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)5131.png" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)5131sub1.png" "$(TargetDir)" /F /R /Y /I
@@ -103,14 +96,7 @@ xcopy "$(SolutionDir)5131sub2.png" "$(TargetDir)" /F /R /Y /I</Command>
     </Link>
     <PreBuildEvent>
       <Command>xcopy "$(SolutionDir)pythonCalls.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)Face_Detection.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)model.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)config.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)guiCalls.py" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)bestModel-pointing.pkl" "$(TargetDir)" /F /R /Y /I
-xcopy "$(SolutionDir)objectDetectionModels" "$(TargetDir)" /E /R /Y /I
-xcopy "$(SolutionDir)gazeDetectionModels" "$(TargetDir)" /E /R /Y /I
-xcopy "$(SolutionDir)poseModels" "$(TargetDir)" /E /R /Y /I
+xcopy "$(SolutionDir)featureModules" "$(TargetDir)/featureModules" /E /R /Y /I
 xcopy "$(SolutionDir)utils.py" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)5131.png" "$(TargetDir)" /F /R /Y /I
 xcopy "$(SolutionDir)5131sub1.png" "$(TargetDir)" /F /R /Y /I
