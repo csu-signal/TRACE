@@ -64,6 +64,14 @@ In order to save the camera calibration settings I updated the Azure SDK offline
 # ASR detection script
 - Additional packages are needed (install using pip): sounddevice, espnet, espnet_model_zoo
 
+# Modular Feature Interface
+- "featureModules/featureName" - contains all data/relevant files for a feature of interest and gets auto copied to the output folder each build
+- IFeature
+-- __init__ - initalize any models, setup code
+-- processFrame - runs each time a frame is processed
+
+- note that the paths to the any models or loaded data needs to be realive to the location of "offline_professor.exe"
+
 # Example Additional Json Output
 
 ```
