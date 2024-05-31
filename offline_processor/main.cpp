@@ -44,7 +44,7 @@ struct depthOutput {
 PyObject* initalizePython()
 {
   PyObject* pInt;
-  if (-1 == _putenv("PYTHONHOME=c:\\users\\isata\\miniconda3\\envs\\handtrackingenvironment\\")) {
+  if (-1 == _putenv("PYTHONHOME=C:\\Users\\vanderh\\Anaconda3\\envs\\handTrackingEnvironment\\")) {
       printf("putenv failed \n");
       return NULL;
   }
@@ -675,5 +675,5 @@ int main(int argc, char** argv)
     "C:\\Users\\vanderh\\Desktop\\OutputTest\\nsf-demo-scene2-sub2.mkv"
   };
 
-  return process_mkv_offline(pyModule, true, false, input_path, "\\", tracker_config) ? 0 : -1;
+  return process_mkv_offline(pyModule, false, false, input_path, "\\", tracker_config) ? 0 : -1;
 }
