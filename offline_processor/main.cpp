@@ -43,8 +43,7 @@ struct depthOutput {
 
 PyObject* initalizePython()
 {
-  PyObject* pInt;
-  if (-1 == _putenv("PYTHONHOME=C:\\Users\\vanderh\\Anaconda3\\envs\\handTrackingEnvironment\\")) {
+  if (-1 == _putenv("PYTHONHOME=C:\\Users\\brady\\miniconda3\\envs\\handTrackingEnvironment\\")) {
       printf("putenv failed \n");
       return NULL;
   }
@@ -503,7 +502,7 @@ void handleFrame(inputSettings& d, int frame_count, PyObject* pyModule, bool ove
     cout << "\nDevice:" << d.deviceId << " Frame: " << frame_count << '\n';
     if (stream_result == K4A_STREAM_RESULT_SUCCEEDED)
     {
-      depthOutput dO = check_depth_image_exists(pyModule, capture_handle, d.calibration, d.transformation, frame_count, d.depth_output_path);
+        depthOutput dO = check_depth_image_exists(pyModule, capture_handle, d.calibration, d.transformation, frame_count, d.depth_output_path);
       if (dO.success)
       {
         jointPredictions predictions = predict_joints(d.frames_json, frame_count, d.tracker, capture_handle);
@@ -561,6 +560,10 @@ bool process_mkv_offline(PyObject* pyModule, bool camera, bool overlay, const ch
 
     frame_count++;
     callDisplayOutput(pyModule);
+
+    if (frame_count > 40){
+        break;
+    }
 
     /*  std::thread t(callDisplayOutput, pyModule);
       t.join();*/
@@ -668,12 +671,17 @@ int main(int argc, char** argv)
         return -1;
     return process_mkv_offline(argv[1], argv[2], tracker_config) ? 0 : -1;*/
 
-  const char* input_path[3] =
-  {
-    "F:\\TempBaselineISAT\\DemoVideo_baseline2\\demoyeti2-sub2.mkv",
-    "C:\\Users\\vanderh\\Desktop\\OutputTest\\nsf-demo-scene2-sub1.mkv",
-    "C:\\Users\\vanderh\\Desktop\\OutputTest\\nsf-demo-scene2-sub2.mkv"
+  cout << "Python initialized successfully" << endl;
+
+  const char* input_path[1] = {
+      "C:\\Users\\brady\\Desktop\\Group_01-master.mkv"
   };
 
-  return process_mkv_offline(pyModule, false, false, input_path, "\\", tracker_config) ? 0 : -1;
+  // const char* input_path[3] =
+  // {
+  //   "F:\\TempBaselineISAT\\DemoVideo_baseline2\\demoyeti2-sub2.mkv",
+  //   "C:\\Users\\vanderh\\Desktop\\OutputTest\\nsf-demo-scene2-sub1.mkv",
+  //   "C:\\Users\\vanderh\\Desktop\\OutputTest\\nsf-demo-scene2-sub2.mkv"
+  // };
+  return process_mkv_offline(pyModule, false, false, input_path, "", tracker_config) ? 0 : -1;
 }

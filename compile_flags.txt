@@ -1,0 +1,7 @@
+-IC:\Users\brady\.nuget\packages\microsoft.azure.kinect.bodytracking\1.1.2\build\native\include
+-IC:\Users\brady\.nuget\packages\microsoft.azure.kinect.sensor\1.4.1\build\native\include
+-IC:\Users\brady\.nuget\packages\nlohmann.json\3.7.0\build\native\include
+-Isample_helper_includes
+-I..\opencv\build\include
+-IC:\Users\brady\miniconda3\envs\handTrackingEnvironment\include
+-IC:\Users\brady\miniconda3\envs\handTrackingEnvironment\Lib\site-packages\numpy\core\include
