@@ -1,5 +1,15 @@
 # Camera Calibration
 
+# Refactored build instructions
+1. Setup and activate conda environment as described below
+2. Install [k4a](https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/docs/usage.md#installation) and [k4abt](https://learn.microsoft.com/en-us/azure/kinect-dk/body-sdk-download). Change `K4A_DIR` and `K4ABT_DIR` in `azure_kinect_wrapper/setup.py` to the correct directories. The `bin` directories need to be added to `%PATH%` when running the python script.
+3. In the `Camera_Calibration` directory:
+```
+mkdir nlohmann
+curl -o nlohmann/json.hpp https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp
+pip install ./azure_kinect_wrapper
+```
+
 In order to save the camera calibration settings I updated the Azure SDK offline processor to include the camera calibration settings directly from Azure. 
 
 # Python Package Versions

@@ -5,3 +5,4 @@
 -I..\opencv\build\include
 -IC:\Users\brady\miniconda3\envs\handTrackingEnvironment\include
 -IC:\Users\brady\miniconda3\envs\handTrackingEnvironment\Lib\site-packages\numpy\core\include
+-IC:\Users\brady\miniconda3\envs\handTrackingEnvironment\lib\site-packages\pybind11\include
