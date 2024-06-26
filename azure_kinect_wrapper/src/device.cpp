@@ -1,6 +1,4 @@
 #include "device.hpp"
-#include "k4abttypes.h"
-#include "k4arecord/playback.h"
 #include "utils.hpp"
 #include <iostream>
 #include <nlohmann/json.hpp>
