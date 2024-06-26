@@ -32,7 +32,8 @@ require("which-key").register({
                     "pip install ./azure_kinect_wrapper",
                     "set PATH=%PATH%;"..
                         "C:\\Program Files\\Azure Kinect SDK v1.4.2\\sdk\\windows-desktop\\amd64\\release\\bin;"..
-                        "C:\\Program Files\\Azure Kinect Body Tracking SDK\\sdk\\windows-desktop\\amd64\\release\\bin",
+                        "C:\\Program Files\\Azure Kinect Body Tracking SDK\\sdk\\windows-desktop\\amd64\\release\\bin;"..
+                        "C:\\Program Files\\Azure Kinect Body Tracking SDK\\tools",
                     "python wrapper_test/test.py"
                 }), "azure_kinect wrapper" },
         c = { function()

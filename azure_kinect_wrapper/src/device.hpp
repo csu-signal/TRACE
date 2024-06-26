@@ -1,10 +1,9 @@
+#ifndef DEVICE_HPP
+#define DEVICE_HPP
+
 #include <k4a/k4a.h>
 #include <k4abt.h>
 #include <k4arecord/playback.h>
-
-
-#ifndef DEVICE_HPP
-#define DEVICE_HPP
 
 struct Device {
   void open();

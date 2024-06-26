@@ -29,8 +29,6 @@ ext_modules = [
     ),
 ]
 
-print(str(K4A_DIR / "sdk" / "windows-desktop" / "amd64" / "release" / "lib"))
-
 setup(
     name="azure_kinect_wrapper",
     ext_modules=ext_modules,

@@ -393,3 +393,5 @@ sysinfo.txt
 /offline_processor/objectDetectionModels/best_model-objects-archieve.pth
 /offline_processor/featureModules/objects/objectDetectionModels/best_model-objects.pth
 /offline_processor/featureModules/objects/objectDetectionModels/best_model-objects-archieve.pth
+
+nlohmann/
