@@ -27,7 +27,6 @@ void Device::open() {
   std::cout << "Body tracker initialized" << std::endl;
 }
 
-
 py::object Device::get_calibration_matrices() {
   k4a_calibration_intrinsic_parameters_t ip =
       calibration.color_camera_calibration.intrinsics.parameters;
@@ -39,12 +38,12 @@ py::object Device::get_calibration_matrices() {
   py::array_t<double> camera_matrix = make_2d_array<3, 3>(camera_matrix_arr);
 
   double rotation_arr[3][3] = {{e.rotation[0], e.rotation[1], e.rotation[2]},
-                              {e.rotation[3], e.rotation[4], e.rotation[5]},
-                              {e.rotation[6], e.rotation[7], e.rotation[8]}};
+                               {e.rotation[3], e.rotation[4], e.rotation[5]},
+                               {e.rotation[6], e.rotation[7], e.rotation[8]}};
   py::array_t<double> rotation = make_2d_array<3, 3>(rotation_arr);
 
   double translation_arr[3] = {e.translation[0], e.translation[1],
-                              e.translation[2]};
+                               e.translation[2]};
   py::array_t<double> translation = make_1d_array<3>(translation_arr);
 
   double distortion_arr[8] = {
@@ -81,23 +80,23 @@ py::object Device::get_frame() {
     return get_frame_fail_return();
   }
 
-  // enqueue to body tracker first so it has as much time as possible to process
-  if (!body_tracker.enqueue_capture(capture_handle)) {
-    return get_frame_fail_return();
-  };
-
   k4a::image depth_image = capture_handle.get_depth_image();
   k4a::image color_image = capture_handle.get_color_image();
   if (!depth_image.is_valid() || !color_image.is_valid()) {
     return get_frame_fail_return();
   }
 
+  // enqueue to body tracker so it has as much time as possible to process
+  if (!body_tracker.enqueue_capture(capture_handle)) {
+    return get_frame_fail_return();
+  };
+
   // create transformed depth image array
   k4a::image transformed_depth_image =
       calibration_transform.depth_image_to_color_camera(depth_image);
   py::array_t<uint16_t> transformed_depth_array(
       {(size_t)transformed_depth_image.get_height_pixels(),
-       (size_t)transformed_depth_image.get_width_pixels(), (size_t)1},
+       (size_t)transformed_depth_image.get_width_pixels()},
       (uint16_t *)transformed_depth_image.get_buffer());
 
   // create color image array

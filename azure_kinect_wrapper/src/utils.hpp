@@ -7,7 +7,6 @@
 using namespace nlohmann;
 namespace py = pybind11;
 
-
 // make a 2d numpy array from an array of doubles
 json body_frame_info(k4abt::frame frame);
 

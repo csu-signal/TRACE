@@ -19,18 +19,18 @@ require("which-key").register({
     ["<leader>b"] = {
         name = "build",
         o = { run(
-            "C:\\Users\\brady\\Desktop\\Camera_Calibration\\offline_processor",
+            "C:\\Users\\brady\\Desktop\\Camera_Calibration",
             {
-                "MSBuild /property:Configuration=Release",
+                "MSBuild /property:Configuration=Release offline_processor",
                 "set PATH=%PATH%;C:\\Users\\brady\\Desktop\\opencv\\build\\x64\\vc14\\bin",
-                "build\\bin\\Release\\offline_processor.exe"
+                "offline_processor\\build\\bin\\Release\\offline_processor.exe"
             }), "offline_processor" },
         p = { run(
             "C:\\Users\\brady\\Desktop\\Camera_Calibration",
             {
                 "pip uninstall -y azure_kinect_wrapper",
                 "pip install ./azure_kinect_wrapper",
-                "python wrapper_test/test.py"
+                "python demo.py"
             }), "azure_kinect wrapper" },
         c = { function()
             require("toggleterm").toggle(7)

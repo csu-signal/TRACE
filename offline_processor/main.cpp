@@ -561,7 +561,7 @@ bool process_mkv_offline(PyObject* pyModule, bool camera, bool overlay, const ch
     frame_count++;
     callDisplayOutput(pyModule);
 
-    if (frame_count > 40){
+    if (frame_count >= 100){
         break;
     }
 
