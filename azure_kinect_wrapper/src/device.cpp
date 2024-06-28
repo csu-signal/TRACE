@@ -1,6 +1,7 @@
 #include "device.hpp"
 #include "utils.hpp"
 #include <iostream>
+#include <k4a/k4a.hpp>
 #include <nlohmann/json.hpp>
 #include <pybind11/numpy.h>
 
@@ -141,25 +142,36 @@ void Playback::update_capture_handle() {
 }
 
 /*
-   Camera implementation: TODO
+   Camera implementation
 */
 
-Camera::Camera() {
-  std::cout << "camera not implemented" << std::endl;
-  assert(false);
+Camera::Camera(uint32_t camera_index) {
+  camera_index = camera_index;
+  open();
 }
 
 void Camera::open_device() {
-  std::cout << "camera not implemented" << std::endl;
-  assert(false);
+  camera_handle = k4a::device::open(camera_index);
+
+  k4a_device_configuration_t config = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
+  config.depth_mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
+  config.color_resolution = K4A_COLOR_RESOLUTION_1080P;
+  config.color_format = K4A_IMAGE_FORMAT_COLOR_BGRA32;
+
+  camera_handle.start_cameras(&config);
+
+  calibration =
+      camera_handle.get_calibration(config.depth_mode, config.color_resolution);
+
+  std::cout << "opening camera with serial number: "
+            << camera_handle.get_serialnum() << std::endl;
 }
 
 void Camera::close_device() {
-  std::cout << "camera not implemented" << std::endl;
-  assert(false);
+  camera_handle.stop_cameras();
+  camera_handle.close();
 }
 
 void Camera::update_capture_handle() {
-  std::cout << "camera not implemented" << std::endl;
-  assert(false);
+  camera_handle.get_capture(&capture_handle);
 }

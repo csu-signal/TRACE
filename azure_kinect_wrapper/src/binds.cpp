@@ -16,5 +16,5 @@ PYBIND11_MODULE(azure_kinect, m) {
 
   py::class_<Playback, Device>(m, "Playback").def(py::init<const char *>());
 
-  py::class_<Camera, Device>(m, "Camera").def(py::init<>());
+  py::class_<Camera, Device>(m, "Camera").def(py::init<uint32_t>());
 }

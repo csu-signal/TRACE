@@ -22,11 +22,13 @@ if __name__ == "__main__":
     pose = PoseFeature()
 
     device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
+    # device = azure_kinect.Camera(0)
+
     device_id = 0
     cameraMatrix, rotation, translation, distortion = device.get_calibration_matrices()
 
     frame_count = 0
-    while frame_count < 200:
+    while frame_count < 30:
 
         color_image, depth_image, body_frame_info = device.get_frame()
         if color_image is None or depth_image is None:

@@ -36,15 +36,21 @@ protected:
   void open_device() override;
   void close_device() override;
   void update_capture_handle() override;
+
+private:
   k4a::playback playback_handle;
   const char *path;
 };
 
 struct Camera : public Device {
-  Camera();
+  Camera(uint32_t id);
 
 protected:
   void open_device() override;
   void close_device() override;
   void update_capture_handle() override;
+
+private:
+  uint32_t camera_index;
+  k4a::device camera_handle;
 };
