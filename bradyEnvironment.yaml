@@ -5,19 +5,20 @@ channels:
   - defaults
 dependencies:
   - python=3.9.12
-  - pip
+  - pip=24.0
   - pytorch=1.11.0
   - torchvision=0.12.0
   - torchaudio=0.11.0
-  - pytorch-cuda
+  - pytorch-cuda=12.4
   - cuda-nvcc=12.4.131
   - pip:
-    - mediapipe
-    - tqdm
-    - pyright
-    - tensorflow<2.11
+    - mediapipe==0.10.11
+    - tqdm==4.66.4
+    - tensorflow==2.8.1
     - protobuf==3.20
-    - joblib
-    - mtcnn
-    - opencv-python
+    - joblib==1.4.2
+    - mtcnn==0.1.1
+    - opencv-python==4.10.0.84
     - scikit-learn==1.3.2
+    - pybind11
+    - pyright

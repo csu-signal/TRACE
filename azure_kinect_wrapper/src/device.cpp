@@ -2,101 +2,119 @@
 #include "utils.hpp"
 #include <iostream>
 #include <nlohmann/json.hpp>
-
-#include "body_tracking_helpers.hpp"
+#include <pybind11/numpy.h>
 
 /*
    Device template implementation
 */
 
 using namespace nlohmann;
+namespace py = pybind11;
 
 void Device::open() {
   open_device();
 
-  // TODO: is any of this needed?
-  // int depthWidth = calibration.depth_camera_calibration.resolution_width;
-  // int depthHeight = calibration.depth_camera_calibration.resolution_height;
-  // calibration.color_resolution = K4A_COLOR_RESOLUTION_1080P;
-  // k4a_transformation_t transformation = k4a_transformation_create(&calibration);
-  // k4a_transformation_destroy(transformation);
+  calibration_transform = k4a::transformation(calibration);
+  frame_count = 0;
+  std::cout << "Device opened" << std::endl;
 
-  print_calibration_info(calibration);
+  // TODO: this only works if cuda is availible
+  // I was getting weird errors with the default processing mode
+  k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT;
+  tracker_config.processing_mode = K4ABT_TRACKER_PROCESSING_MODE_GPU_CUDA;
 
-  // TODO: this only works if cuda is installed
-  k4abt_tracker_configuration_t body_tracker = K4ABT_TRACKER_CONFIG_DEFAULT;
-  body_tracker.processing_mode = K4ABT_TRACKER_PROCESSING_MODE_GPU_CUDA;
+  body_tracker = k4abt::tracker::create(calibration, tracker_config);
+  std::cout << "Body tracker initialized" << std::endl;
+}
 
-  k4abt_tracker_t tracker_handle = nullptr;
-  K4A_VERIFY(
-      k4abt_tracker_create(&calibration, body_tracker, &tracker_handle),
-      "Body tracker initialization failed")
 
-  json json_output;
-  json_output["k4abt_sdk_version"] = K4ABT_VERSION_STR;
+py::object Device::get_calibration_matrices() {
+  k4a_calibration_intrinsic_parameters_t ip =
+      calibration.color_camera_calibration.intrinsics.parameters;
+  k4a_calibration_extrinsics_t e =
+      calibration.color_camera_calibration.extrinsics;
 
-  json_output["camera_calibration"] = json::object();
+  double camera_matrix_arr[3][3] = {
+      {ip.param.fx, 0, ip.param.cx}, {0, ip.param.fy, ip.param.cy}, {0, 0, 1}};
+  py::array_t<double> camera_matrix = make_2d_array<3, 3>(camera_matrix_arr);
 
-  // Store all rotation information to the json
-  json_output["camera_calibration"]["rotation"] = json::array();
-  for (int i = 0; i < 9; i++) {
-    json_output["camera_calibration"]["rotation"].push_back(
-        calibration.color_camera_calibration.extrinsics.rotation[i]);
-  }
+  double rotation_arr[3][3] = {{e.rotation[0], e.rotation[1], e.rotation[2]},
+                              {e.rotation[3], e.rotation[4], e.rotation[5]},
+                              {e.rotation[6], e.rotation[7], e.rotation[8]}};
+  py::array_t<double> rotation = make_2d_array<3, 3>(rotation_arr);
 
-  // Store all translation information to the json
-  json_output["camera_calibration"]["translation"] = json::array();
-  for (int i = 0; i < 3; i++) {
-    json_output["camera_calibration"]["translation"].push_back(
-        calibration.color_camera_calibration.extrinsics.translation[i]);
-  }
+  double translation_arr[3] = {e.translation[0], e.translation[1],
+                              e.translation[2]};
+  py::array_t<double> translation = make_1d_array<3>(translation_arr);
 
-  json_output["camera_calibration"]["fx"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.fx;
-  json_output["camera_calibration"]["fy"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.fy;
-  json_output["camera_calibration"]["cx"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.cx;
-  json_output["camera_calibration"]["cy"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.cy;
-  json_output["camera_calibration"]["p1"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.p1;
-  json_output["camera_calibration"]["p2"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.p2;
-  json_output["camera_calibration"]["k1"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.k1;
-  json_output["camera_calibration"]["k2"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.k2;
-  json_output["camera_calibration"]["k3"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.k3;
-  json_output["camera_calibration"]["k4"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.k4;
-  json_output["camera_calibration"]["k5"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.k5;
-  json_output["camera_calibration"]["k6"] =
-      calibration.color_camera_calibration.intrinsics.parameters.param.k6;
+  double distortion_arr[8] = {
+      ip.param.k1, ip.param.k2, ip.param.p1, ip.param.p2,
+      ip.param.k3, ip.param.k4, ip.param.k5, ip.param.k6,
+  };
+  py::array_t<double> distortion = make_1d_array<8>(distortion_arr);
 
-  // Store all joint names to the json
-  json_output["joint_names"] = json::array();
-  for (int i = 0; i < (int)K4ABT_JOINT_COUNT; i++) {
-    json_output["joint_names"].push_back(
-        g_jointNames.find((k4abt_joint_id_t)i)->second);
-  }
-
-  // Store all bone linkings to the json
-  json_output["bone_list"] = json::array();
-  for (int i = 0; i < (int)g_boneList.size(); i++) {
-    json_output["bone_list"].push_back(
-        {g_jointNames.find(g_boneList[i].first)->second,
-         g_jointNames.find(g_boneList[i].second)->second});
-  }
-
-  std::cout << "Device opened successfully" << std::endl;
+  return py::make_tuple(camera_matrix, rotation, translation, distortion);
 }
 
 void Device::close() {
+  body_tracker.shutdown();
+  std::cout << "Body tracker shutdown" << std::endl;
+
   close_device();
   std::cout << "Device closed successfully" << std::endl;
+}
+
+py::dict json_to_dict(json data) {
+  return py::module::import("json").attr("loads")(data.dump());
+}
+
+py::object get_frame_fail_return() {
+  return py::make_tuple(py::none(), py::none(), json_to_dict(json::object()));
+}
+
+py::object Device::get_frame() {
+  capture_handle.reset();
+  update_capture_handle();
+  frame_count++;
+
+  if (!capture_handle.is_valid()) {
+    return get_frame_fail_return();
+  }
+
+  // enqueue to body tracker first so it has as much time as possible to process
+  if (!body_tracker.enqueue_capture(capture_handle)) {
+    return get_frame_fail_return();
+  };
+
+  k4a::image depth_image = capture_handle.get_depth_image();
+  k4a::image color_image = capture_handle.get_color_image();
+  if (!depth_image.is_valid() || !color_image.is_valid()) {
+    return get_frame_fail_return();
+  }
+
+  // create transformed depth image array
+  k4a::image transformed_depth_image =
+      calibration_transform.depth_image_to_color_camera(depth_image);
+  py::array_t<uint16_t> transformed_depth_array(
+      {(size_t)transformed_depth_image.get_height_pixels(),
+       (size_t)transformed_depth_image.get_width_pixels(), (size_t)1},
+      (uint16_t *)transformed_depth_image.get_buffer());
+
+  // create color image array
+  py::array_t<uint8_t> color_array({(size_t)color_image.get_height_pixels(),
+                                    (size_t)color_image.get_width_pixels(),
+                                    (size_t)4},
+                                   color_image.get_buffer());
+
+  // get body tracking info (enqueued above)
+  k4abt::frame body_frame = body_tracker.pop_result();
+  if (body_frame == nullptr) {
+    return get_frame_fail_return();
+  }
+  json body_frame_info_json = body_frame_info(body_frame);
+
+  return py::make_tuple(color_array, transformed_depth_array,
+                        json_to_dict(body_frame_info_json));
 }
 
 /*
@@ -109,27 +127,40 @@ Playback::Playback(const char *recording_path) {
 }
 
 void Playback::open_device() {
-  K4A_VERIFY(k4a_playback_open(path, &playback_handle), "Cannot open recording")
-
-  K4A_VERIFY(k4a_playback_get_calibration(playback_handle, &calibration),
-             "Failed to get calibration")
-
-  k4a_playback_set_color_conversion(playback_handle,
-                                    K4A_IMAGE_FORMAT_COLOR_BGRA32);
+  playback_handle = k4a::playback::open(path);
+  playback_handle.set_color_conversion(K4A_IMAGE_FORMAT_COLOR_BGRA32);
+  calibration = playback_handle.get_calibration();
 }
 
-void Playback::close_device() {
-  k4a_playback_close(playback_handle);
-}
+void Playback::close_device() { playback_handle.close(); }
 
-void Playback::get_capture() {}
+void Playback::update_capture_handle() {
+  bool success = playback_handle.get_next_capture(&capture_handle);
+  if (!success) {
+    std::cout << "no more frames" << std::endl;
+  }
+}
 
 /*
    Camera implementation: TODO
 */
 
-void Camera::open_device() {}
+Camera::Camera() {
+  std::cout << "camera not implemented" << std::endl;
+  assert(false);
+}
 
-void Camera::close_device() {}
+void Camera::open_device() {
+  std::cout << "camera not implemented" << std::endl;
+  assert(false);
+}
 
-void Camera::get_capture() {}
+void Camera::close_device() {
+  std::cout << "camera not implemented" << std::endl;
+  assert(false);
+}
+
+void Camera::update_capture_handle() {
+  std::cout << "camera not implemented" << std::endl;
+  assert(false);
+}

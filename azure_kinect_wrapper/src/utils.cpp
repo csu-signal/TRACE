@@ -1,55 +1,35 @@
 #include "utils.hpp"
-#include <iostream>
 
-void print_calibration_info(k4a_calibration_t calibration) {
-  std::cout
-      << "Rotation "
-      << calibration.color_camera_calibration.extrinsics.rotation[0] << ","
-      << calibration.color_camera_calibration.extrinsics.rotation[1] << ","
-      << calibration.color_camera_calibration.extrinsics.rotation[2] << ","
-      << calibration.color_camera_calibration.extrinsics.rotation[3] << ","
-      << calibration.color_camera_calibration.extrinsics.rotation[4] << ","
-      << calibration.color_camera_calibration.extrinsics.rotation[5] << ","
-      << calibration.color_camera_calibration.extrinsics.rotation[6] << ","
-      << calibration.color_camera_calibration.extrinsics.rotation[7] << ","
-      << calibration.color_camera_calibration.extrinsics.rotation[8]
-      << std::endl;
+using namespace nlohmann;
 
-  std::cout << "Translation "
-            << calibration.color_camera_calibration.extrinsics.translation[0]
-            << ","
-            << calibration.color_camera_calibration.extrinsics.translation[1]
-            << ","
-            << calibration.color_camera_calibration.extrinsics.translation[2]
-            << std::endl;
+json body_frame_info(k4abt::frame frame) {
+  uint32_t num_bodies = frame.get_num_bodies();
+  uint64_t timestamp = frame.get_device_timestamp().count();
 
-  std::cout
-      << "Camera Matrix "
-      << calibration.color_camera_calibration.intrinsics.parameters.param.fx
-      << ","
-      << calibration.color_camera_calibration.intrinsics.parameters.param.fy
-      << ","
-      << calibration.color_camera_calibration.intrinsics.parameters.param.cx
-      << ","
-      << calibration.color_camera_calibration.intrinsics.parameters.param.cy
-      << std::endl;
+  json frame_result_json;
+  frame_result_json["timestamp_usec"] = timestamp;
+  frame_result_json["num_bodies"] = num_bodies;
+  frame_result_json["bodies"] = json::array();
+  for (uint32_t i = 0; i < num_bodies; i++) {
+    k4abt_skeleton_t skeleton = frame.get_body_skeleton(i);
 
-  std::cout
-      << "Distortion Coefficient "
-      << calibration.color_camera_calibration.intrinsics.parameters.param.k1
-      << ","
-      << calibration.color_camera_calibration.intrinsics.parameters.param.k2
-      << ","
-      << calibration.color_camera_calibration.intrinsics.parameters.param.p1
-      << ","
-      << calibration.color_camera_calibration.intrinsics.parameters.param.p2
-      << ","
-      << calibration.color_camera_calibration.intrinsics.parameters.param.k3
-      << ","
-      << calibration.color_camera_calibration.intrinsics.parameters.param.k4
-      << ","
-      << calibration.color_camera_calibration.intrinsics.parameters.param.k5
-      << ","
-      << calibration.color_camera_calibration.intrinsics.parameters.param.k6
-      << std::endl;
+    json body_result_json;
+    int body_id = frame.get_body_id(i);
+    body_result_json["body_id"] = body_id;
+
+    for (int j = 0; j < K4ABT_JOINT_COUNT; j++) {
+      body_result_json["joint_positions"].push_back(
+          {skeleton.joints[j].position.xyz.x, skeleton.joints[j].position.xyz.y,
+           skeleton.joints[j].position.xyz.z});
+
+      body_result_json["joint_orientations"].push_back(
+          {skeleton.joints[j].orientation.wxyz.w,
+           skeleton.joints[j].orientation.wxyz.x,
+           skeleton.joints[j].orientation.wxyz.y,
+           skeleton.joints[j].orientation.wxyz.z});
+    }
+    frame_result_json["bodies"].push_back(body_result_json);
+  }
+
+  return frame_result_json;
 }

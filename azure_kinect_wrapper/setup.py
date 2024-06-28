@@ -23,7 +23,8 @@ ext_modules = [
         ],
         library_dirs=[
             str(K4A_DIR / "sdk" / "windows-desktop" / "amd64" / "release" / "lib"),
-            str(K4ABT_DIR / "sdk" / "windows-desktop" / "amd64" / "release" / "lib")
+            str(K4ABT_DIR / "sdk" / "windows-desktop" / "amd64" / "release" / "lib"),
+            str(K4ABT_DIR / "tools")
         ],
         libraries = ["k4a", "k4arecord", "k4abt"]
     ),

@@ -19,25 +19,30 @@ require("which-key").register({
     ["<leader>b"] = {
         name = "build",
         o = { run(
-                "C:\\Users\\brady\\Desktop\\Camera_Calibration\\offline_processor",
-                {
-                    "MSBuild /property:Configuration=Release",
-                    "set PATH=%PATH%;C:\\Users\\brady\\Desktop\\opencv\\build\\x64\\vc14\\bin",
-                    "build\\bin\\Release\\offline_processor.exe"
-                }), "offline_processor" },
+            "C:\\Users\\brady\\Desktop\\Camera_Calibration\\offline_processor",
+            {
+                "MSBuild /property:Configuration=Release",
+                "set PATH=%PATH%;C:\\Users\\brady\\Desktop\\opencv\\build\\x64\\vc14\\bin",
+                "build\\bin\\Release\\offline_processor.exe"
+            }), "offline_processor" },
         p = { run(
-                "C:\\Users\\brady\\Desktop\\Camera_Calibration",
-                {
-                    "pip uninstall -y azure_kinect_wrapper",
-                    "pip install ./azure_kinect_wrapper",
-                    "set PATH=%PATH%;"..
-                        "C:\\Program Files\\Azure Kinect SDK v1.4.2\\sdk\\windows-desktop\\amd64\\release\\bin;"..
-                        "C:\\Program Files\\Azure Kinect Body Tracking SDK\\sdk\\windows-desktop\\amd64\\release\\bin;"..
-                        "C:\\Program Files\\Azure Kinect Body Tracking SDK\\tools",
-                    "python wrapper_test/test.py"
-                }), "azure_kinect wrapper" },
+            "C:\\Users\\brady\\Desktop\\Camera_Calibration",
+            {
+                "pip uninstall -y azure_kinect_wrapper",
+                "pip install ./azure_kinect_wrapper",
+                "python wrapper_test/test.py"
+            }), "azure_kinect wrapper" },
         c = { function()
             require("toggleterm").toggle(7)
         end, "close" }
     }
+})
+
+-- fix comments in cpp files
+vim.api.nvim_create_autocmd({ "BufEnter" }, {
+    pattern = { "*.cpp", "*.hpp", "*.c", "*.h" },
+    callback = function()
+        vim.o.commentstring = "// %s"
+        vim.o.shiftwidth = 2
+    end
 })

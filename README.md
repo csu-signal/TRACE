@@ -4,11 +4,7 @@
 2. Install [k4a](https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/docs/usage.md#installation) and [k4abt](https://learn.microsoft.com/en-us/azure/kinect-dk/body-sdk-download). Change `K4A_DIR` and `K4ABT_DIR` in `azure_kinect_wrapper/setup.py` to the correct directories. 
 3. Download `nlohmann/json.hpp`. In the `Camera_Calibration` directory, run `curl --create-dirs -o nlohmann/json.hpp https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp`
 4. Install the Azure Kinect wrapper. Run `pip install ./azure_kinect_wrapper`
-5. Add azure kinect bin and ONNX runtime to path. These are probably at:
-    - `C:\Program Files\Azure Kinect SDK v1.4.2\sdk\windows-desktop\amd64\release\bin`
-    - `C:\Program Files\Azure Kinect Body Tracking SDK\sdk\windows-desktop\amd64\release\bin`
-    - `C:\Program Files\Azure Kinect Body Tracking SDK\tools`
-6. Run the (yet to be made) python script.
+5. TODO: best way to get needed .dll files
 
 # Camera Calibration
 
