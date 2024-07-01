@@ -26,7 +26,7 @@ def select_audio_device():
     p.terminate()
     return device_index
 
-def record_chunks(device_name, device_index, queue, done, chunk_length=3, rate=16000, chunk=1024, format=pyaudio.paInt16):
+def record_chunks(device_name, device_index, queue, done, chunk_length=5, rate=16000, chunk=1024, format=pyaudio.paInt16):
     p = pyaudio.PyAudio()
     stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=1024, input_device_index=device_index)  # Use the selected device index
     counter = 0
