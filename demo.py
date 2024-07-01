@@ -21,7 +21,7 @@ sys.path.append(r"C:\Program Files\Azure Kinect Body Tracking SDK\tools")
 if __name__ == "__main__":
 
     shift = 7 # TODO what is this?
-    gaze = GazeFeature(shift)
+    #gaze = GazeFeature(shift)
     gesture = GestureFeature(shift)
     objects = ObjectFeature()
     pose = PoseFeature()
@@ -31,8 +31,8 @@ if __name__ == "__main__":
     attempts = 1
     while open == False and attempts <= 5:
         try:
-            device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
-            # device = azure_kinect.Camera(0)
+            # device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
+            device = azure_kinect.Camera(0)
         except Exception as e:
             print(str(e))
             print("Error opening device trying again. Attempt " + str(attempts) + "\\5" + "\n")
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         blocks = []
         blocks = objects.processFrame(framergb)
         pose.processFrame(bodies, frame)
-        gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+        #gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
         gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
         asr.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
 
