@@ -25,7 +25,7 @@ if __name__ == "__main__":
     gesture = GestureFeature(shift)
     objects = ObjectFeature()
     pose = PoseFeature()
-    asr = AsrFeature()
+    asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=4)
 
     open = False
     attempts = 1
