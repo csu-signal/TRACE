@@ -1,68 +1,26 @@
-# Camera Calibration
+# Setup instructions
 
-In order to save the camera calibration settings I updated the Azure SDK offline processor to include the camera calibration settings directly from Azure. 
+## Python Environment
+Python 3.10 or higher is required if using conda because of [this unresolved issue](https://github.com/conda/conda/issues/10897). A conda environment can be created with `conda env create --file multimodalDemo.yaml`.
 
-# Python Package Versions
+For those using rosch, the "multimodalDemo" environment was created on the C drive for shared use, it can be activated using: `conda activate C:\ProgramData\anaconda3\envs\multimodalDemo`. It requires VSCode to run as admin to use the environment with the interpreter/debugger. If you prefer to install the environment on your local account follow the steps outlined in the README.
 
-- "python" 3.9.12
-- "argparse" 1.1
-- "cv2" (opencv) 4.5.1 
-- "numpy" 1.21.5
-- "json" 2.0.9
-- "mediapipe" 0.8.9.1
+## Azure Kinect SDK
 
-# Demo Setup 
+Both the [Azure Kinect SDK](https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/docs/usage.md#installation) and [Body Tracking SDK](https://learn.microsoft.com/en-us/azure/kinect-dk/body-sdk-download) are required and can be downloaded/installed for Windows from the linked websites. Use version 1.4.2 of the azure kinect sdk and version 1.1.2 of the body tracking sdk if possible.
 
-- see the "Code Help" folder for video demos and additional Demo setup notes.
-- I recommend copying the "offline_processor.vcxproj" from the code help to the "offline_processor" file and then editing it following these steps (it won't be committed if any changes are made so the build settings won't get wiped out for each setup)
+Both of these libraries are installed in `C:\Program Files\` on rosch.
 
-- Camera_Calibration Repo: https://github.com/Blanchard-lab/Camera_Calibration
-- Sanity Check Open Camera Script: https://github.com/Blanchard-lab/Camera_Calibration/blob/main/azureOverlay/checkCameraUtil.py 
+Once the installation is complete, open `azure_kinect_wrapper/setup.py` and ensure that `K4A_DIR` and `K4ABT_DIR` are set to the correct locations.
 
-## Visual Studio Install
-- Make sure the C++ compiler for visual studio is installed
-	 
-## Install OpenCV
-- https://github.com/opencv/opencv
-- https://github.com/opencv/opencv/releases/tag/4.5.5 
-- Place the “opencv” folder one directory above the “Camera_Calibration” folder (the build is setup to look for it there)
-- Add opencv to the path variable (example from my configuration):      
-- - “C:\Users\Devin\Desktop\GitHub\opencv\build\x64\vc16\bin”
+## Wrapper Library
+Run `pip install ./azure_kinect_wrapper`.
 
-## CONDA
-- Make sure conda is installed and the path to the exe is added to the path:
-- Create a virtual environment using the “handTrackingEnvironment.yaml” (In the repository)
+## Object detection model
+Download the object dection model from [here](https://colostate-my.sharepoint.com/:u:/g/personal/jhfitzg_colostate_edu/ERqPMvinOUJGr4lSLt1oqtYBpv0fwbGRrc15hV6uHtFnCA?e=F1SIoO) and save it as `featureModules/objects/objectDetectionModels/best_model-objects.pth`. Reach out to Jack Fitzgerald (jack.fitzgerald@colostate.edu) or Hannah VanderHoeven (hannah.vanderhoeven@colostate.edu) for access.
 
-## Linking Python
-- Set the include and libs to the directory of the python libs relative to the virtual environment you are using 
-- Add the virtual environment location to the path variable
-- If python##_d.lib doesn’t exist copy python##.lib and rename it
-
-## Linking NUMPY
-- Add the path to numpy from the virtual environment to the includes:
-- C:\Users\vanderh\Anaconda3\envs\handTrackingEnvironment\Lib\site-packages\numpy\core\include
-
-# Build Instructions
-
-- if conda doesn't work on your account in powershell (specifically if activate isn't a valid command) try calling "conda init powershell" and run activate again
-- open a powershell at "C:\GitHub\Camera_Calibration\offline_processor\build\bin\Release"
-- activate hand tracking enviroment "conda activate C:\ProgramData\anaconda3\envs\handTrackingEnvironment"
-- run ".\offline_processor.exe"
-
-- if the torch device isn't the GPU (cuda), you might need to uninstall and reinstall torch and torchvision in the virtual env for windows
-- "pip uninstall torchvision"
-- "pip uninstall torch"
-- "pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121"
-
-# Object Detection Model
-- reach out to Jack Fitzgerald or Hannah VanderHoeven for access to the object detection model
-- hannah.vanderhoeven@colostate.edu
-- jack.fitzgerald@colostate.edu
-
-- https://colostate-my.sharepoint.com/:u:/g/personal/jhfitzg_colostate_edu/ERqPMvinOUJGr4lSLt1oqtYBpv0fwbGRrc15hV6uHtFnCA?e=F1SIoO
-
-# ASR detection script
-- Additional packages are needed (install using pip): sounddevice, espnet, espnet_model_zoo
+# Running the demo
+In `demo.py`, make sure `os.add_dll_directory` points to the correct installation location of the Body Tracking SDK. Also change `azure_kinect.Playback(<path to mkv>)` to have a valid path to an mkv file. Finally, run `python demo.py`.
 
 # Modular Feature Interface
 - "featureModules/featureName" - contains all data/relevant files for a feature of interest and gets auto copied to the output folder each build
@@ -70,44 +28,15 @@ In order to save the camera calibration settings I updated the Azure SDK offline
   - __init__ - initalize any models, setup code
   - __processFrame__ - runs each time a frame is processed
 
-- note that the paths to the any models or loaded data needs to be realive to the location of "offline_professor.exe"
+- note that the paths to the any models or loaded data needs to be realive to the location of the root directory of the repository.
 
-# Example Additional Json Output
+# TODOs
 
-```
-     "camera_calibration": {
-        "cx": 962.8074340820313,
-        "cy": 550.3942260742188,
-        "fx": 911.5870361328125,
-        "fy": 911.545166015625,
-        "k1": 0.42810821533203125,
-        "k2": -2.7314584255218506,
-        "k3": 1.6649699211120605,
-        "k4": 0.3093422055244446,
-        "k5": -2.5492746829986572,
-        "k6": 1.5847551822662354,
-        "p1": 0.0004034260637126863,
-        "p2": -0.00010884667426580563,
-        "rotation": [
-            0.9999893307685852,
-            0.0016191748436540365,
-            -0.004320160020142794,
-            -0.001163218286819756,
-            0.9946256279945374,
-            0.103530153632164,
-            0.004464575555175543,
-            -0.10352402180433273,
-            0.9946169257164001
-        ],
-        "translation": [
-            -32.072898864746094,
-            -2.0814547538757324,
-            3.8745241165161133
-        ]
-    }
-```
-
-Example Python Code to read in Calibration Information can be found in the "azureOverlay" folder.
+- [x] remove old code
+- [ ] Document `azure_kinect_wrapper`
+- [ ] integrate ASR
+- [ ] multiprocessing for improved performance
+- [ ] ensure all features work on multiple devices simultaneously (I was having problems with the gaze feature in particular).
+- [ ] get the demo working with actual cameras (implement `Camera::open_device`, `Camera::close_device`, `Camera::update_capture_handle` in `device.cpp`)
 
 Feel free to reach out to Hannah VanderHoeven with any questions (Hannah.VanderHoeven@colostate.edu)
-
