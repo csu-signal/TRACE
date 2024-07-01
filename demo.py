@@ -7,10 +7,6 @@ from featureModules.objects.ObjectFeature import *
 from featureModules.pose.PoseFeature import *
 from featureModules.gaze.GazeFeature import *
 
-import time
-from threading import Event, Thread
-import numpy as np
-from ctypes import *
 
 # tell the script where to find certain dll's for k4a, cuda, etc.
 # body tracking sdk's tools should contain everything
@@ -26,20 +22,19 @@ if __name__ == "__main__":
     objects = ObjectFeature()
     pose = PoseFeature()
 
-    open = False
-    attempts = 1
-    while open == False and attempts <= 5:
+    device = None
+    attempts = 0
+    while device is None and attempts < 5:
         try:
-            #device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
-            device = azure_kinect.Camera(0)
+            device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
+            # device = azure_kinect.Camera(0)
         except Exception as e:
+            attempts += 1
             print(str(e))
             print("Error opening device trying again. Attempt " + str(attempts) + "\\5" + "\n")
-            attempts+=1
             continue
-        open = True
     
-    if open == False:
+    if device is None:
         exit()
     
     device_id = 0

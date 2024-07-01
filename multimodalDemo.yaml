@@ -21,5 +21,3 @@ dependencies:
     - opencv-python==4.10.0.84
     - scikit-learn==1.3.2
     - pybind11
-    - pyright
-    - debugpy

@@ -357,7 +357,6 @@ Logs/
 body-tracking-samples/sample_unity_bodytracking/Assets/Plugins
 body-tracking-samples/sample_unity_bodytracking/*.dll
 body-tracking-samples/sample_unity_bodytracking/*onnx
-offline_processor\.vs\*
 
 
 
@@ -382,18 +381,6 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
-/body-tracking-samples/simple_3d_viewer/include
-
-/offline_processor/.vs/offline_processor/v17/.suo
-/offline_processor/.vs/offline_processor/v17/Browse.VC.db
-/offline_processor/.vs/offline_processor/v17/Browse.VC.db-shm
-/offline_processor/.vs/offline_processor/v17/Browse.VC.opendb
-/offline_processor/offline_processor.vcxproj
-/offline_processor/objectDetectionModels/best_model-objects.pth
-/offline_processor/objectDetectionModels/best_model-objects-archieve.pth
-/offline_processor/featureModules/objects/objectDetectionModels/best_model-objects.pth
-/offline_processor/featureModules/objects/objectDetectionModels/best_model-objects-archieve.pth
-
-Playback*
-
-nlohmann/
+# development utils -- brady
+custom.lua
+compile_flags.txt
