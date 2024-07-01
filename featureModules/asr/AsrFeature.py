@@ -4,28 +4,32 @@ import multiprocessing as mp
 from featureModules.asr.full_time_recording import record_chunks, process_chunks
 from ctypes import c_bool
 
-# full_time_recording.select_audio_device
-AUDIO_DEVICE_INDEX = 1
-
 class AsrFeature(IFeature):
-    def __init__(self):
+    def __init__(self, devices: list[tuple[str, str]], n_processors=1):
+        """
+        devices should be of the form [(name, index), ...]
+        """
         self.asr_output_queue = mp.Queue()
-        self.full_transcription = ""
+        self.full_transcriptions = {n:"" for n,i in devices}
 
         asr_internal_queue = mp.Queue()
         done = mp.Value(c_bool, False)
-        recorder = mp.Process(target=record_chunks, args=(AUDIO_DEVICE_INDEX, asr_internal_queue, done))
-        processor = mp.Process(target=process_chunks, args=(AUDIO_DEVICE_INDEX, asr_internal_queue, done), kwargs={"output_queue":self.asr_output_queue})
+        recorders = [mp.Process(target=record_chunks, args=(name, index, asr_internal_queue, done)) for name,index in devices]
+        processors = [mp.Process(target=process_chunks, args=(asr_internal_queue, done), kwargs={"output_queue":self.asr_output_queue}) for _ in range(n_processors)]
 
-        recorder.start()
-        processor.start()
+        for i in recorders + processors:
+            i.start()
+
 
     def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus):
-        transcription = ""
+        transcriptions = {n:"" for n in self.full_transcriptions.keys()}
         while not self.asr_output_queue.empty():
-            s = self.asr_output_queue.get()
-            self.full_transcription += s
-            transcription += s
-        if len(transcription.strip()) > 0:
-            print(transcription)
+            name, s = self.asr_output_queue.get()
+            self.full_transcriptions[name] += s
+            transcriptions[name] += s
+
+        for name,s in transcriptions.items():
+            if len(s.strip()) > 0:
+                print(f"{name}: {s}")
+
         cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)

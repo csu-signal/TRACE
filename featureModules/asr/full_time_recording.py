@@ -26,7 +26,7 @@ def select_audio_device():
     p.terminate()
     return device_index
 
-def record_chunks(device_index, queue, done, chunk_length=3, rate=16000, chunk=1024, format=pyaudio.paInt16):
+def record_chunks(device_name, device_index, queue, done, chunk_length=3, rate=16000, chunk=1024, format=pyaudio.paInt16):
     p = pyaudio.PyAudio()
     stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=1024, input_device_index=device_index)  # Use the selected device index
     counter = 0
@@ -43,27 +43,25 @@ def record_chunks(device_index, queue, done, chunk_length=3, rate=16000, chunk=1
         wf.setframerate(rate)
         wf.writeframes(b''.join(frames))
         wf.close()
-        queue.put(next_file)
+        queue.put((device_name, next_file))
 
     stream.stop_stream()
     stream.close()
     p.terminate()
 
-def process_chunks(device_index, queue, done, print_output=False, output_queue=None):
+def process_chunks(queue, done, print_output=False, output_queue=None):
     model = faster_whisper.WhisperModel("tiny", device="cpu", cpu_threads=5, compute_type="int8")
     while not done.value:
-        chunk_file = queue.get()
+        name, chunk_file = queue.get()
 
         segments, info = model.transcribe(chunk_file, language="en")
         transcription = " ".join(segment.text for segment in segments if segment.no_speech_prob < 0.5)  # Join segments into a single string
-        colors = [Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE]
-        color_index = device_index % len(colors) 
 
         if print_output:
-            print(f'{colors[color_index]}{device_index}: {transcription}')
+            print(f'{name}: {transcription}')
 
         if output_queue is not None:
-            output_queue.put(transcription)
+            output_queue.put((name, transcription))
 
         os.remove(chunk_file)
 
