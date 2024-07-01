@@ -146,12 +146,16 @@ void Playback::update_capture_handle() {
 */
 
 Camera::Camera(uint32_t camera_index) {
-  camera_index = camera_index;
+  this->camera_index = camera_index;
+  std::cout << "Camera Index: "
+            << camera_index << std::endl;
   open();
 }
 
 void Camera::open_device() {
-  camera_handle = k4a::device::open(camera_index);
+  std::cout << "Attempting to open camera with index: "
+            << this->camera_index << std::endl;
+  camera_handle = k4a::device::open(this->camera_index);
 
   k4a_device_configuration_t config = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
   config.depth_mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
