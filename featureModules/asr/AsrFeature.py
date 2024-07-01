@@ -21,7 +21,11 @@ class AsrFeature(IFeature):
         processor.start()
 
     def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus):
+        transcription = ""
         while not self.asr_output_queue.empty():
-            self.full_transcription += self.asr_output_queue.get()
-        print(self.full_transcription)
-        cv2.putText(frame, "ASR running", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+            s = self.asr_output_queue.get()
+            self.full_transcription += s
+            transcription += s
+        if len(transcription.strip()) > 0:
+            print(transcription)
+        cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)

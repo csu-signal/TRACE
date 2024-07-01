@@ -1,11 +1,17 @@
 import pyaudio
 import wave
-import whisperx
+# import whisperx
+import faster_whisper
 import os
 from colorama import Fore, Style, init
+from pathlib import Path
+from time import sleep
 
 from multiprocessing import Process, Queue, Value
 from ctypes import c_bool
+
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 
 def select_audio_device():
@@ -39,23 +45,17 @@ def record_chunks(device_index, queue, done, chunk_length=3, rate=16000, chunk=1
         wf.close()
         queue.put(next_file)
 
-
     stream.stop_stream()
     stream.close()
     p.terminate()
 
-def transcribe_chunk(model, chunk_file):
-    audio = whisperx.load_audio(chunk_file)
-    result = model.transcribe(audio)
-    return result["segments"]
-
 def process_chunks(device_index, queue, done, print_output=False, output_queue=None):
-    model = whisperx.load_model("large-v2", device="cuda", compute_type="float16", language="en")
+    model = faster_whisper.WhisperModel("tiny", device="cpu", cpu_threads=5, compute_type="int8")
     while not done.value:
         chunk_file = queue.get()
 
-        segments = transcribe_chunk(model, chunk_file)  # Transcribe the chunk
-        transcription = " ".join(segment['text'] for segment in segments)  # Join segments into a single string
+        segments, info = model.transcribe(chunk_file, language="en")
+        transcription = " ".join(segment.text for segment in segments if segment.no_speech_prob < 0.5)  # Join segments into a single string
         colors = [Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE]
         color_index = device_index % len(colors) 
 

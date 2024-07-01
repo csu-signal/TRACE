@@ -2,16 +2,11 @@ import os
 
 import cv2 as cv
 
-# from featureModules.gesture.GestureFeature import *
-# from featureModules.objects.ObjectFeature import *
-# from featureModules.pose.PoseFeature import *
-# from featureModules.gaze.GazeFeature import *
+from featureModules.gesture.GestureFeature import *
+from featureModules.objects.ObjectFeature import *
+from featureModules.pose.PoseFeature import *
+from featureModules.gaze.GazeFeature import *
 from featureModules.asr.AsrFeature import *
-
-import time
-from threading import Event, Thread
-import numpy as np
-from ctypes import *
 
 import sys
 
@@ -26,10 +21,10 @@ sys.path.append(r"C:\Program Files\Azure Kinect Body Tracking SDK\tools")
 if __name__ == "__main__":
 
     shift = 7 # TODO what is this?
-    # gaze = GazeFeature(shift)
-    # gesture = GestureFeature(shift)
-    # objects = ObjectFeature()
-    # pose = PoseFeature()
+    gaze = GazeFeature(shift)
+    gesture = GestureFeature(shift)
+    objects = ObjectFeature()
+    pose = PoseFeature()
     asr = AsrFeature()
 
     open = False
@@ -72,10 +67,10 @@ if __name__ == "__main__":
         # run features
         blockStatus = {}
         blocks = []
-        # blocks = objects.processFrame(framergb)
-        # pose.processFrame(bodies, frame)
-        # gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
-        # gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+        blocks = objects.processFrame(framergb)
+        pose.processFrame(bodies, frame)
+        gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+        gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
         asr.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
