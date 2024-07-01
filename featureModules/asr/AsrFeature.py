@@ -3,9 +3,10 @@ from utils import *
 import multiprocessing as mp
 from featureModules.asr.full_time_recording import record_chunks, process_chunks
 from ctypes import c_bool
+import os
 
 class AsrFeature(IFeature):
-    def __init__(self, devices: list[tuple[str, str]], n_processors=1):
+    def __init__(self, devices: list[tuple[str, int]], n_processors=1):
         """
         devices should be of the form [(name, index), ...]
         """
@@ -16,6 +17,8 @@ class AsrFeature(IFeature):
         done = mp.Value(c_bool, False)
         recorders = [mp.Process(target=record_chunks, args=(name, index, asr_internal_queue, done)) for name,index in devices]
         processors = [mp.Process(target=process_chunks, args=(asr_internal_queue, done), kwargs={"output_queue":self.asr_output_queue}) for _ in range(n_processors)]
+
+        os.makedirs("chunks", exist_ok=True)
 
         for i in recorders + processors:
             i.start()
