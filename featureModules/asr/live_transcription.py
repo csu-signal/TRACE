@@ -1,69 +1,15 @@
 import pyaudio
 import wave
-import whisperx
+import faster_whisper
 import os
 from colorama import Fore, Style, init
 
-# Initialize colorama for colored text output
-init(autoreset=True)
+from multiprocessing import Process, Queue, Value
+from ctypes import c_bool
 
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
-def record_chunk(p, stream, file_path, device_index, chunk_length=3, rate=16000, chunk=1024, format=pyaudio.paInt16):
-    frames = []
-    for i in range(0, int(rate / chunk * chunk_length)):
-        data = stream.read(chunk)
-        frames.append(data)
-    wf = wave.open(file_path, 'wb')
-    wf.setnchannels(1)
-    wf.setsampwidth(p.get_sample_size(format))
-    wf.setframerate(rate)
-    wf.writeframes(b''.join(frames))
-    wf.close()
-
-def transcribe_chunk(model, chunk_file):
-    audio = whisperx.load_audio(chunk_file)
-    result = model.transcribe(audio)
-    return result["segments"]
-
-def main(device_index=None, identifier="", num_devices=1):
-    if device_index is None:
-        device_index = select_audio_device() # Get the selected device index
-        
-    model = whisperx.load_model("large-v2", device="cuda", compute_type="float16", language="en")
-    p = pyaudio.PyAudio()
-    stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=1024, input_device_index=device_index)  # Use the selected device index
-    accumulated_transcript = ""
-
-    try: 
-        while True:
-            # Generate a unique filename for the temporary chunk
-            chunk_file = f'temp_chunk_{device_index}.wav'
-            record_chunk(p, stream, chunk_file, device_index)  # Pass the device index to record_chunk
-            segments = transcribe_chunk(model, chunk_file)  # Transcribe the chunk
-            transcription = " ".join(segment['text'] for segment in segments)  # Join segments into a single string
-            colors = [Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE]
-            color_index = device_index % len(colors) 
-
-            print(f'{colors[color_index]}{device_index}: {transcription}')
-            os.remove(chunk_file)
-
-            accumulated_transcript += transcription + " "
-
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt")
-
-        with open(f"logs/log_{identifier}.txt", "w") as f:
-            f.write(accumulated_transcript)
-    finally:
-        print(f"{identifier}:"+ accumulated_transcript)
-        #print("log:" + accumulated_transcript)
-        stream.stop_stream()
-        stream.close()
-        p.terminate()
-
-    # Ensure the unique temporary chunk file is removed after processing
-    if os.path.exists(chunk_file):
-        os.remove(chunk_file)
 
 def select_audio_device():
     p = pyaudio.PyAudio()
@@ -77,5 +23,60 @@ def select_audio_device():
     p.terminate()
     return device_index
 
+def record_chunks(device_name, device_index, queue, done, chunk_length=5, rate=16000, chunk=1024, format=pyaudio.paInt16):
+    p = pyaudio.PyAudio()
+    stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=1024, input_device_index=device_index)  # Use the selected device index
+    counter = 0
+    while not done.value:
+        next_file = fr"chunks\device{device_index}-{counter:05}.wav"
+        counter += 1
+        frames = []
+        for i in range(0, int(rate / chunk * chunk_length)):
+            data = stream.read(chunk)
+            frames.append(data)
+        wf = wave.open(next_file, 'wb')
+        wf.setnchannels(1)
+        wf.setsampwidth(p.get_sample_size(format))
+        wf.setframerate(rate)
+        wf.writeframes(b''.join(frames))
+        wf.close()
+        queue.put((device_name, next_file))
+
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+
+def process_chunks(queue, done, print_output=False, output_queue=None):
+    model = faster_whisper.WhisperModel("large-v2", compute_type="float16")
+    while not done.value:
+        name, chunk_file = queue.get()
+
+        segments, info = model.transcribe(chunk_file, language="en")
+        transcription = " ".join(segment.text for segment in segments if segment.no_speech_prob < 0.5)  # Join segments into a single string
+
+        if print_output:
+            print(f'{name}: {transcription}')
+
+        if output_queue is not None:
+            output_queue.put((name, transcription))
+
+        os.remove(chunk_file)
+
+
 if __name__ == "__main__":
-    main()
+    # Initialize colorama for colored text output
+    init(autoreset=True)
+
+    device_index = select_audio_device() # Get the selected device index
+        
+    queue = Queue()
+    done = Value(c_bool, False)
+
+    recorder = Process(target=record_chunks, args=("recording", device_index, queue, done))
+    processor = Process(target=process_chunks, args=(queue, done), kwargs={"print_output":True})
+
+    recorder.start()
+    processor.start()
+
+    recorder.join()
+    processor.join()

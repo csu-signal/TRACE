@@ -1,7 +1,7 @@
 from featureModules.IFeature import *
 from utils import *
 import multiprocessing as mp
-from featureModules.asr.full_time_recording import record_chunks, process_chunks
+from featureModules.asr.live_transcription import record_chunks, process_chunks
 from ctypes import c_bool
 import os
 

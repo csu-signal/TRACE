@@ -25,22 +25,22 @@ if __name__ == "__main__":
     gesture = GestureFeature(shift)
     objects = ObjectFeature()
     pose = PoseFeature()
-    asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=4)
+    # asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=4)
+    asr = AsrFeature([('Participant 1',7)], n_processors=2)
 
-    open = False
-    attempts = 1
-    while open == False and attempts <= 5:
+    device = None
+    attempts = 0
+    while device is None and attempts < 5:
         try:
             # device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
             device = azure_kinect.Camera(0)
         except Exception as e:
+            attempts += 1
             print(str(e))
             print("Error opening device trying again. Attempt " + str(attempts) + "\\5" + "\n")
-            attempts+=1
             continue
-        open = True
     
-    if open == False:
+    if device is None:
         exit()
     
     device_id = 0
