@@ -3,6 +3,7 @@ import wave
 import faster_whisper
 import os
 from colorama import Fore, Style, init
+import time
 
 from multiprocessing import Process, Queue, Value
 from ctypes import c_bool
@@ -31,16 +32,18 @@ def record_chunks(device_name, device_index, queue, done, chunk_length=5, rate=1
         next_file = fr"chunks\device{device_index}-{counter:05}.wav"
         counter += 1
         frames = []
+        start = time.time()
         for i in range(0, int(rate / chunk * chunk_length)):
             data = stream.read(chunk)
             frames.append(data)
+        stop = time.time()
         wf = wave.open(next_file, 'wb')
         wf.setnchannels(1)
         wf.setsampwidth(p.get_sample_size(format))
         wf.setframerate(rate)
         wf.writeframes(b''.join(frames))
         wf.close()
-        queue.put((device_name, next_file))
+        queue.put((device_name, start, stop, next_file))
 
     stream.stop_stream()
     stream.close()
@@ -49,7 +52,7 @@ def record_chunks(device_name, device_index, queue, done, chunk_length=5, rate=1
 def process_chunks(queue, done, print_output=False, output_queue=None):
     model = faster_whisper.WhisperModel("large-v2", compute_type="float16")
     while not done.value:
-        name, chunk_file = queue.get()
+        name, start, stop, chunk_file = queue.get()
 
         segments, info = model.transcribe(chunk_file, language="en")
         transcription = " ".join(segment.text for segment in segments if segment.no_speech_prob < 0.5)  # Join segments into a single string
@@ -58,7 +61,7 @@ def process_chunks(queue, done, print_output=False, output_queue=None):
             print(f'{name}: {transcription}')
 
         if output_queue is not None:
-            output_queue.put((name, transcription))
+            output_queue.put((name, start, stop, transcription))
 
         os.remove(chunk_file)
 

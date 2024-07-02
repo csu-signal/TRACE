@@ -20,19 +20,19 @@ class AsrFeature(IFeature):
 
         os.makedirs("chunks", exist_ok=True)
 
+        with open("asr_out.csv", "w") as f:
+            f.write("name,start,stop,text\n")
+
         for i in recorders + processors:
             i.start()
 
 
     def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus):
-        transcriptions = {n:"" for n in self.full_transcriptions.keys()}
         while not self.asr_output_queue.empty():
-            name, s = self.asr_output_queue.get()
-            self.full_transcriptions[name] += s
-            transcriptions[name] += s
-
-        for name,s in transcriptions.items():
-            if len(s.strip()) > 0:
-                print(f"{name}: {s}")
+            name, start, stop, text = self.asr_output_queue.get()
+            self.full_transcriptions[name] += text
+            if len(text.strip()) > 0:
+                with open("asr_out.csv", "a") as f:
+                    f.write(f"{name},{start},{stop},\"{text}\"\n")
 
         cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)

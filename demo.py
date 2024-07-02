@@ -8,14 +8,10 @@ from featureModules.pose.PoseFeature import *
 from featureModules.gaze.GazeFeature import *
 from featureModules.asr.AsrFeature import *
 
-import sys
-
 # tell the script where to find certain dll's for k4a, cuda, etc.
 # body tracking sdk's tools should contain everything
 os.add_dll_directory(r"C:\Program Files\Azure Kinect Body Tracking SDK\tools")
 import azure_kinect
-
-sys.path.append(r"C:\Program Files\Azure Kinect Body Tracking SDK\tools")
 
 
 if __name__ == "__main__":
@@ -25,8 +21,8 @@ if __name__ == "__main__":
     gesture = GestureFeature(shift)
     objects = ObjectFeature()
     pose = PoseFeature()
-    # asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=4)
-    asr = AsrFeature([('Participant 1',7)], n_processors=2)
+    asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=3)
+    # asr = AsrFeature([('Participant 1',7)], n_processors=2)
 
     device = None
     attempts = 0
