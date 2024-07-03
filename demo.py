@@ -7,6 +7,7 @@ from featureModules.objects.ObjectFeature import *
 from featureModules.pose.PoseFeature import *
 from featureModules.gaze.GazeFeature import *
 from featureModules.asr.AsrFeature import *
+from tkinter import *
 
 
 # tell the script where to find certain dll's for k4a, cuda, etc.
@@ -16,6 +17,61 @@ import azure_kinect
 
 
 if __name__ == "__main__":
+
+    #region GUI setup
+    root = Tk()
+
+    IncludePointing = IntVar(value=1)   
+    IncludeObjects = IntVar(value=1)   
+    IncludeGaze = IntVar(value=1)
+    IncludeASR = IntVar(value=1)
+    IncludePose = IntVar(value=1)
+    
+    # root window title and dimension
+    root.title("Output Options")
+    root.geometry('350x200')
+    Button1 = Checkbutton(root, text = "Pointing",  
+                        variable = IncludePointing, 
+                        onvalue = 1, 
+                        offvalue = 0, 
+                        height = 2, 
+                        width = 10) 
+
+    Button2 = Checkbutton(root, text = "Objects", 
+                        variable = IncludeObjects, 
+                        onvalue = 1, 
+                        offvalue = 0, 
+                        height = 2, 
+                        width = 10) 
+
+    Button3 = Checkbutton(root, text = "Gaze", 
+                        variable = IncludeGaze, 
+                        onvalue = 1, 
+                        offvalue = 0, 
+                        height = 2, 
+                        width = 10) 
+
+    Button4 = Checkbutton(root, text = "ASR", 
+                        variable = IncludeASR, 
+                        onvalue = 1, 
+                        offvalue = 0, 
+                        height = 2, 
+                        width = 10) 
+
+    Button5 = Checkbutton(root, text = "Pose", 
+                        variable = IncludePose, 
+                        onvalue = 1, 
+                        offvalue = 0, 
+                        height = 2, 
+                        width = 10) 
+
+    Button1.pack()
+    Button2.pack()
+    Button3.pack()
+    Button4.pack()
+    Button5.pack()
+
+    #endregion
 
     shift = 7 # TODO what is this?
     gaze = GazeFeature(shift)
@@ -46,7 +102,7 @@ if __name__ == "__main__":
 
     frame_count = 0
     while True:
-
+        root.update()
         color_image, depth_image, body_frame_info = device.get_frame()
         if color_image is None or depth_image is None:
             print(f"DEVICE {device_id}: no color/depth image, skipping frame {frame_count}")
@@ -65,11 +121,21 @@ if __name__ == "__main__":
         # run features
         blockStatus = {}
         blocks = []
-        blocks = objects.processFrame(framergb)
-        pose.processFrame(bodies, frame)
-        gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
-        gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
-        asr.processFrame(frame)
+
+        if(IncludeObjects.get() == 1):
+            blocks = objects.processFrame(framergb)
+
+        if(IncludePose.get() == 1):
+            pose.processFrame(bodies, frame)
+
+        if(IncludeGaze.get() == 1):
+            gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+        
+        if(IncludePointing.get() == 1):
+             gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+
+        if(IncludeASR.get() == 1):
+            asr.processFrame(frame)
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
         cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
