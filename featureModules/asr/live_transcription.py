@@ -50,7 +50,8 @@ def record_chunks(device_name, device_index, queue, done, chunk_length=5, rate=1
     p.terminate()
 
 def process_chunks(queue, done, print_output=False, output_queue=None):
-    model = faster_whisper.WhisperModel("large-v2", compute_type="float16")
+    # model = faster_whisper.WhisperModel("large-v2", compute_type="float16")
+    model = faster_whisper.WhisperModel("small", compute_type="float16")
     while not done.value:
         name, start, stop, chunk_file = queue.get()
 
