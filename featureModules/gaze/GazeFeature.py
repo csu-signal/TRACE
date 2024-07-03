@@ -3,14 +3,28 @@ import mediapipe as mp
 import joblib
 from utils import *
 from featureModules.gaze.Face_Detection import *
-from tensorflow.keras.metrics import categorical_accuracy
+from tensorflow.python.keras.metrics import categorical_accuracy
 from mtcnn import MTCNN
 from tensorflow import keras
+import tensorflow
+
+# https://stackoverflow.com/questions/70782399/tensorflow-is-it-normal-that-my-gpu-is-using-all-its-memory-but-is-not-under-fu
+gpus = tensorflow.config.list_physical_devices('GPU')
+if gpus:
+  try:
+    # Currently, memory growth needs to be the same across GPUs
+    for gpu in gpus:
+      tensorflow.config.experimental.set_memory_growth(gpu, True)
+    logical_gpus = tensorflow.config.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Memory growth must be set before GPUs have been initialized
+    print(e)
 
 #region gaze util methods
 
 def euclideanLoss(y_true, y_pred):
-    return K.mean(K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1)))
+    return keras.mean(keras.sqrt(keras.sum(keras.square(y_pred - y_true), axis=-1)))
 
 def predict_gaze(model, image, faces, heads):
     preds = model.predict([np.array(image),np.array(faces),np.array(heads)])
