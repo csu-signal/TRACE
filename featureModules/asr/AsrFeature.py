@@ -27,7 +27,7 @@ class AsrFeature(IFeature):
             i.start()
 
 
-    def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus):
+    def processFrame(self, frame):
         while not self.asr_output_queue.empty():
             name, start, stop, text = self.asr_output_queue.get()
             self.full_transcriptions[name] += text

@@ -18,7 +18,7 @@ import azure_kinect
 if __name__ == "__main__":
 
     shift = 7 # TODO what is this?
-    #gaze = GazeFeature(shift)
+    gaze = GazeFeature(shift)
     gesture = GestureFeature(shift)
     objects = ObjectFeature()
     pose = PoseFeature()
@@ -67,9 +67,9 @@ if __name__ == "__main__":
         blocks = []
         blocks = objects.processFrame(framergb)
         pose.processFrame(bodies, frame)
-        #gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+        gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
         gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
-        asr.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+        asr.processFrame(frame)
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
         cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
