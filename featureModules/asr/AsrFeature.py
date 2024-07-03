@@ -1,57 +1,38 @@
 from featureModules.IFeature import *
-import mediapipe as mp
 from utils import *
+import multiprocessing as mp
+from featureModules.asr.live_transcription import record_chunks, process_chunks
+from ctypes import c_bool
+import os
 
-# class AsrFeature(IFeature):
-    # def __init__(self):
-        # try: 
-        # connected = []
-        # connected.append(False)
+class AsrFeature(IFeature):
+    def __init__(self, devices: list[tuple[str, int]], n_processors=1):
+        """
+        devices should be of the form [(name, index), ...]
+        """
+        self.asr_output_queue = mp.Queue()
+        self.full_transcriptions = {n:"" for n,i in devices}
 
-        # last_data = []
-        # last_data.append(None)
+        asr_internal_queue = mp.Queue()
+        done = mp.Value(c_bool, False)
+        recorders = [mp.Process(target=record_chunks, args=(name, index, asr_internal_queue, done)) for name,index in devices]
+        processors = [mp.Process(target=process_chunks, args=(asr_internal_queue, done), kwargs={"output_queue":self.asr_output_queue}) for _ in range(n_processors)]
 
-        # client = []
-        # client.append(None)
+        os.makedirs("chunks", exist_ok=True)
 
-        # #next create a socket object 
-        # server_ip='192.168.0.113'
-        # server_port=9999
-        # s = socket.socket()         
-        # print ("Server Socket successfully created")
+        with open("asr_out.csv", "w") as f:
+            f.write("name,start,stop,text\n")
 
-        # s.bind((server_ip, server_port))         
-        # print ("socket binded to %s" %(server_port))
-        # print ("Server IP address:", server_ip)
+        for i in recorders + processors:
+            i.start()
 
-        # # put the socket into listening mode 
-        # s.listen(2)     
-        # print ("socket is listening")  
 
-    # def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus):
-        #     try:
-        #         if(connected[0] == False):
-        #             client[0], addr = s.accept()  
-        #             print ('Got connection from', addr )
-        #             connected[0] = True
-        #             client[0].send('Thank you for connecting'.encode())
-        #             client[0].setblocking(0)
-        #         else:
-        #             ready = select.select([client[0]], [], [], 0.1)
-        #             if ready[0]:
-        #                 data = client[0].recv(1024).decode()
+    def processFrame(self, frame):
+        while not self.asr_output_queue.empty():
+            name, start, stop, text = self.asr_output_queue.get()
+            self.full_transcriptions[name] += text
+            if len(text.strip()) > 0:
+                with open("asr_out.csv", "a") as f:
+                    f.write(f"{name},{start},{stop},\"{text}\"\n")
 
-        #                 # Only print the data if it's new
-        #                 if data != last_data[0]:
-        #                     last_data[0] = data  # Update the last received data 
-        #                     print(data)
-                            
-        #                     # wrapped_text = textwrap.wrap(data, width=50)
-        #                     # asrFrame = np.zeros((1080, 1920, 3), dtype = "uint8")
-
-        #                     # for i, line in enumerate(wrapped_text):
-        #                     #     cv2.putText(asrFrame, str(line), (75,75 * (1+i)), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2, cv2.LINE_AA)
-
-        #                     # keyFrame[1] = cv2.resize(asrFrame, (640, 360))
-        #     except socket.error as e:
-        #         print(e.args[0])
+        cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)

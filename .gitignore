@@ -381,6 +381,12 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
+
+Playback*
+
+nlohmann/
+chunks/
+
 # development utils -- brady
 custom.lua
 compile_flags.txt
