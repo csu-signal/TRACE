@@ -1,6 +1,7 @@
 from featureModules.IFeature import *
 import mediapipe as mp
 import joblib
+import gc
 from utils import *
 from featureModules.gaze.Face_Detection import *
 from tensorflow.python.keras.metrics import categorical_accuracy
@@ -137,3 +138,10 @@ class GazeFeature(IFeature):
                     gazePred[key].append(copyPred[2])
                     gazePred[key].append(copyPred[3])
                     gazePred[key].append(copyPred[4])
+                    del head3D, h_Success, pred3D, p_Success
+                    keras.backend.clear_session()
+                    gc.collect()
+        
+        del faces,heads,images,bodyIds,
+        keras.backend.clear_session()
+        gc.collect()
