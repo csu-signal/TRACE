@@ -8,6 +8,7 @@ from featureModules.pose.PoseFeature import *
 from featureModules.gaze.GazeFeature import *
 from featureModules.asr.AsrFeature import *
 
+
 # tell the script where to find certain dll's for k4a, cuda, etc.
 # body tracking sdk's tools should contain everything
 os.add_dll_directory(r"C:\Program Files\Azure Kinect Body Tracking SDK\tools")
@@ -30,6 +31,7 @@ if __name__ == "__main__":
         try:
             # device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
             device = azure_kinect.Camera(0)
+
         except Exception as e:
             attempts += 1
             print(str(e))

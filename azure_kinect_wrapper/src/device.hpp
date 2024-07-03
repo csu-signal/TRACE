@@ -43,7 +43,7 @@ private:
 };
 
 struct Camera : public Device {
-  Camera(uint32_t id);
+  Camera(uint32_t camera_index);
 
 protected:
   void open_device() override;
