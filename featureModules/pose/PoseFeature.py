@@ -105,7 +105,8 @@ class PoseFeature(IFeature):
             o = torch.tensor(orientation_data).flatten()
             p = torch.tensor(position_data).flatten() / 1000 # normalize to scale of orientations
             tensors.append(torch.concat([o, p])) # concatenating orientation to position
-
+            del o, p
+            torch.cuda.empty_cache()
             output = poseModel(torch.stack(tensors))
             # prediction = int(torch.argmax(output))
             prediction = output.detach().numpy()[0][0] > 0.5
