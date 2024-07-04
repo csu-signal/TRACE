@@ -8,7 +8,6 @@ import time
 from multiprocessing import Process, Queue, Value
 from ctypes import c_bool
 
-import os
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 
