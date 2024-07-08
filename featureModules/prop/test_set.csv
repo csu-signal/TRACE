@@ -1,5 +1,0 @@
-,transcript,common_ground
-0,I think red is ten,red = 10
-1,I think red is ten,red != 10
-2,I think red is ten,red > 10
-3,I think red is ten,red < 10

@@ -1,24 +1,6 @@
-import pickle
-import sys
 import torch
-#from helper import tokenize, forward_ab, f1_score, accuracy, precision, recall
-import pandas as pd
-import random
-from tqdm import tqdm
-import os
-from models import CrossEncoder
-from collections import defaultdict
-import matplotlib.pyplot as plt
-from sklearn.model_selection import GroupKFold
 import re
-from transformers import AutoTokenizer
-import torch
-#from cosine_sim import CrossEncoder_cossim
-import torch.nn.functional as F
 
-import torch
-from transformers import AutoModel, AutoTokenizer
-import os
 def add_special_tokens(proposition_map):
     for x, y in proposition_map.items():
         #print(y['common_ground'])
@@ -130,7 +112,7 @@ def get_arg_attention_mask(input_ids, parallel_model):
     Tensor, Tensor, Tensor
         The global attention mask, arg1 indicator, and arg2 indicator
     """
-    input_ids.cpu()
+    # input_ids.cpu()
 
     num_inputs = input_ids.shape[0]
     
@@ -143,7 +125,7 @@ def get_arg_attention_mask(input_ids, parallel_model):
     nz_indexes = m.nonzero()[:, 1].reshape((num_inputs, 4))
 
     # Now we need to make the tokens between <m> and </m> to be non-zero
-    q = torch.arange(m.shape[1])
+    q = torch.arange(m.shape[1], device=nz_indexes.device)
     q = q.repeat(m.shape[0], 1)
 
     # all indices greater than and equal to the first <m> become True
@@ -173,18 +155,15 @@ def get_arg_attention_mask(input_ids, parallel_model):
     return attention_mask_g, arg1, arg2
 
 def forward_ab(parallel_model, ab_dict, device, indices, lm_only=False, cosine_sim =False):
-    batch_tensor_ab = ab_dict['input_ids'][indices, :]
-    batch_am_ab = ab_dict['attention_mask'][indices, :]
-    batch_posits_ab = ab_dict['position_ids'][indices, :]
+    batch_tensor_ab = ab_dict['input_ids'][indices, :].to(device)
+    batch_am_ab = ab_dict['attention_mask'][indices, :].to(device)
+    batch_posits_ab = ab_dict['position_ids'][indices, :].to(device)
     am_g_ab, arg1_ab, arg2_ab = get_arg_attention_mask(batch_tensor_ab, parallel_model)
 
-    batch_tensor_ab.to(device)
-    batch_am_ab.to(device)
-    batch_posits_ab.to(device)
     if am_g_ab is not None:
-        am_g_ab.to(device)
-    arg1_ab.to(device)
-    arg2_ab.to(device)
+        am_g_ab = am_g_ab.to(device)
+    arg1_ab = arg1_ab.to(device)
+    arg2_ab = arg2_ab.to(device)
     
     return parallel_model(batch_tensor_ab, attention_mask=batch_am_ab, position_ids=batch_posits_ab,
                           global_attention_mask=am_g_ab, arg1=arg1_ab, arg2=arg2_ab, lm_only=lm_only, cosine_sim=False)

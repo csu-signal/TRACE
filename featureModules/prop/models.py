@@ -1,9 +1,6 @@
 import torch.nn as nn
 import torch
 from transformers import AutoModel, AutoTokenizer
-import numpy as np
-import pyhocon
-import os
 from inspect import getfullargspec
 
 # relative path of config file

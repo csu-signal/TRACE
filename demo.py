@@ -7,6 +7,7 @@ from featureModules.objects.ObjectFeature import *
 from featureModules.pose.PoseFeature import *
 from featureModules.gaze.GazeFeature import *
 from featureModules.asr.AsrFeature import *
+from featureModules.prop.PropExtractFeature import *
 from tkinter import *
 
 
@@ -26,6 +27,7 @@ if __name__ == "__main__":
     IncludeGaze = IntVar(value=1)
     IncludeASR = IntVar(value=1)
     IncludePose = IntVar(value=1)
+    IncludeProp = IntVar(value=1)
     
     # root window title and dimension
     root.title("Output Options")
@@ -65,11 +67,19 @@ if __name__ == "__main__":
                         height = 2, 
                         width = 10) 
 
+    Button6 = Checkbutton(root, text = "PropExtract", 
+                        variable = IncludeProp, 
+                        onvalue = 1, 
+                        offvalue = 0, 
+                        height = 2, 
+                        width = 10) 
+
     Button1.pack()
     Button2.pack()
     Button3.pack()
     Button4.pack()
     Button5.pack()
+    Button6.pack()
 
     #endregion
 
@@ -80,6 +90,7 @@ if __name__ == "__main__":
     pose = PoseFeature()
     asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=3)
     # asr = AsrFeature([('Participant 1',7)], n_processors=2)
+    prop = PropExtractFeature()
 
     device = None
     attempts = 0
@@ -134,8 +145,12 @@ if __name__ == "__main__":
         if(IncludePointing.get() == 1):
              gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
 
+        utterances = []
         if(IncludeASR.get() == 1):
-            asr.processFrame(frame)
+            utterances = asr.processFrame(frame)
+
+        if(IncludeProp.get() == 1):
+            prop.processFrame(frame, utterances)
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
         cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)

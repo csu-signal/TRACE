@@ -1,53 +1,41 @@
-import pickle
-import sys
 import torch
-#from helper import tokenize, forward_ab, f1_score, accuracy, precision, recall
 import pandas as pd
-import random
-from tqdm import tqdm
-import os
-from models import CrossEncoder
-from collections import defaultdict
-import matplotlib.pyplot as plt
-from sklearn.model_selection import GroupKFold
-import re
+from featureModules.prop.models import CrossEncoder
 from transformers import AutoTokenizer
-import torch
-#from cosine_sim import CrossEncoder_cossim
-import torch.nn.functional as F
-#from helperMethods import is_proposition_present, normalize_expression, normalize_sub_expression, extract_colors
-from demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground,\
+from featureModules.prop.demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground,\
 is_valid_individual_match, predict_with_XE, add_special_tokens
-import torch
 from transformers import AutoModel, AutoTokenizer
-import os
-
-
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = 'cpu'
+# device = 'cpu'
 
-def load_model(model_dir):
+def load_model(model_dir, verbose=False):
     # Load tokenizer with the local files directly
     tokenizer = AutoTokenizer.from_pretrained(model_dir + '/bert', use_auth_token=False)
     
     # Create an instance of your model with appropriate flags
     model = CrossEncoder(is_training=True, long=False, model_name ='bert-base-uncased')  # Ensure these flags are set as needed for your use case
-    model.to(device)
+    if verbose:
+        print(f"prop extract device: {device}")
     
     # Load the model weights
     model.linear.load_state_dict(torch.load(model_dir + '/linear.chkpt', map_location=device))
     model.model = AutoModel.from_pretrained(model_dir + '/bert')
     #model = torch.nn.DataParallel(model)
 
-    print(tokenizer.vocab['<m>'])  # Check if <m> is in the tokenizer's vocabulary
-    print(tokenizer.vocab['</m>']) 
+    model.to(device)
+
+    if verbose:
+        print(tokenizer.vocab['<m>'])  # Check if <m> is in the tokenizer's vocabulary
+    if verbose:
+        print(tokenizer.vocab['</m>']) 
     return model, tokenizer
-def process_sentence(sentence, model, tokenizer):
+
+def process_sentence(sentence, model, tokenizer, verbose=False):
     #inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
     
-    common_grounds_dataSet = pd.read_csv('data/NormalizedList.csv')
+    common_grounds_dataSet = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
     common_grounds = list(common_grounds_dataSet['Propositions'])
     
     elements = extract_colors_and_numbers(sentence.lower()) #The list of colors / weights in the transcript
@@ -103,20 +91,16 @@ def process_sentence(sentence, model, tokenizer):
     new_df["scores"] = test_predictions #Get the raw scores as given by the cross Encoder
     test_predictions = test_predictions > 0.5
     test_predictions = torch.squeeze(test_predictions)
-    print(test_predictions)
+    if verbose:
+        print(test_predictions)
     test_predictions = test_predictions > 0.5
     test_predictions = torch.squeeze(test_predictions)
-    print(new_df)
+    if verbose:
+        print(new_df)
     highest_score_row = new_df.loc[new_df['scores'].idxmax()]
 
     # Extract the 'common_ground' value from this row
     highest_score_common_ground = highest_score_row['common_ground']
-    print(highest_score_common_ground)
+    if verbose:
+        print(highest_score_common_ground)
     return highest_score_common_ground
-model_dir = 'data/prop_extraction_model/'
-model, tokenizer = load_model(model_dir)
-
-
-sentence = "I think red is ten"
-output = process_sentence(sentence, model, tokenizer)
-print(output)
