@@ -27,8 +27,8 @@ def load_model(model_dir, verbose=False):
     model.to(device)
 
     if verbose:
+        print("new vocab")
         print(tokenizer.vocab['<m>'])  # Check if <m> is in the tokenizer's vocabulary
-    if verbose:
         print(tokenizer.vocab['</m>']) 
     return model, tokenizer
 
@@ -45,6 +45,14 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
             filtered_common_grounds = [cg for cg in common_grounds if is_valid_individual_match(cg, elements)]  #If there is no match where only the mentioned colors and weights are present, get the individual combincations 
     cosine_similarities = []
     
+    if verbose:
+        print("length of filtered common grounds:", len(filtered_common_grounds))
+
+    # TODO: remove this later, there are too many common grounds for off topic utterances
+    if len(filtered_common_grounds) > 100:
+        print("WARNING: too many common grounds, returning failure")
+        return "FAILURE"
+
     for cg in filtered_common_grounds:
         cg_with_token = "<m>" + " " + cg + " "  + "</m>"
         trans_with_token = "<m>" + " "+ sentence +" " + "</m>"
@@ -92,15 +100,18 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
     test_predictions = test_predictions > 0.5
     test_predictions = torch.squeeze(test_predictions)
     if verbose:
+        print("test preds")
         print(test_predictions)
     test_predictions = test_predictions > 0.5
     test_predictions = torch.squeeze(test_predictions)
     if verbose:
+        print("new df")
         print(new_df)
     highest_score_row = new_df.loc[new_df['scores'].idxmax()]
 
     # Extract the 'common_ground' value from this row
     highest_score_common_ground = highest_score_row['common_ground']
     if verbose:
+        print("highest score")
         print(highest_score_common_ground)
     return highest_score_common_ground
