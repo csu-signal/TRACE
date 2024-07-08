@@ -113,7 +113,7 @@ def process_sentence(sentence, model, tokenizer):
     highest_score_common_ground = highest_score_row['common_ground']
     print(highest_score_common_ground)
     return highest_score_common_ground
-model_dir = 'data/chk_42/'
+model_dir = 'data/prop_extraction_model/'
 model, tokenizer = load_model(model_dir)
 
 
