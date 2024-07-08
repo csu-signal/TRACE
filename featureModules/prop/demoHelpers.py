@@ -1,0 +1,248 @@
+import pickle
+import sys
+import torch
+#from helper import tokenize, forward_ab, f1_score, accuracy, precision, recall
+import pandas as pd
+import random
+from tqdm import tqdm
+import os
+from models import CrossEncoder
+from collections import defaultdict
+import matplotlib.pyplot as plt
+from sklearn.model_selection import GroupKFold
+import re
+from transformers import AutoTokenizer
+import torch
+#from cosine_sim import CrossEncoder_cossim
+import torch.nn.functional as F
+
+import torch
+from transformers import AutoModel, AutoTokenizer
+import os
+def add_special_tokens(proposition_map):
+    for x, y in proposition_map.items():
+        #print(y['common_ground'])
+        cg_with_token = "<m>" + " " + y['common_ground']+ " "  + "</m>"
+        #print(y['transcript'])
+        prop_with_token = "<m>" + " "+ y['transcript'] +" " + "</m>"
+        proposition_map[x]['common_ground'] = cg_with_token
+        proposition_map[x]['transcript'] = prop_with_token
+    return proposition_map
+
+
+
+
+def tokenize_props(tokenizer, proposition_ids, proposition_map, m_end, max_sentence_len=1024, truncate=True):
+    
+    if max_sentence_len is None:
+        max_sentence_len = tokenizer.model_max_length
+
+    pairwise_bert_instances_ab = []
+    pairwise_bert_instances_ba = []
+
+    doc_start = '<doc-s>'
+    doc_end = '</doc-s>'
+
+    for index in proposition_ids:
+        sentence_a = proposition_map[index]['transcript']
+        sentence_b = proposition_map[index]['common_ground']
+
+        def make_instance(sent_a, sent_b):
+            return ' '.join(['<g>', doc_start, sent_a, doc_end]), \
+                   ' '.join([doc_start, sent_b, doc_end])
+
+        instance_ab = make_instance(sentence_a, sentence_b)
+        pairwise_bert_instances_ab.append(instance_ab)
+
+        instance_ba = make_instance(sentence_b, sentence_a)
+        pairwise_bert_instances_ba.append(instance_ba)
+
+    def truncate_with_mentions(input_ids):
+        input_ids_truncated = []
+        for input_id in input_ids:
+            m_end_index = input_id.index(m_end)
+
+            curr_start_index = max(0, m_end_index - (max_sentence_len // 4))
+
+            in_truncated = input_id[curr_start_index: m_end_index] + \
+                           input_id[m_end_index: m_end_index + (max_sentence_len // 4)]
+            in_truncated = in_truncated + [tokenizer.pad_token_id] * (max_sentence_len // 2 - len(in_truncated))
+            input_ids_truncated.append(in_truncated)
+
+        return torch.LongTensor(input_ids_truncated)
+
+    def ab_tokenized(pair_wise_instances):
+        instances_a, instances_b = zip(*pair_wise_instances)
+
+        tokenized_a = tokenizer(list(instances_a), add_special_tokens=False)
+        tokenized_b = tokenizer(list(instances_b), add_special_tokens=False)
+
+        tokenized_a = truncate_with_mentions(tokenized_a['input_ids'])
+        positions_a = torch.arange(tokenized_a.shape[-1]).expand(tokenized_a.shape)
+        tokenized_b = truncate_with_mentions(tokenized_b['input_ids'])
+        positions_b = torch.arange(tokenized_b.shape[-1]).expand(tokenized_b.shape)
+
+        tokenized_ab_ = torch.hstack((tokenized_a, tokenized_b))
+        positions_ab = torch.hstack((positions_a, positions_b))
+
+        tokenized_ab_dict = {'input_ids': tokenized_ab_,
+                             'attention_mask': (tokenized_ab_ != tokenizer.pad_token_id),
+                             'position_ids': positions_ab
+                             }
+
+        return tokenized_ab_dict
+
+    if truncate:
+        tokenized_ab = ab_tokenized(pairwise_bert_instances_ab)
+        tokenized_ba = ab_tokenized(pairwise_bert_instances_ba)
+    else:
+        instances_ab = [' '.join(instance) for instance in pairwise_bert_instances_ab]
+        instances_ba = [' '.join(instance) for instance in pairwise_bert_instances_ba]
+        tokenized_ab = tokenizer(list(instances_ab), add_special_tokens=False, padding=True)
+
+        tokenized_ab_input_ids = torch.LongTensor(tokenized_ab['input_ids'])
+
+        tokenized_ab = {'input_ids': torch.LongTensor(tokenized_ab['input_ids']),
+                         'attention_mask': torch.LongTensor(tokenized_ab['attention_mask']),
+                         'position_ids': torch.arange(tokenized_ab_input_ids.shape[-1]).expand(tokenized_ab_input_ids.shape)}
+
+        tokenized_ba = tokenizer(list(instances_ba), add_special_tokens=False, padding=True)
+        tokenized_ba_input_ids = torch.LongTensor(tokenized_ba['input_ids'])
+        tokenized_ba = {'input_ids': torch.LongTensor(tokenized_ba['input_ids']),
+                        'attention_mask': torch.LongTensor(tokenized_ba['attention_mask']),
+                        'position_ids': torch.arange(tokenized_ba_input_ids.shape[-1]).expand(tokenized_ba_input_ids.shape)}
+
+    return tokenized_ab, tokenized_ba    
+    
+
+
+def get_arg_attention_mask(input_ids, parallel_model):
+    """
+    Get the global attention mask and the indices corresponding to the tokens between
+    the mention indicators.
+    Parameters
+    ----------
+    input_ids
+    parallel_model
+
+    Returns
+    -------
+    Tensor, Tensor, Tensor
+        The global attention mask, arg1 indicator, and arg2 indicator
+    """
+    input_ids.cpu()
+
+    num_inputs = input_ids.shape[0]
+    
+    m_start_indicator = input_ids == parallel_model.start_id
+    m_end_indicator = input_ids == parallel_model.end_id
+
+    m = m_start_indicator + m_end_indicator
+
+    # non-zero indices are the tokens corresponding to <m> and </m>
+    nz_indexes = m.nonzero()[:, 1].reshape((num_inputs, 4))
+
+    # Now we need to make the tokens between <m> and </m> to be non-zero
+    q = torch.arange(m.shape[1])
+    q = q.repeat(m.shape[0], 1)
+
+    # all indices greater than and equal to the first <m> become True
+    msk_0 = (nz_indexes[:, 0].repeat(m.shape[1], 1).transpose(0, 1)) <= q
+    # all indices less than and equal to the first </m> become True
+    msk_1 = (nz_indexes[:, 1].repeat(m.shape[1], 1).transpose(0, 1)) >= q
+    # all indices greater than and equal to the second <m> become True
+    msk_2 = (nz_indexes[:, 2].repeat(m.shape[1], 1).transpose(0, 1)) <= q
+    # all indices less than and equal to the second </m> become True
+    msk_3 = (nz_indexes[:, 3].repeat(m.shape[1], 1).transpose(0, 1)) >= q
+
+    # excluding <m> and </m> gives only the indices between <m> and </m>
+    msk_0_ar = (nz_indexes[:, 0].repeat(m.shape[1], 1).transpose(0, 1)) < q
+    msk_1_ar = (nz_indexes[:, 1].repeat(m.shape[1], 1).transpose(0, 1)) > q
+    msk_2_ar = (nz_indexes[:, 2].repeat(m.shape[1], 1).transpose(0, 1)) < q
+    msk_3_ar = (nz_indexes[:, 3].repeat(m.shape[1], 1).transpose(0, 1)) > q
+
+    # Union of indices between first <m> and </m> and second <m> and </m>
+    attention_mask_g = msk_0.int() * msk_1.int() + msk_2.int() * msk_3.int()
+    # attention_mask_g = None
+    # attention_mask_g[:, 0] = 1
+
+    # indices between <m> and </m> excluding the <m> and </m>
+    arg1 = msk_0_ar.int() * msk_1_ar.int()
+    arg2 = msk_2_ar.int() * msk_3_ar.int()
+
+    return attention_mask_g, arg1, arg2
+
+def forward_ab(parallel_model, ab_dict, device, indices, lm_only=False, cosine_sim =False):
+    batch_tensor_ab = ab_dict['input_ids'][indices, :]
+    batch_am_ab = ab_dict['attention_mask'][indices, :]
+    batch_posits_ab = ab_dict['position_ids'][indices, :]
+    am_g_ab, arg1_ab, arg2_ab = get_arg_attention_mask(batch_tensor_ab, parallel_model)
+
+    batch_tensor_ab.to(device)
+    batch_am_ab.to(device)
+    batch_posits_ab.to(device)
+    if am_g_ab is not None:
+        am_g_ab.to(device)
+    arg1_ab.to(device)
+    arg2_ab.to(device)
+    
+    return parallel_model(batch_tensor_ab, attention_mask=batch_am_ab, position_ids=batch_posits_ab,
+                          global_attention_mask=am_g_ab, arg1=arg1_ab, arg2=arg2_ab, lm_only=lm_only, cosine_sim=False)
+
+
+def predict_with_XE(parallel_model, dev_ab, dev_ba, device, batch_size, cosine_sim=False):
+    n = dev_ab['input_ids'].shape[0]
+    indices = list(range(n))
+    # new_batch_size = batching(n, batch_size, len(device_ids))
+    # batch_size = new_batch_size
+    all_scores_ab = []
+    all_scores_ba = []
+    description='Predicting'
+    if(cosine_sim):
+        description = 'Getting Cosine'
+    with torch.no_grad():
+        for i in range(0, n, batch_size):
+            batch_indices = indices[i: i + batch_size]
+            scores_ab = forward_ab(parallel_model, dev_ab, device, batch_indices,cosine_sim=False)
+            scores_ba = forward_ab(parallel_model, dev_ba, device, batch_indices,cosine_sim=False)
+            all_scores_ab.append(scores_ab.detach().cpu())
+            all_scores_ba.append(scores_ba.detach().cpu())
+
+    return torch.cat(all_scores_ab), torch.cat(all_scores_ba) 
+
+number_mapping = {
+    "ten": 10, "twenty": 20, "thirty": 30, 
+    "forty": 40, "fifty": 50
+}
+
+
+def extract_colors_and_numbers(text):
+    colors = ["red", "blue", "green", "yellow", "purple"]
+    numbers = list(number_mapping.keys())
+    found_elements = {"colors": [], "numbers": []}
+    for color in colors:
+        if color in text:
+            found_elements["colors"].append(color)
+    for number in numbers:
+        if number in text:
+            found_elements["numbers"].append(number_mapping[number])
+    return found_elements
+
+
+def is_valid_common_ground(cg, elements):
+    cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
+    cg_numbers = [int(num) for num in re.findall(r'\b(?:10|20|30|40|50)\b', cg)]
+    #print(cg_colors, cg_numbers)
+    color_match = not elements["colors"] or set(cg_colors) == set(elements["colors"])
+    number_match = not elements["numbers"] or set(cg_numbers) == set(elements["numbers"])
+    return color_match and number_match
+
+def is_valid_individual_match(cg, elements):
+    cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
+    cg_numbers = [int(num) for num in re.findall(r'\b(?:10|20|30|40|50)\b', cg)]
+
+    for color in elements["colors"]:
+        for number in elements["numbers"]:
+            if color in cg_colors and number in cg_numbers:
+                return True
+    return False
