@@ -30,6 +30,10 @@ In `demo.py`, make sure `os.add_dll_directory` points to the correct installatio
 
 - note that the paths to the any models or loaded data needs to be realive to the location of the root directory of the repository.
 
+# Prop Extraction
+In `demo.py`, line 120 has a sample sentence. Replace this with the live transcript. process_sentence returns the extracted proposition.  
+
+Please download models from https://colostate-my.sharepoint.com/:f:/g/personal/nkrishna_colostate_edu/EhYic6HBX7hFta6GjQIcb9gBxV_K0yYFhtHagiVyClr7gQ?e=CkHIie and save it under the `data` folder
 # TODOs
 
 - [x] remove old code
