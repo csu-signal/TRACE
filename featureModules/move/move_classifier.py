@@ -16,9 +16,6 @@ import pandas as pd
 import warnings
 # import matplotlib.pyplot as plt
 import torch
-from imblearn.over_sampling import SMOTE
-from IPython.display import clear_output
-from pytorch_metric_learning import losses
 # import re
 # from torchsampler import ImbalancedDatasetSampler
 # import shap

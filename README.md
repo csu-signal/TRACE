@@ -16,11 +16,11 @@ Once the installation is complete, open `azure_kinect_wrapper/setup.py` and ensu
 ## Wrapper Library
 Run `pip install ./azure_kinect_wrapper`.
 
-## Object detection model
-Download the object detection model from [here](https://colostate-my.sharepoint.com/:u:/g/personal/jhfitzg_colostate_edu/ERqPMvinOUJGr4lSLt1oqtYBpv0fwbGRrc15hV6uHtFnCA?e=F1SIoO) and save it as `featureModules/objects/objectDetectionModels/best_model-objects.pth`. Reach out to Jack Fitzgerald (jack.fitzgerald@colostate.edu) or Hannah VanderHoeven (hannah.vanderhoeven@colostate.edu) for access.
-
-## Proposition extraction model
-Download the proposition extraction model from [here](https://colostate-my.sharepoint.com/:f:/g/personal/nkrishna_colostate_edu/EhYic6HBX7hFta6GjQIcb9gBxV_K0yYFhtHagiVyClr7gQ?e=CkHIie) and save the folder as `featureModules/prop/data/prop_extraction_model/`.
+## Download models
+Download the following models from [here](https://colostate-my.sharepoint.com/personal/nkrishna_colostate_edu/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fnkrishna%5Fcolostate%5Fedu%2FDocuments%2FDARPA%2DFACT%2FPapers%2FEMNLP%2DDemo%2DMMCGT%2FDemo%20Models&ga=1) and save at the given locations:
+- `fasterrcnn-*.pth` ==> `featureModules/objects/objectDetectionModels/best_model-objects.pth`
+- `prop_extraction_model/` ==> `featureModules/prop/data/prop_extraction_model/`
+- `move_gnn_01.pt` ==> `featureModules/move/move_gnn_01.pt`
 
 # Running the demo
 In `demo.py`, make sure `os.add_dll_directory` points to the correct installation location of the Body Tracking SDK. Also change `azure_kinect.Playback(<path to mkv>)` to have a valid path to an mkv file. Finally, run `python demo.py`.
