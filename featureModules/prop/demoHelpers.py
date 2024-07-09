@@ -197,20 +197,20 @@ number_mapping = {
 
 def extract_colors_and_numbers(text):
     colors = ["red", "blue", "green", "yellow", "purple"]
-    numbers = list(number_mapping.keys())
+    numbers = ["10","20","30", "40", "50"]
     found_elements = {"colors": [], "numbers": []}
     for color in colors:
         if color in text:
             found_elements["colors"].append(color)
     for number in numbers:
         if number in text:
-            found_elements["numbers"].append(number_mapping[number])
+            found_elements["numbers"].append(number)
     return found_elements
 
 
 def is_valid_common_ground(cg, elements):
     cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
-    cg_numbers = [int(num) for num in re.findall(r'\b(?:10|20|30|40|50)\b', cg)]
+    cg_numbers = [str(num) for num in re.findall(r'\b(?:10|20|30|40|50)\b', cg)]
     #print(cg_colors, cg_numbers)
     color_match = not elements["colors"] or set(cg_colors) == set(elements["colors"])
     number_match = not elements["numbers"] or set(cg_numbers) == set(elements["numbers"])

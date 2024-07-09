@@ -1,9 +1,9 @@
 import torch
 import pandas as pd
-from featureModules.prop.models import CrossEncoder
+from models import CrossEncoder #changed for testing
 from transformers import AutoTokenizer
-from featureModules.prop.demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground,\
-is_valid_individual_match, predict_with_XE, add_special_tokens
+from demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground, \
+is_valid_individual_match, predict_with_XE, add_special_tokens #changed for testing 
 from transformers import AutoModel, AutoTokenizer
 
 
@@ -14,12 +14,12 @@ def load_model(model_dir, verbose=False):
     # Load tokenizer with the local files directly
     tokenizer = AutoTokenizer.from_pretrained(model_dir + '/bert', use_auth_token=False)
     
-    # Create an instance of your model with appropriate flags
-    model = CrossEncoder(is_training=True, long=False, model_name ='bert-base-uncased')  # Ensure these flags are set as needed for your use case
+    # Create an instance of model 
+    model = CrossEncoder(is_training=True, long=False, model_name ='bert-base-uncased')  # Change model is something different is being used 
     if verbose:
         print(f"prop extract device: {device}")
     
-    # Load the model weights
+    #model weights
     model.linear.load_state_dict(torch.load(model_dir + '/linear.chkpt', map_location=device))
     model.model = AutoModel.from_pretrained(model_dir + '/bert')
     #model = torch.nn.DataParallel(model)
@@ -35,12 +35,15 @@ def load_model(model_dir, verbose=False):
 def process_sentence(sentence, model, tokenizer, verbose=False):
     #inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
     
-    common_grounds_dataSet = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
+    # common_grounds_dataSet = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
+    common_grounds_dataSet = pd.read_csv('data/NormalizedList.csv')
     common_grounds = list(common_grounds_dataSet['Propositions'])
     
     elements = extract_colors_and_numbers(sentence.lower()) #The list of colors / weights in the transcript
+    print(elements)
     filtered_common_grounds = []
     filtered_common_grounds = [cg for cg in common_grounds if is_valid_common_ground(cg, elements)]
+    print('common_ground', filtered_common_grounds)
     if not filtered_common_grounds:  # If no match found, try individual color-number pairs
             filtered_common_grounds = [cg for cg in common_grounds if is_valid_individual_match(cg, elements)]  #If there is no match where only the mentioned colors and weights are present, get the individual combincations 
     cosine_similarities = []
@@ -108,10 +111,16 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
         print("new df")
         print(new_df)
     highest_score_row = new_df.loc[new_df['scores'].idxmax()]
-
+    #print(new_df)
     # Extract the 'common_ground' value from this row
     highest_score_common_ground = highest_score_row['common_ground']
     if verbose:
         print("highest score")
         print(highest_score_common_ground)
     return highest_score_common_ground
+
+
+#Testing 
+sentence = 'I think Blue is greater than 20'
+model, tokenizer = load_model('/s/babbage/b/nobackup/nblancha/public-datasets/ilideep/XE/googleSandbox/XE_models/model') #changed for testing 
+print(process_sentence(sentence,model,tokenizer))
