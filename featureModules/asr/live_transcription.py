@@ -62,9 +62,7 @@ def process_chunks(queue, done, print_output=False, output_queue=None):
             print(f'{name}: {transcription}')
 
         if output_queue is not None:
-            output_queue.put((name, start, stop, transcription))
-
-        os.remove(chunk_file)
+            output_queue.put((name, start, stop, transcription, chunk_file))
 
 
 if __name__ == "__main__":

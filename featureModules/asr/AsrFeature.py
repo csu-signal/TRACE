@@ -29,10 +29,10 @@ class AsrFeature(IFeature):
         utterances = []
 
         while not self.asr_output_queue.empty():
-            name, start, stop, text = self.asr_output_queue.get()
+            name, start, stop, text, audio_file = self.asr_output_queue.get()
             self.full_transcriptions[name] += text
             if len(text.strip()) > 0:
-                utterances.append((name, start, stop, text))
+                utterances.append((name, start, stop, text, audio_file))
                 # with open("asr_out.csv", "a") as f:
                 #     f.write(f"{name},{start},{stop},\"{text}\"\n")
 

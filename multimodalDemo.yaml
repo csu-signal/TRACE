@@ -24,3 +24,4 @@ dependencies:
     - PyAudio==0.2.14
     - pybind11==2.13.1
     - pandas==2.2.2
+    - opensmile==2.5.0

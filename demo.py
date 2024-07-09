@@ -98,8 +98,8 @@ if __name__ == "__main__":
     gesture = GestureFeature(shift)
     objects = ObjectFeature()
     pose = PoseFeature()
-    # asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=3)
-    asr = AsrFeature([('Participant 1',1)], n_processors=1)
+    asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=3)
+    # asr = AsrFeature([('Participant 1',1)], n_processors=1)
     prop = PropExtractFeature()
     move = MoveFeature()
 
@@ -160,12 +160,12 @@ if __name__ == "__main__":
         if(IncludeASR.get() == 1):
             utterances = asr.processFrame(frame)
 
-        props = []
+        utterances_and_props = []
         if(IncludeProp.get() == 1):
-            prop.processFrame(frame, utterances)
+            utterances_and_props = prop.processFrame(frame, utterances)
 
         if(IncludeMove.get() == 1):
-            move.processFrame(None, None, None, None, None, frame)
+            move.processFrame(utterances_and_props, frame)
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
         cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
