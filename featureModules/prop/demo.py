@@ -1,9 +1,9 @@
 import torch
 import pandas as pd
-from models import CrossEncoder #changed for testing
+from featureModules.prop.models import CrossEncoder
 from transformers import AutoTokenizer
-from demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground, \
-is_valid_individual_match, predict_with_XE, add_special_tokens #changed for testing 
+from featureModules.prop.demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground, \
+is_valid_individual_match, predict_with_XE, add_special_tokens
 from transformers import AutoModel, AutoTokenizer
 
 
@@ -35,15 +35,16 @@ def load_model(model_dir, verbose=False):
 def process_sentence(sentence, model, tokenizer, verbose=False):
     #inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
     
-    # common_grounds_dataSet = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
-    common_grounds_dataSet = pd.read_csv('data/NormalizedList.csv')
+    common_grounds_dataSet = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
     common_grounds = list(common_grounds_dataSet['Propositions'])
     
     elements = extract_colors_and_numbers(sentence.lower()) #The list of colors / weights in the transcript
-    print(elements)
+    if verbose:
+        print(elements)
     filtered_common_grounds = []
     filtered_common_grounds = [cg for cg in common_grounds if is_valid_common_ground(cg, elements)]
-    print('common_ground', filtered_common_grounds)
+    if verbose:
+        print('common_ground', filtered_common_grounds)
     if not filtered_common_grounds:  # If no match found, try individual color-number pairs
             filtered_common_grounds = [cg for cg in common_grounds if is_valid_individual_match(cg, elements)]  #If there is no match where only the mentioned colors and weights are present, get the individual combincations 
     cosine_similarities = []
@@ -51,10 +52,8 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
     if verbose:
         print("length of filtered common grounds:", len(filtered_common_grounds))
 
-    # TODO: remove this later, there are too many common grounds for off topic utterances
     if len(filtered_common_grounds) > 100:
-        print("WARNING: too many common grounds, returning failure")
-        return "FAILURE"
+        print(f"WARNING: {len(filtered_common_grounds)} common grounds, processing will likely take a long time")
 
     for cg in filtered_common_grounds:
         cg_with_token = "<m>" + " " + cg + " "  + "</m>"
@@ -121,6 +120,6 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
 
 
 #Testing 
-sentence = 'I think Blue is greater than 20'
-model, tokenizer = load_model('/s/babbage/b/nobackup/nblancha/public-datasets/ilideep/XE/googleSandbox/XE_models/model') #changed for testing 
-print(process_sentence(sentence,model,tokenizer))
+# sentence = 'I think Blue is greater than 20'
+# model, tokenizer = load_model('/s/babbage/b/nobackup/nblancha/public-datasets/ilideep/XE/googleSandbox/XE_models/model') #changed for testing 
+# print(process_sentence(sentence,model,tokenizer))
