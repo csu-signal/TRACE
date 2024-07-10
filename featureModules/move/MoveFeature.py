@@ -5,6 +5,7 @@ from featureModules.move.move_classifier import (
     hyperparam,
     modalities,
 )
+from featureModules.move.closure_rules import CommonGround
 from transformers import BertTokenizer, BertModel
 import cv2
 import opensmile
@@ -38,6 +39,10 @@ class MoveFeature:
             (UTTERANCE_HISTORY_LEN, 88), device=device
         )
 
+        self.closure_rules = CommonGround()
+        self.class_names = ["STATEMENT", "ACCEPT", "DOUBT"]
+
+
     def update_bert_embeddings(self, name, text):
         input_ids = torch.tensor(self.tokenizer.encode(text), device=device).unsqueeze(0)
         cls_embeddings = self.bert_model(input_ids)[0][:, 0]
@@ -63,8 +68,18 @@ class MoveFeature:
             in_action = torch.zeros((UTTERANCE_HISTORY_LEN, 78), device=device)
             in_gamr = torch.zeros((UTTERANCE_HISTORY_LEN, 896), device=device)
 
-            out = F.softmax(self.model(in_bert, in_open, in_cps, in_action, in_gamr, hyperparam, modalities))
+            # out = F.softmax(self.model(in_bert, in_open, in_cps, in_action, in_gamr, hyperparam, modalities))
+            out = torch.sigmoid(self.model(in_bert, in_open, in_cps, in_action, in_gamr, hyperparam, modalities))
             out = out.cpu().detach().numpy()
+
+            present_class_indices = (out > 0.5)
+            move = [self.class_names[idx] for idx, class_present in enumerate(present_class_indices) if class_present]
+
+            self.closure_rules.update(move, prop)
+            # self.closure_rules.qbank
+            # self.closure_rules.ebank
+            # self.closure_rules.fbank
+            
             print(f"{name}: {text} => {prop}, {out}")
 
         cv2.putText(frame, "Move classifier is live", (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
