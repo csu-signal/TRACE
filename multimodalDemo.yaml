@@ -25,3 +25,4 @@ dependencies:
     - pybind11==2.13.1
     - pandas==2.2.2
     - opensmile==2.5.0
+    - transformers==4.42.3
