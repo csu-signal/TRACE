@@ -85,7 +85,7 @@ class CommonGround():
                             self.evidence_against[rhs_blocks[0]]))))):
                     block, rhs_blocks = rhs_blocks[0], [block]
                 # STATEMENTs add weights to evidence (for or against)
-                if move == 'STATEMENT':
+                if 'STATEMENT' in move:
                     if relation == '=':
                         # if block = weight
                         if rhs_weight:
@@ -204,7 +204,7 @@ class CommonGround():
                                 (not_weight,) = poss_weights
                                 self.evidence_against[block].add(not_weight)
                 # ACCEPTs remove impossible weights
-                elif move == 'ACCEPT':
+                elif 'ACCEPT' in move:
                     if relation == '=':
                         # if block = weight
                         if rhs_weight:
