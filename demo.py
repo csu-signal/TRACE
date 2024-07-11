@@ -7,6 +7,8 @@ from featureModules.objects.ObjectFeature import *
 from featureModules.pose.PoseFeature import *
 from featureModules.gaze.GazeFeature import *
 from featureModules.asr.AsrFeature import *
+from featureModules.prop.PropExtractFeature import *
+from featureModules.move.MoveFeature import *
 from tkinter import *
 
 
@@ -26,10 +28,12 @@ if __name__ == "__main__":
     IncludeGaze = IntVar(value=1)
     IncludeASR = IntVar(value=1)
     IncludePose = IntVar(value=1)
+    IncludeProp = IntVar(value=1)
+    IncludeMove = IntVar(value=1)
     
     # root window title and dimension
     root.title("Output Options")
-    root.geometry('350x200')
+    # root.geometry('350x200')
     Button1 = Checkbutton(root, text = "Pointing",  
                         variable = IncludePointing, 
                         onvalue = 1, 
@@ -65,11 +69,27 @@ if __name__ == "__main__":
                         height = 2, 
                         width = 10) 
 
+    Button6 = Checkbutton(root, text = "PropExtract", 
+                        variable = IncludeProp, 
+                        onvalue = 1, 
+                        offvalue = 0, 
+                        height = 2, 
+                        width = 10) 
+
+    Button7 = Checkbutton(root, text = "Move Classifier", 
+                        variable = IncludeMove, 
+                        onvalue = 1, 
+                        offvalue = 0, 
+                        height = 2, 
+                        width = 10) 
+
     Button1.pack()
     Button2.pack()
     Button3.pack()
     Button4.pack()
     Button5.pack()
+    Button6.pack()
+    Button7.pack()
 
     #endregion
 
@@ -79,14 +99,16 @@ if __name__ == "__main__":
     objects = ObjectFeature()
     pose = PoseFeature()
     asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=3)
-    # asr = AsrFeature([('Participant 1',7)], n_processors=2)
+    # asr = AsrFeature([('Participant 1',1)], n_processors=1)
+    prop = PropExtractFeature()
+    move = MoveFeature()
 
     device = None
     attempts = 0
     while device is None and attempts < 5:
         try:
-            # device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
-            device = azure_kinect.Camera(0)
+            device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
+            # device = azure_kinect.Camera(0)
 
         except Exception as e:
             attempts += 1
@@ -134,8 +156,16 @@ if __name__ == "__main__":
         if(IncludePointing.get() == 1):
              gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
 
+        utterances = []
         if(IncludeASR.get() == 1):
-            asr.processFrame(frame)
+            utterances = asr.processFrame(frame)
+
+        utterances_and_props = []
+        if(IncludeProp.get() == 1):
+            utterances_and_props = prop.processFrame(frame, utterances)
+
+        if(IncludeMove.get() == 1):
+            move.processFrame(utterances_and_props, frame)
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
         cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)

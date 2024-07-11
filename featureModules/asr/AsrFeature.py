@@ -1,3 +1,4 @@
+from collections import defaultdict
 from featureModules.IFeature import *
 from utils import *
 import multiprocessing as mp
@@ -20,19 +21,21 @@ class AsrFeature(IFeature):
 
         os.makedirs("chunks", exist_ok=True)
 
-        with open("asr_out.csv", "w") as f:
-            f.write("name,start,stop,text\n")
-
         for i in recorders + processors:
             i.start()
 
 
     def processFrame(self, frame):
+        utterances = []
+
         while not self.asr_output_queue.empty():
-            name, start, stop, text = self.asr_output_queue.get()
+            name, start, stop, text, audio_file = self.asr_output_queue.get()
             self.full_transcriptions[name] += text
             if len(text.strip()) > 0:
-                with open("asr_out.csv", "a") as f:
-                    f.write(f"{name},{start},{stop},\"{text}\"\n")
+                utterances.append((name, start, stop, text, audio_file))
+                # with open("asr_out.csv", "a") as f:
+                #     f.write(f"{name},{start},{stop},\"{text}\"\n")
 
         cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+
+        return utterances

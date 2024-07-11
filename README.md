@@ -16,8 +16,11 @@ Once the installation is complete, open `azure_kinect_wrapper/setup.py` and ensu
 ## Wrapper Library
 Run `pip install ./azure_kinect_wrapper`.
 
-## Object detection model
-Download the object dection model from [here](https://colostate-my.sharepoint.com/:u:/g/personal/jhfitzg_colostate_edu/ERqPMvinOUJGr4lSLt1oqtYBpv0fwbGRrc15hV6uHtFnCA?e=F1SIoO) and save it as `featureModules/objects/objectDetectionModels/best_model-objects.pth`. Reach out to Jack Fitzgerald (jack.fitzgerald@colostate.edu) or Hannah VanderHoeven (hannah.vanderhoeven@colostate.edu) for access.
+## Download models
+Download the following models from [here](https://colostate-my.sharepoint.com/personal/nkrishna_colostate_edu/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fnkrishna%5Fcolostate%5Fedu%2FDocuments%2FDARPA%2DFACT%2FPapers%2FEMNLP%2DDemo%2DMMCGT%2FDemo%20Models&ga=1) and save at the given locations:
+- `fasterrcnn-*.pth` ==> `featureModules/objects/objectDetectionModels/best_model-objects.pth`
+- `prop_extraction_model/` ==> `featureModules/prop/data/prop_extraction_model/`
+- `move_gnn_01.pt` ==> `featureModules/move/move_gnn_01.pt`
 
 # Running the demo
 In `demo.py`, make sure `os.add_dll_directory` points to the correct installation location of the Body Tracking SDK. Also change `azure_kinect.Playback(<path to mkv>)` to have a valid path to an mkv file. Finally, run `python demo.py`.
@@ -34,9 +37,9 @@ In `demo.py`, make sure `os.add_dll_directory` points to the correct installatio
 
 - [x] remove old code
 - [ ] Document `azure_kinect_wrapper`
-- [ ] integrate ASR
+- [x] integrate ASR
 - [ ] multiprocessing for improved performance
 - [ ] ensure all features work on multiple devices simultaneously (I was having problems with the gaze feature in particular).
-- [ ] get the demo working with actual cameras (implement `Camera::open_device`, `Camera::close_device`, `Camera::update_capture_handle` in `device.cpp`)
+- [x] get the demo working with actual cameras (implement `Camera::open_device`, `Camera::close_device`, `Camera::update_capture_handle` in `device.cpp`)
 
 Feel free to reach out to Hannah VanderHoeven with any questions (Hannah.VanderHoeven@colostate.edu)
