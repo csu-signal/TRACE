@@ -76,9 +76,12 @@ class MoveFeature:
             move = [self.class_names[idx] for idx, class_present in enumerate(present_class_indices) if class_present]
 
             self.closure_rules.update(move, prop)
-            # self.closure_rules.qbank
-            # self.closure_rules.ebank
-            # self.closure_rules.fbank
+            print("Q bank")
+            print(self.closure_rules.qbank)
+            print("E bank")
+            print(self.closure_rules.ebank)
+            print("F bank")
+            print(self.closure_rules.fbank)
             
             print(f"{name}: {text} => {prop}, {out}")
 
