@@ -19,7 +19,7 @@ print("move classifier device", device)
 
 class MoveFeature:
     def __init__(self):
-        self.model = torch.load(r"featureModules\move\move_gnn_01.pt").to(device)
+        self.model = torch.load(r"featureModules\move\production_move_classifier.pt").to(device)
         self.model.eval()
 
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
@@ -66,7 +66,7 @@ class MoveFeature:
             # TODO: other inputs for move classifier
             in_cps = torch.zeros((UTTERANCE_HISTORY_LEN, 3), device=device)
             in_action = torch.zeros((UTTERANCE_HISTORY_LEN, 78), device=device)
-            in_gamr = torch.zeros((UTTERANCE_HISTORY_LEN, 896), device=device)
+            in_gamr = torch.zeros((UTTERANCE_HISTORY_LEN, 243), device=device)
 
             # out = F.softmax(self.model(in_bert, in_open, in_cps, in_action, in_gamr, hyperparam, modalities))
             out = torch.sigmoid(self.model(in_bert, in_open, in_cps, in_action, in_gamr, hyperparam, modalities))
