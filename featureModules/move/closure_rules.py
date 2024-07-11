@@ -59,7 +59,7 @@ class CommonGround():
 
     def update(self, move, content):
         # content is one or more props connected by ' and '
-        props = re.split(r'\s+and\s+', content)
+        props = re.split(r'\s*(and|,)\s*', content)
         for prop in props:
             # prop consists of block, relation, and rhs
             prop_match = re.match(r'(red|blue|green|yellow|purple)\s*(=|<|>|!=)\s*(.*)', prop)
