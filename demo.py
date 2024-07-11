@@ -1,5 +1,4 @@
 import os
-
 import cv2 as cv
 
 from featureModules.gesture.GestureFeature import *
@@ -107,8 +106,8 @@ if __name__ == "__main__":
     attempts = 0
     while device is None and attempts < 5:
         try:
-            device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
-            # device = azure_kinect.Camera(0)
+            # device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
+            device = azure_kinect.Camera(0)
 
         except Exception as e:
             attempts += 1
