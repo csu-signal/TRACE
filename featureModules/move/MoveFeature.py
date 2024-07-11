@@ -58,7 +58,7 @@ class MoveFeature:
 
     def processFrame(self, utterances_and_props, frame):
         for name, text, prop, audio_file in utterances_and_props:
-            if prop is not "no prop":
+            if prop != "no prop":
                 self.most_recent_prop = prop
 
             self.update_bert_embeddings(name, text)
