@@ -42,6 +42,8 @@ class MoveFeature:
         self.closure_rules = CommonGround()
         self.class_names = ["STATEMENT", "ACCEPT", "DOUBT"]
 
+        self.most_recent_prop = "no prop"
+
 
     def update_bert_embeddings(self, name, text):
         input_ids = torch.tensor(self.tokenizer.encode(text), device=device).unsqueeze(0)
@@ -56,6 +58,8 @@ class MoveFeature:
 
     def processFrame(self, utterances_and_props, frame):
         for name, text, prop, audio_file in utterances_and_props:
+            if prop is not "no prop":
+                self.most_recent_prop = prop
 
             self.update_bert_embeddings(name, text)
             in_bert = self.bert_embedding_history
@@ -75,7 +79,7 @@ class MoveFeature:
             present_class_indices = (out > 0.5)
             move = [self.class_names[idx] for idx, class_present in enumerate(present_class_indices) if class_present]
 
-            self.closure_rules.update(move, prop)
+            self.closure_rules.update(move, self.most_recent_prop)
             print("Q bank")
             print(self.closure_rules.qbank)
             print("E bank")
@@ -83,6 +87,6 @@ class MoveFeature:
             print("F bank")
             print(self.closure_rules.fbank)
             
-            print(f"{name}: {text} => {prop}, {out}")
+            print(f"{name}: {text} => {self.most_recent_prop}, {out}")
 
         cv2.putText(frame, "Move classifier is live", (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
