@@ -158,6 +158,8 @@ if __name__ == "__main__":
         utterances = []
         if(IncludeASR.get() == 1):
             utterances = asr.processFrame(frame)
+            if(IncludePointing.get() == 1):
+                utterances = gesture.updateDemonstratives(utterances)
 
         utterances_and_props = []
         if(IncludeProp.get() == 1):

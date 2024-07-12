@@ -450,6 +450,7 @@ def projectedPoint(p1, p2, p3):
     return getVectorPoint(p3, perpendicular) 
 
 def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shift, gaze):
+    targets = []
     for block in blocks:
         targetPoint = [(block.p1[0] + block.p2[0])/2,(block.p1[1] + block.p2[1]) / 2]
         # print("Check Block: " + str(block.description))
@@ -482,6 +483,7 @@ def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shi
         block.target = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, True)
         if(block.target):
             width = 5
+            targets.append(block.description)
             if gaze:
                 if block.description not in blockStatus:
                     blockStatus[block.description] = 1
@@ -505,7 +507,7 @@ def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shi
                     thickness=5, 
                     shift=shift)
                 cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)  
-    #return blockStatus
+    return targets
 
 class ConeShape:
     def __init__(self, vertex, base, nearRadius, farRadius, cameraMatrix, dist):
