@@ -80,13 +80,17 @@ class MoveFeature:
             move = [self.class_names[idx] for idx, class_present in enumerate(present_class_indices) if class_present]
 
             self.closure_rules.update(move, self.most_recent_prop)
-            print("Q bank")
-            print(self.closure_rules.qbank)
-            print("E bank")
-            print(self.closure_rules.ebank)
-            print("F bank")
-            print(self.closure_rules.fbank)
-            
-            print(f"{name}: {text} => {self.most_recent_prop}, {out}")
+            update = ""
+            update += "Q bank\n"
+            update += str(self.closure_rules.qbank) + "\n"
+            update += "E bank\n"
+            update += str(self.closure_rules.ebank) + "\n"
+            update += "F bank\n"
+            update += str(self.closure_rules.fbank) + "\n"
+            update += f"{name}: {text} => {self.most_recent_prop}, {out}\n\n"
+
+            with open("closure_output.txt", "a") as f:
+                f.write(update)
+            print(update)
 
         cv2.putText(frame, "Move classifier is live", (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
