@@ -20,7 +20,7 @@ class GestureFeature(IFeature):
         updatedUtterances = []
         for name, start, stop, text, audio_file in utterances:
             for demo in demonstratives:
-                if demo in text:
+                if demo in text.lower():
                     key = start
                     while(key < stop):
                         if key in self.blockCache:
@@ -28,7 +28,8 @@ class GestureFeature(IFeature):
                             targetString = ''
                             for t in targets:
                                 targetString+=f'{t},'
-                            text = text.replace(demo, '{}', targetString[:-1]) #TODO verify this is replacing with just the color text and not the entire enum
+                            if targetString:
+                                text = text.lower().replace(demo, targetString[:-1])
                             break
                         key+=1
             updatedUtterances.append((name, start, stop, text, audio_file)) 
@@ -139,4 +140,6 @@ class GestureFeature(IFeature):
                                 cone.projectRadiusLines(self.shift, frame, True, False, False)
 
                                 ## TODO keep track of participant?
-                                self.blockCache[time.time()] = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
+                                targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
+                                if(targets):
+                                    self.blockCache[int(time.time())] = targets

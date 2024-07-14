@@ -79,13 +79,13 @@ class GamrCategory(str, Enum):
 class GamrTarget(str, Enum):
         UNKNOWN = 'unknown'
         SCALE = 'scale'
-        RED_BLOCK = 'red_block'
-        BLUE_BLOCK = 'blue_block'
-        YELLOW_BLOCK = 'yellow_block'
-        GREEN_BLOCK = 'green_block'
-        PURPLE_BLOCK = 'purple_block'
-        BROWN_BLOCK = 'brown_block'
-        MYSTERY_BLOCK = 'mystery_block'
+        RED_BLOCK = 'red'
+        BLUE_BLOCK = 'blue'
+        YELLOW_BLOCK = 'yellow'
+        GREEN_BLOCK = 'green'
+        PURPLE_BLOCK = 'purple'
+        BROWN_BLOCK = 'brown'
+        MYSTERY_BLOCK = 'mystery'
         BLOCKS = 'blocks'
 
 class Object:
