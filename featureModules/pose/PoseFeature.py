@@ -45,7 +45,7 @@ class PoseFeature(IFeature):
         self.rightModel.load_state_dict(torch.load(".\\featureModules\\pose\\poseModels\\skeleton_pose_classifier_right.pt"))
         self.rightModel.eval()
 
-    def processFrame(self, bodies, frame):
+    def processFrame(self, bodies, frame, frameIndex, csvPath):
         left_position = -400
         middle_position = 400
 
@@ -118,7 +118,10 @@ class PoseFeature(IFeature):
             color = (255,0,0) if prediction == 0 else (39,142,37)
             if position == "left":
                 cv2.putText(frame, "P1: " + engagement, (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+                LogPoseCsv(csvPath, frameIndex, "P1", engagement)
             elif position == "middle":
                 cv2.putText(frame, "P2: " + engagement, (50,250), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+                LogPoseCsv(csvPath, frameIndex, "P2", engagement)
             else:
                 cv2.putText(frame, "P3: " + engagement, (50,300), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+                LogPoseCsv(csvPath, frameIndex, "P3", engagement)

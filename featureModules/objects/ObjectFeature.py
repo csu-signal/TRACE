@@ -20,8 +20,9 @@ class ObjectFeature(IFeature):
         self.objectModel.load_state_dict(checkpoint['model_state_dict'], strict=False)
         self.objectModel.to(DEVICE).eval()
 
-    def processFrame(self, framergb):
+    def processFrame(self, framergb, frameIndex, csvPath):
         blocks = []
+        blockDescriptions = []
         image = cv2.resize(framergb, RESIZE_TO)
         image = framergb.astype(np.float32)
         # make the pixel range between 0 and 1
@@ -60,8 +61,9 @@ class ObjectFeature(IFeature):
                 
                 block = Block(float(class_name), p1, p2)
                 blocks.append(block)
-                
+                blockDescriptions.append(block.description)
                 # print("Found Block: " + str(block.description))
                 # print(str(p1))
                 # print(str(p2))
+        LogObjectCsv(csvPath, frameIndex, blockDescriptions)
         return blocks

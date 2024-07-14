@@ -9,7 +9,7 @@ from featureModules.asr.AsrFeature import *
 from featureModules.prop.PropExtractFeature import *
 from featureModules.move.MoveFeature import *
 from tkinter import *
-
+from datetime import datetime
 
 # tell the script where to find certain dll's for k4a, cuda, etc.
 # body tracking sdk's tools should contain everything
@@ -18,6 +18,21 @@ import azure_kinect
 
 
 if __name__ == "__main__":
+    csvDirectory = f"stats_{str(datetime.now().strftime('%Y-%m-%d_%H_%M_%S'))}"
+    gesturePath = f"{csvDirectory}\\gestureOutput.csv"
+    objectPath = f"{csvDirectory}\\objectOutput.csv"
+    posePath = f"{csvDirectory}\\poseOutput.csv"
+    gazePath = f"{csvDirectory}\\gazeOutput.csv"
+    asrPath = f"{csvDirectory}\\asrOutput.csv"
+    propPath = f"{csvDirectory}\\propOutput.csv"
+    movePath = f"{csvDirectory}\\closure_output.txt"
+    initalizeFeatureFolder(csvDirectory)
+    initalizeGestureCsv(gesturePath)
+    initalizeObjectCsv(objectPath) 
+    initalizePoseCsv(posePath)
+    initalizeGazeCsv(gazePath)
+    initalizeAsrCsv(asrPath)
+    initalizePropCsv(propPath)
 
     #region GUI setup
     root = Tk()
@@ -142,21 +157,22 @@ if __name__ == "__main__":
         # run features
         blockStatus = {}
         blocks = []
+        point = False
 
         if(IncludeObjects.get() == 1):
-            blocks = objects.processFrame(framergb)
+            blocks = objects.processFrame(framergb, frame_count, objectPath)
 
         if(IncludePose.get() == 1):
-            pose.processFrame(bodies, frame)
+            pose.processFrame(bodies, frame, frame_count, posePath)
 
         try:
             if(IncludeGaze.get() == 1):
-                gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+                gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count, gazePath)
         except:
             pass
         
         if(IncludePointing.get() == 1):
-             gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+             gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count, gesturePath)
 
         utterances = []
         if(IncludeASR.get() == 1):
@@ -164,13 +180,15 @@ if __name__ == "__main__":
             if(IncludePointing.get() == 1):
                 # utterances.append(("Test", 1720990377, 1721090377, "This block is 10", "test"))
                 utterances = gesture.updateDemonstratives(utterances)
+            LogAsrCsv(asrPath, frame_count, utterances)
 
         utterances_and_props = []
         if(IncludeProp.get() == 1):
             utterances_and_props = prop.processFrame(frame, utterances)
+            LogPropCsv(propPath, frame_count, utterances_and_props)
 
         if(IncludeMove.get() == 1):
-            move.processFrame(utterances_and_props, frame)
+            move.processFrame(utterances_and_props, frame, frame_count, movePath)
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
         cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)

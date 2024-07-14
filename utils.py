@@ -968,6 +968,83 @@ def LogCsv(path, handIndex, gestureType, gesturePhase, group, participant, landm
         writer.writerow([gesturePhase, handIndex, gestureType, group, participant, *landmark_list])
     return
 
+def initalizeFeatureFolder(outputFolder):
+    if os.path.exists(outputFolder):
+        shutil.rmtree(outputFolder)
+    os.makedirs(outputFolder)
+
+def initalizeGestureCsv(path):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["frame_index", "bodyId", "handedness", "targets"])
+    return
+
+def LogGestureCsv(path, frameIndex, bodyId, handedness, targets):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([frameIndex, bodyId, handedness, targets])
+    return
+
+def initalizeGazeCsv(path):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["frame_index", "bodyId", "targets"])
+    return
+
+def LogGazeCsv(path, frameIndex, bodyId, targets):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([frameIndex, bodyId, targets])
+    return
+
+def initalizeObjectCsv(path):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["frame_index", "objects"])
+    return
+
+def LogObjectCsv(path, frameIndex, blocks):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([frameIndex, blocks])
+    return
+
+def initalizePoseCsv(path):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["frame_index", "participant", "engagement"])
+    return
+
+def LogPoseCsv(path, frameIndex, participant, engagement):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([frameIndex, participant, engagement])
+    return
+
+def initalizeAsrCsv(path):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["frame_index", "utterances"])
+    return
+
+def LogAsrCsv(path, frameIndex, utterances):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([frameIndex, utterances])
+    return
+
+def initalizePropCsv(path):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["frame_index", "props"])
+    return
+
+def LogPropCsv(path, frameIndex, props):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([frameIndex, props])
+    return
+
 def initalizeGamrFile(path):
     if os.path.exists(path):
         shutil.rmtree(path)

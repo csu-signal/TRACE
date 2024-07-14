@@ -40,9 +40,10 @@ class GestureFeature(IFeature):
 
         return updatedUtterances
 
-    def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus):
-         points = []
-         for _, body in enumerate(bodies):  
+    def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex, gesturePath):
+        points = []
+        pointsFound = False
+        for _, body in enumerate(bodies):  
             leftXAverage, leftYAverage, rightXAverage, rightYAverage = getAverageHandLocations(body, w, h, rotation, translation, cameraMatrix, dist)
             rightBox = createBoundingBox(rightXAverage, rightYAverage)
             leftBox = createBoundingBox(leftXAverage, leftYAverage)
@@ -56,7 +57,9 @@ class GestureFeature(IFeature):
                     dist,
                     depth,
                     blocks, 
-                    blockStatus) 
+                    blockStatus,
+                    frameIndex,
+                    gesturePath) 
             self.findHands(frame,
                     framergb,
                     int(body['body_id']),
@@ -67,21 +70,25 @@ class GestureFeature(IFeature):
                     dist,
                     depth,
                     blocks,
-                    blockStatus)
+                    blockStatus,
+                    frameIndex,
+                    gesturePath)
             self.devicePoints[deviceId] = points
 
-            for key in self.devicePoints:
-                if(key == deviceId):
-                    if(len(self.devicePoints[key]) == 0):
-                        cv2.putText(frame, "NO POINTS", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
-                    else:
-                        cv2.putText(frame, "POINTS DETECTED", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
-                    for hand in self.devicePoints[key]:
-                        for point in hand:
-                            cv2.circle(frame, point, radius=2, thickness= 2, color=(0,255,0))
+        for key in self.devicePoints:
+            if(key == deviceId):
+                if(len(self.devicePoints[key]) == 0):
+                    cv2.putText(frame, "NO POINTS", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+                else:
+                    cv2.putText(frame, "POINTS DETECTED", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+                    pointsFound = True
+                for hand in self.devicePoints[key]:
+                    for point in hand:
+                        cv2.circle(frame, point, radius=2, thickness= 2, color=(0,255,0))
+        return pointsFound
 
 
-    def findHands(self, frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth, blocks, blockStatus):   
+    def findHands(self, frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth, blocks, blockStatus, frameIndex, gesturePath):   
         ## to help visualize where the hand localization is focused
         # dotColor = dotColors[bodyId % len(dotColors)]
         # cv2.rectangle(frame, 
@@ -143,3 +150,4 @@ class GestureFeature(IFeature):
                                 targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
                                 if(targets):
                                     self.blockCache[int(time.time())] = targets
+                                LogGestureCsv(gesturePath, frameIndex, bodyId, handedness.value, targets)

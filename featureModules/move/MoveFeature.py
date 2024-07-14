@@ -56,7 +56,7 @@ class MoveFeature:
 
         self.opensmile_embedding_history = torch.cat([self.opensmile_embedding_history[1:], embedding])
 
-    def processFrame(self, utterances_and_props, frame):
+    def processFrame(self, utterances_and_props, frame, frameIndex, outputPath):
         for name, text, prop, audio_file in utterances_and_props:
             if prop != "no prop":
                 self.most_recent_prop = prop
@@ -81,6 +81,7 @@ class MoveFeature:
 
             self.closure_rules.update(move, self.most_recent_prop)
             update = ""
+            update += "FRAME: " + str(frameIndex) + "\n"
             update += "Q bank\n"
             update += str(self.closure_rules.qbank) + "\n"
             update += "E bank\n"
@@ -92,7 +93,7 @@ class MoveFeature:
             else:
                 update += f"{name}: {text} => {self.most_recent_prop}, {out}\n\n"
 
-            with open("closure_output.txt", "a") as f:
+            with open(outputPath, "a") as f:
                 f.write(update)
             print(update)
 
