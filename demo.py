@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
         utterances = []
         if(IncludeASR.get() == 1):
-            utterances = asr.processFrame(frame)
+            utterances = asr.processFrame(frame, frame_count)
             if(IncludePointing.get() == 1):
                 # utterances.append(("Test", 1720990377, 1721090377, "This block is 10", "test"))
                 utterances = gesture.updateDemonstratives(utterances)

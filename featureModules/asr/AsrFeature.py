@@ -25,7 +25,7 @@ class AsrFeature(IFeature):
             i.start()
 
 
-    def processFrame(self, frame):
+    def processFrame(self, frame, frame_count):
         utterances = []
 
         while not self.asr_output_queue.empty():
