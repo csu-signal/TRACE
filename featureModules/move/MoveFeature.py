@@ -87,7 +87,10 @@ class MoveFeature:
             update += str(self.closure_rules.ebank) + "\n"
             update += "F bank\n"
             update += str(self.closure_rules.fbank) + "\n"
-            update += f"{name}: {text} => {self.most_recent_prop}, {out}\n\n"
+            if prop == "no prop":
+                update += f"{name}: {text} ({self.most_recent_prop}), {out}\n\n"
+            else:
+                update += f"{name}: {text} => {self.most_recent_prop}, {out}\n\n"
 
             with open("closure_output.txt", "a") as f:
                 f.write(update)
