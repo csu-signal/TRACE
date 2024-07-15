@@ -2,7 +2,9 @@ from featureModules.IFeature import *
 import mediapipe as mp
 import joblib
 from utils import *
+import time
 
+demonstratives = ["this", "that", "it", "those"]
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.4, min_tracking_confidence= 0)
 
@@ -11,6 +13,32 @@ class GestureFeature(IFeature):
         self.loaded_model = joblib.load(".\\featureModules\\gesture\\bestModel-pointing.pkl") 
         self.devicePoints = {}
         self.shift = shift
+        self.blockCache = {}
+
+    def updateDemonstratives(self, utterances):
+        clear = False
+        updatedUtterances = []
+        for name, start, stop, text, audio_file in utterances:
+            for demo in demonstratives:
+                if demo in text.lower():
+                    key = int(start)
+                    while(key < stop):
+                        if key in self.blockCache:
+                            targets = self.blockCache[key]
+                            targetString = ''
+                            for t in targets:
+                                targetString+=f'{t},'
+                            if targetString:
+                                text = text.lower().replace(demo, targetString[:-1])
+                            break
+                        key+=1
+            updatedUtterances.append((name, start, stop, text, audio_file)) 
+
+        #TODO when should we clear these cached values?  
+        # if(clear):
+        #     self.blockCache = {} 
+
+        return updatedUtterances
 
     def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus):
          points = []
@@ -110,4 +138,8 @@ class GestureFeature(IFeature):
 
                                 cone = ConeShape(mediaPipe5, nextPoint, 80, 100, cameraMatrix, dist)
                                 cone.projectRadiusLines(self.shift, frame, True, False, False)
-                                checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
+
+                                ## TODO keep track of participant?
+                                targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
+                                if(targets):
+                                    self.blockCache[int(time.time())] = targets
