@@ -106,8 +106,8 @@ if __name__ == "__main__":
     attempts = 0
     while device is None and attempts < 5:
         try:
-            device = azure_kinect.Playback(rf"F:\TempBaselineISAT\Demo3-sub2.mkv")
-            # device = azure_kinect.Camera(0)
+            # device = azure_kinect.Playback(rf"F:\TempBaselineISAT\Demo3-sub2.mkv")
+            device = azure_kinect.Camera(0)
 
         except Exception as e:
             attempts += 1
@@ -149,8 +149,11 @@ if __name__ == "__main__":
         if(IncludePose.get() == 1):
             pose.processFrame(bodies, frame)
 
-        if(IncludeGaze.get() == 1):
-            gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+        try:
+            if(IncludeGaze.get() == 1):
+                gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+        except:
+            pass
         
         if(IncludePointing.get() == 1):
              gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
@@ -159,7 +162,7 @@ if __name__ == "__main__":
         if(IncludeASR.get() == 1):
             utterances = asr.processFrame(frame)
             if(IncludePointing.get() == 1):
-                #utterances.append(("Test", 1720990377, 1721090377, "This block is 10", "test"))
+                # utterances.append(("Test", 1720990377, 1721090377, "This block is 10", "test"))
                 utterances = gesture.updateDemonstratives(utterances)
 
         utterances_and_props = []

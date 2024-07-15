@@ -21,7 +21,7 @@ class GestureFeature(IFeature):
         for name, start, stop, text, audio_file in utterances:
             for demo in demonstratives:
                 if demo in text.lower():
-                    key = start
+                    key = int(start)
                     while(key < stop):
                         if key in self.blockCache:
                             targets = self.blockCache[key]
