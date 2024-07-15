@@ -227,11 +227,11 @@ class CommonGround():
                             # self.evidence_against[block] with
                             # self.evidence_against[rhs_block]
                             if len(rhs_blocks) == 1:
-                                self.poss[block] = self.poss[rhs_blocks[0]]
+                                self.poss[block] = self.poss[rhs_blocks[0]].copy()
                                 self.evidence_for[block] = (
-                                    self.evidence_for[rhs_blocks[0]])
+                                    self.evidence_for[rhs_blocks[0]]).copy()
                                 self.evidence_against[block] = (
-                                    self.evidence_against[rhs_blocks[0]])
+                                    self.evidence_against[rhs_blocks[0]]).copy()
                             else:
                                 # find possible values of sum(blocks)
                                 poss_blocks = list(self.poss[rhs_block]
@@ -342,12 +342,34 @@ class CommonGround():
                                 self.poss[block].discard(not_weight)
                                 self.evidence_for[block].discard(not_weight)
                                 self.evidence_against[block].discard(not_weight)
-                # else, pass
-                # OBSERVATIONs, INFERENCEs, and RECOMMENDATIONs do nothing
-                # things to watch out for:
-                # - QUESTIONs and ANSWERs
-                # - DOUBTs after ACCEPTs
-                else:
-                    pass
+
+
+
+                elif "DOUBT" in move:
+                    if relation == '=':
+                        if rhs_weight in self.evidence_for[block] or rhs_blocks:
+                            for weight in ({10, 20, 30, 40, 50}
+                                            .difference({rhs_weight})):
+                                self.poss[block].add(weight)
+                    elif relation == '<':
+                        poss_weights = filter(lambda x: x >= rhs_weight, {10, 20, 30, 40, 50})
+                        for weight in poss_weights:
+                            self.poss[block].add(weight)
+                    elif relation == '>':
+                        poss_weights = filter(lambda x: x <= rhs_weight, {10, 20, 30, 40, 50})
+                        for weight in poss_weights:
+                            self.poss[block].add(weight)
+                    elif relation == '!=':
+                        self.poss[block].add(rhs_weight)
+                        self.evidence_against[block].add(rhs_weight)
+
+
+            else:
+                pass
+            # else, pass
+            # OBSERVATIONs, INFERENCEs, and RECOMMENDATIONs do nothing
+            # things to watch out for:
+            # - QUESTIONs and ANSWERs
+            
         # update banks
         self.generate_banks()
