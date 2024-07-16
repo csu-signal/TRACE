@@ -11,6 +11,8 @@ from featureModules.move.MoveFeature import *
 from tkinter import *
 from datetime import datetime
 
+from logger import Logger
+
 # tell the script where to find certain dll's for k4a, cuda, etc.
 # body tracking sdk's tools should contain everything
 os.add_dll_directory(r"C:\Program Files\Azure Kinect Body Tracking SDK\tools")
@@ -111,6 +113,9 @@ if __name__ == "__main__":
     prop = PropExtractFeature(csv_log_file=propPath)
     move = MoveFeature(txt_log_file=movePath)
 
+    error_logger = Logger(file=f"{csvDirectory}\\errors.txt")
+    error_logger.clear()
+
     device = None
     attempts = 0
     while device is None and attempts < 5:
@@ -175,8 +180,11 @@ if __name__ == "__main__":
                 utterances = gesture.updateDemonstratives(utterances)
 
         utterances_and_props = []
-        if(IncludeProp.get() == 1):
-            utterances_and_props = prop.processFrame(frame, utterances, frame_count)
+        try:
+            if(IncludeProp.get() == 1):
+                utterances_and_props = prop.processFrame(frame, utterances, frame_count)
+        except Exception as e:
+            error_logger.append(f"Frame {frame_count}\nProp extractor\n{utterances}\n{str(e)}\n\n")
 
         if(IncludeMove.get() == 1):
             move.processFrame(utterances_and_props, frame, frame_count)
