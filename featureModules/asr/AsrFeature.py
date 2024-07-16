@@ -1,38 +1,76 @@
-from collections import defaultdict
+import multiprocessing as mp
+import os
+import time
+import wave
+from ctypes import c_bool
+
+import faster_whisper
+import pyaudio
+
 from featureModules.IFeature import *
 from utils import *
-import multiprocessing as mp
-from featureModules.asr.live_transcription import record_chunks, process_chunks
-from ctypes import c_bool
-import os
+
+from featureModules.asr.device import BaseDevice
+
+
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
+def select_audio_device():
+    p = pyaudio.PyAudio()
+    # create list of available devices
+    print("Available devices:")
+    for i in range(p.get_device_count()):
+        print(i, ":", p.get_device_info_by_index(i).get('name'))
+    # select device
+    device_index = int(input("Select device index: "))
+    print("Selected device:", p.get_device_info_by_index(device_index).get('name'))
+    p.terminate()
+    return device_index
+
+
+def process_chunks(queue, done, print_output=False, output_queue=None):
+    # model = faster_whisper.WhisperModel("large-v2", compute_type="float16")
+    model = faster_whisper.WhisperModel("small", compute_type="float16")
+    while not done.value:
+        name, start, stop, chunk_file = queue.get()
+
+        segments, info = model.transcribe(chunk_file, language="en")
+        transcription = " ".join(segment.text for segment in segments if segment.no_speech_prob < 0.5)  # Join segments into a single string
+
+        if print_output:
+            print(f'{name}: {transcription}')
+
+        if output_queue is not None:
+            output_queue.put((name, start, stop, transcription, chunk_file))
+
 
 class AsrFeature(IFeature):
-    def __init__(self, devices: list[tuple[str, int]], n_processors=1):
+    def __init__(self, devices: list[BaseDevice], n_processors=1):
         """
         devices should be of the form [(name, index), ...]
         """
+        self.device_lookup = {d.get_id():d for d in devices}
         self.asr_output_queue = mp.Queue()
-        self.full_transcriptions = {n:"" for n,i in devices}
 
         asr_internal_queue = mp.Queue()
         done = mp.Value(c_bool, False)
-        recorders = [mp.Process(target=record_chunks, args=(name, index, asr_internal_queue, done)) for name,index in devices]
+        recorders = [d.create_recorder_process(asr_internal_queue, done) for d in devices]
         processors = [mp.Process(target=process_chunks, args=(asr_internal_queue, done), kwargs={"output_queue":self.asr_output_queue}) for _ in range(n_processors)]
 
-        os.makedirs("chunks", exist_ok=True)
 
         for i in recorders + processors:
             i.start()
 
-
     def processFrame(self, frame, frame_count):
         utterances = []
 
+        for id, device in self.device_lookup.items():
+            device.handle_frame(frame_count)
+
         while not self.asr_output_queue.empty():
-            name, start, stop, text, audio_file = self.asr_output_queue.get()
-            self.full_transcriptions[name] += text
+            id, start, stop, text, audio_file = self.asr_output_queue.get()
             if len(text.strip()) > 0:
-                utterances.append((name, start, stop, text, audio_file))
+                utterances.append((id, start, stop, text, audio_file))
                 # with open("asr_out.csv", "a") as f:
                 #     f.write(f"{name},{start},{stop},\"{text}\"\n")
 
