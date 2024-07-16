@@ -4,7 +4,17 @@ import joblib
 from utils import *
 import time
 
-demonstratives = ["this", "that", "it", "those"]
+class Demonstrative():
+    def __init__(self, text, plural):
+        self.text = text
+        self.plural = plural
+
+demonstratives = [
+    Demonstrative(" those ", True), 
+    Demonstrative(" these ", True), 
+    Demonstrative(" this ", False), 
+    Demonstrative(" that ", False), 
+    Demonstrative(" it ", False)]
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.4, min_tracking_confidence= 0)
 
@@ -20,14 +30,19 @@ class GestureFeature(IFeature):
         updatedUtterances = []
         for name, start, stop, text, audio_file in utterances:
             for demo in demonstratives:
-                if demo in text.lower():
+                if demo.text in text.lower():
                     key = int(start)
                     while(key < stop):
                         if key in self.blockCache:
                             targets = self.blockCache[key]
                             targetString = ''
                             for t in targets:
-                                targetString+=f'{t},'
+                                targetString+=f'{t.description},'
+
+                                #only use the first target if not plural
+                                if(not demo.plural):
+                                    break
+
                             if targetString:
                                 text = text.lower().replace(demo, targetString[:-1])
                             break
