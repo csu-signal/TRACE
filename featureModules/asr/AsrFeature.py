@@ -1,17 +1,13 @@
 import multiprocessing as mp
 import os
-import time
-import wave
 from ctypes import c_bool
 
 import faster_whisper
 import pyaudio
 
+from featureModules.asr.device import AsrQueueData, BaseDevice
 from featureModules.IFeature import *
 from utils import *
-
-from featureModules.asr.device import BaseDevice
-
 
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
@@ -28,12 +24,13 @@ def select_audio_device():
     return device_index
 
 
-def process_chunks(queue, done, print_output=False, output_queue=None):
+def process_chunks(queue: "mp.Queue[AsrQueueData]", done, print_output=False, output_queue=None):
     # model = faster_whisper.WhisperModel("large-v2", compute_type="float16")
     model = faster_whisper.WhisperModel("small", compute_type="float16")
     while not done.value:
-        name, start, stop, chunk_file = queue.get()
-
+        data = queue.get()
+        name, start, stop, chunk_file = data.id, data.start, data.stop, data.audio_file
+        
         segments, info = model.transcribe(chunk_file, language="en")
         transcription = " ".join(segment.text for segment in segments if segment.no_speech_prob < 0.5)  # Join segments into a single string
 

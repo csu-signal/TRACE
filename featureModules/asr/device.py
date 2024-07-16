@@ -3,10 +3,20 @@ import os
 import time
 import wave
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from multiprocessing.sharedctypes import Synchronized
 from typing import final
 
+import numpy as np
 import pyaudio
+
+
+@dataclass
+class AsrQueueData:
+    id: str
+    start: float
+    stop: float
+    audio_file: str
 
 
 class BaseDevice(ABC):
@@ -33,12 +43,12 @@ class MicDevice(BaseDevice):
 
     def create_recorder_process(self, asr_queue: mp.Queue, done: Synchronized):
         os.makedirs("chunks", exist_ok=True)
-        return mp.Process(target=MicDevice.record_chunks, args=(self.name, self.index, asr_queue, done))
+        return mp.Process(target=MicDevice.record_chunks, args=(self.get_id(), self.index, asr_queue, done))
 
     @staticmethod
-    def record_chunks(device_name, device_index, queue, done, chunk_length=5, rate=16000, chunk=1024, format=pyaudio.paInt16):
+    def record_chunks(id, device_index, queue, done, chunk_length=5, rate=16000, chunk=1024, format=pyaudio.paInt16):
         p = pyaudio.PyAudio()
-        stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=1024, input_device_index=device_index)  # Use the selected device index
+        stream = p.open(format=pyaudio.paInt16, channels=1, rate=rate, input=True, frames_per_buffer=chunk, input_device_index=device_index)  # Use the selected device index
         counter = 0
         while not done.value:
             next_file = fr"chunks\device{device_index}-{counter:05}.wav"
@@ -55,7 +65,7 @@ class MicDevice(BaseDevice):
             wf.setframerate(rate)
             wf.writeframes(b''.join(frames))
             wf.close()
-            queue.put((device_name, start, stop, next_file))
+            queue.put(AsrQueueData(id, start, stop, next_file))
 
         stream.stop_stream()
         stream.close()
@@ -63,7 +73,65 @@ class MicDevice(BaseDevice):
 
 @final
 class PrerecordedDevice(BaseDevice):
-    def __init__(self, path, video_frame_rate):
+    READ_FRAME_COUNT = 1
+    SAVE_INTERVAL_SECONDS = 5
+
+    def __init__(self, name, path, video_frame_rate=30):
         super().__init__()
+        self.name = name
         self.path = path
         self.video_frame_rate = video_frame_rate
+        self.asr_queue = None
+
+        self.reader = wave.open(self.path, 'rb')
+        self.num_frames_read = 0
+        self.last_save_time = 0
+        self.counter = 0
+
+        self.frames = b''
+
+    def get_id(self):
+        return self.name
+
+    def create_recorder_process(self, asr_queue: mp.Queue, done: Synchronized):
+        os.makedirs("chunks", exist_ok=True)
+        self.asr_queue = asr_queue
+        return mp.Process(target=PrerecordedDevice.noop)
+
+    @staticmethod
+    def noop():
+        pass
+
+    @property
+    def audio_time(self):
+        return self.num_frames_read / self.reader.getframerate()
+
+    def create_writer(self, path):
+        chunk_writer = wave.open(path, 'wb')
+        chunk_writer.setnchannels(self.reader.getnchannels())
+        chunk_writer.setsampwidth(self.reader.getsampwidth())
+        chunk_writer.setframerate(self.reader.getframerate())
+        return chunk_writer
+
+    def save_if_needed(self):
+        assert self.asr_queue is not None
+
+        if self.audio_time - self.last_save_time >= self.SAVE_INTERVAL_SECONDS:
+            next_file = fr"chunks\device{hash(self.path)}-{self.counter:05}.wav"
+            chunk_writer = self.create_writer(next_file)
+            chunk_writer.writeframes(self.frames)
+            chunk_writer.close()
+
+            self.last_save_time = self.audio_time
+            self.frames = b''
+            self.counter += 1
+
+            self.asr_queue.put(AsrQueueData(self.get_id(), time.time() - self.SAVE_INTERVAL_SECONDS, time.time(), next_file))
+
+    def handle_frame(self, frame_count: int):
+        # while audio time < video time
+        while self.audio_time < frame_count / self.video_frame_rate:
+            self.frames += self.reader.readframes(self.READ_FRAME_COUNT)
+            self.num_frames_read += self.READ_FRAME_COUNT
+
+            self.save_if_needed()
