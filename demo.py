@@ -113,7 +113,7 @@ if __name__ == "__main__":
     prop = PropExtractFeature(csv_log_file=propPath)
     move = MoveFeature(txt_log_file=movePath)
 
-    error_logger = Logger(file=f"{csvDirectory}\\errors.txt")
+    error_logger = Logger(file=f"{csvDirectory}\\errors.txt", stdout=True)
     error_logger.clear()
 
     device = None

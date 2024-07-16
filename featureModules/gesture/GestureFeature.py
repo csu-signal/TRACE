@@ -4,18 +4,19 @@ import joblib
 from logger import Logger
 from utils import *
 import time
+import re
 
 class Demonstrative():
-    def __init__(self, text, plural):
-        self.text = text
+    def __init__(self, regex, plural):
+        self.regex = regex
         self.plural = plural
 
 demonstratives = [
-    Demonstrative(" those ", True), 
-    Demonstrative(" these ", True), 
-    Demonstrative(" this ", False), 
-    Demonstrative(" that ", False), 
-    Demonstrative(" it ", False)]
+    Demonstrative(r"\bthose\b", True), 
+    Demonstrative(r"\bthese\b", True), 
+    Demonstrative(r"\bthis\b", False), 
+    Demonstrative(r"\bthat\b", False), 
+    Demonstrative(r"\bit\b", False)]
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.4, min_tracking_confidence= 0)
 
@@ -32,9 +33,23 @@ class GestureFeature(IFeature):
     def updateDemonstratives(self, utterances):
         clear = False
         updatedUtterances = []
+        #
+        #
+        # for name, start, stop, text, audio_file in utterances:
+        #     for demo in demonstratives:
+        #         key = int(start)
+        #         while(key < stop):
+        #             if key in self.blockCache:
+        #                 print("regex:", demo.regex)
+        #                 print("text:", text.lower())
+        #                 print("match:", bool(re.search(demo.regex, text.lower())))
+        #                 print("sub:", re.sub(demo.regex, "TARGET", text.lower()))
+        #                 print()
+        #             key+=1
+
         for name, start, stop, text, audio_file in utterances:
             for demo in demonstratives:
-                if demo.text in text.lower():
+                if bool(re.search(demo.regex, text.lower())):
                     key = int(start)
                     while(key < stop):
                         if key in self.blockCache:
@@ -48,7 +63,7 @@ class GestureFeature(IFeature):
                                     break
 
                             if targetString:
-                                text = text.lower().replace(demo, targetString[:-1])
+                                text = re.sub(demo.regex, targetString[:-1], text.lower())
                             break
                         key+=1
             updatedUtterances.append((name, start, stop, text, audio_file)) 
