@@ -141,7 +141,3 @@ class GazeFeature(IFeature):
                     del head3D, h_Success, pred3D, p_Success
                     keras.backend.clear_session()
                     gc.collect()
-        
-        del faces,heads,images,bodyIds,
-        keras.backend.clear_session()
-        gc.collect()
