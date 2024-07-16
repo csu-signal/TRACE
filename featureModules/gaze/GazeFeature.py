@@ -2,6 +2,7 @@ from featureModules.IFeature import *
 import mediapipe as mp
 import joblib
 import gc
+from logger import Logger
 from utils import *
 from featureModules.gaze.Face_Detection import *
 from tensorflow.python.keras.metrics import categorical_accuracy
@@ -43,13 +44,16 @@ gazeHeadAverage = {}
 gazePredAverage = {}
 
 class GazeFeature(IFeature):
-    def __init__(self, shift):
+    def __init__(self, shift, csv_log_file=None):
         self.shift = shift
         self.faceDetector = MTCNN()
         self.gazeModel = keras.models.load_model(".\\featureModules\\gaze\\gazeDetectionModels\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
                                                                  'categorical_accuracy': categorical_accuracy})
 
-    def processFrame(self, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex, csvPath):
+        self.logger = Logger(file=csv_log_file)
+        self.logger.write_csv_headers("frame_index", "bodyId", "targets")
+
+    def processFrame(self, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex):
           #faces,heads,images=load_frame(frame,framergb,self.faceDetector,shift)
         faces,heads,images,bodyIds=load_frame_azure(frame,framergb,bodies, rotation, translation, cameraMatrix, dist, self.shift)
         targets = []
@@ -142,7 +146,8 @@ class GazeFeature(IFeature):
                     del head3D, h_Success, pred3D, p_Success
                     keras.backend.clear_session()
                     gc.collect()
-                LogGazeCsv(csvPath, frameIndex, key, targets)
+
+                self.logger.append_csv(frameIndex, key, targets)
                 
         del faces,heads,images,bodyIds,
         keras.backend.clear_session()

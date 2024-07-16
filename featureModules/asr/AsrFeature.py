@@ -1,5 +1,6 @@
 from collections import defaultdict
 from featureModules.IFeature import *
+from logger import Logger
 from utils import *
 import multiprocessing as mp
 from featureModules.asr.live_transcription import record_chunks, process_chunks
@@ -7,7 +8,7 @@ from ctypes import c_bool
 import os
 
 class AsrFeature(IFeature):
-    def __init__(self, devices: list[tuple[str, int]], n_processors=1):
+    def __init__(self, devices: list[tuple[str, int]], n_processors=1, csv_log_file=None):
         """
         devices should be of the form [(name, index), ...]
         """
@@ -23,9 +24,12 @@ class AsrFeature(IFeature):
 
         for i in recorders + processors:
             i.start()
+        
+        self.logger = Logger(file=csv_log_file)
+        self.logger.write_csv_headers("frame", "name", "start", "stop", "text", "audio_file")
 
 
-    def processFrame(self, frame):
+    def processFrame(self, frame, frame_count):
         utterances = []
 
         while not self.asr_output_queue.empty():
@@ -33,8 +37,7 @@ class AsrFeature(IFeature):
             self.full_transcriptions[name] += text
             if len(text.strip()) > 0:
                 utterances.append((name, start, stop, text, audio_file))
-                # with open("asr_out.csv", "a") as f:
-                #     f.write(f"{name},{start},{stop},\"{text}\"\n")
+                self.logger.append_csv(frame_count, name, start, stop, text, audio_file)
 
         cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
 

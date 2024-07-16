@@ -25,14 +25,8 @@ if __name__ == "__main__":
     gazePath = f"{csvDirectory}\\gazeOutput.csv"
     asrPath = f"{csvDirectory}\\asrOutput.csv"
     propPath = f"{csvDirectory}\\propOutput.csv"
-    movePath = f"{csvDirectory}\\closure_output.txt"
-    initalizeFeatureFolder(csvDirectory)
-    initalizeGestureCsv(gesturePath)
-    initalizeObjectCsv(objectPath) 
-    initalizePoseCsv(posePath)
-    initalizeGazeCsv(gazePath)
-    initalizeAsrCsv(asrPath)
-    initalizePropCsv(propPath)
+    movePath = f"{csvDirectory}\\moveOutput.txt"
+    os.makedirs(csvDirectory, exist_ok=False) # error if directory will get overwritten
 
     #region GUI setup
     root = Tk()
@@ -108,14 +102,14 @@ if __name__ == "__main__":
     #endregion
 
     shift = 7 # TODO what is this?
-    gaze = GazeFeature(shift)
-    gesture = GestureFeature(shift)
-    objects = ObjectFeature()
-    pose = PoseFeature()
-    asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=3)
-    # asr = AsrFeature([('Participant 1',1)], n_processors=1)
-    prop = PropExtractFeature()
-    move = MoveFeature()
+    gaze = GazeFeature(shift, csv_log_file=gazePath)
+    gesture = GestureFeature(shift, csv_log_file=gesturePath)
+    objects = ObjectFeature(csv_log_file=objectPath)
+    pose = PoseFeature(csv_log_file=posePath)
+    # asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=3, csv_log_file=asrPath)
+    asr = AsrFeature([('Participant 1',1)], n_processors=1, csv_log_file=asrPath)
+    prop = PropExtractFeature(csv_log_file=propPath)
+    move = MoveFeature(txt_log_file=movePath)
 
     device = None
     attempts = 0
@@ -159,14 +153,14 @@ if __name__ == "__main__":
         blocks = []
 
         if(IncludeObjects.get() == 1):
-            blocks = objects.processFrame(framergb, frame_count, objectPath)
+            blocks = objects.processFrame(framergb, frame_count, frame_count)
 
         if(IncludePose.get() == 1):
-            pose.processFrame(bodies, frame, frame_count, posePath)
+            pose.processFrame(bodies, frame, frame_count)
 
         try:
             if(IncludeGaze.get() == 1):
-                gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count, gazePath)
+                gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count)
         except:
             pass
         
@@ -175,19 +169,17 @@ if __name__ == "__main__":
 
         utterances = []
         if(IncludeASR.get() == 1):
-            utterances = asr.processFrame(frame)
+            utterances = asr.processFrame(frame, frame_count)
             if(IncludePointing.get() == 1):
                 # utterances.append(("Test", 1720990377, 1721090377, "This block is 10", "test"))
                 utterances = gesture.updateDemonstratives(utterances)
-            LogAsrCsv(asrPath, frame_count, utterances)
 
         utterances_and_props = []
         if(IncludeProp.get() == 1):
-            utterances_and_props = prop.processFrame(frame, utterances)
-            LogPropCsv(propPath, frame_count, utterances_and_props)
+            utterances_and_props = prop.processFrame(frame, utterances, frame_count)
 
         if(IncludeMove.get() == 1):
-            move.processFrame(utterances_and_props, frame, frame_count, movePath)
+            move.processFrame(utterances_and_props, frame, frame_count)
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
         cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)

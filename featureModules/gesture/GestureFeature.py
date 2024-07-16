@@ -1,6 +1,7 @@
 from featureModules.IFeature import *
 import mediapipe as mp
 import joblib
+from logger import Logger
 from utils import *
 import time
 
@@ -19,11 +20,14 @@ mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.4, min_tracking_confidence= 0)
 
 class GestureFeature(IFeature):
-    def __init__(self, shift):
+    def __init__(self, shift, csv_log_file = None):
         self.loaded_model = joblib.load(".\\featureModules\\gesture\\bestModel-pointing.pkl") 
         self.devicePoints = {}
         self.shift = shift
         self.blockCache = {}
+
+        self.logger = Logger(file=csv_log_file)
+        self.logger.write_csv_headers("frame_index", "bodyId", "handedness", "targets")
 
     def updateDemonstratives(self, utterances):
         clear = False
@@ -73,8 +77,8 @@ class GestureFeature(IFeature):
                     depth,
                     blocks, 
                     blockStatus,
-                    frameIndex,
-                    gesturePath) 
+                    frameIndex
+                    ) 
             self.findHands(frame,
                     framergb,
                     int(body['body_id']),
@@ -86,8 +90,8 @@ class GestureFeature(IFeature):
                     depth,
                     blocks,
                     blockStatus,
-                    frameIndex,
-                    gesturePath)
+                    frameIndex
+                    )
             self.devicePoints[deviceId] = points
 
         for key in self.devicePoints:
@@ -103,7 +107,7 @@ class GestureFeature(IFeature):
         return pointsFound
 
 
-    def findHands(self, frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth, blocks, blockStatus, frameIndex, gesturePath):   
+    def findHands(self, frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth, blocks, blockStatus, frameIndex):   
         ## to help visualize where the hand localization is focused
         # dotColor = dotColors[bodyId % len(dotColors)]
         # cv2.rectangle(frame, 
@@ -165,4 +169,4 @@ class GestureFeature(IFeature):
                                 targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
                                 if(targets):
                                     self.blockCache[int(time.time())] = targets
-                                LogGestureCsv(gesturePath, frameIndex, bodyId, handedness.value, targets)
+                                self.logger.append_csv(frameIndex, bodyId, handedness.value, targets)

@@ -393,3 +393,5 @@ custom.lua
 compile_flags.txt
 
 test_set.csv
+
+stats_*/
