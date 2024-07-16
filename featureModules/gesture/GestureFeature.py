@@ -162,7 +162,7 @@ class GestureFeature(IFeature):
                                 cv2.circle(frame, (int(bx), int(by)), radius=4, color=(0, 0, 255), thickness=-1)
                                 cv2.circle(frame, point_Extended, radius=15, color=(255,0,0), thickness=15, shift=self.shift)
 
-                                cone = ConeShape(mediaPipe5, nextPoint, 80, 100, cameraMatrix, dist)
+                                cone = ConeShape(mediaPipe5, nextPoint, 40, 70, cameraMatrix, dist)
                                 cone.projectRadiusLines(self.shift, frame, True, False, False)
 
                                 ## TODO keep track of participant?
