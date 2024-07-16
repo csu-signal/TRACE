@@ -4,7 +4,7 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # User-specific files
-*.pt
+production_move_classifier.pt
 *.pth
 *.suo
 *.user
