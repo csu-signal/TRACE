@@ -19,7 +19,7 @@ print("move classifier device", device)
 
 class MoveFeature:
     def __init__(self):
-        self.model = torch.load(r"featureModules\move\move_gnn_01.pt").to(device)
+        self.model = torch.load(r"featureModules\move\production_move_classifier.pt").to(device)
         self.model.eval()
 
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
@@ -42,6 +42,8 @@ class MoveFeature:
         self.closure_rules = CommonGround()
         self.class_names = ["STATEMENT", "ACCEPT", "DOUBT"]
 
+        self.most_recent_prop = "no prop"
+
 
     def update_bert_embeddings(self, name, text):
         input_ids = torch.tensor(self.tokenizer.encode(text), device=device).unsqueeze(0)
@@ -56,6 +58,8 @@ class MoveFeature:
 
     def processFrame(self, utterances_and_props, frame):
         for name, text, prop, audio_file in utterances_and_props:
+            if prop != "no prop":
+                self.most_recent_prop = prop
 
             self.update_bert_embeddings(name, text)
             in_bert = self.bert_embedding_history
@@ -66,7 +70,7 @@ class MoveFeature:
             # TODO: other inputs for move classifier
             in_cps = torch.zeros((UTTERANCE_HISTORY_LEN, 3), device=device)
             in_action = torch.zeros((UTTERANCE_HISTORY_LEN, 78), device=device)
-            in_gamr = torch.zeros((UTTERANCE_HISTORY_LEN, 896), device=device)
+            in_gamr = torch.zeros((UTTERANCE_HISTORY_LEN, 243), device=device)
 
             # out = F.softmax(self.model(in_bert, in_open, in_cps, in_action, in_gamr, hyperparam, modalities))
             out = torch.sigmoid(self.model(in_bert, in_open, in_cps, in_action, in_gamr, hyperparam, modalities))
@@ -75,11 +79,21 @@ class MoveFeature:
             present_class_indices = (out > 0.5)
             move = [self.class_names[idx] for idx, class_present in enumerate(present_class_indices) if class_present]
 
-            self.closure_rules.update(move, prop)
-            # self.closure_rules.qbank
-            # self.closure_rules.ebank
-            # self.closure_rules.fbank
-            
-            print(f"{name}: {text} => {prop}, {out}")
+            self.closure_rules.update(move, self.most_recent_prop)
+            update = ""
+            update += "Q bank\n"
+            update += str(self.closure_rules.qbank) + "\n"
+            update += "E bank\n"
+            update += str(self.closure_rules.ebank) + "\n"
+            update += "F bank\n"
+            update += str(self.closure_rules.fbank) + "\n"
+            if prop == "no prop":
+                update += f"{name}: {text} ({self.most_recent_prop}), {out}\n\n"
+            else:
+                update += f"{name}: {text} => {self.most_recent_prop}, {out}\n\n"
+
+            with open("closure_output.txt", "a") as f:
+                f.write(update)
+            print(update)
 
         cv2.putText(frame, "Move classifier is live", (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)

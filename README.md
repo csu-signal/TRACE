@@ -17,10 +17,10 @@ Once the installation is complete, open `azure_kinect_wrapper/setup.py` and ensu
 Run `pip install ./azure_kinect_wrapper`.
 
 ## Download models
-Download the following models from [here](https://colostate-my.sharepoint.com/personal/nkrishna_colostate_edu/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fnkrishna%5Fcolostate%5Fedu%2FDocuments%2FDARPA%2DFACT%2FPapers%2FEMNLP%2DDemo%2DMMCGT%2FDemo%20Models&ga=1) and save at the given locations:
+Download the following models from [here](https://colostate-my.sharepoint.com/:f:/g/personal/nkrishna_colostate_edu/EhYic6HBX7hFta6GjQIcb9gBxV_K0yYFhtHagiVyClr7gQ?e=W6Pm6I) and save at the given locations:
 - `fasterrcnn-*.pth` ==> `featureModules/objects/objectDetectionModels/best_model-objects.pth`
 - `prop_extraction_model/` ==> `featureModules/prop/data/prop_extraction_model/`
-- `move_gnn_01.pt` ==> `featureModules/move/move_gnn_01.pt`
+- `production_move_classifier.pt` ==> `featureModules/move/production_move_classifier.pt`
 
 # Running the demo
 In `demo.py`, make sure `os.add_dll_directory` points to the correct installation location of the Body Tracking SDK. Also change `azure_kinect.Playback(<path to mkv>)` to have a valid path to an mkv file. Finally, run `python demo.py`.
