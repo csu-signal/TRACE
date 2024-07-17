@@ -449,6 +449,14 @@ def projectedPoint(p1, p2, p3):
 
     return getVectorPoint(p3, perpendicular) 
 
+class TargetDescription():
+    def __init__(self, description, radius):
+        self.description = description
+        self.radius = radius
+
+def sortTarget(target):
+    return target.radius 
+
 def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shift, gaze):
     targets = []
     for block in blocks:
@@ -480,10 +488,10 @@ def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shi
             thickness=3, 
             shift=shift)
 
-        block.target = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, True)
+        block.target, raduis = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, True)
         if(block.target):
             width = 5
-            targets.append(block.description)
+            targets.append(TargetDescription(block.description, raduis))
             if gaze:
                 if block.description not in blockStatus:
                     blockStatus[block.description] = 1
@@ -507,6 +515,7 @@ def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shi
                     thickness=5, 
                     shift=shift)
                 cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)  
+    targets = sorted(targets,key=sortTarget)
     return targets
 
 class ConeShape:
@@ -596,7 +605,7 @@ class ConeShape:
         proj = projectedPoint(self.vertex, self.base, [x,y,z]) 
 
         if (math.isnan(proj[0]) or math.isnan(proj[1]) or math.isnan(proj[2])):
-            return False #11178
+            return False, -1
 
         if includeOverlay:
             proj2D = convert2D(proj, self.cameraMatrix, self.dist)             
@@ -605,12 +614,12 @@ class ConeShape:
 
         dot = np.dot(getDirectionalVector(self.vertex, proj), self.vector)   
         if (dot < 0):
-            return False
+            return False, -1
             
         distVertex = distance3D(proj, self.vertex)
         # print(("Distance on Vector: {0:0.2f}").format(distVertex))
         if (distVertex > self.Height):
-            return False
+            return False, -1
 
         coneRadius = self.nearRadius + (self.farRadius - self.nearRadius) * (distVertex / self.Height)
         # print(("Cone Radius: {0:0.2f}").format(coneRadius))
@@ -621,9 +630,9 @@ class ConeShape:
 
         if (pointRadius <= coneRadius):
             # print("Target\n")
-            return True
+            return True, pointRadius
         # print("\n")
-        return False
+        return False, -1
 
 ##############################################################################################
 
