@@ -1,11 +1,16 @@
-from featureModules.IFeature import *
-import numpy as np
-from utils import convert2D, ConeShape, checkBlocks, Joint
 import cv2 as cv
+import numpy as np
+
+from featureModules.IFeature import *
+from logger import Logger
+from utils import ConeShape, Joint, checkBlocks, convert2D
+
 
 class GazeBodyTrackingFeature(IFeature):
-    def __init__(self, shift):
+    def __init__(self, shift, csv_log_file=None):
         self.shift = shift
+        self.logger = Logger(file=csv_log_file)
+        self.logger.write_csv_headers("frame_index", "bodyId", "targets")
 
     def world_to_camera_coords(self, r_w, rotation, translation):
         return np.dot(rotation, r_w) + translation
@@ -14,13 +19,11 @@ class GazeBodyTrackingFeature(IFeature):
         r_w = np.array(body["joint_positions"][joint.value])
         return self.world_to_camera_coords(r_w, rotation, translation)
 
-    def processFrame(self, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus):
+    def processFrame(self, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frame_count):
         for b in bodies:
-            # for i in (Joint.HEAD, Joint.NECK, Joint.NOSE, Joint.EYE_LEFT,Joint.EAR_LEFT,Joint.EYE_RIGHT,Joint.EAR_RIGHT):
-            #     pos = convert2D(b["joint_positions"][i.value], rotation, translation, cameraMatrix, dist)
-            #     cv.circle(frame, pos.astype(int), 5, (255,255,255), -1)
+            body_id = b["body_id"]
+
             nose = self.get_joint(Joint.NOSE, b, rotation, translation)
-            head = self.get_joint(Joint.HEAD, b, rotation, translation)
 
             ear_left = self.get_joint(Joint.EAR_LEFT, b, rotation, translation)
             ear_right = self.get_joint(Joint.EAR_RIGHT, b, rotation, translation)
@@ -44,4 +47,6 @@ class GazeBodyTrackingFeature(IFeature):
             p2 = convert2D(p2_3d, cameraMatrix, dist)
             cv.line(frame, p1.astype(int), p2.astype(int), (255,255,0), 2)
             
-            checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, True)
+            targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, True)
+
+            self.logger.append_csv(frame_count, body_id, targets)
