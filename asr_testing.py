@@ -9,8 +9,8 @@ if __name__ == "__main__":
     asrPath = "asr_out.csv"
     asr = AsrFeature(
         [
-            MicDevice("Participant 1", 1),
-            PrerecordedDevice("Recording 1", r"C:\Users\brady\Desktop\test.wav", video_frame_rate=30)
+            MicDevice("Participant 1", 2),
+            # PrerecordedDevice("Recording 1", r"C:\Users\brady\Desktop\test.wav", video_frame_rate=30)
         ], n_processors=1, csv_log_file=asrPath
     )
 
