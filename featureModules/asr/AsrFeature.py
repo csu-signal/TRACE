@@ -7,6 +7,7 @@ import pyaudio
 
 from featureModules.asr.device import AsrQueueData, BaseDevice
 from featureModules.IFeature import *
+from logger import Logger
 from utils import *
 
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
@@ -42,7 +43,7 @@ def process_chunks(queue: "mp.Queue[AsrQueueData]", done, print_output=False, ou
 
 
 class AsrFeature(IFeature):
-    def __init__(self, devices: list[BaseDevice], n_processors=1):
+    def __init__(self, devices: list[BaseDevice], n_processors=1, csv_log_file=None):
         """
         devices should be of the form [(name, index), ...]
         """
@@ -57,6 +58,10 @@ class AsrFeature(IFeature):
 
         for i in recorders + processors:
             i.start()
+        
+        self.logger = Logger(file=csv_log_file)
+        self.logger.write_csv_headers("frame", "name", "start", "stop", "text", "audio_file")
+
 
     def processFrame(self, frame, frame_count):
         utterances = []
@@ -68,8 +73,8 @@ class AsrFeature(IFeature):
             id, start, stop, text, audio_file = self.asr_output_queue.get()
             if len(text.strip()) > 0:
                 utterances.append((id, start, stop, text, audio_file))
-                # with open("asr_out.csv", "a") as f:
-                #     f.write(f"{name},{start},{stop},\"{text}\"\n")
+                self.logger.append_csv(frame_count, name, start, stop, text, audio_file)
+
 
         cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
 

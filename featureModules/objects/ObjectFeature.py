@@ -1,6 +1,7 @@
 from featureModules.IFeature import *
 import torch
 import platform
+from logger import Logger
 from utils import *
 from featureModules.objects.model import *
 from featureModules.objects.config import *
@@ -11,7 +12,7 @@ detection_threshold = 0.6
 RESIZE_TO = (512, 512)
 
 class ObjectFeature(IFeature):
-    def __init__(self):
+    def __init__(self, csv_log_file=None):
         print("Torch Device " + str(DEVICE))
         print("Python version " + str(platform.python_version()))
         # load the best objectModel and trained weights - for object detection
@@ -20,8 +21,12 @@ class ObjectFeature(IFeature):
         self.objectModel.load_state_dict(checkpoint['model_state_dict'], strict=False)
         self.objectModel.to(DEVICE).eval()
 
-    def processFrame(self, framergb):
+        self.logger = Logger(file=csv_log_file)
+        self.logger.write_csv_headers("frame_index", "objects")
+
+    def processFrame(self, framergb, frameIndex, csvPath):
         blocks = []
+        blockDescriptions = []
         image = cv2.resize(framergb, RESIZE_TO)
         image = framergb.astype(np.float32)
         # make the pixel range between 0 and 1
@@ -60,8 +65,9 @@ class ObjectFeature(IFeature):
                 
                 block = Block(float(class_name), p1, p2)
                 blocks.append(block)
-                
+                blockDescriptions.append(block.description)
                 # print("Found Block: " + str(block.description))
                 # print(str(p1))
                 # print(str(p2))
+        self.logger.append_csv(frameIndex, blockDescriptions)
         return blocks

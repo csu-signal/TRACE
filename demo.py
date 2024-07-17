@@ -10,7 +10,9 @@ from featureModules.asr.AsrFeature import *
 from featureModules.prop.PropExtractFeature import *
 from featureModules.move.MoveFeature import *
 from tkinter import *
+from datetime import datetime
 
+from logger import Logger
 
 # tell the script where to find certain dll's for k4a, cuda, etc.
 # body tracking sdk's tools should contain everything
@@ -19,6 +21,15 @@ import azure_kinect
 
 
 if __name__ == "__main__":
+    csvDirectory = f"stats_{str(datetime.now().strftime('%Y-%m-%d_%H_%M_%S'))}"
+    gesturePath = f"{csvDirectory}\\gestureOutput.csv"
+    objectPath = f"{csvDirectory}\\objectOutput.csv"
+    posePath = f"{csvDirectory}\\poseOutput.csv"
+    gazePath = f"{csvDirectory}\\gazeOutput.csv"
+    asrPath = f"{csvDirectory}\\asrOutput.csv"
+    propPath = f"{csvDirectory}\\propOutput.csv"
+    movePath = f"{csvDirectory}\\moveOutput.txt"
+    os.makedirs(csvDirectory, exist_ok=False) # error if directory will get overwritten
 
     #region GUI setup
     root = Tk()
@@ -94,15 +105,18 @@ if __name__ == "__main__":
     #endregion
 
     shift = 7 # TODO what is this?
-    gaze = GazeFeature(shift)
-    gesture = GestureFeature(shift)
-    objects = ObjectFeature()
-    pose = PoseFeature()
-    # asr = AsrFeature([MicDevice('Participant 1',2),MicDevice('Participant 2',6),MicDevice('Participant 3',15)], n_processors=3)
-    # asr = AsrFeature([MicDevice('Participant 1',1)], n_processors=1)
-    asr = AsrFeature([PrerecordedDevice("Recording 1", r"C:\Users\brady\Desktop\test.wav", video_frame_rate=2)], n_processors=1)
-    prop = PropExtractFeature()
-    move = MoveFeature()
+    gaze = GazeFeature(shift, csv_log_file=gazePath)
+    gesture = GestureFeature(shift, csv_log_file=gesturePath)
+    objects = ObjectFeature(csv_log_file=objectPath)
+    pose = PoseFeature(csv_log_file=posePath)
+    asr = AsrFeature([MicDevice('Participant 1',2),MicDevice('Participant 2',6),MicDevice('Participant 3',15)], n_processors=3, csv_log_file=asrPath)
+    # asr = AsrFeature([MicDevice('Participant 1',1)], n_processors=1, csv_log_file=asrPath)
+    # asr = AsrFeature([PrerecordedDevice("Recording 1", r"C:\Users\brady\Desktop\test.wav", video_frame_rate=2)], n_processors=1, csv_log_file=asrPath)
+    prop = PropExtractFeature(csv_log_file=propPath)
+    move = MoveFeature(txt_log_file=movePath)
+
+    error_logger = Logger(file=f"{csvDirectory}\\errors.txt", stdout=True)
+    error_logger.clear()
 
     device = None
     attempts = 0
@@ -146,19 +160,19 @@ if __name__ == "__main__":
         blocks = []
 
         if(IncludeObjects.get() == 1):
-            blocks = objects.processFrame(framergb)
+            blocks = objects.processFrame(framergb, frame_count, frame_count)
 
         if(IncludePose.get() == 1):
-            pose.processFrame(bodies, frame)
+            pose.processFrame(bodies, frame, frame_count)
 
         try:
             if(IncludeGaze.get() == 1):
-                gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+                gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count)
         except:
             pass
         
         if(IncludePointing.get() == 1):
-             gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus)
+             gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count, gesturePath)
 
         utterances = []
         if(IncludeASR.get() == 1):
@@ -168,11 +182,14 @@ if __name__ == "__main__":
                 utterances = gesture.updateDemonstratives(utterances)
 
         utterances_and_props = []
-        if(IncludeProp.get() == 1):
-            utterances_and_props = prop.processFrame(frame, utterances)
+        try:
+            if(IncludeProp.get() == 1):
+                utterances_and_props = prop.processFrame(frame, utterances, frame_count)
+        except Exception as e:
+            error_logger.append(f"Frame {frame_count}\nProp extractor\n{utterances}\n{str(e)}\n\n")
 
         if(IncludeMove.get() == 1):
-            move.processFrame(utterances_and_props, frame)
+            move.processFrame(utterances_and_props, frame, frame_count)
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
         cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
