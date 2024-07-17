@@ -19,6 +19,7 @@ class AsrDeviceData:
     frames: bytes
     sample_rate: int
     sample_width: int
+    channels: int
 
 
 class BaseDevice(ABC):
@@ -64,7 +65,8 @@ class MicDevice(BaseDevice):
                 stop,
                 b''.join(frames),
                 rate,
-                p.get_sample_size(format)
+                p.get_sample_size(format),
+                1
             ))
 
         stream.stop_stream()
@@ -116,7 +118,8 @@ class PrerecordedDevice(BaseDevice):
                 time.time(),
                 self.frames,
                 self.reader.getframerate(),
-                self.reader.getsampwidth()
+                self.reader.getsampwidth(),
+                self.reader.getnchannels()
             ))
 
             self.last_save_time = self.audio_time

@@ -46,17 +46,18 @@ def build_utterances(builder_queue: "mp.Queue[AsrDeviceData]", processor_queue: 
 
     while not done.value:
         data = builder_queue.get()
-        id, start, stop, frames, sample_rate, sample_width = (
+        id, start, stop, frames, sample_rate, sample_width, channels = (
             data.id,
             data.start,
             data.stop,
             data.frames,
             data.sample_rate,
             data.sample_width,
+            data.channels
         )
         
         wf = wave.open("chunks\\vad_tmp.wav", 'wb')
-        wf.setnchannels(1)
+        wf.setnchannels(channels)
         wf.setsampwidth(sample_width)
         wf.setframerate(sample_rate)
         wf.writeframes(frames)
@@ -83,7 +84,7 @@ def build_utterances(builder_queue: "mp.Queue[AsrDeviceData]", processor_queue: 
         if not activity and contains_activity[id]:
             next_file = f"chunks\\{counter:08}.wav"
             wf = wave.open(next_file, 'wb')
-            wf.setnchannels(1)
+            wf.setnchannels(channels)
             wf.setsampwidth(sample_width)
             wf.setframerate(sample_rate)
             wf.writeframes(stored_audio[id])

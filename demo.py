@@ -111,7 +111,13 @@ if __name__ == "__main__":
     objects = ObjectFeature(csv_log_file=objectPath)
     pose = PoseFeature(csv_log_file=posePath)
 
-    asr = AsrFeature([MicDevice('Participant 1',2),MicDevice('Participant 2',6),MicDevice('Participant 3',15)], n_processors=1, csv_log_file=asrPath)
+    # asr = AsrFeature([MicDevice('Videep',2),MicDevice('Austin',6),MicDevice('Mariah',15)], n_processors=1, csv_log_file=asrPath)
+
+    asr = AsrFeature([
+        PrerecordedDevice('Videep',r'F:\brady_recording_tests\test_7_17-audio1-convert.wav'),
+        PrerecordedDevice('Austin',r'F:\brady_recording_tests\test_7_17-audio2-convert.wav'),
+        PrerecordedDevice('Mariah',r'F:\brady_recording_tests\test_7_17-audio3-convert.wav'),
+        ], n_processors=1, csv_log_file=asrPath)
 
     # asr = AsrFeature([MicDevice('Participant 1',1)], n_processors=1, csv_log_file=asrPath)
     # asr = AsrFeature([PrerecordedDevice("Recording 1", r"C:\Users\brady\Desktop\test.wav", video_frame_rate=2)], n_processors=1, csv_log_file=asrPath)
@@ -126,8 +132,8 @@ if __name__ == "__main__":
     attempts = 0
     while device is None and attempts < 5:
         try:
-            # device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
-            device = azure_kinect.Camera(0)
+            device = azure_kinect.Playback(rf"F:\brady_recording_tests\test_7_17-master.mkv")
+            # device = azure_kinect.Camera(0)
 
         except Exception as e:
             attempts += 1

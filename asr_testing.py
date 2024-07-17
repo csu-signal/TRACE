@@ -7,12 +7,12 @@ import cv2 as cv
 
 if __name__ == "__main__":
     asrPath = "asr_out.csv"
-    asr = AsrFeature(
-        [
-            MicDevice("Participant 1", 2),
-            # PrerecordedDevice("Recording 1", r"C:\Users\brady\Desktop\test.wav", video_frame_rate=30)
-        ], n_processors=1, csv_log_file=asrPath
-    )
+    # asr = AsrFeature([MicDevice('Participant 1',2),MicDevice('Participant 2',6),MicDevice('Participant 3',15)], n_processors=1, csv_log_file=asrPath)
+    asr = AsrFeature([
+        PrerecordedDevice('Videep',r'F:\brady_recording_tests\test_7_17-audio1-convert.wav', video_frame_rate=5),
+        PrerecordedDevice('Austin',r'F:\brady_recording_tests\test_7_17-audio2-convert.wav',video_frame_rate=5),
+        PrerecordedDevice('Mariah',r'F:\brady_recording_tests\test_7_17-audio3-convert.wav',video_frame_rate=5),
+        ], n_processors=1, csv_log_file=asrPath)
 
     frame_count = 0
     while True:
