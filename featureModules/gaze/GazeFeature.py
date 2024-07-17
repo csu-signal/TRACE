@@ -2,6 +2,7 @@ from featureModules.IFeature import *
 import mediapipe as mp
 import joblib
 import gc
+from logger import Logger
 from utils import *
 from featureModules.gaze.Face_Detection import *
 from tensorflow.python.keras.metrics import categorical_accuracy
@@ -43,15 +44,19 @@ gazeHeadAverage = {}
 gazePredAverage = {}
 
 class GazeFeature(IFeature):
-    def __init__(self, shift):
+    def __init__(self, shift, csv_log_file=None):
         self.shift = shift
         self.faceDetector = MTCNN()
         self.gazeModel = keras.models.load_model(".\\featureModules\\gaze\\gazeDetectionModels\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
                                                                  'categorical_accuracy': categorical_accuracy})
 
-    def processFrame(self, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus):
+        self.logger = Logger(file=csv_log_file)
+        self.logger.write_csv_headers("frame_index", "bodyId", "targets")
+
+    def processFrame(self, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex):
           #faces,heads,images=load_frame(frame,framergb,self.faceDetector,shift)
         faces,heads,images,bodyIds=load_frame_azure(frame,framergb,bodies, rotation, translation, cameraMatrix, dist, self.shift)
+        targets = []
         if(len(faces) > 0):
             preds = predict_gaze(self.gazeModel, images, faces, heads)
             gazeCount[0] += 1 
@@ -119,7 +124,7 @@ class GazeFeature(IFeature):
                         cone = ConeShape(head3D, pred3D, 80, 100, cameraMatrix, dist)
                         cone.projectRadiusLines(self.shift, frame, False, False, True)
                         
-                        checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, True)
+                        targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, True)
                     
                     # for key in gazeHead:
                     #     print(key)
@@ -141,3 +146,5 @@ class GazeFeature(IFeature):
                     del head3D, h_Success, pred3D, p_Success
                     keras.backend.clear_session()
                     gc.collect()
+
+                self.logger.append_csv(frameIndex, key, targets)

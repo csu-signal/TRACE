@@ -1,35 +1,69 @@
 from featureModules.IFeature import *
 import mediapipe as mp
 import joblib
+from logger import Logger
 from utils import *
 import time
+import re
 
-demonstratives = ["this", "that", "it", "those"]
+class Demonstrative():
+    def __init__(self, regex, plural):
+        self.regex = regex
+        self.plural = plural
+
+demonstratives = [
+    Demonstrative(r"\bthose\b", True), 
+    Demonstrative(r"\bthese\b", True), 
+    Demonstrative(r"\bthis\b", False), 
+    Demonstrative(r"\bthat\b", False), 
+    Demonstrative(r"\bit\b", False)]
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.4, min_tracking_confidence= 0)
 
 class GestureFeature(IFeature):
-    def __init__(self, shift):
+    def __init__(self, shift, csv_log_file = None):
         self.loaded_model = joblib.load(".\\featureModules\\gesture\\bestModel-pointing.pkl") 
         self.devicePoints = {}
         self.shift = shift
         self.blockCache = {}
 
+        self.logger = Logger(file=csv_log_file)
+        self.logger.write_csv_headers("frame_index", "bodyId", "handedness", "targets")
+
     def updateDemonstratives(self, utterances):
         clear = False
         updatedUtterances = []
+        #
+        #
+        # for name, start, stop, text, audio_file in utterances:
+        #     for demo in demonstratives:
+        #         key = int(start)
+        #         while(key < stop):
+        #             if key in self.blockCache:
+        #                 print("regex:", demo.regex)
+        #                 print("text:", text.lower())
+        #                 print("match:", bool(re.search(demo.regex, text.lower())))
+        #                 print("sub:", re.sub(demo.regex, "TARGET", text.lower()))
+        #                 print()
+        #             key+=1
+
         for name, start, stop, text, audio_file in utterances:
             for demo in demonstratives:
-                if demo in text.lower():
+                if bool(re.search(demo.regex, text.lower())):
                     key = int(start)
                     while(key < stop):
                         if key in self.blockCache:
                             targets = self.blockCache[key]
                             targetString = ''
                             for t in targets:
-                                targetString+=f'{t},'
+                                targetString+=f'{t.description},'
+
+                                #only use the first target if not plural
+                                if(not demo.plural):
+                                    break
+
                             if targetString:
-                                text = text.lower().replace(demo, targetString[:-1])
+                                text = re.sub(demo.regex, targetString[:-1], text.lower())
                             break
                         key+=1
             updatedUtterances.append((name, start, stop, text, audio_file)) 
@@ -40,9 +74,10 @@ class GestureFeature(IFeature):
 
         return updatedUtterances
 
-    def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus):
-         points = []
-         for _, body in enumerate(bodies):  
+    def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex, gesturePath):
+        points = []
+        pointsFound = False
+        for _, body in enumerate(bodies):  
             leftXAverage, leftYAverage, rightXAverage, rightYAverage = getAverageHandLocations(body, w, h, rotation, translation, cameraMatrix, dist)
             rightBox = createBoundingBox(rightXAverage, rightYAverage)
             leftBox = createBoundingBox(leftXAverage, leftYAverage)
@@ -56,7 +91,9 @@ class GestureFeature(IFeature):
                     dist,
                     depth,
                     blocks, 
-                    blockStatus) 
+                    blockStatus,
+                    frameIndex
+                    ) 
             self.findHands(frame,
                     framergb,
                     int(body['body_id']),
@@ -67,21 +104,25 @@ class GestureFeature(IFeature):
                     dist,
                     depth,
                     blocks,
-                    blockStatus)
+                    blockStatus,
+                    frameIndex
+                    )
             self.devicePoints[deviceId] = points
 
-            for key in self.devicePoints:
-                if(key == deviceId):
-                    if(len(self.devicePoints[key]) == 0):
-                        cv2.putText(frame, "NO POINTS", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
-                    else:
-                        cv2.putText(frame, "POINTS DETECTED", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
-                    for hand in self.devicePoints[key]:
-                        for point in hand:
-                            cv2.circle(frame, point, radius=2, thickness= 2, color=(0,255,0))
+        for key in self.devicePoints:
+            if(key == deviceId):
+                if(len(self.devicePoints[key]) == 0):
+                    cv2.putText(frame, "NO POINTS", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+                else:
+                    cv2.putText(frame, "POINTS DETECTED", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+                    pointsFound = True
+                for hand in self.devicePoints[key]:
+                    for point in hand:
+                        cv2.circle(frame, point, radius=2, thickness= 2, color=(0,255,0))
+        return pointsFound
 
 
-    def findHands(self, frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth, blocks, blockStatus):   
+    def findHands(self, frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth, blocks, blockStatus, frameIndex):   
         ## to help visualize where the hand localization is focused
         # dotColor = dotColors[bodyId % len(dotColors)]
         # cv2.rectangle(frame, 
@@ -136,10 +177,11 @@ class GestureFeature(IFeature):
                                 cv2.circle(frame, (int(bx), int(by)), radius=4, color=(0, 0, 255), thickness=-1)
                                 cv2.circle(frame, point_Extended, radius=15, color=(255,0,0), thickness=15, shift=self.shift)
 
-                                cone = ConeShape(mediaPipe5, nextPoint, 80, 100, cameraMatrix, dist)
+                                cone = ConeShape(mediaPipe5, nextPoint, 40, 70, cameraMatrix, dist)
                                 cone.projectRadiusLines(self.shift, frame, True, False, False)
 
                                 ## TODO keep track of participant?
                                 targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
                                 if(targets):
                                     self.blockCache[int(time.time())] = targets
+                                self.logger.append_csv(frameIndex, bodyId, handedness.value, targets)
