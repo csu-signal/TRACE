@@ -6,6 +6,7 @@ from featureModules.gesture.GestureFeature import *
 from featureModules.objects.ObjectFeature import *
 from featureModules.pose.PoseFeature import *
 from featureModules.gaze.GazeFeature import *
+from featureModules.gaze.GazeBodyTrackingFeature import *
 from featureModules.asr.AsrFeature import *
 from featureModules.prop.PropExtractFeature import *
 from featureModules.move.MoveFeature import *
@@ -105,12 +106,12 @@ if __name__ == "__main__":
     #endregion
 
     shift = 7 # TODO what is this?
-    gaze = GazeFeature(shift, csv_log_file=gazePath)
+    gaze = GazeBodyTrackingFeature(shift, csv_log_file=gazePath)
     gesture = GestureFeature(shift, csv_log_file=gesturePath)
     objects = ObjectFeature(csv_log_file=objectPath)
     pose = PoseFeature(csv_log_file=posePath)
-    asr = AsrFeature([MicDevice('Participant 1',2),MicDevice('Participant 2',6),MicDevice('Participant 3',15)], n_processors=3, csv_log_file=asrPath)
-    # asr = AsrFeature([MicDevice('Participant 1',1)], n_processors=1, csv_log_file=asrPath)
+    # asr = AsrFeature([MicDevice('Participant 1',2),MicDevice('Participant 2',6),MicDevice('Participant 3',15)], n_processors=3, csv_log_file=asrPath)
+    asr = AsrFeature([MicDevice('Participant 1',1)], n_processors=1, csv_log_file=asrPath)
     # asr = AsrFeature([PrerecordedDevice("Recording 1", r"C:\Users\brady\Desktop\test.wav", video_frame_rate=2)], n_processors=1, csv_log_file=asrPath)
     prop = PropExtractFeature(csv_log_file=propPath)
     move = MoveFeature(txt_log_file=movePath)
