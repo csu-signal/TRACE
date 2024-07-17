@@ -1,6 +1,7 @@
 import os
 import cv2 as cv
 
+from featureModules.asr.device import MicDevice, PrerecordedDevice
 from featureModules.gesture.GestureFeature import *
 from featureModules.objects.ObjectFeature import *
 from featureModules.pose.PoseFeature import *
@@ -108,8 +109,9 @@ if __name__ == "__main__":
     gesture = GestureFeature(shift, csv_log_file=gesturePath)
     objects = ObjectFeature(csv_log_file=objectPath)
     pose = PoseFeature(csv_log_file=posePath)
-    asr = AsrFeature([('Participant 1',2),('Participant 2',6),('Participant 3',15)], n_processors=3, csv_log_file=asrPath)
-    # asr = AsrFeature([('Participant 1',1)], n_processors=1, csv_log_file=asrPath)
+    asr = AsrFeature([MicDevice('Participant 1',2),MicDevice('Participant 2',6),MicDevice('Participant 3',15)], n_processors=3, csv_log_file=asrPath)
+    # asr = AsrFeature([MicDevice('Participant 1',1)], n_processors=1, csv_log_file=asrPath)
+    # asr = AsrFeature([PrerecordedDevice("Recording 1", r"C:\Users\brady\Desktop\test.wav", video_frame_rate=2)], n_processors=1, csv_log_file=asrPath)
     prop = PropExtractFeature(csv_log_file=propPath)
     move = MoveFeature(txt_log_file=movePath)
 
@@ -120,8 +122,8 @@ if __name__ == "__main__":
     attempts = 0
     while device is None and attempts < 5:
         try:
-            # device = azure_kinect.Playback(rf"F:\TempBaselineISAT\Demo3-sub2.mkv")
-            device = azure_kinect.Camera(0)
+            device = azure_kinect.Playback(rf"C:\Users\brady\Desktop\Group_01-master.mkv")
+            # device = azure_kinect.Camera(0)
 
         except Exception as e:
             attempts += 1
