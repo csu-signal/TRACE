@@ -112,7 +112,6 @@ if __name__ == "__main__":
     pose = PoseFeature(csv_log_file=posePath)
 
     # asr = AsrFeature([MicDevice('Videep',2),MicDevice('Austin',6),MicDevice('Mariah',15)], n_processors=1, csv_log_file=asrPath)
-
     asr = AsrFeature([
         PrerecordedDevice('Videep',r'F:\brady_recording_tests\test_7_17-audio1-convert.wav'),
         PrerecordedDevice('Austin',r'F:\brady_recording_tests\test_7_17-audio2-convert.wav'),
@@ -120,7 +119,6 @@ if __name__ == "__main__":
         ], n_processors=1, csv_log_file=asrPath)
 
     # asr = AsrFeature([MicDevice('Participant 1',1)], n_processors=1, csv_log_file=asrPath)
-    # asr = AsrFeature([PrerecordedDevice("Recording 1", r"C:\Users\brady\Desktop\test.wav", video_frame_rate=2)], n_processors=1, csv_log_file=asrPath)
 
     prop = PropExtractFeature(csv_log_file=propPath)
     move = MoveFeature(txt_log_file=movePath)
