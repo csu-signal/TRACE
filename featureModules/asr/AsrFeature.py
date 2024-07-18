@@ -73,7 +73,7 @@ class AsrFeature(IFeature):
             id, start, stop, text, audio_file = self.asr_output_queue.get()
             if len(text.strip()) > 0:
                 utterances.append((id, start, stop, text, audio_file))
-                self.logger.append_csv(frame_count, name, start, stop, text, audio_file)
+                self.logger.append_csv(frame_count, id, start, stop, text, audio_file)
 
 
         cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)

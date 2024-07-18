@@ -148,7 +148,3 @@ class GazeFeature(IFeature):
                     gc.collect()
 
                 self.logger.append_csv(frameIndex, key, targets)
-                
-        del faces,heads,images,bodyIds,
-        keras.backend.clear_session()
-        gc.collect()
