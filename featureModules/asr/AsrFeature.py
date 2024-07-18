@@ -35,12 +35,22 @@ def select_audio_device():
     p.terminate()
     return device_index
 
-def build_utterances(builder_queue: "mp.Queue[AsrDeviceData]", processor_queue: mp.Queue, done):
+def build_utterances(
+    builder_queue: "mp.Queue[AsrDeviceData]",
+    processor_queue: mp.Queue,
+    done,
+    use_vad=True,
+    max_utterance_time=10,
+):
     stored_audio = defaultdict(bytes)
     starts = defaultdict(float)
     contains_activity = defaultdict(bool)
+    total_time = defaultdict(float)
 
-    vad = load_silero_vad()
+    if use_vad:
+        vad = load_silero_vad()
+    else:
+        vad = None
 
     counter = 0
 
@@ -63,25 +73,30 @@ def build_utterances(builder_queue: "mp.Queue[AsrDeviceData]", processor_queue: 
         wf.writeframes(frames)
         wf.close()
 
-        try:
-            audio = read_audio("chunks\\vad_tmp.wav")
-            activity = len(get_speech_timestamps(audio, vad)) > 0
-        except RuntimeError:
-            activity = False
+        if use_vad:
+            try:
+                audio = read_audio("chunks\\vad_tmp.wav")
+                activity = len(get_speech_timestamps(audio, vad)) > 0
+            except RuntimeError:
+                activity = False
+        else:
+            activity = True
 
         if not activity and not contains_activity[id]:
             starts[id] = start
             stored_audio[id] = frames
+            total_time[id] = stop - start
         else:
             if len(stored_audio[id]) == 0:
                 starts[id] = start
             stored_audio[id] += frames
+            total_time[id] += stop - start
 
         if activity:
             contains_activity[id] = True
 
         # if there is no activity but there was previous activity, make utterance
-        if not activity and contains_activity[id]:
+        if (not activity and contains_activity[id]) or total_time[id] > max_utterance_time:
             next_file = f"chunks\\{counter:08}.wav"
             wf = wave.open(next_file, 'wb')
             wf.setnchannels(channels)
@@ -94,6 +109,7 @@ def build_utterances(builder_queue: "mp.Queue[AsrDeviceData]", processor_queue: 
 
             stored_audio[id] = b''
             contains_activity[id] = False
+            total_time[id] = 0
             counter += 1
 
 
