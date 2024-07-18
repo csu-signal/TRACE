@@ -23,6 +23,7 @@ import azure_kinect
 
 if __name__ == "__main__":
     csvDirectory = f"stats_{str(datetime.now().strftime('%Y-%m-%d_%H_%M_%S'))}"
+    frame_dir = f"csvDirectory\\frames"
     gesturePath = f"{csvDirectory}\\gestureOutput.csv"
     objectPath = f"{csvDirectory}\\objectOutput.csv"
     posePath = f"{csvDirectory}\\poseOutput.csv"
@@ -31,6 +32,7 @@ if __name__ == "__main__":
     propPath = f"{csvDirectory}\\propOutput.csv"
     movePath = f"{csvDirectory}\\moveOutput.txt"
     os.makedirs(csvDirectory, exist_ok=False) # error if directory will get overwritten
+    os.makedirs(frame_dir, exist_ok=False)
 
     #region GUI setup
     root = Tk()
@@ -205,6 +207,8 @@ if __name__ == "__main__":
         frame = cv.resize(frame, (1280, 720))
         cv.imshow("output", frame)
         cv.waitKey(1)
+
+        cv.imwrite(f"{frame_dir}\\frame{frame_count:08}.png", frame)
 
         frame_count += 1
 
