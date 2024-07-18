@@ -12,11 +12,14 @@ import pyaudio
 
 
 @dataclass
-class AsrQueueData:
+class AsrDeviceData:
     id: str
     start: float
     stop: float
-    audio_file: str
+    frames: bytes
+    sample_rate: int
+    sample_width: int
+    channels: int
 
 
 class BaseDevice(ABC):
@@ -46,26 +49,25 @@ class MicDevice(BaseDevice):
         return mp.Process(target=MicDevice.record_chunks, args=(self.get_id(), self.index, asr_queue, done))
 
     @staticmethod
-    def record_chunks(id, device_index, queue, done, chunk_length=5, rate=16000, chunk=1024, format=pyaudio.paInt16):
+    def record_chunks(id, device_index, queue, done, chunk_length_seconds=0.5, rate=16000, frames_per_read=512, format=pyaudio.paInt16):
         p = pyaudio.PyAudio()
-        stream = p.open(format=pyaudio.paInt16, channels=1, rate=rate, input=True, frames_per_buffer=chunk, input_device_index=device_index)  # Use the selected device index
-        counter = 0
+        stream = p.open(format=pyaudio.paInt16, channels=1, rate=rate, input=True, frames_per_buffer=frames_per_read, input_device_index=device_index)  # Use the selected device index
         while not done.value:
-            next_file = fr"chunks\device{device_index}-{counter:05}.wav"
-            counter += 1
             frames = []
             start = time.time()
-            for i in range(0, int(rate / chunk * chunk_length)):
-                data = stream.read(chunk)
+            for i in range(0, int(rate / frames_per_read * chunk_length_seconds)):
+                data = stream.read(frames_per_read)
                 frames.append(data)
             stop = time.time()
-            wf = wave.open(next_file, 'wb')
-            wf.setnchannels(1)
-            wf.setsampwidth(p.get_sample_size(format))
-            wf.setframerate(rate)
-            wf.writeframes(b''.join(frames))
-            wf.close()
-            queue.put(AsrQueueData(id, start, stop, next_file))
+            queue.put(AsrDeviceData(
+                id,
+                start,
+                stop,
+                b''.join(frames),
+                rate,
+                p.get_sample_size(format),
+                1
+            ))
 
         stream.stop_stream()
         stream.close()
@@ -73,8 +75,8 @@ class MicDevice(BaseDevice):
 
 @final
 class PrerecordedDevice(BaseDevice):
-    READ_FRAME_COUNT = 1
-    SAVE_INTERVAL_SECONDS = 5
+    READ_FRAME_COUNT = 512
+    SAVE_INTERVAL_SECONDS = 0.5
 
     def __init__(self, name, path, video_frame_rate=30):
         super().__init__()
@@ -106,27 +108,24 @@ class PrerecordedDevice(BaseDevice):
     def audio_time(self):
         return self.num_frames_read / self.reader.getframerate()
 
-    def create_writer(self, path):
-        chunk_writer = wave.open(path, 'wb')
-        chunk_writer.setnchannels(self.reader.getnchannels())
-        chunk_writer.setsampwidth(self.reader.getsampwidth())
-        chunk_writer.setframerate(self.reader.getframerate())
-        return chunk_writer
-
     def save_if_needed(self):
         assert self.asr_queue is not None
 
         if self.audio_time - self.last_save_time >= self.SAVE_INTERVAL_SECONDS:
-            next_file = fr"chunks\device{hash(self.path)}-{self.counter:05}.wav"
-            chunk_writer = self.create_writer(next_file)
-            chunk_writer.writeframes(self.frames)
-            chunk_writer.close()
+            self.asr_queue.put(AsrDeviceData(
+                self.get_id(),
+                time.time() - self.SAVE_INTERVAL_SECONDS,
+                time.time(),
+                self.frames,
+                self.reader.getframerate(),
+                self.reader.getsampwidth(),
+                self.reader.getnchannels()
+            ))
 
             self.last_save_time = self.audio_time
             self.frames = b''
             self.counter += 1
 
-            self.asr_queue.put(AsrQueueData(self.get_id(), time.time() - self.SAVE_INTERVAL_SECONDS, time.time(), next_file))
 
     def handle_frame(self, frame_count: int):
         # while audio time < video time
