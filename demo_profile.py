@@ -89,3 +89,13 @@ class RecordedProfile(BaseProfile):
         os.system(f"ffmpeg -i {self.video_dir}\\processed.mp4 -i {self.video_dir}\\audio-combined.wav -map 0:v -map 1:a -c:v copy -shortest {self.video_dir}\\final.mp4")
 
         print(f"saved video as {self.video_dir}\\final.mp4")
+
+def create_recorded_profile(path):
+    return RecordedProfile(
+        rf"{path}-master.mkv",
+        [
+            ("Videep", rf"{path}-audio1.wav"),
+            ("Austin", rf"{path}-audio2.wav"),
+            ("Mariah", rf"{path}-audio3.wav"),
+        ],
+    )

@@ -11,7 +11,7 @@ from featureModules import (AsrFeature, BaseDevice, GazeBodyTrackingFeature,
 
 from gui import Gui
 from logger import Logger
-from demo_profile import BaseProfile, LiveProfile, RecordedProfile
+from demo_profile import BaseProfile, LiveProfile, RecordedProfile, create_recorded_profile
 
 
 if __name__ == "__main__":
@@ -21,21 +21,19 @@ if __name__ == "__main__":
         ("Mariah", 15)
         ])
 
-    recorded_prof = RecordedProfile(
-        r"F:\brady_recording_tests\test_7_17-master.mkv",
-        [
-            ("Videep", r"F:\brady_recording_tests\test_7_17-audio1.wav"),
-            ("Austin", r"F:\brady_recording_tests\test_7_17-audio2.wav"),
-            ("Mariah", r"F:\brady_recording_tests\test_7_17-audio3.wav"),
-        ])
 
-    group1_prof = RecordedProfile(
+    group1 = RecordedProfile(
         r"F:\Weights_Task\Data\Fib_weights_original_videos\Group_01-master.mkv",
         [
             ("Group 1", r"F:\Weights_Task\Data\Group_01-audio.wav"),
         ])
 
-    prof: BaseProfile = recorded_prof
+    prof_7_17_run01 = create_recorded_profile(r"F:\brady_recording_tests\test_7_17")
+    prof_7_18_run01 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_18\run01")
+    prof_7_18_run02 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_18\run02")
+
+    prof: BaseProfile = prof_7_18_run02
+    # prof: BaseProfile = live_prof
 
     gui = Gui()
     gui.create_buttons()
