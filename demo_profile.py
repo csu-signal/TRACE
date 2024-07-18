@@ -8,7 +8,7 @@ from typing import final
 import config
 from datetime import datetime
 
-from featureModules.asr.device import MicDevice, PrerecordedDevice
+from featureModules import BaseDevice, MicDevice, PrerecordedDevice
 
 # tell the script where to find certain dll's for k4a, cuda, etc.
 # body tracking sdk's tools should contain everything
@@ -66,7 +66,7 @@ class RecordedProfile(BaseProfile):
         return f"{self.video_dir}\\audio{index}.wav"
 
 
-    def get_audio_devices(self):
+    def get_audio_devices(self) -> list[BaseDevice]:
         return [
                 PrerecordedDevice(name, self.convert_audio(file, index), video_frame_rate=self.mkv_fr)
                 for index, (name,file) in enumerate(self.audio_info)
