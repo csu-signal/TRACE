@@ -184,4 +184,9 @@ class GestureFeature(IFeature):
                                 targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
                                 if(targets):
                                     self.blockCache[int(time.time())] = targets
-                                self.logger.append_csv(frameIndex, bodyId, handedness.value, targets)
+                                
+                                descriptions = []
+                                for t in targets:
+                                    descriptions.append(t.description)
+                                    
+                                self.logger.append_csv(frameIndex, bodyId, handedness.value, descriptions)

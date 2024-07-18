@@ -61,6 +61,30 @@ class MoveFeature:
 
         self.opensmile_embedding_history = torch.cat([self.opensmile_embedding_history[1:], embedding])
 
+    def renderBanks(self, frame, xSpace, yCord, bankLabel):
+        colors = [(0, 0, 255), (255, 0, 0), (0, 255, 0), (128, 0, 128), (0, 215, 255)]
+        blocks = len(colors) + 1
+        blockWidth = 50
+        blockHeight = 50
+        h,w,_ = frame.shape
+        start = w - (xSpace * blocks)
+        p2 = h - yCord
+        (tw, th), _ = cv2.getTextSize(bankLabel, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)
+        labelCoords = (int(start) - int(tw / 2), (int(blockHeight / 2) + int(th / 2)) + p2)
+        cv2.putText(frame, bankLabel, labelCoords, cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2)
+
+        for i in range(1, blocks):
+            p1 = start + (xSpace * i)
+            cv2.rectangle(frame, 
+                (p1, p2), 
+                (p1 + blockWidth, p2 + blockHeight), 
+                color=colors[i - 1],
+                thickness=3)
+            
+            (tw, th), _ = cv2.getTextSize("1", cv2.FONT_HERSHEY_SIMPLEX, 1, 2)
+            centerCoordinates = ((int(blockWidth / 2) - int(tw / 2)) + p1, (int(blockHeight / 2) + int(th / 2)) + p2)
+            cv2.putText(frame, "1", centerCoordinates, cv2.FONT_HERSHEY_SIMPLEX, 1, colors[i - 1], 2)
+
     def processFrame(self, utterances_and_props, frame, frameIndex):
         for name, text, prop, audio_file in utterances_and_props:
             if prop != "no prop":
@@ -100,4 +124,6 @@ class MoveFeature:
 
             self.logger.append(update)
 
+        self.renderBanks(frame, 75, 25, "F BANK:")
+        self.renderBanks(frame, 75, 100, "E BANK:")
         cv2.putText(frame, "Move classifier is live", (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
