@@ -101,7 +101,7 @@ if __name__ == "__main__":
         blocks = []
 
         if(gui.should_process("objects")):
-            blocks = objects.processFrame(framergb, frame_count, frame_count)
+            blocks = objects.processFrame(framergb, frame_count)
 
         if(gui.should_process("pose")):
             pose.processFrame(bodies, frame, frame_count)
