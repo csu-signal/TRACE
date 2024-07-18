@@ -23,7 +23,7 @@ Download the following models from [here](https://colostate-my.sharepoint.com/:f
 - `production_move_classifier.pt` ==> `featureModules/move/production_move_classifier.pt`
 
 # Running the demo
-In `demo.py`, make sure `os.add_dll_directory` points to the correct installation location of the Body Tracking SDK. Also change `azure_kinect.Playback(<path to mkv>)` to have a valid path to an mkv file. Finally, run `python demo.py`.
+In `config.py`, make sure `K4A_DIR` points to the correct installation location of the Body Tracking SDK. Run `python demo.py`.
 
 # Modular Feature Interface
 - "featureModules/featureName" - contains all data/relevant files for a feature of interest and gets auto copied to the output folder each build
