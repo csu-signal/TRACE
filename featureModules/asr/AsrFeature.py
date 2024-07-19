@@ -154,7 +154,7 @@ class AsrFeature(IFeature):
         self.logger.write_csv_headers("frame", "name", "start", "stop", "text", "audio_file")
 
 
-    def processFrame(self, frame, frame_count):
+    def processFrame(self, frame, frame_count, includeText):
         utterances = []
 
         for id, device in self.device_lookup.items():
@@ -166,7 +166,7 @@ class AsrFeature(IFeature):
                 utterances.append((id, start, stop, text, audio_file))
                 self.logger.append_csv(frame_count, id, start, stop, text, audio_file)
 
-
-        cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+        if includeText:
+            cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
 
         return utterances

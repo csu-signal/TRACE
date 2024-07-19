@@ -74,7 +74,7 @@ class GestureFeature(IFeature):
 
         return updatedUtterances
 
-    def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex, gesturePath):
+    def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex, includeText):
         points = []
         pointsFound = False
         for _, body in enumerate(bodies):  
@@ -111,11 +111,12 @@ class GestureFeature(IFeature):
 
         for key in self.devicePoints:
             if(key == deviceId):
-                if(len(self.devicePoints[key]) == 0):
-                    cv2.putText(frame, "NO POINTS", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
-                else:
-                    cv2.putText(frame, "POINTS DETECTED", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
-                    pointsFound = True
+                if includeText:
+                    if(len(self.devicePoints[key]) == 0):
+                        cv2.putText(frame, "NO POINTS", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
+                    else:
+                        cv2.putText(frame, "POINTS DETECTED", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+                        pointsFound = True
                 for hand in self.devicePoints[key]:
                     for point in hand:
                         cv2.circle(frame, point, radius=2, thickness= 2, color=(0,255,0))
