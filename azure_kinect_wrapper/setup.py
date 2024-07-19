@@ -44,6 +44,9 @@ ext_modules = [
 # setup package
 setup(
     name="azure_kinect_wrapper",
-    ext_modules=ext_modules,
     python_requires=">=3.10",
+    ext_modules=ext_modules,
+    packages=["azure_kinect-stubs"],
+    include_package_data=True,
+    package_data={"azure_kinect-stubs": ["*.pyi"]}
 )
