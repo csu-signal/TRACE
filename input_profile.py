@@ -62,7 +62,7 @@ class RecordedProfile(BaseProfile):
 
     def convert_audio(self, path, index):
         os.makedirs(self.video_dir, exist_ok=True)
-        os.system(f"ffmpeg -i {path} {self.video_dir}\\audio{index}.wav")
+        os.system(f"ffmpeg -i {path} -ac 2 {self.video_dir}\\audio{index}.wav")
         return f"{self.video_dir}\\audio{index}.wav"
 
 
@@ -77,7 +77,8 @@ class RecordedProfile(BaseProfile):
 
     def finalize(self):
         # turn frames into video
-        os.system(f"ffmpeg -framerate 30 -i {self.output_dir}\\frames\\frame%8d.png -c:v libx264 -pix_fmt yuv420p {self.video_dir}\\processed.mp4")
+        os.system(f"ffmpeg -framerate 30 -i {self.output_dir}\\processed_frames\\frame%8d.png -c:v libx264 -pix_fmt yuv420p {self.video_dir}\\processed_frames.mp4")
+        os.system(f"ffmpeg -framerate 30 -i {self.output_dir}\\raw_frames\\frame%8d.png -c:v libx264 -pix_fmt yuv420p {self.video_dir}\\raw_frames.mp4")
 
         num_audio = len(self.audio_info)
         audio_inputs = " ".join([f"-i {file}" for _,file in self.audio_info])
@@ -86,7 +87,7 @@ class RecordedProfile(BaseProfile):
         os.system(f"ffmpeg {audio_inputs} -filter_complex amix=inputs={num_audio}:duration=shortest {self.video_dir}\\audio-combined.wav")
 
         # add audio to video
-        os.system(f"ffmpeg -i {self.video_dir}\\processed.mp4 -i {self.video_dir}\\audio-combined.wav -map 0:v -map 1:a -c:v copy -shortest {self.video_dir}\\final.mp4")
+        os.system(f"ffmpeg -i {self.video_dir}\\processed_frames.mp4 -i {self.video_dir}\\audio-combined.wav -map 0:v -map 1:a -c:v copy -shortest {self.video_dir}\\final.mp4")
 
         print(f"saved video as {self.video_dir}\\final.mp4")
 
@@ -94,8 +95,8 @@ def create_recorded_profile(path):
     return RecordedProfile(
         rf"{path}-master.mkv",
         [
-            ("Videep", rf"{path}-audio1.wav"),
-            ("Austin", rf"{path}-audio2.wav"),
-            ("Mariah", rf"{path}-audio3.wav"),
+            ("Group", rf"{path}-audio1.wav"),
+            # ("Austin", rf"{path}-audio2.wav"),
+            # ("Mariah", rf"{path}-audio3.wav"),
         ],
     )

@@ -1,6 +1,4 @@
 import os
-from datetime import datetime
-from dataclasses import dataclass
 from pathlib import Path
 
 import cv2 as cv
@@ -15,12 +13,15 @@ from logger import Logger
 from input_profile import BaseProfile, LiveProfile, RecordedProfile, create_recorded_profile
 
 
-
 if __name__ == "__main__":
+    # live_prof = LiveProfile([
+    #     ("Videep", 2),
+    #     ("Austin", 6),
+    #     ("Mariah", 15)
+    #     ])
+
     live_prof = LiveProfile([
-        ("Videep", 2),
-        ("Austin", 6),
-        ("Mariah", 15)
+        ("Group", 6),
         ])
 
 
@@ -30,27 +31,18 @@ if __name__ == "__main__":
             ("Group 1", r"F:\Weights_Task\Data\Group_01-audio.wav"),
         ])
 
-    # prof_7_17_run01 = create_recorded_profile(r"F:\brady_recording_tests\test_7_17")
-    # prof_7_18_run01 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_18\run01")
-    # prof_7_18_run02 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_18\run02")
-
-    group1 = RecordedProfile(
-        r"C:\Users\brady\Desktop\Group_01-master.mkv",
-        [
-
-        ])
-
-    prof: BaseProfile = group1
-    # prof: BaseProfile = live_prof
+    prof: BaseProfile = live_prof
 
     gui = Gui()
     gui.create_buttons()
 
     output_directory = Path(prof.get_output_dir())
-    frame_dir = output_directory / "frames"
+    processed_frame_dir = output_directory / "processed_frames"
+    raw_frame_dir = output_directory / "raw_frames"
 
     os.makedirs(output_directory, exist_ok=False) # error if directory will get overwritten
-    os.makedirs(frame_dir, exist_ok=False)
+    os.makedirs(processed_frame_dir, exist_ok=False)
+    os.makedirs(raw_frame_dir, exist_ok=False)
 
 
     shift = 7 # TODO what is this?
@@ -93,6 +85,7 @@ if __name__ == "__main__":
 
         framergb = cv.cvtColor(color_image, cv.COLOR_BGR2RGB)
         frame = cv.cvtColor(color_image, cv.IMREAD_COLOR)
+        cv.imwrite(f"{raw_frame_dir}\\frame{frame_count:08}.png", frame)
 
         h,w,_ = color_image.shape
         bodies = body_frame_info["bodies"]
@@ -140,7 +133,7 @@ if __name__ == "__main__":
         cv.imshow("output", frame)
         cv.waitKey(1)
 
-        cv.imwrite(f"{frame_dir}\\frame{frame_count:08}.png", frame)
+        cv.imwrite(f"{processed_frame_dir}\\frame{frame_count:08}.png", frame)
 
         if cv.getWindowProperty("output", cv.WND_PROP_VISIBLE) == 0:
             break
