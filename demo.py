@@ -1,17 +1,19 @@
 import os
 from datetime import datetime
 from dataclasses import dataclass
+from pathlib import Path
 
 import cv2 as cv
 
 from featureModules import (AsrFeature, BaseDevice, GazeBodyTrackingFeature,
                             GazeFeature, GestureFeature, MicDevice,
                             MoveFeature, ObjectFeature, PoseFeature,
-                            PrerecordedDevice, PropExtractFeature, rec_common_ground)
+                            PrerecordedDevice, PropExtractFeature, rec_common_ground, DenseParaphrasingFeature)
 
 from gui import Gui
 from logger import Logger
-from demo_profile import BaseProfile, LiveProfile, RecordedProfile, create_recorded_profile
+from input_profile import BaseProfile, LiveProfile, RecordedProfile, create_recorded_profile
+
 
 
 if __name__ == "__main__":
@@ -28,40 +30,41 @@ if __name__ == "__main__":
             ("Group 1", r"F:\Weights_Task\Data\Group_01-audio.wav"),
         ])
 
-    prof_7_17_run01 = create_recorded_profile(r"F:\brady_recording_tests\test_7_17")
-    prof_7_18_run01 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_18\run01")
-    prof_7_18_run02 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_18\run02")
+    # prof_7_17_run01 = create_recorded_profile(r"F:\brady_recording_tests\test_7_17")
+    # prof_7_18_run01 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_18\run01")
+    # prof_7_18_run02 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_18\run02")
 
-    prof: BaseProfile = prof_7_18_run02
+    group1 = RecordedProfile(
+        r"C:\Users\brady\Desktop\Group_01-master.mkv",
+        [
+
+        ])
+
+    prof: BaseProfile = group1
     # prof: BaseProfile = live_prof
 
     gui = Gui()
     gui.create_buttons()
 
-    output_directory = prof.get_output_dir()
-    frame_dir = f"{output_directory}\\frames"
-    gesturePath = f"{output_directory}\\gestureOutput.csv"
-    objectPath = f"{output_directory}\\objectOutput.csv"
-    posePath = f"{output_directory}\\poseOutput.csv"
-    gazePath = f"{output_directory}\\gazeOutput.csv"
-    asrPath = f"{output_directory}\\asrOutput.csv"
-    propPath = f"{output_directory}\\propOutput.csv"
-    movePath = f"{output_directory}\\moveOutput.txt"
+    output_directory = Path(prof.get_output_dir())
+    frame_dir = output_directory / "frames"
+
     os.makedirs(output_directory, exist_ok=False) # error if directory will get overwritten
     os.makedirs(frame_dir, exist_ok=False)
 
 
     shift = 7 # TODO what is this?
 
-    gaze = GazeBodyTrackingFeature(shift, csv_log_file=gazePath)
-    gesture = GestureFeature(shift, csv_log_file=gesturePath)
-    objects = ObjectFeature(csv_log_file=objectPath)
-    pose = PoseFeature(csv_log_file=posePath)
-    asr = AsrFeature(prof.get_audio_devices(), n_processors=1, csv_log_file=asrPath)
-    prop = PropExtractFeature(csv_log_file=propPath)
-    move = MoveFeature(txt_log_file=movePath)
+    gaze = GazeBodyTrackingFeature(shift, log_dir=output_directory)
+    gesture = GestureFeature(shift, log_dir=output_directory)
+    objects = ObjectFeature(log_dir=output_directory)
+    pose = PoseFeature(log_dir=output_directory)
+    asr = AsrFeature(prof.get_audio_devices(), n_processors=1, log_dir=output_directory)
+    dense_paraphrasing = DenseParaphrasingFeature(log_dir=output_directory)
+    prop = PropExtractFeature(log_dir=output_directory)
+    move = MoveFeature(log_dir=output_directory)
 
-    error_logger = Logger(file=f"{output_directory}\\errors.txt", stdout=True)
+    error_logger = Logger(file=output_directory / "errors.txt", stdout=True)
     error_logger.clear()
 
     device = prof.get_camera_device()
@@ -111,23 +114,24 @@ if __name__ == "__main__":
             pass
         
         if(gui.should_process("gesture")):
-             gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count, gesturePath)
+             gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count)
 
-        utterances = []
+        new_utterances = []
         if(gui.should_process("asr")):
-            utterances = asr.processFrame(frame, frame_count)
-            if(gui.should_process("gesture")):
-                utterances = gesture.updateDemonstratives(utterances)
+            new_utterances = asr.processFrame(frame, frame_count)
 
-        utterances_and_props = []
+        if gui.should_process("dense paraphrasing"):
+            dense_paraphrasing.processFrame(frame, new_utterances, asr.utterance_lookup, gesture.blockCache, frame_count)
+
+
         try:
             if(gui.should_process("prop")):
-                utterances_and_props = prop.processFrame(frame, utterances, frame_count)
+                prop.processFrame(frame, new_utterances, dense_paraphrasing.paraphrased_utterance_lookup, frame_count)
         except Exception as e:
-            error_logger.append(f"Frame {frame_count}\nProp extractor\n{utterances}\n{str(e)}\n\n")
+            error_logger.append(f"Frame {frame_count}\nProp extractor\n{new_utterances}\n{str(e)}\n\n")
 
         if(gui.should_process("move")):
-            move.processFrame(utterances_and_props, frame, frame_count)
+            move.processFrame(frame, new_utterances, dense_paraphrasing.paraphrased_utterance_lookup, frame_count)
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv.LINE_AA)
         cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv.LINE_AA)

@@ -1,80 +1,31 @@
 from featureModules.IFeature import *
 import mediapipe as mp
 import joblib
+from featureModules.asr.AsrFeature import UtteranceInfo
 from logger import Logger
 from utils import *
 import time
-import re
 
-class Demonstrative():
-    def __init__(self, regex, plural):
-        self.regex = regex
-        self.plural = plural
-
-demonstratives = [
-    Demonstrative(r"\bthose\b", True), 
-    Demonstrative(r"\bthese\b", True), 
-    Demonstrative(r"\bthis\b", False), 
-    Demonstrative(r"\bthat\b", False), 
-    Demonstrative(r"\bit\b", False)]
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.4, min_tracking_confidence= 0)
 
 class GestureFeature(IFeature):
-    def __init__(self, shift, csv_log_file = None):
+    LOG_FILE = "gestureOutput.csv"
+
+    def __init__(self, shift, log_dir = None):
         self.loaded_model = joblib.load(".\\featureModules\\gesture\\bestModel-pointing.pkl") 
         self.devicePoints = {}
         self.shift = shift
         self.blockCache = {}
 
-        self.logger = Logger(file=csv_log_file)
+        if log_dir is not None:
+            self.logger = Logger(file=log_dir / self.LOG_FILE)
+        else:
+            self.logger = Logger()
+
         self.logger.write_csv_headers("frame_index", "bodyId", "handedness", "targets")
 
-    def updateDemonstratives(self, utterances):
-        clear = False
-        updatedUtterances = []
-        #
-        #
-        # for name, start, stop, text, audio_file in utterances:
-        #     for demo in demonstratives:
-        #         key = int(start)
-        #         while(key < stop):
-        #             if key in self.blockCache:
-        #                 print("regex:", demo.regex)
-        #                 print("text:", text.lower())
-        #                 print("match:", bool(re.search(demo.regex, text.lower())))
-        #                 print("sub:", re.sub(demo.regex, "TARGET", text.lower()))
-        #                 print()
-        #             key+=1
-
-        for name, start, stop, text, audio_file in utterances:
-            for demo in demonstratives:
-                if bool(re.search(demo.regex, text.lower())):
-                    key = int(start)
-                    while(key < stop):
-                        if key in self.blockCache:
-                            targets = self.blockCache[key]
-                            targetString = ''
-                            for t in targets:
-                                targetString+=f'{t.description},'
-
-                                #only use the first target if not plural
-                                if(not demo.plural):
-                                    break
-
-                            if targetString:
-                                text = re.sub(demo.regex, targetString[:-1], text.lower())
-                            break
-                        key+=1
-            updatedUtterances.append((name, start, stop, text, audio_file)) 
-
-        #TODO when should we clear these cached values?  
-        # if(clear):
-        #     self.blockCache = {} 
-
-        return updatedUtterances
-
-    def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex, gesturePath):
+    def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex):
         points = []
         pointsFound = False
         for _, body in enumerate(bodies):  

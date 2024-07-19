@@ -27,7 +27,9 @@ class SkeletonPoseClassifier(nn.Module):
         return x
 
 class PoseFeature(IFeature):
-    def __init__(self, csv_log_file=None):
+    LOG_FILE = "poseOutput.csv"
+
+    def __init__(self, log_dir=None):
         #  required arguments
         input_size = 224
         hidden_size = 300
@@ -46,7 +48,11 @@ class PoseFeature(IFeature):
         self.rightModel.load_state_dict(torch.load(".\\featureModules\\pose\\poseModels\\skeleton_pose_classifier_right.pt"))
         self.rightModel.eval()
 
-        self.logger = Logger(file=csv_log_file)
+        if log_dir is not None:
+            self.logger = Logger(file=log_dir / self.LOG_FILE)
+        else:
+            self.logger = Logger()
+
         self.logger.write_csv_headers("frame_index", "participant", "engagement")
 
     def processFrame(self, bodies, frame, frameIndex):

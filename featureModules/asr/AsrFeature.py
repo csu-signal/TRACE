@@ -1,5 +1,6 @@
 import multiprocessing as mp
 import os
+from pathlib import Path
 import wave
 from collections import defaultdict
 from ctypes import c_bool
@@ -131,8 +132,20 @@ def process_utterances(queue: "mp.Queue[AsrUtteranceData]", done, print_output=F
             output_queue.put((name, start, stop, transcription, chunk_file))
 
 
+@dataclass
+class UtteranceInfo:
+    utterance_id: int
+    frame: int
+    speaker_id: str
+    text: str
+    start: float
+    stop: float
+    audio_file: str | Path
+
 class AsrFeature(IFeature):
-    def __init__(self, devices: list[BaseDevice], n_processors=1, csv_log_file=None):
+    LOG_FILE = "asrOutput.csv"
+    
+    def __init__(self, devices: list[BaseDevice], n_processors=1, log_dir=None):
         """
         devices should be of the form [(name, index), ...]
         """
@@ -150,23 +163,33 @@ class AsrFeature(IFeature):
         for i in recorders + processors + [builder]:
             i.start()
         
-        self.logger = Logger(file=csv_log_file)
-        self.logger.write_csv_headers("frame", "name", "start", "stop", "text", "audio_file")
+        if log_dir is not None:
+            self.logger = Logger(file=log_dir / self.LOG_FILE)
+        else:
+            self.logger = Logger()
+
+        self.logger.write_csv_headers("utterance_id", "frame", "speaker_id", "text", "start", "stop", "audio_file")
+
+        self.utterance_lookup: list[UtteranceInfo] = []
 
 
     def processFrame(self, frame, frame_count):
-        utterances = []
+        new_utterance_ids = []
 
-        for id, device in self.device_lookup.items():
+        for speaker, device in self.device_lookup.items():
             device.handle_frame(frame_count)
 
         while not self.asr_output_queue.empty():
-            id, start, stop, text, audio_file = self.asr_output_queue.get()
+            speaker, start, stop, text, audio_file = self.asr_output_queue.get()
             if len(text.strip()) > 0:
-                utterances.append((id, start, stop, text, audio_file))
-                self.logger.append_csv(frame_count, id, start, stop, text, audio_file)
+                utterance = UtteranceInfo(len(self.utterance_lookup), frame_count, speaker, text, start, stop, audio_file)
+                self.utterance_lookup.append(utterance)
+
+                self.logger.append_csv(utterance.utterance_id, utterance.frame, utterance.speaker_id, utterance.text, utterance.start, utterance.stop, utterance.audio_file)
+
+                new_utterance_ids.append(utterance.utterance_id)
 
 
         cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
 
-        return utterances
+        return new_utterance_ids

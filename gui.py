@@ -12,6 +12,7 @@ class Gui:
                 "objects": IntVar(value=1),
                 "gaze": IntVar(value=1),
                 "asr": IntVar(value=1),
+                "dense paraphrasing": IntVar(value=1),
                 "pose": IntVar(value=1),
                 "prop": IntVar(value=1),
                 "move": IntVar(value=1),

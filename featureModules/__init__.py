@@ -2,6 +2,7 @@ from featureModules.gesture.GestureFeature import GestureFeature
 from featureModules.objects.ObjectFeature import ObjectFeature
 from featureModules.pose.PoseFeature import PoseFeature
 from featureModules.gaze.GazeFeature import GazeFeature
+from featureModules.asr.DenseParaphrasingFeature import DenseParaphrasingFeature
 from featureModules.gaze.GazeBodyTrackingFeature import GazeBodyTrackingFeature
 from featureModules.asr.AsrFeature import AsrFeature
 from featureModules.prop.PropExtractFeature import PropExtractFeature

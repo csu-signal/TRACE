@@ -1,11 +1,11 @@
 import torch
 import torch.nn.functional as F
+from featureModules.asr.AsrFeature import UtteranceInfo
 from featureModules.move.move_classifier import (
     rec_common_ground,
     hyperparam,
     modalities,
 )
-from featureModules.move.closure_rules import CommonGround
 from transformers import BertTokenizer, BertModel
 import cv2
 import opensmile
@@ -20,7 +20,9 @@ print("move classifier device", device)
 
 
 class MoveFeature:
-    def __init__(self, txt_log_file=None):
+    LOG_FILE = "moveOutput.txt"
+
+    def __init__(self, log_dir=None):
         self.model = torch.load(r"featureModules\move\production_move_classifier.pt").to(device)
         self.model.eval()
 
@@ -41,12 +43,13 @@ class MoveFeature:
             (UTTERANCE_HISTORY_LEN, 88), device=device
         )
 
-        self.closure_rules = CommonGround()
         self.class_names = ["STATEMENT", "ACCEPT", "DOUBT"]
 
-        self.most_recent_prop = "no prop"
+        if log_dir is not None:
+            self.logger = Logger(file=log_dir / self.LOG_FILE)
+        else:
+            self.logger = Logger()
 
-        self.logger = Logger(file=txt_log_file, stdout=True)
         self.logger.clear()
 
 
@@ -61,11 +64,8 @@ class MoveFeature:
 
         self.opensmile_embedding_history = torch.cat([self.opensmile_embedding_history[1:], embedding])
 
-    def processFrame(self, utterances_and_props, frame, frameIndex):
+    def processFrame(self, frame, new_utterances: list[int], utterance_lookup: list[UtteranceInfo] | dict[int, UtteranceInfo], frameIndex):
         for name, text, prop, audio_file in utterances_and_props:
-            if prop != "no prop":
-                self.most_recent_prop = prop
-
             self.update_bert_embeddings(name, text)
             in_bert = self.bert_embedding_history
 
@@ -84,20 +84,5 @@ class MoveFeature:
             present_class_indices = (out > 0.5)
             move = [self.class_names[idx] for idx, class_present in enumerate(present_class_indices) if class_present]
 
-            self.closure_rules.update(move, self.most_recent_prop)
-            update = ""
-            update += "FRAME: " + str(frameIndex) + "\n"
-            update += "Q bank\n"
-            update += str(self.closure_rules.qbank) + "\n"
-            update += "E bank\n"
-            update += str(self.closure_rules.ebank) + "\n"
-            update += "F bank\n"
-            update += str(self.closure_rules.fbank) + "\n"
-            if prop == "no prop":
-                update += f"{name}: {text} ({self.most_recent_prop}), {out}\n\n"
-            else:
-                update += f"{name}: {text} => {self.most_recent_prop}, {out}\n\n"
-
-            self.logger.append(update)
 
         cv2.putText(frame, "Move classifier is live", (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
