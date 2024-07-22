@@ -116,7 +116,7 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
     if verbose:
         print("highest score")
         print(highest_score_common_ground)
-    return highest_score_common_ground
+    return highest_score_common_ground, len(filtered_common_grounds)
 
 
 #Testing 

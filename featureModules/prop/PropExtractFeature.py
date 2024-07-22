@@ -22,7 +22,7 @@ class PropExtractFeature(IFeature):
         else:
             self.logger = Logger()
 
-        self.logger.write_csv_headers("frame", "utterance_id", "proposition", "utterance_text")
+        self.logger.write_csv_headers("frame", "utterance_id", "proposition", "utterance_text", "num_filtered_props")
 
         # map utterance ids to propositions
         self.prop_lookup = {}
@@ -34,12 +34,12 @@ class PropExtractFeature(IFeature):
             colors = ["red", "blue", "green", "purple", "yellow"]
             numbers = ["10", "20", "30", "40", "50"]
             if not any(i in utterance_info.text for i in colors + numbers):
-                prop = "no prop"
+                prop, num_filtered_props = "no prop", 0
             else:
-                prop = process_sentence(utterance_info.text, self.model, self.tokenizer, verbose=False)
+                prop, num_filtered_props = process_sentence(utterance_info.text, self.model, self.tokenizer, verbose=False)
 
             self.prop_lookup[i] = PropInfo(i, prop)
-            self.logger.append_csv(frame_count, i, prop, utterance_info.text)
+            self.logger.append_csv(frame_count, i, prop, utterance_info.text, num_filtered_props)
 
         if includeText:
             cv2.putText(frame, "Prop extract is live", (50,400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
