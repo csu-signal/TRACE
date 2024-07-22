@@ -103,3 +103,19 @@ def create_recorded_profile(path):
             # ("Mariah", rf"{path}-audio3.wav"),
         ],
     )
+
+
+# TODO: remove later
+@final
+class BradyLaptopProfile(BaseProfile):
+    def __init__(self):
+        self.output_dir = f"stats_{str(datetime.now().strftime('%Y-%m-%d_%H_%M_%S'))}"
+
+    def get_camera_device(self):
+        return azure_kinect.Playback(r"C:\Users\brady\Desktop\Group_01-master.mkv")
+
+    def get_audio_devices(self) -> list[BaseDevice]:
+        return [MicDevice("Brady", 1)]
+
+    def get_output_dir(self) -> str:
+        return self.output_dir

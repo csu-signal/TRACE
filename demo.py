@@ -4,7 +4,7 @@ from pathlib import Path
 import cv2 as cv
 
 from feature_manager import FeatureManager
-from input_profile import BaseProfile, LaptopProfile, LiveProfile, RecordedProfile, create_recorded_profile
+from input_profile import BaseProfile, BradyLaptopProfile, LiveProfile, RecordedProfile, create_recorded_profile
 
 
 if __name__ == "__main__":
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     prof_7_22_run02 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_22\run02")
 
     # prof: BaseProfile = live_prof
-    prof: BaseProfile = LaptopProfile()
+    prof: BaseProfile = BradyLaptopProfile()
     # prof: BaseProfile = prof_7_19_run03
 
     output_directory = Path(prof.get_output_dir())
