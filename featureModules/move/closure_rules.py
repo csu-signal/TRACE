@@ -204,7 +204,7 @@ class CommonGround():
                                 (not_weight,) = poss_weights
                                 self.evidence_against[block].add(not_weight)
                 # ACCEPTs remove impossible weights
-                elif 'ACCEPT' in move:
+                elif 'ACCEPT' in move and f"{block}{relation}{rhs}" in self.ebank:
                     if relation == '=':
                         # if block = weight
                         if rhs_weight:
@@ -346,7 +346,7 @@ class CommonGround():
 
 
                 elif "DOUBT" in move:
-                    if relation == '=':
+                    if relation == '=': 
                         if rhs_weight in self.evidence_for[block] or rhs_blocks:
                             for weight in ({10, 20, 30, 40, 50}
                                             .difference({rhs_weight})):
@@ -373,3 +373,5 @@ class CommonGround():
             
         # update banks
         self.generate_banks()
+
+
