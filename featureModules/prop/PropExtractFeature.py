@@ -27,9 +27,10 @@ class PropExtractFeature(IFeature):
         # map utterance ids to propositions
         self.prop_lookup = {}
 
-    def processFrame(self, frame, new_utterance_ids: list[int], utterance_lookup: list[UtteranceInfo] | dict[int, UtteranceInfo], frame_count: int):
+    def processFrame(self, frame, new_utterance_ids: list[int], utterance_lookup: list[UtteranceInfo] | dict[int, UtteranceInfo], frame_count: int, includeText):
         for i in new_utterance_ids:
             utterance_info = utterance_lookup[i]
+
             colors = ["red", "blue", "green", "purple", "yellow"]
             numbers = ["10", "20", "30", "40", "50"]
             if not any(i in utterance_info.text for i in colors + numbers):
@@ -40,4 +41,6 @@ class PropExtractFeature(IFeature):
             self.prop_lookup[i] = PropInfo(i, prop)
             self.logger.append_csv(frame_count, i, prop, utterance_info.text)
 
-        cv2.putText(frame, "Prop extract is live", (50,400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+        if includeText:
+            cv2.putText(frame, "Prop extract is live", (50,400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+

@@ -173,7 +173,8 @@ class AsrFeature(IFeature):
         self.utterance_lookup: list[UtteranceInfo] = []
 
 
-    def processFrame(self, frame, frame_count):
+
+    def processFrame(self, frame, frame_count, includeText):
         new_utterance_ids = []
 
         for speaker, device in self.device_lookup.items():
@@ -189,7 +190,7 @@ class AsrFeature(IFeature):
 
                 new_utterance_ids.append(utterance.utterance_id)
 
-
-        cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+        if includeText:
+            cv2.putText(frame, "ASR is live", (50,350), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
 
         return new_utterance_ids

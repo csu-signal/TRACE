@@ -9,6 +9,7 @@ from featureModules.move.move_classifier import (
 from transformers import BertTokenizer, BertModel
 import cv2
 import opensmile
+import re
 
 from logger import Logger
 
@@ -18,6 +19,17 @@ UTTERANCE_HISTORY_LEN = 4
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("move classifier device", device)
 
+class Color():
+    def __init__(self, name, color):
+        self.name = name
+        self.color = color
+
+colors = [
+        Color("red", (0, 0, 255)), 
+        Color("blue", (255, 0, 0)), 
+        Color("green", (19, 129, 51)), 
+        Color("purple", (128, 0, 128)), 
+        Color("yellow", (0, 215, 255))]
 
 class MoveFeature:
     LOG_FILE = "moveOutput.txt"
@@ -64,6 +76,50 @@ class MoveFeature:
 
         self.opensmile_embedding_history = torch.cat([self.opensmile_embedding_history[1:], embedding])
 
+    def getPropValues(self, propStrings, match):
+        label = []
+        for prop in propStrings:
+            prop_match = re.match(r'(' + match + r')\s*(=|<|>|!=)\s*(.*)', prop)
+            if prop_match:
+                block = prop_match[1]
+                relation = prop_match[2]
+                rhs = prop_match[3]
+                if(relation == '<' or relation == '>' or relation == '!='):
+                    label.append(relation + rhs)
+                else:
+                    label.append(rhs)
+        return label
+
+
+    def renderBanks(self, frame, xSpace, yCord, bankLabel, bankValues):
+        blocks = len(colors) + 1
+        blockWidth = 112
+        blockHeight = 112
+
+        h,w,_ = frame.shape
+        start = w - (xSpace * blocks)
+        p2 = h - yCord
+        (tw, th), _ = cv2.getTextSize(bankLabel, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
+        labelCoords = (int(start) - int(tw / 3), (int(blockHeight / 2) + int(th / 2)) + p2)
+        cv2.putText(frame, bankLabel, labelCoords, cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,0,0), 3)
+
+        for i in range(1, blocks):
+            p1 = start + (xSpace * i)
+            color = colors[i - 1]
+            cv2.rectangle(frame, 
+                (p1, p2), 
+                (p1 + blockWidth, p2 + blockHeight), 
+                color=color.color,
+                thickness=-1)
+            
+            labels = self.getPropValues(bankValues, color.name)
+            for i, line in enumerate(labels):
+                (tw, th), _ = cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
+                y = ((int(blockHeight / 4) + int(th / 2)) * (i + 1)) + p2
+                x = (int(blockWidth / 2) - int(tw / 2)) + p1
+                cv2.putText(frame, line, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,0,0), 3)
+
+    def processFrame(self, utterances_and_props, frame, frameIndex, includeText, banks):
     def processFrame(self, frame, new_utterances: list[int], utterance_lookup: list[UtteranceInfo] | dict[int, UtteranceInfo], frameIndex):
         for name, text, prop, audio_file in utterances_and_props:
             self.update_bert_embeddings(name, text)
@@ -85,4 +141,8 @@ class MoveFeature:
             move = [self.class_names[idx] for idx, class_present in enumerate(present_class_indices) if class_present]
 
 
-        cv2.putText(frame, "Move classifier is live", (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+        if banks:
+            self.renderBanks(frame, 130, 260, "F BANK:", self.closure_rules.fbank)
+            self.renderBanks(frame, 130, 130, "E BANK:",  self.closure_rules.ebank)
+        if includeText:
+            cv2.putText(frame, "Move classifier is live", (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
