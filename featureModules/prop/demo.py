@@ -5,10 +5,32 @@ from transformers import AutoTokenizer
 from featureModules.prop.demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground, \
 is_valid_individual_match, predict_with_XE, add_special_tokens
 from transformers import AutoModel, AutoTokenizer
-
+from nltk import word_tokenize, download
+from nltk.corpus import stopwords
+download("stopwords")
+download("punkt")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # device = 'cpu'
+
+def remove_stop_words(utterance):
+    #default stopwords 
+    stop_words = set(stopwords.words('english'))
+
+    #custom stopwords
+    additional_stop_words = ['so', 'yeah', 'well', 'uh', 'ok', 'now', 'we', 'know', 'that', 'we', 'say', 'mean', 
+                             'this', 'think', 'guess', 'just', 'like', 'imagine', 'yes', 'here', 'there']
+    stop_words.update(additional_stop_words)
+
+    # Keep these
+    words_to_exclude = {'not', 'more', 'less', 'no'}
+    stop_words = stop_words - words_to_exclude
+
+    # Tokenize
+    word_tokens = word_tokenize(utterance)
+    filtered_utterance = [w for w in word_tokens if not w.lower() in stop_words]
+
+    return " ".join(filtered_utterance)
 
 def load_model(model_dir, verbose=False):
     # Load tokenizer with the local files directly
@@ -33,6 +55,7 @@ def load_model(model_dir, verbose=False):
     return model, tokenizer
 
 def process_sentence(sentence, model, tokenizer, verbose=False):
+    sentence = remove_stop_words(sentence)
     #inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
     
     common_grounds_dataSet = pd.read_csv('featureModules/prop/data/NormalizedList.csv')

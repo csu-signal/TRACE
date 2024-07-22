@@ -210,11 +210,16 @@ def extract_colors_and_numbers(text):
 
 def is_valid_common_ground(cg, elements):
     cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
-    cg_numbers = [str(num) for num in re.findall(r'\b(?:10|20|30|40|50)\b', cg)]
-    #print(cg_colors, cg_numbers)
-    color_match = not elements["colors"] or set(cg_colors) == set(elements["colors"])
-    number_match = not elements["numbers"] or set(cg_numbers) == set(elements["numbers"])
-    return color_match and number_match
+    cg_numbers = re.findall(r'\b(?:10|20|30|40|50)\b', cg)
+    cg_set = set(cg_colors + cg_numbers)  # Combine and convert to set
+
+    # Combine colors and numbers from the elements dictionary into a set
+    # Assume elements['colors'] and elements['numbers'] are provided as lists
+    element_colors = elements.get("colors", [])
+    element_numbers = [str(num) for num in elements.get("numbers", [])]
+    elements_set = set(element_colors + element_numbers)
+
+    return cg_set == elements_set
 
 def is_valid_individual_match(cg, elements):
     cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
