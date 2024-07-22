@@ -30,11 +30,12 @@ if __name__ == "__main__":
             ("Group 1", r"F:\Weights_Task\Data\Group_01-audio.wav"),
         ])
 
+    prof_7_18_run02 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_18\run02")
     prof_7_19_run02 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_19\run02")
     prof_7_19_run03 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_19\run03")
 
     # prof: BaseProfile = live_prof
-    prof: BaseProfile = prof_7_19_run02
+    prof: BaseProfile = prof_7_18_run02
     # prof: BaseProfile = prof_7_19_run03
 
     gui = Gui()
@@ -107,7 +108,7 @@ if __name__ == "__main__":
             blocks = objects.processFrame(framergb, frame_count)
 
         if(gui.should_process("pose")):
-            pose.processFrame(bodies, frame, frame_count)
+            pose.processFrame(bodies, frame, frame_count, False)
 
         try:
             if(gui.should_process("gaze")):
@@ -116,26 +117,26 @@ if __name__ == "__main__":
             pass
         
         if(gui.should_process("gesture")):
-             gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count, gesturePath)
+             gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count, False)
 
         utterances = []
         if(gui.should_process("asr")):
-            utterances = asr.processFrame(frame, frame_count)
+            utterances = asr.processFrame(frame, frame_count, False)
             if(gui.should_process("gesture")):
                 utterances = gesture.updateDemonstratives(utterances)
 
         utterances_and_props = []
         try:
             if(gui.should_process("prop")):
-                utterances_and_props = prop.processFrame(frame, utterances, frame_count)
+                utterances_and_props = prop.processFrame(frame, utterances, frame_count, False)
         except Exception as e:
             error_logger.append(f"Frame {frame_count}\nProp extractor\n{utterances}\n{str(e)}\n\n")
 
         if(gui.should_process("move")):
-            move.processFrame(utterances_and_props, frame, frame_count)
+            move.processFrame(utterances_and_props, frame, frame_count, False, True)
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv.LINE_AA)
-        cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv.LINE_AA)
+        #cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv.LINE_AA)
 
         frame = cv.resize(frame, (1280, 720))
         cv.imshow("output", frame)

@@ -11,7 +11,7 @@ class PropExtractFeature(IFeature):
         self.logger = Logger(file=csv_log_file)
         self.logger.write_csv_headers("frame", "name", "text", "prop")
 
-    def processFrame(self, frame, utterances, frame_count):
+    def processFrame(self, frame, utterances, frame_count, includeText):
         utterances_and_props = []
         for name, start, stop, text, audio_file in utterances:
             colors = ["red", "blue", "green", "purple", "yellow"]
@@ -24,6 +24,7 @@ class PropExtractFeature(IFeature):
             utterances_and_props.append((name, text, prop, audio_file))
             self.logger.append_csv(frame_count, name, text, prop)
 
-        cv2.putText(frame, "Prop extract is live", (50,400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+        if includeText:
+            cv2.putText(frame, "Prop extract is live", (50,400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
 
         return utterances_and_props

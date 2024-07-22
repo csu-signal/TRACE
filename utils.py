@@ -488,7 +488,7 @@ def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shi
             thickness=3, 
             shift=shift)
 
-        block.target, raduis = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, True)
+        block.target, raduis = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, False)
         if(block.target):
             width = 5
             targets.append(TargetDescription(block.description, raduis))
