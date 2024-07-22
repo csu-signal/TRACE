@@ -16,6 +16,7 @@ class Gui:
                 "pose": IntVar(value=0),
                 "prop": IntVar(value=1),
                 "move": IntVar(value=1),
+                "common ground": IntVar(value=1),
                 }
 
 

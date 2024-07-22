@@ -6,11 +6,11 @@ import cv2 as cv
 from featureModules import (AsrFeature, BaseDevice, GazeBodyTrackingFeature,
                             GazeFeature, GestureFeature, MicDevice,
                             MoveFeature, ObjectFeature, PoseFeature,
-                            PrerecordedDevice, PropExtractFeature, rec_common_ground, DenseParaphrasingFeature)
+                            PrerecordedDevice, PropExtractFeature, rec_common_ground, DenseParaphrasingFeature, CommonGroundFeature)
 
 from gui import Gui
 from logger import Logger
-from input_profile import BaseProfile, LiveProfile, RecordedProfile, create_recorded_profile
+from input_profile import BaseProfile, LaptopProfile, LiveProfile, RecordedProfile, create_recorded_profile
 
 
 if __name__ == "__main__":
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     prof_7_19_run03 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_19\run03")
 
     # prof: BaseProfile = live_prof
-    prof: BaseProfile = prof_7_18_run02
+    prof: BaseProfile = LaptopProfile()
     # prof: BaseProfile = prof_7_19_run03
 
     gui = Gui()
@@ -62,9 +62,13 @@ if __name__ == "__main__":
     dense_paraphrasing = DenseParaphrasingFeature(log_dir=output_directory)
     prop = PropExtractFeature(log_dir=output_directory)
     move = MoveFeature(log_dir=output_directory)
+    common_ground = CommonGroundFeature(log_dir=output_directory)
 
-    error_logger = Logger(file=output_directory / "errors.txt", stdout=True)
-    error_logger.clear()
+    error_log = Logger(file=output_directory / "errors.txt", stdout=True)
+    error_log.clear()
+
+    summary_log = Logger(file=output_directory / "summary.txt", stdout=True)
+    summary_log.clear()
 
     device = prof.get_camera_device()
     device_id = 0
@@ -123,20 +127,35 @@ if __name__ == "__main__":
         if gui.should_process("dense paraphrasing"):
             dense_paraphrasing.processFrame(frame, new_utterances, asr.utterance_lookup, gesture.blockCache, frame_count)
 
-
         try:
             if(gui.should_process("prop")):
                 prop.processFrame(frame, new_utterances, dense_paraphrasing.paraphrased_utterance_lookup, frame_count, False)
 
         except Exception as e:
-            error_logger.append(f"Frame {frame_count}\nProp extractor\n{new_utterances}\n{str(e)}\n\n")
+            error_log.append(f"Frame {frame_count}\nProp extractor\n{new_utterances}\n{str(e)}\n\n")
 
         if(gui.should_process("move")):
-            move.processFrame(frame, new_utterances, dense_paraphrasing.paraphrased_utterance_lookup, frame_count, False, True)
+            move.processFrame(frame, new_utterances, dense_paraphrasing.paraphrased_utterance_lookup, frame_count, False)
+
+        if gui.should_process("common ground"):
+            common_ground.processFrame(frame, new_utterances, prop.prop_lookup, move.move_lookup, frame_count)
 
 
         cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv.LINE_AA)
         #cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv.LINE_AA)
+
+        # update = ""
+        # update += "FRAME: " + str(frame_count) + "\n"
+        # update += "Q bank\n"
+        # update += str(self.closure_rules.qbank) + "\n"
+        # update += "E bank\n"
+        # update += str(self.closure_rules.ebank) + "\n"
+        # update += "F bank\n"
+        # update += str(self.closure_rules.fbank) + "\n"
+        # if prop == "no prop":
+        #     update += f"{name}: {text} ({self.most_recent_prop}), {out}\n\n"
+        # else:
+        #     update += f"{name}: {text} => {self.most_recent_prop}, {out}\n\n"
 
         frame = cv.resize(frame, (1280, 720))
         cv.imshow("output", frame)

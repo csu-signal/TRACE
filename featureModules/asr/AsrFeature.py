@@ -164,7 +164,7 @@ class AsrFeature(IFeature):
         utterance_processor_queue = mp.Queue()
         self.done = mp.Value(c_bool, False)
         recorders = [d.create_recorder_process(utterance_builder_queue, self.done) for d in devices]
-        builder = mp.Process(target = build_utterances, args=(utterance_builder_queue, utterance_processor_queue, self.done))
+        builder = mp.Process(target = build_utterances, args=(utterance_builder_queue, utterance_processor_queue, self.done), kwargs={"output_dir": log_dir})
         processors = [mp.Process(target=process_utterances, args=(utterance_processor_queue, self.done), kwargs={"output_queue":self.asr_output_queue}) for _ in range(n_processors)]
 
 

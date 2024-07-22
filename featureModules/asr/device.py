@@ -45,7 +45,6 @@ class MicDevice(BaseDevice):
         return self.name
 
     def create_recorder_process(self, asr_queue: mp.Queue, done: Synchronized):
-        os.makedirs("chunks", exist_ok=True)
         return mp.Process(target=MicDevice.record_chunks, args=(self.get_id(), self.index, asr_queue, done))
 
     @staticmethod
@@ -96,7 +95,6 @@ class PrerecordedDevice(BaseDevice):
         return self.name
 
     def create_recorder_process(self, asr_queue: mp.Queue, done: Synchronized):
-        os.makedirs("chunks", exist_ok=True)
         self.asr_queue = asr_queue
         return mp.Process(target=PrerecordedDevice.noop)
 
