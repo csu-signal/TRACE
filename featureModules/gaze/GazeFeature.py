@@ -147,4 +147,8 @@ class GazeFeature(IFeature):
                     keras.backend.clear_session()
                     gc.collect()
 
+                descriptions = []
+                for t in targets:
+                    descriptions.append(t.description)
+
                 self.logger.append_csv(frameIndex, key, targets)

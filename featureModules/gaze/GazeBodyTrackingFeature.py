@@ -49,4 +49,8 @@ class GazeBodyTrackingFeature(IFeature):
             
             targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, True)
 
-            self.logger.append_csv(frame_count, body_id, targets)
+            descriptions = []
+            for t in targets:
+                descriptions.append(t.description)
+
+            self.logger.append_csv(frame_count, body_id, descriptions)

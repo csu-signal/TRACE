@@ -24,7 +24,7 @@ class ObjectFeature(IFeature):
         self.logger = Logger(file=csv_log_file)
         self.logger.write_csv_headers("frame_index", "objects")
 
-    def processFrame(self, framergb, frameIndex, csvPath):
+    def processFrame(self, framergb, frameIndex):
         blocks = []
         blockDescriptions = []
         image = cv2.resize(framergb, RESIZE_TO)

@@ -49,7 +49,7 @@ class PoseFeature(IFeature):
         self.logger = Logger(file=csv_log_file)
         self.logger.write_csv_headers("frame_index", "participant", "engagement")
 
-    def processFrame(self, bodies, frame, frameIndex):
+    def processFrame(self, bodies, frame, frameIndex, includeText):
         left_position = -400
         middle_position = 400
 
@@ -121,12 +121,15 @@ class PoseFeature(IFeature):
             engagement = "leaning out" if prediction == 0 else "leaning in"
             color = (255,0,0) if prediction == 0 else (39,142,37)
             if position == "left":
-                cv2.putText(frame, "P1: " + engagement, (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+                if includeText:
+                    cv2.putText(frame, "P1: " + engagement, (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
                 self.logger.append_csv(frameIndex, "P1", engagement)
             elif position == "middle":
-                cv2.putText(frame, "P2: " + engagement, (50,250), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+                if includeText:
+                    cv2.putText(frame, "P2: " + engagement, (50,250), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
                 self.logger.append_csv(frameIndex, "P2", engagement)
             else:
-                cv2.putText(frame, "P3: " + engagement, (50,300), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+                if includeText:
+                    cv2.putText(frame, "P3: " + engagement, (50,300), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
                 self.logger.append_csv(frameIndex, "P3", engagement)
 
