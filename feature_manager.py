@@ -93,7 +93,6 @@ class FeatureManager:
         try:
             if(self._should_process("prop")):
                 self.prop.processFrame(output_frame, new_utterances, self.dense_paraphrasing.paraphrased_utterance_lookup, frame_count, False)
-
         except Exception as e:
             self.error_log.append(f"Frame {frame_count}\nProp extractor\n{new_utterances}\n{str(e)}\n\n")
 
@@ -120,8 +119,6 @@ class FeatureManager:
 
             update = ""
             update += "FRAME: " + str(frame_count) + "\n"
-            update += "Q bank\n"
-            update += str(self.common_ground.closure_rules.qbank) + "\n"
             update += "E bank\n"
             update += str(self.common_ground.closure_rules.ebank) + "\n"
             update += "F bank\n"
