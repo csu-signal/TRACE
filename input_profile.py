@@ -54,6 +54,8 @@ class RecordedProfile(BaseProfile):
         self.audio_info = audio_info
         self.mkv_fr = mkv_frame_rate
 
+        self.audio_inputs = []
+
         self.output_dir = f"stats_{str(datetime.now().strftime('%Y-%m-%d_%H_%M_%S'))}"
         self.video_dir = f"{self.output_dir}\\video_files"
 
@@ -62,9 +64,10 @@ class RecordedProfile(BaseProfile):
 
     def convert_audio(self, path, index):
         os.makedirs(self.video_dir, exist_ok=True)
-        os.system(f"ffmpeg -i {path} -ac 2 {self.video_dir}\\audio{index}.wav")
-        return f"{self.video_dir}\\audio{index}.wav"
-
+        output_path = f"{self.video_dir}\\audio{index}.wav"
+        os.system(f"ffmpeg -i {path} -filter:a loudnorm -ar 16000 -ac 1 -acodec pcm_s16le {output_path}")
+        self.audio_inputs.append(output_path)
+        return output_path
 
     def get_audio_devices(self) -> list[BaseDevice]:
         return [
@@ -80,8 +83,8 @@ class RecordedProfile(BaseProfile):
         os.system(f"ffmpeg -framerate 30 -i {self.output_dir}\\processed_frames\\frame%8d.png -c:v libx264 -pix_fmt yuv420p {self.video_dir}\\processed_frames.mp4")
         os.system(f"ffmpeg -framerate 30 -i {self.output_dir}\\raw_frames\\frame%8d.png -c:v libx264 -pix_fmt yuv420p {self.video_dir}\\raw_frames.mp4")
 
-        num_audio = len(self.audio_info)
-        audio_inputs = " ".join([f"-i {file}" for _,file in self.audio_info])
+        num_audio = len(self.audio_inputs)
+        audio_inputs = " ".join([f"-i {file}" for file in self.audio_inputs])
 
         # combine all audio recordings
         os.system(f"ffmpeg {audio_inputs} -filter_complex amix=inputs={num_audio}:duration=shortest {self.video_dir}\\audio-combined.wav")

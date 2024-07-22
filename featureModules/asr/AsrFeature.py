@@ -42,7 +42,15 @@ def build_utterances(
     done,
     use_vad=True,
     max_utterance_time=10,
+    output_dir = None
 ):
+    if output_dir is None:
+        output_dir = Path(".")
+    else:
+        output_dir = Path(output_dir)
+
+    os.makedirs(output_dir / "chunks", exist_ok=True)
+
     stored_audio = defaultdict(bytes)
     starts = defaultdict(float)
     contains_activity = defaultdict(bool)
@@ -67,7 +75,7 @@ def build_utterances(
             data.channels
         )
         
-        wf = wave.open("chunks\\vad_tmp.wav", 'wb')
+        wf = wave.open(str(output_dir / "chunks" / "vad_tmp.wav"), 'wb')
         wf.setnchannels(channels)
         wf.setsampwidth(sample_width)
         wf.setframerate(sample_rate)
@@ -76,7 +84,7 @@ def build_utterances(
 
         if use_vad:
             try:
-                audio = read_audio("chunks\\vad_tmp.wav")
+                audio = read_audio(str(output_dir / "chunks" / "vad_tmp.wav"))
                 activity = len(get_speech_timestamps(audio, vad)) > 0
             except RuntimeError:
                 activity = False
@@ -98,7 +106,7 @@ def build_utterances(
 
         # if there is no activity but there was previous activity, make utterance
         if (not activity and contains_activity[id]) or total_time[id] > max_utterance_time:
-            next_file = f"chunks\\{counter:08}.wav"
+            next_file = str(output_dir / "chunks" / f"{counter:08}.wav")
             wf = wave.open(next_file, 'wb')
             wf.setnchannels(channels)
             wf.setsampwidth(sample_width)
