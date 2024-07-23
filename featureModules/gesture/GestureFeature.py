@@ -33,38 +33,31 @@ class GestureFeature(IFeature):
     def updateDemonstratives(self, utterances):
         clear = False
         updatedUtterances = []
-        #
-        #
-        # for name, start, stop, text, audio_file in utterances:
-        #     for demo in demonstratives:
-        #         key = int(start)
-        #         while(key < stop):
-        #             if key in self.blockCache:
-        #                 print("regex:", demo.regex)
-        #                 print("text:", text.lower())
-        #                 print("match:", bool(re.search(demo.regex, text.lower())))
-        #                 print("sub:", re.sub(demo.regex, "TARGET", text.lower()))
-        #                 print()
-        #             key+=1
-
         for name, start, stop, text, audio_file in utterances:
             for demo in demonstratives:
-                if bool(re.search(demo.regex, text.lower())):
+                demos = re.finditer(demo.regex, text)
+                spanList = [d.span() for d in [*demos]]
+                demoCount = len(spanList)
+
+                if (demoCount > 0):
                     key = int(start)
                     while(key < stop):
                         if key in self.blockCache:
                             targets = self.blockCache[key]
-                            targetString = ''
-                            for t in targets:
-                                targetString+=f'{t.description},'
+                            targetList = [t.description for t in targets]
 
-                                #only use the first target if not plural
-                                if(not demo.plural):
-                                    break
-
-                            if targetString:
-                                text = re.sub(demo.regex, targetString[:-1], text.lower())
+                            if (demoCount == 1):
+                                if (not demo.plural):
+                                    targetList = targetList[0]
+                                    text = re.sub(demo.regex, targetList, text.lower())
+                                else:
+                                    text = re.sub(demo.regex, ', '.join(targetList), text.lower())
+                            else:
+                                for i in range(len(targetList)):
+                                    if i < len(spanList):
+                                        text = re.sub(demo.regex, targetList[i], text.lower()[:spanList[i][1]]) + text.lower()[spanList[i][1]:]
                             break
+
                         key+=1
             updatedUtterances.append((name, start, stop, text, audio_file)) 
 
