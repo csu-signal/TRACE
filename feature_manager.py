@@ -123,7 +123,7 @@ class FeatureManager:
             update += str(self.common_ground.closure_rules.ebank) + "\n"
             update += "F bank\n"
             update += str(self.common_ground.closure_rules.fbank) + "\n"
-            if prop == "no prop":
+            if prop.prop == "no prop":
                 update += f"{utterance.speaker_id}: {utterance.text} ({self.common_ground.most_recent_prop}), {move.move}\n\n"
             else:
                 update += f"{utterance.speaker_id}: {utterance.text} => {prop.prop}, {move.move}\n\n"
