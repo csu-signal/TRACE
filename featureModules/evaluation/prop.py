@@ -18,11 +18,12 @@ class PropExtractFeatureEval(PropExtractFeature):
 
         with open(self.input_dir / self.LOG_FILE, "r") as f:
             reader = csv.reader(f)
-            next(reader, None)
-            for (frame, id, prop, text, num_props) in reader:
+            keys = next(reader)
+            for row in reader:
+                data = {i:j for i,j in zip(keys, row)}
                 prop = PropInfo(
-                        int(id),
-                        prop
+                        int(data["utterance_id"]),
+                        data["proposition"]
                     )
                 self.prop_lookup[prop.utterance_id] = prop
 

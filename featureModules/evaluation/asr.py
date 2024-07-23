@@ -20,16 +20,17 @@ class AsrFeatureEval(AsrFeature):
 
         with open(self.input_dir / self.LOG_FILE, "r") as f:
             reader = csv.reader(f)
-            next(reader, None)
-            for (id, frame, speaker_id, text, start, stop, audio_file) in reader:
+            keys = next(reader)
+            for row in reader:
+                data = {i:j for i,j in zip(keys, row)}
                 utterance = UtteranceInfo(
-                        int(id),
-                        int(frame),
-                        speaker_id,
-                        text,
-                        float(start),
-                        float(stop),
-                        self.get_chunk_file(audio_file)
+                        int(data["utterance_id"]),
+                        int(data["frame"]),
+                        data["speaker_id"],
+                        data["text"],
+                        float(data["start"]),
+                        float(data["stop"]),
+                        self.get_chunk_file(data["audio_file"])
                     )
                 self.utterance_lookup[utterance.utterance_id] = utterance
                 self.new_utterance_by_frame[utterance.frame].append(utterance.utterance_id)

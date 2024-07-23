@@ -35,10 +35,11 @@ class FeatureManager:
 
         self._create_buttons()
 
+        self.objects = ObjectFeature(log_dir=self.output_dir)
+
         shift = 7 # TODO what is this?
         self.gaze = GazeBodyTrackingFeature(shift, log_dir=self.output_dir)
         self.gesture = GestureFeature(shift, log_dir=self.output_dir)
-        self.objects = ObjectFeature(log_dir=self.output_dir)
         self.pose = PoseFeature(log_dir=self.output_dir)
 
         self.asr = AsrFeature(self.profile.get_audio_devices(), n_processors=1, log_dir=self.output_dir)

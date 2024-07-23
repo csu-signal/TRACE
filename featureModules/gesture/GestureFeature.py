@@ -18,12 +18,19 @@ class GestureFeature(IFeature):
         self.shift = shift
         self.blockCache = {}
 
+        self.init_logger(log_dir)
+
+
+    def init_logger(self, log_dir):
         if log_dir is not None:
             self.logger = Logger(file=log_dir / self.LOG_FILE)
         else:
             self.logger = Logger()
 
-        self.logger.write_csv_headers("frame_index", "bodyId", "handedness", "targets")
+        self.logger.write_csv_headers("frame", "time", "blocks", "body_id", "handedness")
+
+    def log_gesture(self, frame: int, time: int, descriptions: list[str], body_id, handedness: str):
+        self.logger.append_csv(frame, time, json.dumps(descriptions), body_id, handedness)
 
     def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex, includeText):
         points = []
@@ -71,7 +78,6 @@ class GestureFeature(IFeature):
                 for hand in self.devicePoints[key]:
                     for point in hand:
                         cv2.circle(frame, point, radius=2, thickness= 2, color=(0,255,0))
-        return pointsFound
 
 
     def findHands(self, frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth, blocks, blockStatus, frameIndex):   
@@ -134,11 +140,12 @@ class GestureFeature(IFeature):
 
                                 ## TODO keep track of participant?
                                 targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
+                                floor_time = int(time.time())
                                 if(targets):
-                                    self.blockCache[int(time.time())] = targets
+                                    self.blockCache[floor_time] = targets
                                 
                                 descriptions = []
                                 for t in targets:
                                     descriptions.append(t.description)
                                     
-                                self.logger.append_csv(frameIndex, bodyId, handedness.value, descriptions)
+                                self.log_gesture(frameIndex, floor_time, [d.value for d in descriptions], bodyId, handedness.value)
