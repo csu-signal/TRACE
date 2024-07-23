@@ -18,6 +18,9 @@ colors = [
         Color("purple", (128, 0, 128)), 
         Color("yellow", (0, 215, 255))]
 
+fontScales = [1.5, 1.5, 0.75, 0.5, 0.5]
+fontThickness = [3, 3, 2, 2, 2]
+
 class CommonGroundFeature(IFeature):
     LOG_FILE = "common_ground_output.csv"
 
@@ -69,11 +72,13 @@ class CommonGroundFeature(IFeature):
                 thickness=-1)
             
             labels = self.getPropValues(bankValues, color.name)
-            for i, line in enumerate(labels):
-                (tw, th), _ = cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
-                y = ((int(blockHeight / 4) + int(th / 2)) * (i + 1)) + p2
-                x = (int(blockWidth / 2) - int(tw / 2)) + p1
-                cv2.putText(frame, line, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,0,0), 3)
+            numberLabels = min(len(labels), 5)
+            if(numberLabels > 0):
+                for i, line in enumerate(labels):
+                    (tw, th), _ = cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, fontScales[numberLabels - 1], fontThickness[numberLabels -1])
+                    y = ((int(blockHeight / (numberLabels + 1)) + int(th / 3)) * (i + 1)) + p2
+                    x = (int(blockWidth / 2) - int(tw / 2)) + p1
+                    cv2.putText(frame, line, (x, y), cv2.FONT_HERSHEY_SIMPLEX, fontScales[numberLabels - 1], (0,0,0), fontThickness[numberLabels -1])
 
     # TODO: create moveinfo
     def processFrame(self, frame, new_utterances: list[int], prop_lookup: dict[int, PropInfo], move_lookup: dict[int, MoveInfo], frame_count):

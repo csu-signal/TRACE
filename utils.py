@@ -355,7 +355,7 @@ def getVectorPoint(terminal, vector):
 def processPoint(landmarks, box, w, h, cameraMatrix, dist, depth):
     try:
         for index, lm in enumerate(landmarks): 
-            if(index == 0):
+            if(index == 5):
                 bx, by = lm[0], lm[1] 
             if(index == 8):  
                 tx, ty = lm[0], lm[1]

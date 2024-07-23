@@ -37,22 +37,29 @@ class DenseParaphrasingFeature(IFeature):
             text = utterance_info.text
 
             for demo in demonstratives:
-                if bool(re.search(demo.regex, utterance_info.text.lower())):
+                demos = re.finditer(demo.regex, text)
+                spanList = [d.span() for d in [*demos]]
+                demoCount = len(spanList)
+
+                if (demoCount > 0):
                     key = int(utterance_info.start)
                     while(key < utterance_info.stop):
                         if key in blockCache:
                             targets = blockCache[key]
-                            targetString = ''
-                            for t in targets:
-                                targetString+=f'{t.description},'
+                            targetList = [t.description for t in targets]
 
-                                #only use the first target if not plural
-                                if(not demo.plural):
-                                    break
-
-                            if targetString:
-                                text = re.sub(demo.regex, targetString[:-1], utterance_info.text.lower())
+                            if (demoCount == 1):
+                                if (not demo.plural):
+                                    targetList = targetList[0]
+                                    text = re.sub(demo.regex, targetList, text.lower())
+                                else:
+                                    text = re.sub(demo.regex, ', '.join(targetList), text.lower())
+                            else:
+                                for i in range(len(targetList)):
+                                    if i < len(spanList):
+                                        text = re.sub(demo.regex, targetList[i], text.lower()[:spanList[i][1]]) + text.lower()[spanList[i][1]:]
                             break
+
                         key+=1
 
             self.paraphrased_utterance_lookup[i] = UtteranceInfo(
