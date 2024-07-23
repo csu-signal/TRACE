@@ -41,13 +41,13 @@ class FeatureManager:
         self.objects = ObjectFeature(log_dir=self.output_dir)
         self.pose = PoseFeature(log_dir=self.output_dir)
 
-        # self.asr = AsrFeature(self.profile.get_audio_devices(), n_processors=1, log_dir=self.output_dir)
-        self.asr = AsrFeatureEval("ground_truth_07_22_run_02", chunks_in_input_dir=True, log_dir=self.output_dir)
+        self.asr = AsrFeature(self.profile.get_audio_devices(), n_processors=1, log_dir=self.output_dir)
+        # self.asr = AsrFeatureEval("ground_truth_07_22_run_02", chunks_in_input_dir=True, log_dir=self.output_dir)
 
         self.dense_paraphrasing = DenseParaphrasingFeature(log_dir=self.output_dir)
 
-        # self.prop = PropExtractFeature(log_dir=self.output_dir)
-        self.prop = PropExtractFeatureEval("ground_truth_07_22_run_02", log_dir=self.output_dir)
+        self.prop = PropExtractFeature(log_dir=self.output_dir)
+        # self.prop = PropExtractFeatureEval("ground_truth_07_22_run_02", log_dir=self.output_dir)
 
         self.move = MoveFeature(log_dir=self.output_dir)
         self.common_ground = CommonGroundFeature(log_dir=self.output_dir)
