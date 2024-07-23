@@ -31,6 +31,9 @@ colors = [
         Color("purple", (128, 0, 128)), 
         Color("yellow", (0, 215, 255))]
 
+fontScales = [1.5, 1.5, 0.75, 0.5, 0.5]
+fontThickness = [3, 3, 2, 2, 2]
+
 class MoveFeature:
     def __init__(self, txt_log_file=None):
         self.model = torch.load(r"featureModules\move\production_move_classifier.pt").to(device)
@@ -110,11 +113,13 @@ class MoveFeature:
                 thickness=-1)
             
             labels = self.getPropValues(bankValues, color.name)
-            for i, line in enumerate(labels):
-                (tw, th), _ = cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
-                y = ((int(blockHeight / 4) + int(th / 2)) * (i + 1)) + p2
-                x = (int(blockWidth / 2) - int(tw / 2)) + p1
-                cv2.putText(frame, line, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,0,0), 3)
+            numberLabels = min(len(labels), 5)
+            if(numberLabels > 0):
+                for i, line in enumerate(labels):
+                    (tw, th), _ = cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, fontScales[numberLabels - 1], fontThickness[numberLabels -1])
+                    y = ((int(blockHeight / (numberLabels + 1)) + int(th / 3)) * (i + 1)) + p2
+                    x = (int(blockWidth / 2) - int(tw / 2)) + p1
+                    cv2.putText(frame, line, (x, y), cv2.FONT_HERSHEY_SIMPLEX, fontScales[numberLabels - 1], (0,0,0), fontThickness[numberLabels -1])
 
     def processFrame(self, utterances_and_props, frame, frameIndex, includeText, banks):
         for name, text, prop, audio_file in utterances_and_props:
@@ -155,6 +160,7 @@ class MoveFeature:
 
             self.logger.append(update)
 
+        self.closure_rules.fbank = {'green!=30', 'green!=10', 'green!=20'}
         if banks:
             self.renderBanks(frame, 130, 260, "F BANK:", self.closure_rules.fbank)
             self.renderBanks(frame, 130, 130, "E BANK:",  self.closure_rules.ebank)
