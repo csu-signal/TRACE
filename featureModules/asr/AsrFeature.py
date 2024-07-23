@@ -170,7 +170,12 @@ class AsrFeature(IFeature):
 
         for i in recorders + processors + [builder]:
             i.start()
-        
+
+        self.init_logger(log_dir)
+
+        self.utterance_lookup: dict[int, UtteranceInfo] = {}
+
+    def init_logger(self, log_dir):
         if log_dir is not None:
             self.logger = Logger(file=log_dir / self.LOG_FILE)
         else:
@@ -178,9 +183,8 @@ class AsrFeature(IFeature):
 
         self.logger.write_csv_headers("utterance_id", "frame", "speaker_id", "text", "start", "stop", "audio_file")
 
-        self.utterance_lookup: list[UtteranceInfo] = []
-
-
+    def log_utterance(self, ut: UtteranceInfo):
+        self.logger.append_csv(ut.utterance_id, ut.frame, ut.speaker_id, ut.text, ut.start, ut.stop, ut.audio_file)
 
     def processFrame(self, frame, frame_count, includeText):
         new_utterance_ids = []
@@ -192,9 +196,9 @@ class AsrFeature(IFeature):
             speaker, start, stop, text, audio_file = self.asr_output_queue.get()
             if len(text.strip()) > 0:
                 utterance = UtteranceInfo(len(self.utterance_lookup), frame_count, speaker, text, start, stop, audio_file)
-                self.utterance_lookup.append(utterance)
-
-                self.logger.append_csv(utterance.utterance_id, utterance.frame, utterance.speaker_id, utterance.text, utterance.start, utterance.stop, utterance.audio_file)
+                self.utterance_lookup[utterance.utterance_id] = utterance
+                
+                self.log_utterance(utterance)
 
                 new_utterance_ids.append(utterance.utterance_id)
 
