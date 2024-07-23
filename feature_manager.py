@@ -1,11 +1,16 @@
-from tkinter import Tk, IntVar, Checkbutton
-from featureModules import (AsrFeature, BaseDevice, GazeBodyTrackingFeature,
-                            GazeFeature, GestureFeature, MicDevice,
-                            MoveFeature, ObjectFeature, PoseFeature,
-                            PrerecordedDevice, PropExtractFeature, rec_common_ground, DenseParaphrasingFeature, CommonGroundFeature)
+from tkinter import Checkbutton, IntVar, Tk
+
+import cv2 as cv
+
+from featureModules import (AsrFeature, AsrFeatureEval, BaseDevice,
+                            CommonGroundFeature, DenseParaphrasingFeature,
+                            GazeBodyTrackingFeature, GazeFeature,
+                            GestureFeature, MicDevice, MoveFeature,
+                            ObjectFeature, PoseFeature, PrerecordedDevice,
+                            PropExtractFeature, PropExtractFeatureEval, rec_common_ground)
 from input_profile import BaseProfile
 from logger import Logger
-import cv2 as cv
+
 
 class FeatureManager:
     def __init__(self, profile: BaseProfile, output_dir=None):
@@ -35,9 +40,15 @@ class FeatureManager:
         self.gesture = GestureFeature(shift, log_dir=self.output_dir)
         self.objects = ObjectFeature(log_dir=self.output_dir)
         self.pose = PoseFeature(log_dir=self.output_dir)
-        self.asr = AsrFeature(self.profile.get_audio_devices(), n_processors=1, log_dir=self.output_dir)
+
+        # self.asr = AsrFeature(self.profile.get_audio_devices(), n_processors=1, log_dir=self.output_dir)
+        self.asr = AsrFeatureEval("ground_truth_07_22_run_02", chunks_in_input_dir=True, log_dir=self.output_dir)
+
         self.dense_paraphrasing = DenseParaphrasingFeature(log_dir=self.output_dir)
-        self.prop = PropExtractFeature(log_dir=self.output_dir)
+
+        # self.prop = PropExtractFeature(log_dir=self.output_dir)
+        self.prop = PropExtractFeatureEval("ground_truth_07_22_run_02", log_dir=self.output_dir)
+
         self.move = MoveFeature(log_dir=self.output_dir)
         self.common_ground = CommonGroundFeature(log_dir=self.output_dir)
 

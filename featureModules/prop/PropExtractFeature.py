@@ -17,6 +17,12 @@ class PropExtractFeature(IFeature):
         model_dir = r'featureModules\prop\data\prop_extraction_model'
         self.model, self.tokenizer = load_model(model_dir)
 
+        self.init_logger(log_dir)
+
+        # map utterance ids to propositions
+        self.prop_lookup = {}
+
+    def init_logger(self, log_dir):
         if log_dir is not None:
             self.logger = Logger(file=log_dir / self.LOG_FILE)
         else:
@@ -24,8 +30,8 @@ class PropExtractFeature(IFeature):
 
         self.logger.write_csv_headers("frame", "utterance_id", "proposition", "utterance_text", "num_filtered_props")
 
-        # map utterance ids to propositions
-        self.prop_lookup = {}
+    def log_prop(self, frame_count, prop_info: PropInfo, text, num_props):
+        self.logger.append_csv(frame_count, prop_info.utterance_id, prop_info.prop, text, num_props)
 
     def processFrame(self, frame, new_utterance_ids: list[int], utterance_lookup: list[UtteranceInfo] | dict[int, UtteranceInfo], frame_count: int, includeText):
         for i in new_utterance_ids:
@@ -39,7 +45,7 @@ class PropExtractFeature(IFeature):
                 prop, num_filtered_props = process_sentence(utterance_info.text, self.model, self.tokenizer, verbose=False)
 
             self.prop_lookup[i] = PropInfo(i, prop)
-            self.logger.append_csv(frame_count, i, prop, utterance_info.text, num_filtered_props)
+            self.log_prop(frame_count, self.prop_lookup[i], utterance_info.text, num_filtered_props)
 
         if includeText:
             cv2.putText(frame, "Prop extract is live", (50,400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)

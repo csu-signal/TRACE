@@ -11,3 +11,6 @@ from featureModules.move.MoveFeature import MoveFeature, rec_common_ground
 from featureModules.objects.ObjectFeature import ObjectFeature
 from featureModules.pose.PoseFeature import PoseFeature
 from featureModules.prop.PropExtractFeature import PropExtractFeature
+
+from featureModules.evaluation.asr import AsrFeatureEval
+from featureModules.evaluation.prop import PropExtractFeatureEval

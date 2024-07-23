@@ -31,9 +31,9 @@ if __name__ == "__main__":
     prof_7_22_run01 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_22\run01")
     prof_7_22_run02 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_22\run02")
 
-    prof: BaseProfile = live_prof
+    # prof: BaseProfile = live_prof
     # prof: BaseProfile = BradyLaptopProfile()
-    # prof: BaseProfile = prof_7_22_run01
+    prof: BaseProfile = prof_7_22_run02
 
     output_directory = Path(prof.get_output_dir())
     processed_frame_dir = output_directory / "processed_frames"
