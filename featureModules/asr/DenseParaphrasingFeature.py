@@ -44,8 +44,7 @@ class DenseParaphrasingFeature(IFeature):
                     key = int(utterance_info.start)
                     while(key < utterance_info.stop):
                         if key in blockCache:
-                            targets = blockCache[key]
-                            targetList = [t.description for t in targets]
+                            targetList = blockCache[key]
 
                             if (demoCount == 1):
                                 if (not demo.plural):

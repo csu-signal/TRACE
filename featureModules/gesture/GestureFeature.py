@@ -142,7 +142,7 @@ class GestureFeature(IFeature):
                                 targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
                                 floor_time = int(time.time())
                                 if(targets):
-                                    self.blockCache[floor_time] = targets
+                                    self.blockCache[floor_time] = [t.description for t in targets]
                                 
                                 descriptions = []
                                 for t in targets:
