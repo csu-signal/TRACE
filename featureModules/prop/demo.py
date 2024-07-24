@@ -58,7 +58,7 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
 
     if len(filtered_common_grounds) > 137:
         print("Using cosine similaroty")
-        model = SentenceTransformer('sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
+        model = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
         cg_cosine_scores = []
         for cg in filtered_common_grounds:
             cosine_score = sentence_fcg_cosine(cg, sentence, model).item()
