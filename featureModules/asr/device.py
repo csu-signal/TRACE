@@ -77,7 +77,7 @@ class PrerecordedDevice(BaseDevice):
     READ_FRAME_COUNT = 512
     SAVE_INTERVAL_SECONDS = 0.5
 
-    def __init__(self, name, path, video_frame_rate=30):
+    def __init__(self, name, path, video_frame_rate):
         super().__init__()
         self.name = name
         self.path = path

@@ -5,20 +5,24 @@ Profiles which can be used by the demo to load different devices
 from abc import ABC, abstractmethod
 import os
 from typing import final
-import config
+from config import PLAYBACK_SKIP_FRAMES, PLAYBACK_TARGET_FPS, K4A_DIR
 from datetime import datetime
 
 from featureModules import BaseDevice, MicDevice, PrerecordedDevice
 
 # tell the script where to find certain dll's for k4a, cuda, etc.
 # body tracking sdk's tools should contain everything
-os.add_dll_directory(config.K4A_DIR)
+os.add_dll_directory(K4A_DIR)
 import azure_kinect
 
 
 class BaseProfile(ABC):
     def finalize(self):
         pass
+
+    @staticmethod
+    def frames_to_video(frame_path, output_path, rate=PLAYBACK_TARGET_FPS):
+        os.system(f"ffmpeg -framerate {rate} -i {frame_path} -c:v libx264 -pix_fmt yuv420p {output_path}")
 
     @abstractmethod
     def get_output_dir(self) -> str:
@@ -49,10 +53,15 @@ class LiveProfile(BaseProfile):
 
 @final
 class RecordedProfile(BaseProfile):
-    def __init__(self, mkv_path: str, audio_info: list[tuple[str, str]], mkv_frame_rate=30):
+    def __init__(
+        self,
+        mkv_path: str,
+        audio_info: list[tuple[str, str]],
+        mkv_frame_rate=30 / (PLAYBACK_SKIP_FRAMES + 1),
+    ):
         self.mkv = mkv_path
         self.audio_info = audio_info
-        self.mkv_fr = mkv_frame_rate
+        self.mkv_frame_rate = mkv_frame_rate
 
         self.audio_inputs = []
 
@@ -71,7 +80,7 @@ class RecordedProfile(BaseProfile):
 
     def get_audio_devices(self) -> list[BaseDevice]:
         return [
-                PrerecordedDevice(name, self.convert_audio(file, index), video_frame_rate=self.mkv_fr)
+                PrerecordedDevice(name, self.convert_audio(file, index), self.mkv_frame_rate)
                 for index, (name,file) in enumerate(self.audio_info)
                 ]
 
@@ -80,8 +89,13 @@ class RecordedProfile(BaseProfile):
 
     def finalize(self):
         # turn frames into video
-        os.system(f"ffmpeg -framerate 30 -i {self.output_dir}\\processed_frames\\frame%8d.png -c:v libx264 -pix_fmt yuv420p {self.video_dir}\\processed_frames.mp4")
-        os.system(f"ffmpeg -framerate 30 -i {self.output_dir}\\raw_frames\\frame%8d.png -c:v libx264 -pix_fmt yuv420p {self.video_dir}\\raw_frames.mp4")
+        os.makedirs(self.video_dir, exist_ok=True)
+        self.frames_to_video(
+                f"{self.output_dir}\\processed_frames\\frame%8d.png",
+                f"{self.video_dir}\\processed_frames.mp4")
+        self.frames_to_video(
+                f"{self.output_dir}\\raw_frames\\frame%8d.png",
+                f"{self.video_dir}\\raw_frames.mp4")
 
         num_audio = len(self.audio_inputs)
         audio_inputs = " ".join([f"-i {file}" for file in self.audio_inputs])

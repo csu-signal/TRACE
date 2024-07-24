@@ -141,6 +141,14 @@ void Playback::update_capture_handle() {
   }
 }
 
+void Playback::skip_frames(int n_frames){
+  for (int i = 0; i < n_frames; i++) {
+    capture_handle.reset();
+    update_capture_handle();
+    frame_count++;
+  }
+}
+
 /*
    Camera implementation
 */

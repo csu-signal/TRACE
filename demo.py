@@ -1,12 +1,16 @@
 import os
 from pathlib import Path
+from config import K4A_DIR, PLAYBACK_SKIP_FRAMES
 
+os.add_dll_directory(K4A_DIR)
+from azure_kinect import Playback
 import cv2 as cv
 
 from feature_manager import FeatureManager
 from input_profile import BaseProfile, BradyLaptopProfile, LiveProfile, RecordedProfile, create_recorded_profile
 
 from featureModules import rec_common_ground
+
 
 
 if __name__ == "__main__":
@@ -31,8 +35,8 @@ if __name__ == "__main__":
     prof_7_22_run01 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_22\run01")
     prof_7_22_run02 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_22\run02")
 
-    prof: BaseProfile = live_prof
-    # prof: BaseProfile = BradyLaptopProfile()
+    # prof: BaseProfile = live_prof
+    prof: BaseProfile = BradyLaptopProfile()
     # prof: BaseProfile = prof_7_22_run02
 
     output_directory = Path(prof.get_output_dir())
@@ -57,6 +61,11 @@ if __name__ == "__main__":
         # exit if 20 frames fail in a row
         if fail_count > 20:
             break
+
+        # skip frames to match target fps
+        if isinstance(device, Playback):
+            device.skip_frames(PLAYBACK_SKIP_FRAMES)
+            frame_count += PLAYBACK_SKIP_FRAMES
 
         # get output from camera or playback
         color_image, depth_image, body_frame_info = device.get_frame()
