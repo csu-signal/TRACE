@@ -27,4 +27,5 @@ dependencies:
     - opensmile==2.5.0
     - transformers==4.42.3
     - silero-vad==5.1
-    - sentence_transformers
+    - sentence-transformers==3.0.1
+    - nltk==3.8.1
