@@ -224,7 +224,7 @@ def is_valid_common_ground(cg, elements):
 def is_valid_individual_match(cg, elements):
     cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
     cg_numbers = [str(num) for num in re.findall(r'\b(?:10|20|30|40|50)\b', cg)]
-
+    
     for color in elements["colors"]:
         for number in elements["numbers"]:
             if color in cg_colors and number in cg_numbers:
