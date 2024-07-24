@@ -14,7 +14,9 @@ PYBIND11_MODULE(azure_kinect, m) {
       .def("get_frame", &Device::get_frame)
       .def("get_calibration_matrices", &Device::get_calibration_matrices);
 
-  py::class_<Playback, Device>(m, "Playback").def(py::init<const char *>());
+  py::class_<Playback, Device>(m, "Playback")
+      .def(py::init<const char *>())
+      .def("skip_frames", &Playback::skip_frames);
 
   py::class_<Camera, Device>(m, "Camera").def(py::init<uint32_t>());
 }

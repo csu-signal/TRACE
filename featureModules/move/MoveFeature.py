@@ -46,15 +46,28 @@ class MoveFeature:
         )
 
         self.class_names = ["STATEMENT", "ACCEPT", "DOUBT"]
+        
+        self.move_lookup: dict[int, MoveInfo] = {}
 
+        self.init_logger(log_dir)
+
+    def init_logger(self, log_dir):
         if log_dir is not None:
             self.logger = Logger(file=log_dir / self.LOG_FILE)
         else:
             self.logger = Logger()
-        self.logger.write_csv_headers("frame", "utterance_id", "move", "move_model_output", "text", "audio_file")
+        self.logger.write_csv_headers("frame", "utterance_id", "statement", "accept", "dobut", "move_model_output", "text", "audio_file")
 
-        self.move_lookup: dict[int, MoveInfo] = {}
-
+    def log_move(self, frame_count, move: MoveInfo, output, text, audio_file):
+        self.logger.append_csv(
+                frame_count,
+                move.utterance_id,
+                "STATEMENT" in move.move,
+                "ACCEPT" in move.move,
+                "DOUBT" in move.move,
+                output,
+                text,
+                audio_file)
 
     def update_bert_embeddings(self, text):
         input_ids = torch.tensor(self.tokenizer.encode(text), device=self.device).unsqueeze(0)
@@ -91,7 +104,7 @@ class MoveFeature:
             move = [self.class_names[idx] for idx, class_present in enumerate(present_class_indices) if class_present]
             self.move_lookup[i] = MoveInfo(i, move)
 
-            self.logger.append_csv(frameIndex, i, move, out, text, audio_file)
+            self.log_move(frameIndex, self.move_lookup[i], out, text, audio_file)
 
         if includeText:
             cv2.putText(frame, "Move classifier is live", (50, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)

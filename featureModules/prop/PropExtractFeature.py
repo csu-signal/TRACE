@@ -5,6 +5,9 @@ from logger import Logger
 from utils import *
 from featureModules.prop.demo import process_sentence, load_model
 
+COLORS = ["red", "blue", "green", "purple", "yellow"]
+NUMBERS = ["10", "20", "30", "40", "50"]
+
 @dataclass
 class PropInfo:
     utterance_id: int
@@ -37,12 +40,12 @@ class PropExtractFeature(IFeature):
         for i in new_utterance_ids:
             utterance_info = utterance_lookup[i]
 
-            colors = ["red", "blue", "green", "purple", "yellow"]
-            numbers = ["10", "20", "30", "40", "50"]
-            if not any(i in utterance_info.text for i in colors + numbers):
-                prop, num_filtered_props = "no prop", 0
-            else:
+            contains_color = any(i in utterance_info.text for i in COLORS)
+            contains_number = any(i in utterance_info.text for i in NUMBERS)
+            if contains_color and contains_number:
                 prop, num_filtered_props = process_sentence(utterance_info.text, self.model, self.tokenizer, verbose=False)
+            else:
+                prop, num_filtered_props = "no prop", 0
 
             self.prop_lookup[i] = PropInfo(i, prop)
             self.log_prop(frame_count, self.prop_lookup[i], utterance_info.text, num_filtered_props)

@@ -11,11 +11,11 @@ class Demonstrative():
         self.plural = plural
 
 demonstratives = [
-    Demonstrative(r"\bthose\b", True), 
-    Demonstrative(r"\bthese\b", True), 
-    Demonstrative(r"\bthis\b", False), 
-    Demonstrative(r"\bthat\b", False), 
-    Demonstrative(r"\bit\b", False)]
+    Demonstrative(r"\b[Tt]hose\b", True), 
+    Demonstrative(r"\b[Tt]hese\b", True), 
+    Demonstrative(r"\b[Tt]his\b", False), 
+    Demonstrative(r"\b[Tt]hat\b", False), 
+    Demonstrative(r"\b[Ii]t\b", False)]
 
 class DenseParaphrasingFeature(IFeature):
     LOG_FILE = "dense_paraphrasing_out.csv"
@@ -29,8 +29,7 @@ class DenseParaphrasingFeature(IFeature):
             self.logger = Logger()
         self.logger.write_csv_headers("frame", "utterance_id", "updated_text", "old_text", "subs_made")
 
-    def processFrame(self, frame, new_utterances: list[int], utterance_lookup: list[UtteranceInfo] | dict[int, UtteranceInfo],
-                             blockCache, frame_count):
+    def processFrame(self, frame, new_utterances: list[int], utterance_lookup: dict[int, UtteranceInfo], blockCache, frame_count):
         clear = False
         for i in new_utterances:
             utterance_info = utterance_lookup[i]
@@ -45,8 +44,7 @@ class DenseParaphrasingFeature(IFeature):
                     key = int(utterance_info.start)
                     while(key < utterance_info.stop):
                         if key in blockCache:
-                            targets = blockCache[key]
-                            targetList = [t.description for t in targets]
+                            targetList = blockCache[key]
 
                             if (demoCount == 1):
                                 if (not demo.plural):
@@ -62,11 +60,11 @@ class DenseParaphrasingFeature(IFeature):
 
                         key+=1
 
-            self.paraphrased_utterance_lookup[i] = UtteranceInfo(
-                    i,
+            self.paraphrased_utterance_lookup[utterance_info.utterance_id] = UtteranceInfo(
+                    utterance_info.utterance_id,
                     frame_count,
                     utterance_info.speaker_id,
-                    utterance_info.text,
+                    text,
                     utterance_info.start,
                     utterance_info.stop,
                     utterance_info.audio_file
@@ -74,7 +72,7 @@ class DenseParaphrasingFeature(IFeature):
 
             self.logger.append_csv(
                     frame_count,
-                    i,
+                    utterance_info.utterance_id,
                     text,
                     utterance_info.text,
                     text.lower() != utterance_info.text.lower()

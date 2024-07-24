@@ -1,16 +1,46 @@
 import torch
 import pandas as pd
+#from featureModules.prop.models import CrossEncoder
 from featureModules.prop.models import CrossEncoder
+import string
 from transformers import AutoTokenizer
+
 from featureModules.prop.demoHelpers import *
 # from featureModules.prop.demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground, \
 # is_valid_individual_match, predict_with_XE, add_special_tokens, get_embeddings, sentence_fcg_cosine
 from transformers import AutoModel, AutoTokenizer
 from sentence_transformers import SentenceTransformer, util
-
+from nltk import word_tokenize, download
+from nltk.corpus import stopwords
+download("stopwords")
+download("punkt")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # device = 'cpu'
+
+def remove_stop_words(utterance):
+    #default stopwords 
+    stop_words = set(stopwords.words('english'))
+    utterance = utterance.lower()
+    #custom stopwords
+    # additional_stop_words = ['so', 'yeah', 'well', 'uh', 'ok', 'now', 'we', 'know', 'that', 'we', 'say', 'mean', 
+    #                          'this', 'think', 'guess', 'just', 'like', 'imagine', 'yes', 'here', 'there', 'so', 'wait','think', 'check']
+    
+    additional_stop_words = ['so', 'yeah', 'well', 'uh', 'ok', 'now', 'we', 'know', 'that', 'we', 'say', 'mean', 
+                             'this', 'think', 'guess', 'just', 'like', 'imagine', 'yes', 'here', 'there', 'let', 
+                             'us', 'make', 'wait', 'looks', 'also', 'would', 'one']
+    stop_words.update(additional_stop_words)
+    
+    # Keep these
+    words_to_exclude = {'not', 'more', 'less', 'no'}
+    stop_words = stop_words - words_to_exclude
+    #print('final stopwords', stop_words)
+    # Tokenize
+    word_tokens = word_tokenize(utterance)
+    filtered_utterance = [w for w in word_tokens if w.lower() not in stop_words and w not in string.punctuation]
+    
+
+    return " ".join(filtered_utterance)
 
 def load_model(model_dir, verbose=False):
     # Load tokenizer with the local files directly
@@ -35,18 +65,22 @@ def load_model(model_dir, verbose=False):
     return model, tokenizer
 
 def process_sentence(sentence, model, tokenizer, verbose=False):
+    sentence = remove_stop_words(sentence)
     #inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
     
     common_grounds_dataSet = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
+    # common_grounds_dataSet = pd.read_csv('data/NormalizedList.csv')
     common_grounds = list(common_grounds_dataSet['Propositions'])
     
     elements = extract_colors_and_numbers(sentence.lower()) #The list of colors / weights in the transcript
+    if 'yellow' in elements["colors"] and '40' in elements["numbers"] and not sentence.strip().endswith('.'):
+        sentence += '.'
     if verbose:
         print(elements)
     filtered_common_grounds = []
     filtered_common_grounds = [cg for cg in common_grounds if is_valid_common_ground(cg, elements)]
     if verbose:
-        print('common_ground', filtered_common_grounds)
+        print('common_ground level 1', filtered_common_grounds)
     if not filtered_common_grounds:  # If no match found, try individual color-number pairs
             filtered_common_grounds = [cg for cg in common_grounds if is_valid_individual_match(cg, elements)]  #If there is no match where only the mentioned colors and weights are present, get the individual combincations 
     
