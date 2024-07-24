@@ -1,5 +1,6 @@
 import torch
 import re
+from sentence_transformers import SentenceTransformer, util
 
 def add_special_tokens(proposition_map):
     for x, y in proposition_map.items():
@@ -225,3 +226,13 @@ def is_valid_individual_match(cg, elements):
             if color in cg_colors and number in cg_numbers:
                 return True
     return False
+
+def get_embeddings(cg, sentence, model):
+    sentence_embeddings = model.encode(sentence, convert_to_tensor=True)
+    cg_embedding = model.encode(cg, convert_to_tensor=True)
+    return sentence_embeddings, cg_embedding
+
+def sentence_fcg_cosine(cg, sentence, model):
+    sentence_embeddings, cg_embedding = get_embeddings(cg, sentence, model)
+    cosine_score = util.cos_sim(sentence_embeddings, cg_embedding)
+    return cosine_score

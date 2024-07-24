@@ -3,8 +3,9 @@ import pandas as pd
 from featureModules.prop.models import CrossEncoder
 from transformers import AutoTokenizer
 from featureModules.prop.demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground, \
-is_valid_individual_match, predict_with_XE, add_special_tokens
+is_valid_individual_match, predict_with_XE, add_special_tokens, get_embeddings, sentence_fcg_cosine
 from transformers import AutoModel, AutoTokenizer
+from sentence_transformers import SentenceTransformer, util
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -55,6 +56,20 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
     if len(filtered_common_grounds) > 100:
         print(f"WARNING: {len(filtered_common_grounds)} common grounds, processing will likely take a long time")
 
+    if len(filtered_common_grounds) > 137:
+        print("Using cosine similaroty")
+        model = SentenceTransformer('sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
+        cg_cosine_scores = []
+        for cg in filtered_common_grounds:
+            cosine_score = sentence_fcg_cosine(cg, sentence, model).item()
+            print(f'Cosine Score is {cosine_score}')
+            cg_cosine_scores.append([sentence, cg, cosine_score])
+        df_cosine_scores = pd.DataFrame(cg_cosine_scores, columns = ['sentence', 'common ground', 'cosine similarity'])
+        highest_score_row = df_cosine_scores.loc[df_cosine_scores['cosine similarity'].idxmax()]
+        highest_score_common_ground = highest_score_row['common ground']
+
+        return highest_score_common_ground, len(filtered_common_grounds)
+
     for cg in filtered_common_grounds:
         cg_with_token = "<m>" + " " + cg + " "  + "</m>"
         trans_with_token = "<m>" + " "+ sentence +" " + "</m>"
@@ -69,8 +84,6 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
         #print(model.end_id)
        
         test_ab, test_ba = tokenize_props(tokenizer,proposition_ids,proposition_map,model.end_id ,max_sentence_len=512, truncate=True)    
-        
-        
         
         cosine_test_scores_ab, cosine_test_scores_ba = predict_with_XE(model, test_ab, test_ba, device, 4,cosine_sim=True)
         cosine_similarity = (cosine_test_scores_ab + cosine_test_scores_ba) /2
