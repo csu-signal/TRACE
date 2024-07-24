@@ -64,8 +64,8 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
             cosine_score = sentence_fcg_cosine(cg, sentence, model).item()
             print(f'Cosine Score is {cosine_score}')
             cg_cosine_scores.append([sentence, cg, cosine_score])
-        df_cosine_scores = pd.DataFrame(cg_cosine_scores, columns = ['sentence', 'common ground', 'cosine similarity'])
-        highest_score_row = df_cosine_scores.loc[df_cosine_scores['cosine similarity'].idxmax()]
+        df_cosine_scores = pd.DataFrame(cg_cosine_scores, columns = ['sentence', 'common ground', 'score'])
+        highest_score_row = df_cosine_scores.loc[df_cosine_scores['score'].idxmax()]
         highest_score_common_ground = highest_score_row['common ground']
 
         return highest_score_common_ground, len(filtered_common_grounds)
