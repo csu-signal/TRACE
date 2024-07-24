@@ -2,8 +2,9 @@ import torch
 import pandas as pd
 from featureModules.prop.models import CrossEncoder
 from transformers import AutoTokenizer
-from featureModules.prop.demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground, \
-is_valid_individual_match, predict_with_XE, add_special_tokens, get_embeddings, sentence_fcg_cosine
+from featureModules.prop.demoHelpers import *
+# from featureModules.prop.demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground, \
+# is_valid_individual_match, predict_with_XE, add_special_tokens, get_embeddings, sentence_fcg_cosine
 from transformers import AutoModel, AutoTokenizer
 from sentence_transformers import SentenceTransformer, util
 
@@ -48,7 +49,6 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
         print('common_ground', filtered_common_grounds)
     if not filtered_common_grounds:  # If no match found, try individual color-number pairs
             filtered_common_grounds = [cg for cg in common_grounds if is_valid_individual_match(cg, elements)]  #If there is no match where only the mentioned colors and weights are present, get the individual combincations 
-    cosine_similarities = []
     
     if verbose:
         print("length of filtered common grounds:", len(filtered_common_grounds))
@@ -57,45 +57,13 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
         print(f"WARNING: {len(filtered_common_grounds)} common grounds, processing will likely take a long time")
 
     if len(filtered_common_grounds) > 137:
-        print("Using cosine similaroty")
-        model = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
-        cg_cosine_scores = []
-        for cg in filtered_common_grounds:
-            cosine_score = sentence_fcg_cosine(cg, sentence, model).item()
-            print(f'Cosine Score is {cosine_score}')
-            cg_cosine_scores.append([sentence, cg, cosine_score])
-        df_cosine_scores = pd.DataFrame(cg_cosine_scores, columns = ['sentence', 'common ground', 'scores'])
-        highest_score_row = df_cosine_scores.loc[df_cosine_scores['scores'].idxmax()]
-        highest_score_common_ground = highest_score_row['common ground']
+        print("Using cosine similarity")
+        return get_simple_cosine(sentence, filtered_common_grounds)
 
-        return highest_score_common_ground, len(filtered_common_grounds)
-
-    for cg in filtered_common_grounds:
-        cg_with_token = "<m>" + " " + cg + " "  + "</m>"
-        trans_with_token = "<m>" + " "+ sentence +" " + "</m>"
-        theIndividualDict = {
-            "transcript": trans_with_token,
-            "common_ground": cg_with_token # match[0] is the common ground text
-        }
-        
-        proposition_map = {0: theIndividualDict} 
-        proposition_ids = [0]
-        tokenizer = tokenizer
-        #print(model.end_id)
-       
-        test_ab, test_ba = tokenize_props(tokenizer,proposition_ids,proposition_map,model.end_id ,max_sentence_len=512, truncate=True)    
-        
-        cosine_test_scores_ab, cosine_test_scores_ba = predict_with_XE(model, test_ab, test_ba, device, 4,cosine_sim=True)
-        cosine_similarity = (cosine_test_scores_ab + cosine_test_scores_ba) /2
-        cosine_similarities.append(cosine_similarity)
+    cosine_similarities = get_cosine_similarities(sentence, filtered_common_grounds, model, device, tokenizer)
     top_matches = sorted(zip(filtered_common_grounds, cosine_similarities), key=lambda x: x[1], reverse=True)[:5]
-    new_rows = []
-    for match in top_matches:
-        new_row = {
-            "transcript": sentence,
-            "common_ground": match[0]  # match[0] is the common ground text
-        }
-        new_rows.append(new_row)
+    new_rows = append_matches(top_matches, sentence)
+
     new_df = pd.DataFrame(new_rows, columns=["transcript", "common_ground"])
     new_df.index.to_list()#the list of indicies in the dict that needs to be tokenized
     

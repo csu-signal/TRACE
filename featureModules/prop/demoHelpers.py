@@ -1,5 +1,6 @@
 import torch
 import re
+import pandas as pd
 from sentence_transformers import SentenceTransformer, util
 
 def add_special_tokens(proposition_map):
@@ -236,3 +237,48 @@ def sentence_fcg_cosine(cg, sentence, model):
     sentence_embeddings, cg_embedding = get_embeddings(cg, sentence, model)
     cosine_score = util.cos_sim(sentence_embeddings, cg_embedding)
     return cosine_score
+
+def append_matches(top_matches, sentence):
+    new_rows = []
+    for match in top_matches:
+        new_row = {
+            "transcript": sentence,
+            "common_ground": match[0]  # match[0] is the common ground text
+        }
+        new_rows.append(new_row)
+    return new_rows
+
+def get_simple_cosine(sentence, filtered_common_grounds):
+    model = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
+    cg_cosine_scores = []
+    for cg in filtered_common_grounds:
+        cosine_score = sentence_fcg_cosine(cg, sentence, model).item()
+        # print(f'Cosine Score is {cosine_score}')
+        cg_cosine_scores.append([sentence, cg, cosine_score])
+    df_cosine_scores = pd.DataFrame(cg_cosine_scores, columns = ['sentence', 'common ground', 'scores'])
+    highest_score_row = df_cosine_scores.loc[df_cosine_scores['scores'].idxmax()]
+    highest_score_common_ground = highest_score_row['common ground']
+
+    return highest_score_common_ground, len(filtered_common_grounds)
+
+def get_cosine_similarities(sentence, filtered_common_grounds, model, device, tokenizer):
+    cosine_similarities = []
+    for cg in filtered_common_grounds:
+        cg_with_token = "<m>" + " " + cg + " "  + "</m>"
+        trans_with_token = "<m>" + " "+ sentence +" " + "</m>"
+        theIndividualDict = {
+            "transcript": trans_with_token,
+            "common_ground": cg_with_token # match[0] is the common ground text
+        }
+        
+        proposition_map = {0: theIndividualDict} 
+        proposition_ids = [0]
+        tokenizer = tokenizer
+        #print(model.end_id)
+       
+        test_ab, test_ba = tokenize_props(tokenizer,proposition_ids,proposition_map,model.end_id ,max_sentence_len=512, truncate=True)    
+        
+        cosine_test_scores_ab, cosine_test_scores_ba = predict_with_XE(model, test_ab, test_ba, device, 4,cosine_sim=True)
+        cosine_similarity = (cosine_test_scores_ab + cosine_test_scores_ba) /2
+        cosine_similarities.append(cosine_similarity)
+    return cosine_similarities
