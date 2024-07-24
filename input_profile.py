@@ -16,8 +16,8 @@ from featureModules import (AsrFeature, AsrFeatureEval, BaseDevice,
                             CommonGroundFeature, DenseParaphrasingFeature,
                             GazeBodyTrackingFeature, GazeFeature,
                             GestureFeature, GestureFeatureEval, MicDevice,
-                            MoveFeature, ObjectFeature, PoseFeature,
-                            PrerecordedDevice, PropExtractFeature,
+                            MoveFeature, MoveFeatureEval, ObjectFeature,
+                            PoseFeature, PrerecordedDevice, PropExtractFeature,
                             PropExtractFeatureEval, rec_common_ground)
 from logger import Logger
 

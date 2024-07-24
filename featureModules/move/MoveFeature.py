@@ -56,15 +56,15 @@ class MoveFeature:
             self.logger = Logger(file=log_dir / self.LOG_FILE)
         else:
             self.logger = Logger()
-        self.logger.write_csv_headers("frame", "utterance_id", "statement", "accept", "dobut", "move_model_output", "text", "audio_file")
+        self.logger.write_csv_headers("frame", "utterance_id", "statement", "accept", "doubt", "move_model_output", "text", "audio_file")
 
     def log_move(self, frame_count, move: MoveInfo, output, text, audio_file):
         self.logger.append_csv(
                 frame_count,
                 move.utterance_id,
-                "STATEMENT" in move.move,
-                "ACCEPT" in move.move,
-                "DOUBT" in move.move,
+                int("STATEMENT" in move.move),
+                int("ACCEPT" in move.move),
+                int("DOUBT" in move.move),
                 output,
                 text,
                 audio_file)

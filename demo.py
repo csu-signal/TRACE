@@ -30,11 +30,11 @@ if __name__ == "__main__":
         ])
 
 
-    prof_7_23_run01 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_23\run01")
-    # prof_7_23_run01 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_23\run01", eval_dir="stats_2024-07-24_12_49_45", eval_asr=True, eval_gesture=True, eval_prop=True)
-    # prof_7_23_run02 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_23\run02")
+    # prof_7_24_run01 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run01")
+    # prof_7_24_run02 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run02")
+    prof_7_24_run01_gt = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run01", eval_dir="run01_gt_input", eval_asr=True, eval_prop=True, eval_move=True, eval_gesture=True)
 
-    prof: BaseProfile = prof_7_23_run01
+    prof: BaseProfile = prof_7_24_run01_gt
     prof.init_features()
 
 
