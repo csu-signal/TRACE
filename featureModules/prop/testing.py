@@ -51,6 +51,7 @@ listOfProp = ["I think yellow is definetely not 40.",
               "I would say that purple is about 30",
               "Blue is the same as the red", 
               "Yellow is noticebly heavier than purple"
+              "Yellow is definitely not 40, it's too heavy."
               ]
 
 #print(remove_stop_words(" Green looks like about 20."))
