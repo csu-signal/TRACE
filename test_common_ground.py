@@ -1,4 +1,4 @@
-from featureModules.move.closure_rules import CommonGround
+from featureModules.common_ground.closure_rules import CommonGround
 
 closure_rules = CommonGround()
 class_names = ["STATEMENT", "ACCEPT", "DOUBT"]

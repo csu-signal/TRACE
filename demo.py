@@ -1,15 +1,14 @@
 import os
+from config import K4A_DIR, PLAYBACK_SKIP_FRAMES
 
+os.add_dll_directory(K4A_DIR)
+from azure_kinect import Playback
 import cv2 as cv
 
-from featureModules import (AsrFeature, BaseDevice, GazeBodyTrackingFeature,
-                            GazeFeature, GestureFeature, MicDevice,
-                            MoveFeature, ObjectFeature, PoseFeature,
-                            PrerecordedDevice, PropExtractFeature, rec_common_ground)
+from profiles import BradyLaptopProfile, LiveProfile, RecordedProfile, create_recorded_profile, TestDenseParaphrasingProfile
+from base_profile import BaseProfile
 
-from gui import Gui
-from logger import Logger
-from demo_profile import BaseProfile, LiveProfile, RecordedProfile, create_recorded_profile
+from featureModules import rec_common_ground
 
 
 if __name__ == "__main__":
@@ -30,57 +29,34 @@ if __name__ == "__main__":
             ("Group 1", r"F:\Weights_Task\Data\Group_01-audio.wav"),
         ])
 
-    prof_7_18_run02 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_18\run02")
-    prof_7_19_run02 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_19\run02")
-    prof_7_19_run03 = create_recorded_profile(r"C:\Users\brady03\Desktop\full_run_7_19\run03")
 
-    # prof: BaseProfile = live_prof
-    prof: BaseProfile = prof_7_18_run02
-    # prof: BaseProfile = prof_7_19_run03
+    # prof_7_24_run01 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run01")
+    # prof_7_24_run02 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run02")
+    # prof_7_24_run01_gt = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run01", eval_dir="run01_gt_input", eval_asr=True, eval_prop=True, eval_move=True, eval_gesture=True)
 
-    gui = Gui()
-    gui.create_buttons()
-
-    output_directory = prof.get_output_dir()
-    processed_frame_dir = f"{output_directory}\\processed_frames"
-    raw_frame_dir = f"{output_directory}\\raw_frames"
-    gesturePath = f"{output_directory}\\gestureOutput.csv"
-    objectPath = f"{output_directory}\\objectOutput.csv"
-    posePath = f"{output_directory}\\poseOutput.csv"
-    gazePath = f"{output_directory}\\gazeOutput.csv"
-    asrPath = f"{output_directory}\\asrOutput.csv"
-    propPath = f"{output_directory}\\propOutput.csv"
-    movePath = f"{output_directory}\\moveOutput.txt"
-    os.makedirs(output_directory, exist_ok=False) # error if directory will get overwritten
-    os.makedirs(processed_frame_dir, exist_ok=False)
-    os.makedirs(raw_frame_dir, exist_ok=False)
+    prof: BaseProfile = TestDenseParaphrasingProfile()
+    prof.init_features()
 
 
-    shift = 7 # TODO what is this?
-
-    gaze = GazeBodyTrackingFeature(shift, csv_log_file=gazePath)
-    gesture = GestureFeature(shift, csv_log_file=gesturePath)
-    objects = ObjectFeature(csv_log_file=objectPath)
-    pose = PoseFeature(csv_log_file=posePath)
-    asr = AsrFeature(prof.get_audio_devices(), n_processors=1, csv_log_file=asrPath)
-    prop = PropExtractFeature(csv_log_file=propPath)
-    move = MoveFeature(txt_log_file=movePath)
-
-    error_logger = Logger(file=f"{output_directory}\\errors.txt", stdout=True)
-    error_logger.clear()
-
-    device = prof.get_camera_device()
+    # get device information
+    device = prof.create_camera_device()
     device_id = 0
     cameraMatrix, rotation, translation, distortion = device.get_calibration_matrices()
 
     fail_count = 0
     frame_count = 0
+    saved_frame_count = 0
     while True:
         # exit if 20 frames fail in a row
         if fail_count > 20:
             break
 
-        gui.update()
+        # skip frames to match target fps
+        if isinstance(device, Playback):
+            device.skip_frames(PLAYBACK_SKIP_FRAMES)
+            frame_count += PLAYBACK_SKIP_FRAMES
+
+        # get output from camera or playback
         color_image, depth_image, body_frame_info = device.get_frame()
         if color_image is None or depth_image is None:
             print(f"DEVICE {device_id}: no color/depth image, skipping frame {frame_count}")
@@ -90,66 +66,30 @@ if __name__ == "__main__":
         else:
             fail_count = 0
 
+        # process images into correct formats
         color_image = color_image[:,:,:3]
         depth = depth_image
-
         framergb = cv.cvtColor(color_image, cv.COLOR_BGR2RGB)
-        frame = cv.cvtColor(color_image, cv.IMREAD_COLOR)
-        cv.imwrite(f"{raw_frame_dir}\\frame{frame_count:08}.png", frame)
+        output_frame = cv.cvtColor(color_image, cv.IMREAD_COLOR)
+        cv.imwrite(f"{prof.raw_frame_dir}\\frame{saved_frame_count:08}.png", output_frame)
 
-        h,w,_ = color_image.shape
         bodies = body_frame_info["bodies"]
 
-        # run features
-        blockStatus = {}
-        blocks = []
+        # run all features
+        prof.processFrame(output_frame, framergb, depth, bodies, rotation, translation, cameraMatrix, distortion, frame_count)
 
-        if(gui.should_process("objects")):
-            blocks = objects.processFrame(framergb, frame_count)
-
-        if(gui.should_process("pose")):
-            pose.processFrame(bodies, frame, frame_count, False)
-
-        try:
-            if(gui.should_process("gaze")):
-                gaze.processFrame( bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count)
-        except:
-            pass
-        
-        if(gui.should_process("gesture")):
-             gesture.processFrame(device_id, bodies, w, h, rotation, translation, cameraMatrix, distortion, frame, framergb, depth, blocks, blockStatus, frame_count, False)
-
-        utterances = []
-        if(gui.should_process("asr")):
-            utterances = asr.processFrame(frame, frame_count, False)
-            if(gui.should_process("gesture")):
-                utterances = gesture.updateDemonstratives(utterances)
-
-        utterances_and_props = []
-        try:
-            if(gui.should_process("prop")):
-                utterances_and_props = prop.processFrame(frame, utterances, frame_count, False)
-        except Exception as e:
-            error_logger.append(f"Frame {frame_count}\nProp extractor\n{utterances}\n{str(e)}\n\n")
-
-        if(gui.should_process("move")):
-            move.processFrame(utterances_and_props, frame, frame_count, False, True)
-
-        cv.putText(frame, "FRAME:" + str(frame_count), (50,50), cv.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv.LINE_AA)
-        #cv.putText(frame, "DEVICE:" + str(int(device_id)), (50,100), cv.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv.LINE_AA)
-
-        frame = cv.resize(frame, (1280, 720))
-        cv.imshow("output", frame)
+        # resize, display, and save output
+        output_frame = cv.resize(output_frame, (1280, 720))
+        cv.imshow("output", output_frame)
         cv.waitKey(1)
-
-        cv.imwrite(f"{processed_frame_dir}\\frame{frame_count:08}.png", frame)
+        cv.imwrite(f"{prof.processed_frame_dir}\\frame{saved_frame_count:08}.png", output_frame)
 
         if cv.getWindowProperty("output", cv.WND_PROP_VISIBLE) == 0:
             break
 
         frame_count += 1
+        saved_frame_count += 1
 
+    # cleanup and generate processed video
     device.close()
-    asr.done.value = True
-
     prof.finalize()

@@ -1,71 +1,36 @@
 from featureModules.IFeature import *
 import mediapipe as mp
 import joblib
+from featureModules.asr.AsrFeature import UtteranceInfo
 from logger import Logger
 from utils import *
 import time
-import re
 
-class Demonstrative():
-    def __init__(self, regex, plural):
-        self.regex = regex
-        self.plural = plural
-
-demonstratives = [
-    Demonstrative(r"\bthose\b", True), 
-    Demonstrative(r"\bthese\b", True), 
-    Demonstrative(r"\bthis\b", False), 
-    Demonstrative(r"\bthat\b", False), 
-    Demonstrative(r"\bit\b", False)]
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.4, min_tracking_confidence= 0)
 
 class GestureFeature(IFeature):
-    def __init__(self, shift, csv_log_file = None):
+    LOG_FILE = "gestureOutput.csv"
+
+    def __init__(self, shift, log_dir = None):
         self.loaded_model = joblib.load(".\\featureModules\\gesture\\bestModel-pointing.pkl") 
         self.devicePoints = {}
         self.shift = shift
         self.blockCache = {}
 
-        self.logger = Logger(file=csv_log_file)
-        self.logger.write_csv_headers("frame_index", "bodyId", "handedness", "targets")
+        self.init_logger(log_dir)
 
-    def updateDemonstratives(self, utterances):
-        clear = False
-        updatedUtterances = []
-        for name, start, stop, text, audio_file in utterances:
-            for demo in demonstratives:
-                demos = re.finditer(demo.regex, text)
-                spanList = [d.span() for d in [*demos]]
-                demoCount = len(spanList)
 
-                if (demoCount > 0):
-                    key = int(start)
-                    while(key < stop):
-                        if key in self.blockCache:
-                            targets = self.blockCache[key]
-                            targetList = [t.description for t in targets]
+    def init_logger(self, log_dir):
+        if log_dir is not None:
+            self.logger = Logger(file=log_dir / self.LOG_FILE)
+        else:
+            self.logger = Logger()
 
-                            if (demoCount == 1):
-                                if (not demo.plural):
-                                    targetList = targetList[0]
-                                    text = re.sub(demo.regex, targetList, text.lower())
-                                else:
-                                    text = re.sub(demo.regex, ', '.join(targetList), text.lower())
-                            else:
-                                for i in range(len(targetList)):
-                                    if i < len(spanList):
-                                        text = re.sub(demo.regex, targetList[i], text.lower()[:spanList[i][1]]) + text.lower()[spanList[i][1]:]
-                            break
+        self.logger.write_csv_headers("frame", "time", "blocks", "body_id", "handedness")
 
-                        key+=1
-            updatedUtterances.append((name, start, stop, text, audio_file)) 
-
-        #TODO when should we clear these cached values?  
-        # if(clear):
-        #     self.blockCache = {} 
-
-        return updatedUtterances
+    def log_gesture(self, frame: int, time: int, descriptions: list[str], body_id, handedness: str):
+        self.logger.append_csv(frame, time, json.dumps(descriptions), body_id, handedness)
 
     def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex, includeText):
         points = []
@@ -113,7 +78,6 @@ class GestureFeature(IFeature):
                 for hand in self.devicePoints[key]:
                     for point in hand:
                         cv2.circle(frame, point, radius=2, thickness= 2, color=(0,255,0))
-        return pointsFound
 
 
     def findHands(self, frame, framergb, bodyId, handedness, box, points, cameraMatrix, dist, depth, blocks, blockStatus, frameIndex):   
@@ -176,11 +140,12 @@ class GestureFeature(IFeature):
 
                                 ## TODO keep track of participant?
                                 targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
+                                floor_time = int(time.time())
                                 if(targets):
-                                    self.blockCache[int(time.time())] = targets
+                                    self.blockCache[floor_time] = [t.description for t in targets]
                                 
                                 descriptions = []
                                 for t in targets:
                                     descriptions.append(t.description)
                                     
-                                self.logger.append_csv(frameIndex, bodyId, handedness.value, descriptions)
+                                self.log_gesture(frameIndex, floor_time, [d.value for d in descriptions], bodyId, handedness.value)

@@ -1,5 +1,7 @@
 import torch
 import re
+import pandas as pd
+from sentence_transformers import SentenceTransformer, util
 
 def add_special_tokens(proposition_map):
     for x, y in proposition_map.items():
@@ -208,7 +210,20 @@ def extract_colors_and_numbers(text):
     return found_elements
 
 
-def is_valid_common_ground(cg, elements):
+def is_valid_common_ground_1(cg, elements):
+    cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
+    cg_numbers = re.findall(r'\b(?:10|20|30|40|50)\b', cg)
+    cg_set = set(cg_colors + cg_numbers)  # Combine and convert to set
+
+    # Combine colors and numbers from the elements dictionary into a set
+    # Assume elements['colors'] and elements['numbers'] are provided as lists
+    element_colors = elements.get("colors", [])
+    element_numbers = [str(num) for num in elements.get("numbers", [])]
+    elements_set = set(element_colors + element_numbers)
+
+    return cg_set == elements_set
+
+def is_valid_common_ground_2(cg, elements):
     cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
     cg_numbers = [str(num) for num in re.findall(r'\b(?:10|20|30|40|50)\b', cg)]
     #print(cg_colors, cg_numbers)
@@ -219,9 +234,64 @@ def is_valid_common_ground(cg, elements):
 def is_valid_individual_match(cg, elements):
     cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
     cg_numbers = [str(num) for num in re.findall(r'\b(?:10|20|30|40|50)\b', cg)]
-
+    
     for color in elements["colors"]:
         for number in elements["numbers"]:
             if color in cg_colors and number in cg_numbers:
                 return True
     return False
+
+def get_embeddings(cg, sentence, model):
+    sentence_embeddings = model.encode(sentence, convert_to_tensor=True)
+    cg_embedding = model.encode(cg, convert_to_tensor=True)
+    return sentence_embeddings, cg_embedding
+
+def sentence_fcg_cosine(cg, sentence, model):
+    sentence_embeddings, cg_embedding = get_embeddings(cg, sentence, model)
+    cosine_score = util.cos_sim(sentence_embeddings, cg_embedding)
+    return cosine_score
+
+def append_matches(top_matches, sentence):
+    new_rows = []
+    for match in top_matches:
+        new_row = {
+            "transcript": sentence,
+            "common_ground": match[0]  # match[0] is the common ground text
+        }
+        new_rows.append(new_row)
+    return new_rows
+
+def get_simple_cosine(sentence, filtered_common_grounds):
+    model = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
+    cg_cosine_scores = []
+    for cg in filtered_common_grounds:
+        cosine_score = sentence_fcg_cosine(cg, sentence, model).item()
+        # print(f'Cosine Score is {cosine_score}')
+        cg_cosine_scores.append([sentence, cg, cosine_score])
+    df_cosine_scores = pd.DataFrame(cg_cosine_scores, columns = ['sentence', 'common ground', 'scores'])
+    highest_score_row = df_cosine_scores.loc[df_cosine_scores['scores'].idxmax()]
+    highest_score_common_ground = highest_score_row['common ground']
+
+    return highest_score_common_ground, len(filtered_common_grounds)
+
+def get_cosine_similarities(sentence, filtered_common_grounds, model, device, tokenizer):
+    cosine_similarities = []
+    for cg in filtered_common_grounds:
+        cg_with_token = "<m>" + " " + cg + " "  + "</m>"
+        trans_with_token = "<m>" + " "+ sentence +" " + "</m>"
+        theIndividualDict = {
+            "transcript": trans_with_token,
+            "common_ground": cg_with_token # match[0] is the common ground text
+        }
+        
+        proposition_map = {0: theIndividualDict} 
+        proposition_ids = [0]
+        tokenizer = tokenizer
+        #print(model.end_id)
+       
+        test_ab, test_ba = tokenize_props(tokenizer,proposition_ids,proposition_map,model.end_id ,max_sentence_len=512, truncate=True)    
+        
+        cosine_test_scores_ab, cosine_test_scores_ba = predict_with_XE(model, test_ab, test_ba, device, 4,cosine_sim=True)
+        cosine_similarity = (cosine_test_scores_ab + cosine_test_scores_ba) /2
+        cosine_similarities.append(cosine_similarity)
+    return cosine_similarities

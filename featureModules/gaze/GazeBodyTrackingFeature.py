@@ -7,9 +7,16 @@ from utils import ConeShape, Joint, checkBlocks, convert2D
 
 
 class GazeBodyTrackingFeature(IFeature):
-    def __init__(self, shift, csv_log_file=None):
+    LOG_FILE = "gazeOutput.csv"
+
+    def __init__(self, shift, log_dir=None):
         self.shift = shift
-        self.logger = Logger(file=csv_log_file)
+
+        if log_dir is not None:
+            self.logger = Logger(file=log_dir / self.LOG_FILE)
+        else:
+            self.logger = Logger()
+
         self.logger.write_csv_headers("frame_index", "bodyId", "targets")
 
     def world_to_camera_coords(self, r_w, rotation, translation):

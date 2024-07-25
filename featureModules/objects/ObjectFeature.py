@@ -12,7 +12,9 @@ detection_threshold = 0.6
 RESIZE_TO = (512, 512)
 
 class ObjectFeature(IFeature):
-    def __init__(self, csv_log_file=None):
+    LOG_FILE = "objectOutput.csv"
+
+    def __init__(self, log_dir=None):
         print("Torch Device " + str(DEVICE))
         print("Python version " + str(platform.python_version()))
         # load the best objectModel and trained weights - for object detection
@@ -21,7 +23,11 @@ class ObjectFeature(IFeature):
         self.objectModel.load_state_dict(checkpoint['model_state_dict'], strict=False)
         self.objectModel.to(DEVICE).eval()
 
-        self.logger = Logger(file=csv_log_file)
+        if log_dir is not None:
+            self.logger = Logger(file=log_dir / self.LOG_FILE)
+        else:
+            self.logger = Logger()
+
         self.logger.write_csv_headers("frame_index", "objects")
 
     def processFrame(self, framergb, frameIndex):
@@ -64,8 +70,10 @@ class ObjectFeature(IFeature):
                 p2 = [box[2], box[3]]
                 
                 block = Block(float(class_name), p1, p2)
-                blocks.append(block)
-                blockDescriptions.append(block.description)
+
+                if(block.description != GamrTarget.SCALE):
+                    blocks.append(block)
+                    blockDescriptions.append(block.description)
                 # print("Found Block: " + str(block.description))
                 # print(str(p1))
                 # print(str(p2))

@@ -888,7 +888,7 @@ class Block:
             self.description = GamrTarget.PURPLE_BLOCK
 
         if(description == 5):
-            self.description = GamrTarget.MYSTERY_BLOCK
+            self.description = GamrTarget.SCALE
 
     def toJSON(self):
         return {
