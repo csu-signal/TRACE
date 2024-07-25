@@ -70,8 +70,10 @@ class ObjectFeature(IFeature):
                 p2 = [box[2], box[3]]
                 
                 block = Block(float(class_name), p1, p2)
-                blocks.append(block)
-                blockDescriptions.append(block.description)
+
+                if(block.description != GamrTarget.SCALE):
+                    blocks.append(block)
+                    blockDescriptions.append(block.description)
                 # print("Found Block: " + str(block.description))
                 # print(str(p1))
                 # print(str(p2))
