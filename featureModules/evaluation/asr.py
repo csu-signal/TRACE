@@ -35,6 +35,7 @@ class AsrFeatureEval(AsrFeature):
                 self.utterance_lookup[utterance.utterance_id] = utterance
                 self.new_utterance_by_frame[utterance.frame].append(utterance.utterance_id)
 
+        self.current_frame = 0
 
     def get_chunk_file(self, file):
         if not self.chunks_in_input_dir:
@@ -44,7 +45,10 @@ class AsrFeatureEval(AsrFeature):
             return str(self.input_dir / "chunks" / chunk_name)
 
     def processFrame(self, frame, frame_count, includeText):
-        new_utterance_ids = self.new_utterance_by_frame[frame_count]
+        new_utterance_ids = []
+        while self.current_frame <= frame_count:
+            new_utterance_ids += self.new_utterance_by_frame[self.current_frame]
+            self.current_frame += 1
 
         for i in new_utterance_ids:
             utterance = self.utterance_lookup[i]

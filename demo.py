@@ -5,10 +5,10 @@ os.add_dll_directory(K4A_DIR)
 from azure_kinect import Playback
 import cv2 as cv
 
-from input_profile import BaseProfile, BradyLaptopProfile, LiveProfile, RecordedProfile, create_recorded_profile
+from profiles import BradyLaptopProfile, LiveProfile, RecordedProfile, create_recorded_profile, TestDenseParaphrasingProfile
+from base_profile import BaseProfile
 
 from featureModules import rec_common_ground
-
 
 
 if __name__ == "__main__":
@@ -32,9 +32,9 @@ if __name__ == "__main__":
 
     # prof_7_24_run01 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run01")
     # prof_7_24_run02 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run02")
-    prof_7_24_run01_gt = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run01", eval_dir="run01_gt_input", eval_asr=True, eval_prop=True, eval_move=True, eval_gesture=True)
+    # prof_7_24_run01_gt = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run01", eval_dir="run01_gt_input", eval_asr=True, eval_prop=True, eval_move=True, eval_gesture=True)
 
-    prof: BaseProfile = prof_7_24_run01_gt
+    prof: BaseProfile = TestDenseParaphrasingProfile()
     prof.init_features()
 
 

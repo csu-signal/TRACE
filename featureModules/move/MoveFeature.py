@@ -9,11 +9,15 @@ from featureModules.move.move_classifier import (
 from transformers import BertTokenizer, BertModel
 import cv2
 import opensmile
+import os
 
 from logger import Logger
 
 # length of the sequence (the utterance of interest + 3 previous utterances for context)
 UTTERANCE_HISTORY_LEN = 4
+
+BERT_EMBEDDING_DIM = 768
+SMILE_EMBEDDING_DIM = 88
 
 @dataclass
 class MoveInfo:
@@ -39,10 +43,10 @@ class MoveFeature:
         )
 
         self.bert_embedding_history = torch.zeros(
-            (UTTERANCE_HISTORY_LEN, 768), device=self.device
+            (UTTERANCE_HISTORY_LEN, BERT_EMBEDDING_DIM), device=self.device
         )
         self.opensmile_embedding_history = torch.zeros(
-            (UTTERANCE_HISTORY_LEN, 88), device=self.device
+            (UTTERANCE_HISTORY_LEN, SMILE_EMBEDDING_DIM), device=self.device
         )
 
         self.class_names = ["STATEMENT", "ACCEPT", "DOUBT"]
@@ -76,7 +80,10 @@ class MoveFeature:
         self.bert_embedding_history = torch.cat([self.bert_embedding_history[1:], cls_embeddings])
 
     def update_smile_embeddings(self, audio_file):
-        embedding = torch.tensor(self.smile.process_file(audio_file).to_numpy(), device=self.device)
+        if os.path.exists(audio_file):
+            embedding = torch.tensor(self.smile.process_file(audio_file).to_numpy(), device=self.device)
+        else:
+            embedding = torch.zeros(1, SMILE_EMBEDDING_DIM, device=self.device)
 
         self.opensmile_embedding_history = torch.cat([self.opensmile_embedding_history[1:], embedding])
 
