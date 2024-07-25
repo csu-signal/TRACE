@@ -35,30 +35,43 @@ class DenseParaphrasingFeature(IFeature):
             utterance_info = utterance_lookup[i]
             text = utterance_info.text
 
+            pluralDemos = []
+            singularDemos = []
             for demo in demonstratives:
                 demos = re.finditer(demo.regex, text)
-                spanList = [d.span() for d in [*demos]]
+                if (len(demos) > 0):
+                    if(demo.plural):
+                        pluralDemos.append(demo)
+                    else:
+                        singularDemos.append(demo)
+
+
+            if (len(pluralDemos) > 0):
+                key = int(utterance_info.start)
+                while(key < utterance_info.stop):
+                    if key in blockCache:
+                        targetList = blockCache[key]
+                        for p in pluralDemos:
+                            text = re.sub(p.regex, ', '.join(targetList), text.lower())
+                        break
+                    key+=1
+                
+            if (len(singularDemos) > 0): 
+                spanList = [d.span() for d in [*singularDemos]]
                 demoCount = len(spanList)
-
-                if (demoCount > 0):
-                    key = int(utterance_info.start)
-                    while(key < utterance_info.stop):
-                        if key in blockCache:
-                            targetList = blockCache[key]
-
-                            if (demoCount == 1):
-                                if (not demo.plural):
-                                    targetList = targetList[0]
-                                    text = re.sub(demo.regex, targetList, text.lower())
-                                else:
-                                    text = re.sub(demo.regex, ', '.join(targetList), text.lower())
-                            else:
-                                for i in range(len(targetList)):
-                                    if i < len(spanList):
-                                        text = re.sub(demo.regex, targetList[i], text.lower()[:spanList[i][1]]) + text.lower()[spanList[i][1]:]
-                            break
-
-                        key+=1
+ 
+                key = int(utterance_info.start)
+                while(key < utterance_info.stop):
+                    if key in blockCache:
+                        targetList = blockCache[key]
+                        if (demoCount == 1):
+                            text = re.sub(singularDemos[0].regex, targetList[0], text.lower())
+                        else:
+                            for i in range(len(targetList)):
+                                if i < len(spanList):
+                                    text = re.sub(singularDemos[i].regex, targetList[i], text.lower()[:spanList[i][1]]) + text.lower()[spanList[i][1]:]
+                        break
+                    key+=1
 
             self.paraphrased_utterance_lookup[utterance_info.utterance_id] = UtteranceInfo(
                     utterance_info.utterance_id,
