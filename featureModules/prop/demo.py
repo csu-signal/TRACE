@@ -1,11 +1,13 @@
 import torch
 import pandas as pd
+from models import CrossEncoder
 #from featureModules.prop.models import CrossEncoder
-from featureModules.prop.models import CrossEncoder
 import string
 from transformers import AutoTokenizer
 
-from featureModules.prop.demoHelpers import *
+#from featureModules.prop.demoHelpers import *
+from demoHelpers import *
+
 # from featureModules.prop.demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground, \
 # is_valid_individual_match, predict_with_XE, add_special_tokens, get_embeddings, sentence_fcg_cosine
 from transformers import AutoModel, AutoTokenizer
@@ -68,21 +70,25 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
     sentence = remove_stop_words(sentence)
     #inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
     
-    common_grounds_dataSet = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
-    # common_grounds_dataSet = pd.read_csv('data/NormalizedList.csv')
+    #common_grounds_dataSet = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
+    common_grounds_dataSet = pd.read_csv('data/NormalizedList.csv')
     common_grounds = list(common_grounds_dataSet['Propositions'])
     
     elements = extract_colors_and_numbers(sentence.lower()) #The list of colors / weights in the transcript
-    if 'yellow' in elements["colors"] and '40' in elements["numbers"] and not sentence.strip().endswith('.'):
-        sentence += '.'
+    # if 'yellow' in elements["colors"] and '40' in elements["numbers"] and not sentence.strip().endswith('.'):
+    #     sentence += '.'
     if verbose:
         print(elements)
     filtered_common_grounds = []
-    filtered_common_grounds = [cg for cg in common_grounds if is_valid_common_ground(cg, elements)]
+    filtered_common_grounds = [cg for cg in common_grounds if is_valid_common_ground_1(cg, elements)]
     if verbose:
         print('common_ground level 1', filtered_common_grounds)
     if not filtered_common_grounds:  # If no match found, try individual color-number pairs
-            filtered_common_grounds = [cg for cg in common_grounds if is_valid_individual_match(cg, elements)]  #If there is no match where only the mentioned colors and weights are present, get the individual combincations 
+            print('We are in level 2')
+            filtered_common_grounds = [cg for cg in common_grounds if is_valid_common_ground_2(cg, elements)]  #If there is no match where only the mentioned colors and weights are present, get the individual combincations 
+    
+    if not filtered_common_grounds:  # If no match found, try individual color-number pairs
+            filtered_common_grounds = [cg for cg in common_grounds if is_valid_individual_match(cg, elements)]
     
     if verbose:
         print("length of filtered common grounds:", len(filtered_common_grounds))

@@ -25,7 +25,8 @@ while True:
     
 '''
 
-listOfProp = ["I think yellow is definetely not 40.", 
+listOfProp = ["blue is not 10",
+              "I think yellow is definetely not 40.", 
               " Red 10",
               "It seems like blue might be about the same as the red",
               " Green looks like about 20.",
@@ -38,7 +39,7 @@ listOfProp = ["I think yellow is definetely not 40.",
               "I would guess the yellow would be  equal to 40 ",
               "Did we say purple was 30 ",
               "Yeah, purple is 30, green is 20, and blue and red are both 10.",
-              "The yellow block doesn't weigh 40 grams",
+              "the yellow is not 40",
               "Yeah, green plus purple is yellow ",
               "purple is more than 20",
               "purple is not 20",
@@ -50,12 +51,14 @@ listOfProp = ["I think yellow is definetely not 40.",
               "Lets double check that purple is also not 20",
               "I would say that purple is about 30",
               "Blue is the same as the red", 
-              "Yellow is noticebly heavier than purple"
-              "Yellow is definitely not 40, it's too heavy."
+              "Yellow is noticebly heavier than purple",
+              "Yellow is definitely not 40, it's too heavy.",
+              "30"
               ]
 
 #print(remove_stop_words(" Green looks like about 20."))
 for sentences in listOfProp:
+    
     prop, num_filtered_props = process_sentence(sentences, model, tokenizer, verbose=False)
     print("UTT: ", sentences, "CLEAN:" , remove_stop_words(sentences) , "PROP: ", prop)
     
