@@ -1,0 +1,7 @@
+frame,time,blocks,body_id,handedness
+0,5,"[""red""]",,
+1,15,"[""blue""]",,
+2,25,"[""red"", ""green""]",,
+3,35,"[""red"", ""blue""]",,
+4,45,"[""red"", ""blue"", ""green""]",,
+5,55,"[""blue"", ""green""]",,

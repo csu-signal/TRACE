@@ -1,7 +1,0 @@
-frame,time,blocks,body_id,handedness
-0,5,"[""red""]",-1,Left
-0,15,"[""blue""]",-1,Left
-0,25,"[""red"", ""green""]",-1,Left
-0,35,"[""red"", ""blue""]",-1,Left
-0,45,"[""red"", ""blue"", ""green""]",-1,Left
-0,55,"[""blue"", ""green""]",-1,Left

@@ -20,8 +20,12 @@ class GestureFeatureEval(GestureFeature):
                     self.blockCache[time] = targets
                 self.gestures_by_frame[frame] = (frame, time, targets)
 
+        self.current_frame = 0
+
 
     def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex, includeText):
-        if frameIndex in self.gestures_by_frame:
-            _, time, targets = self.gestures_by_frame[frameIndex]
-            self.log_gesture(frameIndex, time, targets, -1, "-1")
+        while self.current_frame <= frameIndex:
+            if self.current_frame in self.gestures_by_frame:
+                _, time, targets = self.gestures_by_frame[self.current_frame]
+                self.log_gesture(self.current_frame, time, targets, -1, "-1")
+            self.current_frame += 1

@@ -109,7 +109,9 @@ class BradyLaptopProfile(BaseProfile):
 @final
 class TestDenseParaphrasingProfile(BaseProfile):
     def __init__(self) -> None:
-        super().__init__(eval_dir="dense_paraphrasing_test_input", eval_asr=True, eval_gesture=True)
+        super().__init__(eval_dir="test_inputs\\dense_paraphrasing",
+                         eval_asr=True,
+                         eval_gesture=True)
 
     def create_camera_device(self):
         return FakeCamera()
