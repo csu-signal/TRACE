@@ -6,16 +6,16 @@ import re
 from logger import Logger
 
 class Demonstrative():
-    def __init__(self, regex, plural):
-        self.regex = regex
+    def __init__(self, text, plural):
+        self.text = text
         self.plural = plural
 
 demonstratives = [
-    Demonstrative(r"\b[Tt]hose\b", True), 
-    Demonstrative(r"\b[Tt]hese\b", True), 
-    Demonstrative(r"\b[Tt]his\b", False), 
-    Demonstrative(r"\b[Tt]hat\b", False), 
-    Demonstrative(r"\b[Ii]t\b", False)]
+    Demonstrative("those", True), 
+    Demonstrative("these", True), 
+    Demonstrative("this", False), 
+    Demonstrative("that", False), 
+    Demonstrative("it", False)]
 
 class DenseParaphrasingFeature(IFeature):
     LOG_FILE = "dense_paraphrasing_out.csv"
@@ -35,43 +35,20 @@ class DenseParaphrasingFeature(IFeature):
             utterance_info = utterance_lookup[i]
             text = utterance_info.text
 
-            pluralDemos = []
-            singularDemos = []
-            for demo in demonstratives:
-                demos = re.finditer(demo.regex, text)
-                if (len(demos) > 0):
-                    if(demo.plural):
-                        pluralDemos.append(demo)
-                    else:
-                        singularDemos.append(demo)
+            plural_demo_regex = r"\b(" + "|".join([d.text for d in demonstratives if d.plural]) + r")\b"
+            singlular_demo_regex = r"\b(" + "|".join([d.text for d in demonstratives if not d.plural]) + r")\b"
 
+            key = int(utterance_info.start)
+            while key < utterance_info.stop:
+                if key in blockCache and len(blockCache[key]) > 0:
+                    targets = blockCache[key]
 
-            if (len(pluralDemos) > 0):
-                key = int(utterance_info.start)
-                while(key < utterance_info.stop):
-                    if key in blockCache:
-                        targetList = blockCache[key]
-                        for p in pluralDemos:
-                            text = re.sub(p.regex, ', '.join(targetList), text.lower())
-                        break
-                    key+=1
-                
-            if (len(singularDemos) > 0): 
-                spanList = [d.span() for d in [*singularDemos]]
-                demoCount = len(spanList)
- 
-                key = int(utterance_info.start)
-                while(key < utterance_info.stop):
-                    if key in blockCache:
-                        targetList = blockCache[key]
-                        if (demoCount == 1):
-                            text = re.sub(singularDemos[0].regex, targetList[0], text.lower())
-                        else:
-                            for i in range(len(targetList)):
-                                if i < len(spanList):
-                                    text = re.sub(singularDemos[i].regex, targetList[i], text.lower()[:spanList[i][1]]) + text.lower()[spanList[i][1]:]
-                        break
-                    key+=1
+                    text = re.sub(plural_demo_regex, ", ".join(targets), text, count=1, flags=re.IGNORECASE)
+
+                    for i in range(len(targets)):
+                        text = re.sub(singlular_demo_regex, targets[i], text, count=1, flags=re.IGNORECASE)
+
+                key+=1
 
             self.paraphrased_utterance_lookup[utterance_info.utterance_id] = UtteranceInfo(
                     utterance_info.utterance_id,
