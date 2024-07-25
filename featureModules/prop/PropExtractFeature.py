@@ -42,7 +42,7 @@ class PropExtractFeature(IFeature):
 
             contains_color = any(i in utterance_info.text for i in COLORS)
             contains_number = any(i in utterance_info.text for i in NUMBERS)
-            if contains_color and contains_number:
+            if contains_color or contains_number:
                 prop, num_filtered_props = process_sentence(utterance_info.text, self.model, self.tokenizer, verbose=False)
             else:
                 prop, num_filtered_props = "no prop", 0
