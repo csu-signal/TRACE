@@ -6,6 +6,7 @@ import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
+from time import time
 from tkinter import Checkbutton, IntVar, Tk
 
 import cv2 as cv
@@ -70,6 +71,8 @@ class BaseProfile(ABC):
 
         self._create_buttons()
 
+        timestamp_offset = time()
+
         self.objects = ObjectFeature(log_dir=self.output_dir)
 
         shift = 7 # TODO what is this?
@@ -78,14 +81,14 @@ class BaseProfile(ABC):
         if self.eval_gesture:
             self.gesture = GestureFeatureEval(self.eval_dir, log_dir=self.output_dir)
         else:
-            self.gesture = GestureFeature(shift, log_dir=self.output_dir)
+            self.gesture = GestureFeature(timestamp_offset, shift, log_dir=self.output_dir)
 
         self.pose = PoseFeature(log_dir=self.output_dir)
 
         if self.eval_asr:
             self.asr = AsrFeatureEval(self.eval_dir, chunks_in_input_dir=True, log_dir=self.output_dir)
         else:
-            self.asr = AsrFeature(self.create_audio_devices(), n_processors=1, log_dir=self.output_dir)
+            self.asr = AsrFeature(self.create_audio_devices(), timestamp_offset, n_processors=1, log_dir=self.output_dir)
 
         self.dense_paraphrasing = DenseParaphrasingFeature(log_dir=self.output_dir)
 
