@@ -10,3 +10,4 @@ class EvaluationConfig:
     asr: bool = False
     prop: bool = False
     move: bool = False
+    fallback_audio: str | Path | None = None # add to processed frames in the end

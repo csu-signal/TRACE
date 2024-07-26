@@ -69,11 +69,14 @@ class RecordedProfile(BaseProfile):
         num_audio = len(self.audio_inputs)
         audio_inputs = " ".join([f"-i {file}" for file in self.audio_inputs])
 
-        # combine all audio recordings
-        os.system(f"ffmpeg {audio_inputs} -filter_complex amix=inputs={num_audio}:duration=shortest {self.video_dir}\\audio-combined.wav")
+        if num_audio > 0:
+            # combine all audio recordings
+            os.system(f"ffmpeg {audio_inputs} -filter_complex amix=inputs={num_audio}:duration=shortest {self.video_dir}\\audio-combined.wav")
 
-        # add audio to video
-        os.system(f"ffmpeg -i {self.video_dir}\\processed_frames.mp4 -i {self.video_dir}\\audio-combined.wav -map 0:v -map 1:a -c:v copy -shortest {self.video_dir}\\final.mp4")
+            # add audio to video
+            os.system(f"ffmpeg -i {self.video_dir}\\processed_frames.mp4 -i {self.video_dir}\\audio-combined.wav -map 0:v -map 1:a -c:v copy -shortest {self.video_dir}\\final.mp4")
+        elif self.eval is not None and self.eval.fallback_audio is not None:
+            os.system(f"ffmpeg -i {self.video_dir}\\processed_frames.mp4 -i {self.eval.fallback_audio} -map 0:v -map 1:a -c:v copy -shortest {self.video_dir}\\final.mp4")
 
         print(f"saved video as {self.video_dir}\\final.mp4")
 
@@ -92,6 +95,9 @@ def create_recorded_profile(path, eval_config=None):
 # TODO: remove later
 @final
 class BradyLaptopProfile(BaseProfile):
+    def __init__(self):
+        super().__init__(eval_config=None)
+
     def create_camera_device(self):
         return azure_kinect.Playback(r"C:\Users\brady\Desktop\Group_01-master.mkv")
 

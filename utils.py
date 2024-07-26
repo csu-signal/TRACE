@@ -1008,3 +1008,5 @@ def convertTimestamp(seconds):
      
     return "%d:%02d:%02d" % (hour, minutes, seconds)
 
+def get_frame_bin(frame):
+    return frame // 30

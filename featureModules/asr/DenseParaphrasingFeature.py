@@ -4,6 +4,7 @@ from featureModules.asr.AsrFeature import UtteranceInfo
 import re
 
 from logger import Logger
+from utils import get_frame_bin
 
 class Demonstrative():
     def __init__(self, text, plural):
@@ -38,8 +39,9 @@ class DenseParaphrasingFeature(IFeature):
             plural_demo_regex = r"\b(" + "|".join([d.text for d in demonstratives if d.plural]) + r")\b"
             singlular_demo_regex = r"\b(" + "|".join([d.text for d in demonstratives if not d.plural]) + r")\b"
 
-            key = int(utterance_info.start)
-            while key < utterance_info.stop:
+            key = get_frame_bin(utterance_info.start_frame)
+            stop_bin = get_frame_bin(utterance_info.stop_frame)
+            while key <= stop_bin:
                 if key in blockCache and len(blockCache[key]) > 0:
                     targets = blockCache[key]
 
@@ -55,8 +57,8 @@ class DenseParaphrasingFeature(IFeature):
                     frame_count,
                     utterance_info.speaker_id,
                     text,
-                    utterance_info.start,
-                    utterance_info.stop,
+                    utterance_info.start_frame,
+                    utterance_info.stop_frame,
                     utterance_info.audio_file
                 )
 

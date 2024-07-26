@@ -4,7 +4,6 @@ import joblib
 from featureModules.asr.AsrFeature import UtteranceInfo
 from logger import Logger
 from utils import *
-import time
 
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_confidence=0.4, min_tracking_confidence= 0)
@@ -27,10 +26,10 @@ class GestureFeature(IFeature):
         else:
             self.logger = Logger()
 
-        self.logger.write_csv_headers("frame", "time", "blocks", "body_id", "handedness")
+        self.logger.write_csv_headers("frame", "blocks", "body_id", "handedness")
 
-    def log_gesture(self, frame: int, time: int, descriptions: list[str], body_id, handedness: str):
-        self.logger.append_csv(frame, time, json.dumps(descriptions), body_id, handedness)
+    def log_gesture(self, frame: int, descriptions: list[str], body_id, handedness: str):
+        self.logger.append_csv(frame, json.dumps(descriptions), body_id, handedness)
 
     def processFrame(self, deviceId, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex, includeText):
         points = []
@@ -140,12 +139,12 @@ class GestureFeature(IFeature):
 
                                 ## TODO keep track of participant?
                                 targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
-                                floor_time = int(time.time())
+                                frame_bin = get_frame_bin(frameIndex)
                                 if(targets):
-                                    self.blockCache[floor_time] = [t.description for t in targets]
+                                    self.blockCache[frame_bin] = [t.description for t in targets]
                                 
                                 descriptions = []
                                 for t in targets:
                                     descriptions.append(t.description)
                                     
-                                self.log_gesture(frameIndex, floor_time, [d.value for d in descriptions], bodyId, handedness.value)
+                                self.log_gesture(frameIndex, [d.value for d in descriptions], bodyId, handedness.value)

@@ -20,8 +20,8 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 @dataclass
 class AsrUtteranceData:
     id: str
-    start: float
-    stop: float
+    start_time: float
+    stop_time: float
     audio_file: str
 
 def select_audio_device():
@@ -67,8 +67,8 @@ def build_utterances(
         data = builder_queue.get()
         id, start, stop, frames, sample_rate, sample_width, channels = (
             data.id,
-            data.start,
-            data.stop,
+            data.start_time,
+            data.stop_time,
             data.frames,
             data.sample_rate,
             data.sample_width,
@@ -128,7 +128,7 @@ def process_utterances(queue: "mp.Queue[AsrUtteranceData]", done, print_output=F
 
     while not done.value:
         data = queue.get()
-        name, start, stop, chunk_file = data.id, data.start, data.stop, data.audio_file
+        name, start_time, stop_time, chunk_file = data.id, data.start_time, data.stop_time, data.audio_file
         
         segments, info = model.transcribe(chunk_file, language="en")
         transcription = " ".join(segment.text for segment in segments if segment.no_speech_prob < 0.5)  # Join segments into a single string
@@ -137,17 +137,17 @@ def process_utterances(queue: "mp.Queue[AsrUtteranceData]", done, print_output=F
             print(f'{name}: {transcription}')
 
         if output_queue is not None:
-            output_queue.put((name, start, stop, transcription, chunk_file))
+            output_queue.put((name, start_time, stop_time, transcription, chunk_file))
 
 
 @dataclass
 class UtteranceInfo:
     utterance_id: int
-    frame: int
+    frame_received: int
     speaker_id: str
     text: str
-    start: float
-    stop: float
+    start_frame: int
+    stop_frame: int
     audio_file: str | Path
 
 class AsrFeature(IFeature):
@@ -181,27 +181,27 @@ class AsrFeature(IFeature):
         else:
             self.logger = Logger()
 
-        self.logger.write_csv_headers("utterance_id", "frame", "speaker_id", "text", "start", "stop", "audio_file")
+        self.logger.write_csv_headers("utterance_id", "frame_received", "speaker_id", "text", "start_frame", "stop_frame", "audio_file")
 
     def log_utterance(self, ut: UtteranceInfo):
-        self.logger.append_csv(ut.utterance_id, ut.frame, ut.speaker_id, ut.text, ut.start, ut.stop, ut.audio_file)
+        self.logger.append_csv(ut.utterance_id, ut.frame_received, ut.speaker_id, ut.text, ut.start_frame, ut.stop_frame, ut.audio_file)
 
-    def processFrame(self, frame, frame_count, includeText):
+    def processFrame(self, frame, frame_count, time_to_frame, includeText):
         new_utterance_ids = []
 
         for speaker, device in self.device_lookup.items():
             device.handle_frame(frame_count)
 
         while not self.asr_output_queue.empty():
-            speaker, start, stop, text, audio_file = self.asr_output_queue.get()
+            speaker, start_time, stop_time, text, audio_file = self.asr_output_queue.get()
             if len(text.strip()) > 0:
                 utterance = UtteranceInfo(
                         len(self.utterance_lookup),
                         frame_count,
                         speaker,
                         text,
-                        start,
-                        stop,
+                        time_to_frame(start_time),
+                        time_to_frame(stop_time),
                         audio_file
                     )
                 self.utterance_lookup[utterance.utterance_id] = utterance
