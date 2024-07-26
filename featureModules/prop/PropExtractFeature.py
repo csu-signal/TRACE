@@ -24,7 +24,6 @@ class PropExtractFeature(IFeature):
         model_dir = r'featureModules\prop\data\prop_extraction_model'
         self.model, self.tokenizer = load_model(model_dir)
         self.bert = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
-        self.embeddings = get_pickle()        self.bert = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
         self.embeddings = get_pickle()
         self.init_logger(log_dir)
 
