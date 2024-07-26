@@ -1,5 +1,7 @@
 import torch
 import re
+import os
+import pickle
 import pandas as pd
 from sentence_transformers import SentenceTransformer, util
 
@@ -14,10 +16,7 @@ def add_special_tokens(proposition_map):
     return proposition_map
 
 
-
-
 def tokenize_props(tokenizer, proposition_ids, proposition_map, m_end, max_sentence_len=1024, truncate=True):
-    
     if max_sentence_len is None:
         max_sentence_len = tokenizer.model_max_length
 
@@ -41,6 +40,7 @@ def tokenize_props(tokenizer, proposition_ids, proposition_map, m_end, max_sente
         instance_ba = make_instance(sentence_b, sentence_a)
         pairwise_bert_instances_ba.append(instance_ba)
 
+
     def truncate_with_mentions(input_ids):
         input_ids_truncated = []
         for input_id in input_ids:
@@ -54,6 +54,7 @@ def tokenize_props(tokenizer, proposition_ids, proposition_map, m_end, max_sente
             input_ids_truncated.append(in_truncated)
 
         return torch.LongTensor(input_ids_truncated)
+
 
     def ab_tokenized(pair_wise_instances):
         instances_a, instances_b = zip(*pair_wise_instances)
@@ -97,7 +98,6 @@ def tokenize_props(tokenizer, proposition_ids, proposition_map, m_end, max_sente
                         'position_ids': torch.arange(tokenized_ba_input_ids.shape[-1]).expand(tokenized_ba_input_ids.shape)}
 
     return tokenized_ab, tokenized_ba    
-    
 
 
 def get_arg_attention_mask(input_ids, parallel_model):
@@ -155,6 +155,7 @@ def get_arg_attention_mask(input_ids, parallel_model):
     arg2 = msk_2_ar.int() * msk_3_ar.int()
 
     return attention_mask_g, arg1, arg2
+
 
 def forward_ab(parallel_model, ab_dict, device, indices, lm_only=False, cosine_sim =False):
     batch_tensor_ab = ab_dict['input_ids'][indices, :].to(device)
@@ -223,6 +224,7 @@ def is_valid_common_ground_1(cg, elements):
 
     return cg_set == elements_set
 
+
 def is_valid_common_ground_2(cg, elements):
     cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
     cg_numbers = [str(num) for num in re.findall(r'\b(?:10|20|30|40|50)\b', cg)]
@@ -230,6 +232,7 @@ def is_valid_common_ground_2(cg, elements):
     color_match = not elements["colors"] or set(cg_colors) == set(elements["colors"])
     number_match = not elements["numbers"] or set(cg_numbers) == set(elements["numbers"])
     return color_match and number_match
+
 
 def is_valid_individual_match(cg, elements):
     cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
@@ -241,15 +244,48 @@ def is_valid_individual_match(cg, elements):
                 return True
     return False
 
-def get_embeddings(cg, sentence, model):
-    sentence_embeddings = model.encode(sentence, convert_to_tensor=True)
-    cg_embedding = model.encode(cg, convert_to_tensor=True)
-    return sentence_embeddings, cg_embedding
 
-def sentence_fcg_cosine(cg, sentence, model):
-    sentence_embeddings, cg_embedding = get_embeddings(cg, sentence, model)
-    cosine_score = util.cos_sim(sentence_embeddings, cg_embedding)
+def get_pickle():
+    emb_path = './cg_embeddings.pkl'
+    if os.path.isfile(emb_path):
+        with open(emb_path, 'rb') as file:
+            embeddings = pickle.load(file)
+    else:
+        embeddings = {}
+    return embeddings
+
+
+def get_cg_embeddings(filtered_common_grounds, bert, embeddings):
+    existing_cgs = set(embeddings.keys())
+    new_cg = [i for i in filtered_common_grounds not in existing_cgs]
+    if len(new_cg) == 0:
+        return embeddings
+    
+    emb_path = './cg_embeddings.pkl'
+    temp_embeddings = {}
+    instance_cg = []
+    
+    for cg in new_cg:
+        if cg not in instance_cg:
+            emb = bert.encode(cg, convert_to_tensor=True)
+            temp_embeddings[cg] = emb
+            instance_cg.append(cg)
+    
+        embeddings.update(temp_embeddings)
+        with open(emb_path, 'wb') as write:
+            pickle.dump(embeddings, write)
+    return embeddings
+
+
+def sentence_fcg_cosine(cg_embedding, sentence_embedding):
+    cosine_score = util.cos_sim(sentence_embedding, cg_embedding)
     return cosine_score
+
+
+def get_sentence_embedding(sentence, bert):
+    sentence_embedding = bert.encode(sentence, convert_to_tensor=True)
+    return sentence_embedding
+
 
 def append_matches(top_matches, sentence):
     new_rows = []
@@ -261,18 +297,20 @@ def append_matches(top_matches, sentence):
         new_rows.append(new_row)
     return new_rows
 
-def get_simple_cosine(sentence, filtered_common_grounds):
-    model = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
+
+def get_simple_cosine(sentence, filtered_common_grounds, bert, embeddings):
     cg_cosine_scores = []
+    embeddings = get_cg_embeddings(filtered_common_grounds, bert, embeddings)
+    sentence_embedding = get_sentence_embedding(sentence, bert)
     for cg in filtered_common_grounds:
-        cosine_score = sentence_fcg_cosine(cg, sentence, model).item()
-        # print(f'Cosine Score is {cosine_score}')
+        cosine_score = sentence_fcg_cosine(embeddings[cg], sentence_embedding).item()
         cg_cosine_scores.append([sentence, cg, cosine_score])
     df_cosine_scores = pd.DataFrame(cg_cosine_scores, columns = ['sentence', 'common ground', 'scores'])
     highest_score_row = df_cosine_scores.loc[df_cosine_scores['scores'].idxmax()]
     highest_score_common_ground = highest_score_row['common ground']
 
     return highest_score_common_ground, len(filtered_common_grounds)
+
 
 def get_cosine_similarities(sentence, filtered_common_grounds, model, device, tokenizer):
     cosine_similarities = []
