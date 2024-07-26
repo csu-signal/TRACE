@@ -42,7 +42,7 @@ if __name__ == "__main__":
             r"F:\brady_recording_tests\full_run_7_25\run03",
             EvaluationConfig("input_run_03_ground_truth", gesture=True, asr=True))
 
-    prof: BaseProfile = prof_7_25_run03_gt_asr_gesture
+    prof: BaseProfile = TestDenseParaphrasingProfile()
     prof.init_features()
 
 

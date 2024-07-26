@@ -18,8 +18,9 @@ from featureModules import (AsrFeature, AsrFeatureEval, BaseDevice,
                             GazeBodyTrackingFeature, GazeFeature,
                             GestureFeature, GestureFeatureEval, MicDevice,
                             MoveFeature, MoveFeatureEval, ObjectFeature,
-                            PoseFeature, PrerecordedDevice, PropExtractFeature,
-                            PropExtractFeatureEval, rec_common_ground)
+                            ObjectFeatureEval, PoseFeature, PrerecordedDevice,
+                            PropExtractFeature, PropExtractFeatureEval,
+                            rec_common_ground)
 from featureModules.evaluation.eval_config import EvaluationConfig
 from logger import Logger
 
@@ -27,6 +28,7 @@ from logger import Logger
 # body tracking sdk's tools should contain everything
 os.add_dll_directory(K4A_DIR)
 import azure_kinect
+
 
 # TODO: This could probably be written more efficiently, memory usage will get very large
 class FrameTimeConverter:
@@ -98,7 +100,10 @@ class BaseProfile(ABC):
 
         self._create_buttons()
 
-        self.objects = ObjectFeature(log_dir=self.output_dir)
+        if self.eval is not None and self.eval.objects:
+            self.objects = ObjectFeatureEval(self.eval_dir, log_dir=self.output_dir)
+        else:
+            self.objects = ObjectFeature(log_dir=self.output_dir)
 
         shift = 7 # TODO what is this?
         self.gaze = GazeBodyTrackingFeature(shift, log_dir=self.output_dir)

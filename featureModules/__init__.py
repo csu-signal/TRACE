@@ -16,3 +16,4 @@ from featureModules.evaluation.asr import AsrFeatureEval
 from featureModules.evaluation.prop import PropExtractFeatureEval
 from featureModules.evaluation.gesture import GestureFeatureEval
 from featureModules.evaluation.move import MoveFeatureEval
+from featureModules.evaluation.object import ObjectFeatureEval

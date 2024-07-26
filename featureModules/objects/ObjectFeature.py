@@ -23,12 +23,25 @@ class ObjectFeature(IFeature):
         self.objectModel.load_state_dict(checkpoint['model_state_dict'], strict=False)
         self.objectModel.to(DEVICE).eval()
 
+        self.init_logger(log_dir)
+
+    def init_logger(self, log_dir):
         if log_dir is not None:
             self.logger = Logger(file=log_dir / self.LOG_FILE)
         else:
             self.logger = Logger()
 
-        self.logger.write_csv_headers("frame_index", "objects")
+        self.logger.write_csv_headers("frame_index", "class", "p10", "p11", "p20", "p21")
+
+    def log_block(self, frame_index, block: Block):
+        self.logger.append_csv(
+                frame_index,
+                block.description.value,
+                block.p1[0],
+                block.p1[1],
+                block.p2[0],
+                block.p2[1]
+        )
 
     def processFrame(self, framergb, frameIndex):
         blocks = []
@@ -73,9 +86,10 @@ class ObjectFeature(IFeature):
 
                 if(block.description != GamrTarget.SCALE):
                     blocks.append(block)
+                    self.log_block(frameIndex, block)
+
                     blockDescriptions.append(block.description)
                 # print("Found Block: " + str(block.description))
                 # print(str(p1))
                 # print(str(p2))
-        self.logger.append_csv(frameIndex, blockDescriptions)
         return blocks
