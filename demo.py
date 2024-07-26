@@ -1,5 +1,6 @@
 import os
 from config import K4A_DIR, PLAYBACK_SKIP_FRAMES
+from featureModules.evaluation.eval_config import EvaluationConfig
 
 os.add_dll_directory(K4A_DIR)
 from azure_kinect import Playback
@@ -31,9 +32,15 @@ if __name__ == "__main__":
 
 
     prof_7_25_run03 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_25\run03")
-    prof_7_25_run03_gt_asr = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_25\run03", eval_dir="input_run_03_ground_truth", eval_asr=True)
-    prof_7_25_run03_gt_gesture = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_25\run03", eval_dir="input_run_03_ground_truth", eval_gesture=True)
-    prof_7_25_run03_gt_asr_gesture = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_25\run03", eval_dir="input_run_03_ground_truth", eval_asr=True, eval_gesture=True)
+    prof_7_25_run03_gt_asr = create_recorded_profile(
+            r"F:\brady_recording_tests\full_run_7_25\run03",
+            EvaluationConfig("input_run_03_ground_truth", asr=True))
+    prof_7_25_run03_gt_gesture = create_recorded_profile(
+            r"F:\brady_recording_tests\full_run_7_25\run03",
+            EvaluationConfig("input_run_03_ground_truth", gesture=True))
+    prof_7_25_run03_gt_asr_gesture = create_recorded_profile(
+            r"F:\brady_recording_tests\full_run_7_25\run03",
+            EvaluationConfig("input_run_03_ground_truth", gesture=True, asr=True))
 
     prof: BaseProfile = prof_7_25_run03_gt_asr_gesture
     prof.init_features()

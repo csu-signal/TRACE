@@ -12,8 +12,7 @@ hands = mpHands.Hands(max_num_hands=1, static_image_mode= True, min_detection_co
 class GestureFeature(IFeature):
     LOG_FILE = "gestureOutput.csv"
 
-    def __init__(self, timestamp_offset, shift, log_dir = None):
-        self.timestamp_offset = timestamp_offset
+    def __init__(self, shift, log_dir = None):
         self.loaded_model = joblib.load(".\\featureModules\\gesture\\bestModel-pointing.pkl") 
         self.devicePoints = {}
         self.shift = shift
@@ -141,7 +140,7 @@ class GestureFeature(IFeature):
 
                                 ## TODO keep track of participant?
                                 targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
-                                floor_time = int(time.time() - self.timestamp_offset)
+                                floor_time = int(time.time())
                                 if(targets):
                                     self.blockCache[floor_time] = [t.description for t in targets]
                                 

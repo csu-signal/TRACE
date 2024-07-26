@@ -153,15 +153,13 @@ class UtteranceInfo:
 class AsrFeature(IFeature):
     LOG_FILE = "asrOutput.csv"
     
-    def __init__(self, devices: list[BaseDevice], timestamp_offset, n_processors=1, log_dir=None):
+    def __init__(self, devices: list[BaseDevice], n_processors=1, log_dir=None):
         """
         devices should be of the form [(name, index), ...]
         """
         self.device_lookup = {d.get_id():d for d in devices}
         self.asr_output_queue = mp.Queue()
         
-        self.timestamp_offset = timestamp_offset
-
         utterance_builder_queue = mp.Queue()
         utterance_processor_queue = mp.Queue()
         self.done = mp.Value(c_bool, False)
@@ -202,8 +200,8 @@ class AsrFeature(IFeature):
                         frame_count,
                         speaker,
                         text,
-                        start - self.timestamp_offset,
-                        stop - self.timestamp_offset,
+                        start,
+                        stop,
                         audio_file
                     )
                 self.utterance_lookup[utterance.utterance_id] = utterance

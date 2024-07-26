@@ -20,6 +20,7 @@ from featureModules import (AsrFeature, AsrFeatureEval, BaseDevice,
                             MoveFeature, MoveFeatureEval, ObjectFeature,
                             PoseFeature, PrerecordedDevice, PropExtractFeature,
                             PropExtractFeatureEval, rec_common_ground)
+from featureModules.evaluation.eval_config import EvaluationConfig
 from logger import Logger
 
 # tell the script where to find certain dll's for k4a, cuda, etc.
@@ -27,15 +28,10 @@ from logger import Logger
 os.add_dll_directory(K4A_DIR)
 import azure_kinect
 
-
 class BaseProfile(ABC):
     def __init__(
             self,
-            eval_dir=None,
-            eval_asr=False,
-            eval_prop=False,
-            eval_gesture=False,
-            eval_move=False,
+            eval_config: EvaluationConfig|None,
         ) -> None:
         self.output_dir = Path(f"stats_{str(datetime.now().strftime('%Y-%m-%d_%H_%M_%S'))}")
         self.video_dir = self.output_dir / "video_files"
@@ -44,13 +40,8 @@ class BaseProfile(ABC):
         for i in (self.output_dir, self.video_dir, self.processed_frame_dir, self.raw_frame_dir):
             os.makedirs(i, exist_ok=True)
 
-        self.eval_dir = Path(eval_dir) if eval_dir is not None else None
-        self.eval_asr = eval_asr
-        self.eval_prop = eval_prop
-        self.eval_gesture = eval_gesture
-        self.eval_move = eval_move
-        if self.eval_asr or self.eval_prop or self.eval_gesture or self.eval_move:
-            assert self.eval_dir is not None, "No evaluation directory provided"
+        self.use_eval = eval_config is not None
+        self.eval = eval_config
 
     def init_features(self):
         self.root = Tk()
@@ -71,34 +62,32 @@ class BaseProfile(ABC):
 
         self._create_buttons()
 
-        timestamp_offset = time()
-
         self.objects = ObjectFeature(log_dir=self.output_dir)
 
         shift = 7 # TODO what is this?
         self.gaze = GazeBodyTrackingFeature(shift, log_dir=self.output_dir)
 
-        if self.eval_gesture:
-            self.gesture = GestureFeatureEval(self.eval_dir, log_dir=self.output_dir)
+        if self.eval is not None and self.eval.gesture:
+            self.gesture = GestureFeatureEval(self.eval.directory, log_dir=self.output_dir)
         else:
-            self.gesture = GestureFeature(timestamp_offset, shift, log_dir=self.output_dir)
+            self.gesture = GestureFeature(shift, log_dir=self.output_dir)
 
         self.pose = PoseFeature(log_dir=self.output_dir)
 
-        if self.eval_asr:
-            self.asr = AsrFeatureEval(self.eval_dir, chunks_in_input_dir=True, log_dir=self.output_dir)
+        if self.eval is not None and self.eval.asr:
+            self.asr = AsrFeatureEval(self.eval.directory, chunks_in_input_dir=True, log_dir=self.output_dir)
         else:
-            self.asr = AsrFeature(self.create_audio_devices(), timestamp_offset, n_processors=1, log_dir=self.output_dir)
+            self.asr = AsrFeature(self.create_audio_devices(), n_processors=1, log_dir=self.output_dir)
 
         self.dense_paraphrasing = DenseParaphrasingFeature(log_dir=self.output_dir)
 
-        if self.eval_prop:
-            self.prop = PropExtractFeatureEval(self.eval_dir, log_dir=self.output_dir)
+        if self.eval is not None and self.eval.prop:
+            self.prop = PropExtractFeatureEval(self.eval.directory, log_dir=self.output_dir)
         else:
             self.prop = PropExtractFeature(log_dir=self.output_dir)
 
-        if self.eval_move:
-            self.move = MoveFeatureEval(self.eval_dir, log_dir=self.output_dir)
+        if self.eval is not None and self.eval.move:
+            self.move = MoveFeatureEval(self.eval.directory, log_dir=self.output_dir)
         else:
             self.move = MoveFeature(log_dir=self.output_dir)
 

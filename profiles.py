@@ -12,6 +12,7 @@ from config import K4A_DIR
 from fake_camera import FakeCamera
 from featureModules import BaseDevice, MicDevice, PrerecordedDevice
 from base_profile import BaseProfile
+from featureModules.evaluation.eval_config import EvaluationConfig
 
 # tell the script where to find certain dll's for k4a, cuda, etc.
 # body tracking sdk's tools should contain everything
@@ -21,7 +22,7 @@ import azure_kinect
 @final
 class LiveProfile(BaseProfile):
     def __init__(self, mic_info: list[tuple[str, int]]):
-        super().__init__(eval_dir=None)
+        super().__init__(eval_config=None)
         self.mic_info = mic_info
 
     def create_camera_device(self):
@@ -36,19 +37,10 @@ class RecordedProfile(BaseProfile):
         self,
         mkv_path: str,
         audio_info: list[tuple[str, str]],
+        eval_config: EvaluationConfig | None = None,
         mkv_frame_rate=30,
-        eval_dir=None,
-        eval_asr=False,
-        eval_prop=False,
-        eval_gesture=False,
-        eval_move=False,
     ):
-        super().__init__(
-                eval_dir=eval_dir,
-                eval_asr=eval_asr,
-                eval_prop=eval_prop,
-                eval_gesture=eval_gesture,
-                eval_move=eval_move)
+        super().__init__(eval_config)
         self.mkv = mkv_path
         self.audio_info = audio_info
         self.mkv_frame_rate = mkv_frame_rate
@@ -85,7 +77,7 @@ class RecordedProfile(BaseProfile):
 
         print(f"saved video as {self.video_dir}\\final.mp4")
 
-def create_recorded_profile(path, **kwargs):
+def create_recorded_profile(path, eval_config=None):
     return RecordedProfile(
         rf"{path}-master.mkv",
         [
@@ -93,7 +85,7 @@ def create_recorded_profile(path, **kwargs):
             # ("Austin", rf"{path}-audio2.wav"),
             # ("Mariah", rf"{path}-audio3.wav"),
         ],
-        **kwargs
+        eval_config
     )
 
 
@@ -109,9 +101,7 @@ class BradyLaptopProfile(BaseProfile):
 @final
 class TestDenseParaphrasingProfile(BaseProfile):
     def __init__(self) -> None:
-        super().__init__(eval_dir="test_inputs\\dense_paraphrasing",
-                         eval_asr=True,
-                         eval_gesture=True)
+        super().__init__(EvaluationConfig(directory="test_inputs\\dense_paraphrasing", asr=True, gesture=True))
 
     def create_camera_device(self):
         return FakeCamera()
