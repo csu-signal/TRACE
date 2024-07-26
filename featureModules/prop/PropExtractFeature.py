@@ -1,11 +1,10 @@
+import pickle
 from dataclasses import dataclass
 from featureModules.IFeature import *
 from featureModules.asr.AsrFeature import UtteranceInfo
 from logger import Logger
 from utils import *
 from featureModules.prop.demo import process_sentence, load_model
-from sentence_transformers import SentenceTransformer
-from featureModules.prop.demoHelpers import get_cg_embeddings, get_pickle
 from sentence_transformers import SentenceTransformer
 from featureModules.prop.demoHelpers import get_cg_embeddings, get_pickle
 
@@ -24,8 +23,9 @@ class PropExtractFeature(IFeature):
         model_dir = r'featureModules\prop\data\prop_extraction_model'
         self.model, self.tokenizer = load_model(model_dir)
         self.bert = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
-        self.embeddings = get_pickle()
         self.init_logger(log_dir)
+        self.embeddings = get_pickle(self.bert)
+        
 
         # map utterance ids to propositions
         self.prop_lookup = {}

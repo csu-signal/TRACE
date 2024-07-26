@@ -245,35 +245,27 @@ def is_valid_individual_match(cg, elements):
     return False
 
 
-def get_pickle():
+def get_pickle(bert):
     emb_path = './cg_embeddings.pkl'
     if os.path.isfile(emb_path):
         with open(emb_path, 'rb') as file:
             embeddings = pickle.load(file)
     else:
-        embeddings = {}
+        cg_data = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
+        props = list(cg_data['Propositions'])
+        embeddings = get_cg_embeddings(props, bert, {})
+        with open(emb_path, 'wb') as write:
+            pickle.dump(embeddings, write)
     return embeddings
 
 
 def get_cg_embeddings(filtered_common_grounds, bert, embeddings):
-    existing_cgs = set(embeddings.keys())
-    new_cg = [i for i in filtered_common_grounds not in existing_cgs]
-    if len(new_cg) == 0:
-        return embeddings
-    
     emb_path = './cg_embeddings.pkl'
-    temp_embeddings = {}
-    instance_cg = []
     
-    for cg in new_cg:
-        if cg not in instance_cg:
-            emb = bert.encode(cg, convert_to_tensor=True)
-            temp_embeddings[cg] = emb
-            instance_cg.append(cg)
-    
-        embeddings.update(temp_embeddings)
-        with open(emb_path, 'wb') as write:
-            pickle.dump(embeddings, write)
+    for cg in filtered_common_grounds:
+        emb = bert.encode(cg, convert_to_tensor=True)
+        embeddings[cg] = emb
+        
     return embeddings
 
 
@@ -300,7 +292,7 @@ def append_matches(top_matches, sentence):
 
 def get_simple_cosine(sentence, filtered_common_grounds, bert, embeddings):
     cg_cosine_scores = []
-    embeddings = get_cg_embeddings(filtered_common_grounds, bert, embeddings)
+    #embeddings = get_cg_embeddings(filtered_common_grounds, bert, embeddings)
     sentence_embedding = get_sentence_embedding(sentence, bert)
     for cg in filtered_common_grounds:
         cosine_score = sentence_fcg_cosine(embeddings[cg], sentence_embedding).item()

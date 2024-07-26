@@ -9,7 +9,7 @@ from featureModules.prop.demoHelpers import *
 model_dir = r'featureModules\prop\data\prop_extraction_model'
 model, tokenizer = load_model(model_dir)
 bert = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
-embeddings = get_pickle()
+embeddings = get_pickle(bert)
 
 while True:
     text = input("enter phrase: ")
