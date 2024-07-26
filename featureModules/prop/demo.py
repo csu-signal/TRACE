@@ -1,15 +1,9 @@
 import torch
 import pandas as pd
-# from models import CrossEncoder
 from featureModules.prop.models import CrossEncoder
 import string
 from transformers import AutoTokenizer
-
 from featureModules.prop.demoHelpers import *
-# from demoHelpers import *
-
-# from featureModules.prop.demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground, \
-# is_valid_individual_match, predict_with_XE, add_special_tokens, get_embeddings, sentence_fcg_cosine
 from transformers import AutoModel, AutoTokenizer
 from sentence_transformers import SentenceTransformer, util
 from nltk import word_tokenize, download
@@ -66,7 +60,7 @@ def load_model(model_dir, verbose=False):
         print(tokenizer.vocab['</m>']) 
     return model, tokenizer
 
-def process_sentence(sentence, model, tokenizer, verbose=False):
+def process_sentence(sentence, model, tokenizer, bert, embeddings, verbose=False):
     sentence = remove_stop_words(sentence)
     #inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
     
@@ -98,7 +92,7 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
 
     if len(filtered_common_grounds) > 137:
         print("Using cosine similarity")
-        return get_simple_cosine(sentence, filtered_common_grounds)
+        return get_simple_cosine(sentence, filtered_common_grounds, bert, embeddings)
 
     cosine_similarities = get_cosine_similarities(sentence, filtered_common_grounds, model, device, tokenizer)
     top_matches = sorted(zip(filtered_common_grounds, cosine_similarities), key=lambda x: x[1], reverse=True)[:5]

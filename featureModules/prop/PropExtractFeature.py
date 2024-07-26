@@ -1,9 +1,12 @@
+import pickle
 from dataclasses import dataclass
 from featureModules.IFeature import *
 from featureModules.asr.AsrFeature import UtteranceInfo
 from logger import Logger
 from utils import *
 from featureModules.prop.demo import process_sentence, load_model
+from sentence_transformers import SentenceTransformer
+from featureModules.prop.demoHelpers import get_cg_embeddings, get_pickle
 
 COLORS = ["red", "blue", "green", "purple", "yellow"]
 NUMBERS = ["10", "20", "30", "40", "50"]
@@ -19,8 +22,10 @@ class PropExtractFeature(IFeature):
     def __init__(self, log_dir=None):
         model_dir = r'featureModules\prop\data\prop_extraction_model'
         self.model, self.tokenizer = load_model(model_dir)
-
+        self.bert = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
         self.init_logger(log_dir)
+        self.embeddings = get_pickle(self.bert)
+        
 
         # map utterance ids to propositions
         self.prop_lookup = {}
@@ -43,7 +48,7 @@ class PropExtractFeature(IFeature):
             contains_color = any(i in utterance_info.text for i in COLORS)
             contains_number = any(i in utterance_info.text for i in NUMBERS)
             if contains_color or contains_number:
-                prop, num_filtered_props = process_sentence(utterance_info.text, self.model, self.tokenizer, verbose=False)
+                prop, num_filtered_props = process_sentence(utterance_info.text, self.model, self.tokenizer, self.bert, self.embeddings, verbose=False)
             else:
                 prop, num_filtered_props = "no prop", 0
 
