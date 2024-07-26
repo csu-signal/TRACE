@@ -30,11 +30,12 @@ if __name__ == "__main__":
         ])
 
 
-    # prof_7_24_run01 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run01")
-    # prof_7_24_run02 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run02")
-    # prof_7_24_run01_gt = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_24\run01", eval_dir="run01_gt_input", eval_asr=True, eval_prop=True, eval_move=True, eval_gesture=True)
+    prof_7_25_run03 = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_25\run03")
+    prof_7_25_run03_gt_asr = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_25\run03", eval_dir="input_run_03_ground_truth", eval_asr=True)
+    prof_7_25_run03_gt_gesture = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_25\run03", eval_dir="input_run_03_ground_truth", eval_gesture=True)
+    prof_7_25_run03_gt_asr_gesture = create_recorded_profile(r"F:\brady_recording_tests\full_run_7_25\run03", eval_dir="input_run_03_ground_truth", eval_asr=True, eval_gesture=True)
 
-    prof: BaseProfile = TestDenseParaphrasingProfile()
+    prof: BaseProfile = prof_7_25_run03_gt_asr_gesture
     prof.init_features()
 
 
