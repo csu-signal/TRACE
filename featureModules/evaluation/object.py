@@ -4,22 +4,6 @@ import csv
 
 from utils import Block, GamrTarget
 
-# from Block definition in utils.py
-def str_to_gamr_float(s):
-    match s:
-        case "red":
-            return 0
-        case "blue":
-            return 3
-        case "green":
-            return 2
-        case "purple":
-            return 4
-        case "yellow":
-            return 1
-        case _:
-            raise ValueError("string does not correspond to a target")
-
 class ObjectFeatureEval(ObjectFeature):
     def __init__(self, input_dir, log_dir=None):
         self.init_logger(log_dir)
@@ -32,7 +16,7 @@ class ObjectFeatureEval(ObjectFeature):
             for row in reader:
                 data = {i:j for i,j in zip(keys, row)}
                 frame_index = int(data["frame_index"])
-                class_gamr = str_to_gamr_float(data["class"])
+                class_gamr = int(data["class"])
                 p10 = float(data["p10"])
                 p11 = float(data["p11"])
                 p20 = float(data["p20"])

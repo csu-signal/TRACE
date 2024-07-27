@@ -6,7 +6,7 @@ os.add_dll_directory(K4A_DIR)
 from azure_kinect import Playback
 import cv2 as cv
 
-from profiles import BradyLaptopProfile, LiveProfile, RecordedProfile, create_recorded_profile, TestDenseParaphrasingProfile
+from profiles import BradyLaptopProfile, LiveProfile, RecordedProfile, create_recorded_profile, TestDenseParaphrasingProfile, create_wtd_eval_profiles
 from base_profile import BaseProfile
 
 from featureModules import rec_common_ground
@@ -20,22 +20,14 @@ if __name__ == "__main__":
     #     ])
 
 
-    # group1 = RecordedProfile(
-    #     r"F:\Weights_Task\Data\Fib_weights_original_videos\Group_01-master.mkv",
-    #     [
-    #         ("Group 1", r"F:\Weights_Task\Data\Group_01-audio.wav"),
+    # live_prof = LiveProfile([
+    #     ("Group", 6),
     #     ])
 
 
-    live_prof = LiveProfile([
-        ("Group", 6),
-        ])
-
-
-    profiles = [
-        create_recorded_profile(r"F:\brady_recording_tests\full_run_7_26\run02", output_dir="output_7_26_run_02"),
-        create_recorded_profile(r"F:\brady_recording_tests\full_run_7_26\run03", output_dir="output_7_26_run_03")
-    ]
+    profiles = []
+    for group in [1,2,4,5]:
+        profiles += create_wtd_eval_profiles(group, "wtd_inputs", "wtd_outputs")
 
     for prof in profiles:
         prof.init_features()

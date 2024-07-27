@@ -17,6 +17,7 @@ class GestureFeatureEval(GestureFeature):
             keys = next(reader)
             for row in reader:
                 data = {i:j for i,j in zip(keys, row)}
+                print(data["blocks"])
                 targets = json.loads(data["blocks"])
                 frame = int(data["frame"])
                 if len(targets) > 0:

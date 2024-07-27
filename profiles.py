@@ -116,3 +116,23 @@ class TestDenseParaphrasingProfile(BaseProfile):
 
     def create_audio_devices(self):
         return []
+
+def create_wtd_eval_profiles(group, input_dir, output_dir):
+    mkv = rf"F:\Weights_Task\Data\Fib_weights_original_videos\Group_{group:02}-master.mkv"
+    audio = rf"F:\Weights_Task\Data\Group_{group:02}-audio.wav"
+
+    eval_config_kwargs  = [
+        {"asr": True, "gesture": True, "objects": True},
+    ]
+
+    profiles = []
+    for kwargs in eval_config_kwargs:
+        config = EvaluationConfig(f"{input_dir}\\group{group}", **kwargs, fallback_audio=audio)
+        prof = RecordedProfile(
+                mkv,
+                [(f"Group {group}", audio)],
+                eval_config=config,
+                output_dir=f"{output_dir}\\group{group}")
+        profiles.append(prof)
+
+    return profiles
