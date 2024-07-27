@@ -59,7 +59,7 @@ class CommonGroundFeature(IFeature):
         start = w - (xSpace * blocks)
         p2 = h - yCord
         (tw, th), _ = cv2.getTextSize(bankLabel, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
-        labelCoords = (int(start) - int(tw / 3), (int(blockHeight / 2) + int(th / 2)) + p2)
+        labelCoords = (int(start) - int(tw / 4), (int(blockHeight / 2) + int(th / 2)) + p2)
         cv2.putText(frame, bankLabel, labelCoords, cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,0,0), 3)
 
         for i in range(1, blocks):
@@ -94,5 +94,5 @@ class CommonGroundFeature(IFeature):
             self.logger.append_csv(frame_count, i, self.closure_rules.qbank, self.closure_rules.ebank, self.closure_rules.fbank, prop, move)
 
 
-        self.renderBanks(frame, 130, 260, "F BANK:", self.closure_rules.fbank)
-        self.renderBanks(frame, 130, 130, "E BANK:",  self.closure_rules.ebank)
+        self.renderBanks(frame, 130, 260, "FBank", self.closure_rules.fbank)
+        self.renderBanks(frame, 130, 130, "EBank",  self.closure_rules.ebank)
