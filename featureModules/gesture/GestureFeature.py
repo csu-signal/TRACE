@@ -138,7 +138,7 @@ class GestureFeature(IFeature):
                                 cone.projectRadiusLines(self.shift, frame, True, False, False)
 
                                 ## TODO keep track of participant?
-                                targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False)
+                                targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False, gesture=True, index=mediaPipe8)
                                 frame_bin = get_frame_bin(frameIndex)
                                 if(targets):
                                     self.blockCache[frame_bin] = [t.description for t in targets]

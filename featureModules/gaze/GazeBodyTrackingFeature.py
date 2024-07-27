@@ -52,7 +52,7 @@ class GazeBodyTrackingFeature(IFeature):
 
             p1 = convert2D(p1_3d, cameraMatrix, dist)
             p2 = convert2D(p2_3d, cameraMatrix, dist)
-            cv.line(frame, p1.astype(int), p2.astype(int), (255,255,0), 2)
+            cv.line(frame, p1.astype(int), p2.astype(int), (255, 107, 170), 2)
             
             targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, True)
 
