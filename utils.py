@@ -981,6 +981,14 @@ def initalizeGamrFile(path):
     if os.path.exists(path):
         shutil.rmtree(path)
 
+def loadUtteranceFeatures(csvFile):
+    featuresArray = []
+    features = np.loadtxt(csvFile, delimiter=',', ndmin=2, dtype=str, usecols=list(range(0, 4)))
+    if features.size != 0: 
+        for f in features:
+            featuresArray.append(f)
+        return featuresArray
+
 ################################################################################
 
 #drawing utils
