@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from time import time
 from tkinter import Checkbutton, IntVar, Tk
+import shutil
 
 import cv2 as cv
 
@@ -66,14 +67,18 @@ class FrameTimeConverter:
 class BaseProfile(ABC):
     def __init__(
             self,
-            eval_config: EvaluationConfig|None,
+            *,
+            eval_config: EvaluationConfig|None = None,
+            output_dir: str|Path|None = None
         ) -> None:
-        self.output_dir = Path(f"stats_{str(datetime.now().strftime('%Y-%m-%d_%H_%M_%S'))}")
+        if output_dir is None:
+            self.output_dir = Path(f"stats_{str(datetime.now().strftime('%Y-%m-%d_%H_%M_%S'))}")
+        else:
+            self.output_dir = Path(output_dir)
+
         self.video_dir = self.output_dir / "video_files"
         self.processed_frame_dir = self.output_dir / "processed_frames"
         self.raw_frame_dir = self.output_dir / "raw_frames"
-        for i in (self.output_dir, self.video_dir, self.processed_frame_dir, self.raw_frame_dir):
-            os.makedirs(i, exist_ok=True)
 
         self.use_eval = eval_config is not None
         self.eval = eval_config
@@ -82,6 +87,9 @@ class BaseProfile(ABC):
         self.frame_time_lookup = FrameTimeConverter()
 
     def init_features(self):
+        for i in (self.output_dir, self.video_dir, self.processed_frame_dir, self.raw_frame_dir):
+            os.makedirs(i, exist_ok=True)
+
         self.root = Tk()
         # self.root.geometry('350x200')
         self.root.title("Output Options")
@@ -223,15 +231,19 @@ class BaseProfile(ABC):
             self.summary_log.append(update)
 
     def finalize(self):
-        if hasattr(self.asr, "done"):
-            self.asr.done.value = True
+        self.asr.exit()
+        self.root.destroy()
 
         self.frames_to_video(
-                f"{self.output_dir}\\processed_frames\\frame%8d.png",
+                f"{self.processed_frame_dir}\\frame%8d.png",
                 f"{self.video_dir}\\processed_frames.mp4")
         self.frames_to_video(
-                f"{self.output_dir}\\raw_frames\\frame%8d.png",
+                f"{self.raw_frame_dir}\\frame%8d.png",
                 f"{self.video_dir}\\raw_frames.mp4")
+
+        # remove frame images (they take a lot of space)
+        shutil.rmtree(self.processed_frame_dir)
+        shutil.rmtree(self.raw_frame_dir)
 
     @staticmethod
     def frames_to_video(frame_path, output_path, rate=PLAYBACK_TARGET_FPS):

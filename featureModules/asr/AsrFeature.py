@@ -65,6 +65,8 @@ def build_utterances(
 
     while not done.value:
         data = builder_queue.get()
+        if data is None:
+            continue
         id, start, stop, frames, sample_rate, sample_width, channels = (
             data.id,
             data.start_time,
@@ -128,6 +130,8 @@ def process_utterances(queue: "mp.Queue[AsrUtteranceData]", done, print_output=F
 
     while not done.value:
         data = queue.get()
+        if data is None:
+            continue
         name, start_time, stop_time, chunk_file = data.id, data.start_time, data.stop_time, data.audio_file
         
         segments, info = model.transcribe(chunk_file, language="en")
@@ -160,12 +164,14 @@ class AsrFeature(IFeature):
         self.device_lookup = {d.get_id():d for d in devices}
         self.asr_output_queue = mp.Queue()
         
-        utterance_builder_queue = mp.Queue()
-        utterance_processor_queue = mp.Queue()
+        self.utterance_builder_queue = mp.Queue()
+        self.utterance_processor_queue = mp.Queue()
         self.done = mp.Value(c_bool, False)
-        recorders = [d.create_recorder_process(utterance_builder_queue, self.done) for d in devices]
-        builder = mp.Process(target = build_utterances, args=(utterance_builder_queue, utterance_processor_queue, self.done), kwargs={"output_dir": log_dir})
-        processors = [mp.Process(target=process_utterances, args=(utterance_processor_queue, self.done), kwargs={"output_queue":self.asr_output_queue}) for _ in range(n_processors)]
+        recorders = [d.create_recorder_process(self.utterance_builder_queue, self.done) for d in devices]
+        builder = mp.Process(target = build_utterances, args=(self.utterance_builder_queue, self.utterance_processor_queue, self.done), kwargs={"output_dir": log_dir})
+
+        self.n_processors = n_processors
+        processors = [mp.Process(target=process_utterances, args=(self.utterance_processor_queue, self.done), kwargs={"output_queue":self.asr_output_queue}) for _ in range(self.n_processors)]
 
 
         for i in recorders + processors + [builder]:
@@ -174,6 +180,11 @@ class AsrFeature(IFeature):
         self.init_logger(log_dir)
 
         self.utterance_lookup: dict[int, UtteranceInfo] = {}
+
+    def exit(self):
+        self.done.value = True
+        self.utterance_builder_queue.put(None)
+        self.utterance_processor_queue.put(None)
 
     def init_logger(self, log_dir):
         if log_dir is not None:

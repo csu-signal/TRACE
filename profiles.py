@@ -39,8 +39,9 @@ class RecordedProfile(BaseProfile):
         audio_info: list[tuple[str, str]],
         eval_config: EvaluationConfig | None = None,
         mkv_frame_rate=30,
+        output_dir = None
     ):
-        super().__init__(eval_config)
+        super().__init__(eval_config=eval_config, output_dir=output_dir)
         self.mkv = mkv_path
         self.audio_info = audio_info
         self.mkv_frame_rate = mkv_frame_rate
@@ -80,7 +81,7 @@ class RecordedProfile(BaseProfile):
 
         print(f"saved video as {self.video_dir}\\final.mp4")
 
-def create_recorded_profile(path, eval_config=None):
+def create_recorded_profile(path, *, output_dir=None, eval_config=None):
     return RecordedProfile(
         rf"{path}-master.mkv",
         [
@@ -88,7 +89,8 @@ def create_recorded_profile(path, eval_config=None):
             # ("Austin", rf"{path}-audio2.wav"),
             # ("Mariah", rf"{path}-audio3.wav"),
         ],
-        eval_config
+        eval_config=eval_config,
+        output_dir=output_dir
     )
 
 
@@ -96,7 +98,7 @@ def create_recorded_profile(path, eval_config=None):
 @final
 class BradyLaptopProfile(BaseProfile):
     def __init__(self):
-        super().__init__(eval_config=None)
+        super().__init__()
 
     def create_camera_device(self):
         return azure_kinect.Playback(r"C:\Users\brady\Desktop\Group_01-master.mkv")
@@ -107,7 +109,7 @@ class BradyLaptopProfile(BaseProfile):
 @final
 class TestDenseParaphrasingProfile(BaseProfile):
     def __init__(self) -> None:
-        super().__init__(EvaluationConfig(directory="test_inputs\\dense_paraphrasing", asr=True, gesture=True))
+        super().__init__(eval_config=EvaluationConfig(directory="test_inputs\\dense_paraphrasing", asr=True, gesture=True))
 
     def create_camera_device(self):
         return FakeCamera()

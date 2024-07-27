@@ -37,6 +37,9 @@ class AsrFeatureEval(AsrFeature):
 
         self.current_frame = 0
 
+    def exit(self):
+        pass
+
     def get_chunk_file(self, file):
         if not self.chunks_in_input_dir:
             return file
