@@ -121,21 +121,21 @@ def create_wtd_eval_profiles(group, input_dir, output_dir):
     mkv = rf"F:\Weights_Task\Data\Fib_weights_original_videos\Group_{group:02}-master.mkv"
     audio = rf"F:\Weights_Task\Data\Group_{group:02}-audio.wav"
 
-    eval_config_kwargs  = [
-        {},
-        {"asr": True},
-        {"gesture": True},
-        {"objects": True},
-    ]
+    eval_config_kwargs  = {
+            "no_gt": {},
+            "asr_gt": {"asr": True},
+            "gesture_gt": {"gesture": True},
+            "object_gt": {"objects": True},
+    }
 
     profiles = []
-    for kwargs in eval_config_kwargs:
+    for name, kwargs in eval_config_kwargs.items():
         config = EvaluationConfig(f"{input_dir}\\group{group}", **kwargs, fallback_audio=audio)
         prof = RecordedProfile(
                 mkv,
                 [(f"Group {group}", audio)],
                 eval_config=config,
-                output_dir=f"{output_dir}\\group{group}")
+                output_dir=f"{output_dir}\\group{group}\\{name}")
         profiles.append(prof)
 
     return profiles
