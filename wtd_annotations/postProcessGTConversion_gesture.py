@@ -1,4 +1,5 @@
 import argparse
+import json
 from utils import GamrCategory, GamrTarget, convertGamrValues, loadGamrFeatures, loadKeyFrameFeatures
 import os
 import csv
@@ -43,7 +44,7 @@ def create_gesture_input(gamrPath, annotationsFile, outputFile):
                                 blocks.append(t.value)
 
                 if(len(blocks) > 0):
-                    LogCsv(outputFile, frameCount, blocks, f[2], f[1])
+                    LogCsv(outputFile, frameCount, json.dumps(blocks), f[2], f[1])
 
 
 

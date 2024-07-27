@@ -28,7 +28,7 @@ def create_utterance_input(utterancePath, outputFile):
     #for each ground truth utterance log the ASR values
     count = 1
     for u in utteranceFeatures:
-        print(u)
+        # print(u)
         startFrame = int(float(u[1]) * 30)
         endFrame = int(float(u[2]) * 30)
         LogCsv(outputFile, count, endFrame, "Group", u[3], startFrame, endFrame, "")

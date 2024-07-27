@@ -14,6 +14,7 @@ ANNOTATIONS_FILE = "F:\\Weights_Task\\Data\\Pointing\\GroundTruthFrames\\Group{0
 def create_all_inputs(parent_dir):
     parent_dir = Path(parent_dir)
     for group in [1,2,4,5]:
+        print("creating inputs for group", group)
         dir = parent_dir / f"group{group}"
         os.makedirs(dir, exist_ok=True)
 
