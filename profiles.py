@@ -122,7 +122,10 @@ def create_wtd_eval_profiles(group, input_dir, output_dir):
     audio = rf"F:\Weights_Task\Data\Group_{group:02}-audio.wav"
 
     eval_config_kwargs  = [
-        {"asr": True, "gesture": True, "objects": True},
+        {},
+        {"asr": True},
+        {"gesture": True},
+        {"objects": True},
     ]
 
     profiles = []
