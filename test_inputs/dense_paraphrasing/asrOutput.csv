@@ -1,7 +1,7 @@
-utterance_id,frame,speaker_id,text,start,stop,audio_file
-0,0,,This one,0,9,
-1,1,,That block,10,19,
-2,2,,This is 10 and that is 20,20,29,
-3,3,,These are both 10,30,39,
-4,4,,Those are 10 and this one is 20,40,49,
-5,5,,This is 10 and this is 20.,50,59,
+utterance_id,frame_received,speaker_id,text,start_frame,stop_frame,audio_file
+0,30,,This one,0,29,
+1,60,,That block,30,59,
+2,90,,This is 10 and that is 20,60,89,
+3,120,,These are both 10,90,119,
+4,150,,Those are 10 and this one is 20,120,149,
+5,180,,This is 10 and this is 20.,150,179,

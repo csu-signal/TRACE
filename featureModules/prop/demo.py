@@ -66,12 +66,12 @@ def load_model(model_dir, verbose=False):
         print(tokenizer.vocab['</m>']) 
     return model, tokenizer
 
-def process_sentence(sentence, model, tokenizer, verbose=False):
+def process_sentence(sentence, model, tokenizer, bert, embeddings, verbose=False):
     sentence = remove_stop_words(sentence)
     #inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
     
-    #common_grounds_dataSet = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
-    common_grounds_dataSet = pd.read_csv('data/NormalizedList.csv')
+    common_grounds_dataSet = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
+    # common_grounds_dataSet = pd.read_csv('data/NormalizedList.csv')
     common_grounds = list(common_grounds_dataSet['Propositions'])
     
     elements = extract_colors_and_numbers(sentence.lower()) #The list of colors / weights in the transcript
@@ -98,7 +98,7 @@ def process_sentence(sentence, model, tokenizer, verbose=False):
 
     if len(filtered_common_grounds) > 137:
         print("Using cosine similarity")
-        return get_simple_cosine(sentence, filtered_common_grounds)
+        return get_simple_cosine(sentence, filtered_common_grounds, bert, embeddings)
 
     cosine_similarities = get_cosine_similarities(sentence, filtered_common_grounds, model, device, tokenizer)
     top_matches = sorted(zip(filtered_common_grounds, cosine_similarities), key=lambda x: x[1], reverse=True)[:5]

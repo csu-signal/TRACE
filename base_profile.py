@@ -6,7 +6,9 @@ import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
+from time import time
 from tkinter import Checkbutton, IntVar, Tk
+import shutil
 
 import cv2 as cv
 
@@ -17,8 +19,10 @@ from featureModules import (AsrFeature, AsrFeatureEval, BaseDevice,
                             GazeBodyTrackingFeature, GazeFeature,
                             GestureFeature, GestureFeatureEval, MicDevice,
                             MoveFeature, MoveFeatureEval, ObjectFeature,
-                            PoseFeature, PrerecordedDevice, PropExtractFeature,
-                            PropExtractFeatureEval, rec_common_ground)
+                            ObjectFeatureEval, PoseFeature, PrerecordedDevice,
+                            PropExtractFeature, PropExtractFeatureEval,
+                            rec_common_ground)
+from featureModules.evaluation.eval_config import EvaluationConfig
 from logger import Logger
 
 # tell the script where to find certain dll's for k4a, cuda, etc.
@@ -27,31 +31,65 @@ os.add_dll_directory(K4A_DIR)
 import azure_kinect
 
 
+# TODO: This could probably be written more efficiently, memory usage will get very large
+class FrameTimeConverter:
+    def __init__(self) -> None:
+        self.data = []
+
+    def add_data(self, frame, time):
+        # must be strictly monotonic so binary search can be used
+        assert len(self.data) == 0 or frame > self.data[-1][0]
+        assert len(self.data) == 0 or time > self.data[-1][1]
+        self.data.append((frame, time))
+
+    def get_time(self, frame):
+        return self._bin_search_floor(0, frame)[1]
+
+    def get_frame(self, time):
+        return self._bin_search_floor(1, time)[0]
+
+    def _bin_search_floor(self, index, val):
+        assert len(self.data) > 0
+        assert self.data[-1][index] >= val
+        left = 0
+        right = len(self.data)
+        while right - left > 1:
+            middle = (left + right)//2
+            if self.data[middle][index] < val:
+                left = middle
+            elif self.data[middle][index] > val:
+                right = middle
+            else:
+                left = middle
+                right = middle
+        return self.data[left]
+
 class BaseProfile(ABC):
     def __init__(
             self,
-            eval_dir=None,
-            eval_asr=False,
-            eval_prop=False,
-            eval_gesture=False,
-            eval_move=False,
+            *,
+            eval_config: EvaluationConfig|None = None,
+            output_dir: str|Path|None = None
         ) -> None:
-        self.output_dir = Path(f"stats_{str(datetime.now().strftime('%Y-%m-%d_%H_%M_%S'))}")
+        if output_dir is None:
+            self.output_dir = Path(f"stats_{str(datetime.now().strftime('%Y-%m-%d_%H_%M_%S'))}")
+        else:
+            self.output_dir = Path(output_dir)
+
         self.video_dir = self.output_dir / "video_files"
         self.processed_frame_dir = self.output_dir / "processed_frames"
         self.raw_frame_dir = self.output_dir / "raw_frames"
+
+        self.use_eval = eval_config is not None
+        self.eval = eval_config
+        self.eval_dir = Path(self.eval.directory) if self.eval is not None else ""
+
+        self.frame_time_lookup = FrameTimeConverter()
+
+    def init_features(self):
         for i in (self.output_dir, self.video_dir, self.processed_frame_dir, self.raw_frame_dir):
             os.makedirs(i, exist_ok=True)
 
-        self.eval_dir = Path(eval_dir) if eval_dir is not None else None
-        self.eval_asr = eval_asr
-        self.eval_prop = eval_prop
-        self.eval_gesture = eval_gesture
-        self.eval_move = eval_move
-        if self.eval_asr or self.eval_prop or self.eval_gesture or self.eval_move:
-            assert self.eval_dir is not None, "No evaluation directory provided"
-
-    def init_features(self):
         self.root = Tk()
         # self.root.geometry('350x200')
         self.root.title("Output Options")
@@ -70,31 +108,34 @@ class BaseProfile(ABC):
 
         self._create_buttons()
 
-        self.objects = ObjectFeature(log_dir=self.output_dir)
+        if self.eval is not None and self.eval.objects:
+            self.objects = ObjectFeatureEval(self.eval_dir, log_dir=self.output_dir)
+        else:
+            self.objects = ObjectFeature(log_dir=self.output_dir)
 
         shift = 7 # TODO what is this?
         self.gaze = GazeBodyTrackingFeature(shift, log_dir=self.output_dir)
 
-        if self.eval_gesture:
+        if self.eval is not None and self.eval.gesture:
             self.gesture = GestureFeatureEval(self.eval_dir, log_dir=self.output_dir)
         else:
             self.gesture = GestureFeature(shift, log_dir=self.output_dir)
 
         self.pose = PoseFeature(log_dir=self.output_dir)
 
-        if self.eval_asr:
+        if self.eval is not None and self.eval.asr:
             self.asr = AsrFeatureEval(self.eval_dir, chunks_in_input_dir=True, log_dir=self.output_dir)
         else:
             self.asr = AsrFeature(self.create_audio_devices(), n_processors=1, log_dir=self.output_dir)
 
         self.dense_paraphrasing = DenseParaphrasingFeature(log_dir=self.output_dir)
 
-        if self.eval_prop:
+        if self.eval is not None and self.eval.prop:
             self.prop = PropExtractFeatureEval(self.eval_dir, log_dir=self.output_dir)
         else:
             self.prop = PropExtractFeature(log_dir=self.output_dir)
 
-        if self.eval_move:
+        if self.eval is not None and self.eval.move:
             self.move = MoveFeatureEval(self.eval_dir, log_dir=self.output_dir)
         else:
             self.move = MoveFeature(log_dir=self.output_dir)
@@ -124,6 +165,8 @@ class BaseProfile(ABC):
 
         self.root.update()
 
+        self.frame_time_lookup.add_data(frame_count, time())
+
         # run features
         blockStatus = {}
         blocks = []
@@ -145,7 +188,7 @@ class BaseProfile(ABC):
 
         new_utterances = []
         if(self._should_process("asr")):
-            new_utterances = self.asr.processFrame(output_frame, frame_count, False)
+            new_utterances = self.asr.processFrame(output_frame, frame_count, self.frame_time_lookup.get_frame, False)
 
         if self._should_process("dense paraphrasing"):
             self.dense_paraphrasing.processFrame(output_frame, new_utterances, self.asr.utterance_lookup, self.gesture.blockCache, frame_count)
@@ -188,15 +231,19 @@ class BaseProfile(ABC):
             self.summary_log.append(update)
 
     def finalize(self):
-        if hasattr(self.asr, "done"):
-            self.asr.done.value = True
+        self.asr.exit()
+        self.root.destroy()
 
         self.frames_to_video(
-                f"{self.output_dir}\\processed_frames\\frame%8d.png",
+                f"{self.processed_frame_dir}\\frame%8d.png",
                 f"{self.video_dir}\\processed_frames.mp4")
         self.frames_to_video(
-                f"{self.output_dir}\\raw_frames\\frame%8d.png",
+                f"{self.raw_frame_dir}\\frame%8d.png",
                 f"{self.video_dir}\\raw_frames.mp4")
+
+        # remove frame images (they take a lot of space)
+        shutil.rmtree(self.processed_frame_dir)
+        shutil.rmtree(self.raw_frame_dir)
 
     @staticmethod
     def frames_to_video(frame_path, output_path, rate=PLAYBACK_TARGET_FPS):

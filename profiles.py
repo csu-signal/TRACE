@@ -12,6 +12,7 @@ from config import K4A_DIR
 from fake_camera import FakeCamera
 from featureModules import BaseDevice, MicDevice, PrerecordedDevice
 from base_profile import BaseProfile
+from featureModules.evaluation.eval_config import EvaluationConfig
 
 # tell the script where to find certain dll's for k4a, cuda, etc.
 # body tracking sdk's tools should contain everything
@@ -21,7 +22,7 @@ import azure_kinect
 @final
 class LiveProfile(BaseProfile):
     def __init__(self, mic_info: list[tuple[str, int]]):
-        super().__init__(eval_dir=None)
+        super().__init__(eval_config=None)
         self.mic_info = mic_info
 
     def create_camera_device(self):
@@ -36,19 +37,11 @@ class RecordedProfile(BaseProfile):
         self,
         mkv_path: str,
         audio_info: list[tuple[str, str]],
+        eval_config: EvaluationConfig | None = None,
         mkv_frame_rate=30,
-        eval_dir=None,
-        eval_asr=False,
-        eval_prop=False,
-        eval_gesture=False,
-        eval_move=False,
+        output_dir = None
     ):
-        super().__init__(
-                eval_dir=eval_dir,
-                eval_asr=eval_asr,
-                eval_prop=eval_prop,
-                eval_gesture=eval_gesture,
-                eval_move=eval_move)
+        super().__init__(eval_config=eval_config, output_dir=output_dir)
         self.mkv = mkv_path
         self.audio_info = audio_info
         self.mkv_frame_rate = mkv_frame_rate
@@ -77,15 +70,18 @@ class RecordedProfile(BaseProfile):
         num_audio = len(self.audio_inputs)
         audio_inputs = " ".join([f"-i {file}" for file in self.audio_inputs])
 
-        # combine all audio recordings
-        os.system(f"ffmpeg {audio_inputs} -filter_complex amix=inputs={num_audio}:duration=shortest {self.video_dir}\\audio-combined.wav")
+        if num_audio > 0:
+            # combine all audio recordings
+            os.system(f"ffmpeg {audio_inputs} -filter_complex amix=inputs={num_audio}:duration=shortest {self.video_dir}\\audio-combined.wav")
 
-        # add audio to video
-        os.system(f"ffmpeg -i {self.video_dir}\\processed_frames.mp4 -i {self.video_dir}\\audio-combined.wav -map 0:v -map 1:a -c:v copy -shortest {self.video_dir}\\final.mp4")
+            # add audio to video
+            os.system(f"ffmpeg -i {self.video_dir}\\processed_frames.mp4 -i {self.video_dir}\\audio-combined.wav -map 0:v -map 1:a -c:v copy -shortest {self.video_dir}\\final.mp4")
+        elif self.eval is not None and self.eval.fallback_audio is not None:
+            os.system(f"ffmpeg -i {self.video_dir}\\processed_frames.mp4 -i {self.eval.fallback_audio} -map 0:v -map 1:a -c:v copy -shortest {self.video_dir}\\final.mp4")
 
         print(f"saved video as {self.video_dir}\\final.mp4")
 
-def create_recorded_profile(path, **kwargs):
+def create_recorded_profile(path, *, output_dir=None, eval_config=None):
     return RecordedProfile(
         rf"{path}-master.mkv",
         [
@@ -93,13 +89,17 @@ def create_recorded_profile(path, **kwargs):
             # ("Austin", rf"{path}-audio2.wav"),
             # ("Mariah", rf"{path}-audio3.wav"),
         ],
-        **kwargs
+        eval_config=eval_config,
+        output_dir=output_dir
     )
 
 
 # TODO: remove later
 @final
 class BradyLaptopProfile(BaseProfile):
+    def __init__(self):
+        super().__init__()
+
     def create_camera_device(self):
         return azure_kinect.Playback(r"C:\Users\brady\Desktop\Group_01-master.mkv")
 
@@ -109,12 +109,33 @@ class BradyLaptopProfile(BaseProfile):
 @final
 class TestDenseParaphrasingProfile(BaseProfile):
     def __init__(self) -> None:
-        super().__init__(eval_dir="test_inputs\\dense_paraphrasing",
-                         eval_asr=True,
-                         eval_gesture=True)
+        super().__init__(eval_config=EvaluationConfig(directory="test_inputs\\dense_paraphrasing", asr=True, gesture=True))
 
     def create_camera_device(self):
         return FakeCamera()
 
     def create_audio_devices(self):
         return []
+
+def create_wtd_eval_profiles(group, input_dir, output_dir):
+    mkv = rf"F:\Weights_Task\Data\Fib_weights_original_videos\Group_{group:02}-master.mkv"
+    audio = rf"F:\Weights_Task\Data\Group_{group:02}-audio.wav"
+
+    eval_config_kwargs  = {
+            "no_gt": {},
+            "asr_gt": {"asr": True},
+            "gesture_gt": {"gesture": True},
+            "object_gt": {"objects": True},
+    }
+
+    profiles = []
+    for name, kwargs in eval_config_kwargs.items():
+        config = EvaluationConfig(f"{input_dir}\\group{group}", **kwargs, fallback_audio=audio)
+        prof = RecordedProfile(
+                mkv,
+                [(f"Group {group}", audio)],
+                eval_config=config,
+                output_dir=f"{output_dir}\\group{group}\\{name}")
+        profiles.append(prof)
+
+    return profiles
