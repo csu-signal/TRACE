@@ -1,12 +1,12 @@
 import torch
 import pandas as pd
-from models import CrossEncoder
-#from featureModules.prop.models import CrossEncoder
+# from models import CrossEncoder
+from featureModules.prop.models import CrossEncoder
 import string
 from transformers import AutoTokenizer
 
-#from featureModules.prop.demoHelpers import *
-from demoHelpers import *
+from featureModules.prop.demoHelpers import *
+# from demoHelpers import *
 
 # from featureModules.prop.demoHelpers import tokenize_props, extract_colors_and_numbers, is_valid_common_ground, \
 # is_valid_individual_match, predict_with_XE, add_special_tokens, get_embeddings, sentence_fcg_cosine
