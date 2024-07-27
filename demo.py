@@ -25,8 +25,11 @@ if __name__ == "__main__":
     #     ])
 
 
+    # groups = [1,2,4,5]
+    groups = [4, 5]
+
     profiles = []
-    for group in [1,2,4,5]:
+    for group in groups:
         profiles += create_wtd_eval_profiles(group, "wtd_inputs", "wtd_outputs")
 
     for prof in profiles:
