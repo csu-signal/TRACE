@@ -1,5 +1,5 @@
 import os
-from config import K4A_DIR, PLAYBACK_SKIP_FRAMES
+from config import K4A_DIR, PLAYBACK_SKIP_FRAMES, WTD_END_TIMES
 from featureModules.evaluation.eval_config import EvaluationConfig
 
 os.add_dll_directory(K4A_DIR)
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     profiles = []
     for group in groups:
-        profiles += create_wtd_eval_profiles(group, "wtd_inputs", "wtd_outputs", timestamp_range=(10, 20))
+        profiles += create_wtd_eval_profiles(group, "wtd_inputs", "wtd_outputs", end_time = WTD_END_TIMES[group])
 
     for prof in profiles:
         prof.init_features()

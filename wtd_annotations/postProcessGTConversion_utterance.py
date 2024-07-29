@@ -24,8 +24,11 @@ def LogCsv(path, utterance_id, frame_received, speaker_id, text, start_frame, st
 
 def create_utterance_input(utterancePath, audio_file, outputFile, output_chunk_dir):
     output_chunk_dir = Path(output_chunk_dir)
-
     os.makedirs(output_chunk_dir, exist_ok=True)
+
+    tmp_audio_file = output_chunk_dir / "full_recording.wav"
+    os.system(f"ffmpeg -i {audio_file} -filter:a loudnorm -ar 16000 -ac 1 -acodec pcm_s16le {tmp_audio_file}")
+
     initalizeCsv(outputFile)
 
     utteranceFeatures = loadUtteranceFeatures(utterancePath)
@@ -54,7 +57,7 @@ def create_utterance_input(utterancePath, audio_file, outputFile, output_chunk_d
 
 
         chunk_path = str(output_chunk_dir / f"chunk{count:04}.wav")
-        with wave.open(audio_file, "rb") as wf:
+        with wave.open(str(tmp_audio_file), "rb") as wf:
             with wave.open(chunk_path, "wb") as wf2:
                 wf.readframes(int(wf.getframerate() * startTime))
                 chunk = wf.readframes(int(wf.getframerate() * (endTime - startTime)))

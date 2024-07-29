@@ -42,7 +42,7 @@ class RecordedProfile(BaseProfile):
         *,
         eval_config: EvaluationConfig | None = None,
         mkv_frame_rate=30,
-        timestamp_range: tuple[int, int] | None = None,
+        end_time: float | None = None,
         output_dir = None
     ):
         super().__init__(eval_config=eval_config, output_dir=output_dir)
@@ -52,20 +52,13 @@ class RecordedProfile(BaseProfile):
 
         self.audio_inputs = []
 
-        if timestamp_range is None:
-            self.start_frame = 0
-            self.end_frame = None
-        else:
-            self.start_frame = self.mkv_frame_rate * timestamp_range[0]
-            self.end_frame = self.mkv_frame_rate * timestamp_range[1]
+        self.end_frame = int(self.mkv_frame_rate * end_time) if end_time is not None else None
 
     def is_done(self, frame_count):
         return frame_count > self.end_frame
 
     def create_camera_device(self):
-        device = azure_kinect.Playback(self.mkv)
-        device.skip_frames(self.start_frame)
-        return device
+        return azure_kinect.Playback(self.mkv)
 
     def convert_audio(self, path, index):
         output_path = f"{self.video_dir}\\audio{index}.wav"
@@ -133,7 +126,7 @@ class TestDenseParaphrasingProfile(BaseProfile):
     def create_audio_devices(self):
         return []
 
-def create_wtd_eval_profiles(group, input_dir, output_dir, timestamp_range=None):
+def create_wtd_eval_profiles(group, input_dir, output_dir, end_time=None):
     mkv = config.WTD_MKV_PATH.format(group)
     audio = config.WTD_AUDIO_PATH.format(group)
 
@@ -157,7 +150,7 @@ def create_wtd_eval_profiles(group, input_dir, output_dir, timestamp_range=None)
                 [(f"Group {group}", audio)],
                 eval_config=eval_config,
                 output_dir=f"{output_dir}\\group{group}\\{name}",
-                timestamp_range=timestamp_range)
+                end_time=end_time)
         profiles.append(prof)
 
     return profiles

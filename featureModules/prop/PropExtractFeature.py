@@ -22,7 +22,6 @@ class PropExtractFeature(IFeature):
     def __init__(self,
                  log_dir=None,
                  model_dir=r'featureModules\prop\data\prop_extraction_model'):
-        print("prop extract model:", model_dir)
         self.model, self.tokenizer = load_model(model_dir)
         self.bert = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
         self.init_logger(log_dir)
