@@ -25,12 +25,11 @@ if __name__ == "__main__":
     #     ])
 
 
-    # groups = [1,2,4,5]
-    groups = [4, 5]
+    groups = [1,2,4,5]
 
     profiles = []
     for group in groups:
-        profiles += create_wtd_eval_profiles(group, "wtd_inputs", "wtd_outputs")
+        profiles += create_wtd_eval_profiles(group, "wtd_inputs", "wtd_outputs", timestamp_range=(10, 20))
 
     for prof in profiles:
         prof.init_features()
@@ -43,7 +42,7 @@ if __name__ == "__main__":
         fail_count = 0
         frame_count = 0
         saved_frame_count = 0
-        while True:
+        while not prof.is_done(frame_count):
             # exit if 20 frames fail in a row
             if fail_count > 20:
                 break

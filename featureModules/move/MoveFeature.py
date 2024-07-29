@@ -27,11 +27,14 @@ class MoveInfo:
 class MoveFeature:
     LOG_FILE = "moveOutput.csv"
 
-    def __init__(self, log_dir=None):
+    def __init__(self,
+                 log_dir=None,
+                 model=r"featureModules\move\production_move_classifier.pt"):
+        print("move model:", model)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print("move classifier device", self.device)
 
-        self.model = torch.load(r"featureModules\move\production_move_classifier.pt").to(self.device)
+        self.model = torch.load(model).to(self.device)
         self.model.eval()
 
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")

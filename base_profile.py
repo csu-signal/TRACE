@@ -80,7 +80,6 @@ class BaseProfile(ABC):
         self.processed_frame_dir = self.output_dir / "processed_frames"
         self.raw_frame_dir = self.output_dir / "raw_frames"
 
-        self.use_eval = eval_config is not None
         self.eval = eval_config
         self.eval_dir = Path(self.eval.directory) if self.eval is not None else ""
 
@@ -132,11 +131,15 @@ class BaseProfile(ABC):
 
         if self.eval is not None and self.eval.prop:
             self.prop = PropExtractFeatureEval(self.eval_dir, log_dir=self.output_dir)
+        elif self.eval is not None and self.eval.prop_model is not None:
+            self.prop = PropExtractFeature(log_dir=self.output_dir, model_dir=self.eval.prop_model)
         else:
             self.prop = PropExtractFeature(log_dir=self.output_dir)
 
         if self.eval is not None and self.eval.move:
             self.move = MoveFeatureEval(self.eval_dir, log_dir=self.output_dir)
+        elif self.eval is not None and self.eval.move_model is not None:
+            self.move = MoveFeature(log_dir=self.output_dir, model=self.eval.move_model)
         else:
             self.move = MoveFeature(log_dir=self.output_dir)
 
@@ -244,6 +247,9 @@ class BaseProfile(ABC):
         # remove frame images (they take a lot of space)
         shutil.rmtree(self.processed_frame_dir)
         shutil.rmtree(self.raw_frame_dir)
+
+    def is_done(self, frame_count):
+        return False
 
     @staticmethod
     def frames_to_video(frame_path, output_path, rate=PLAYBACK_TARGET_FPS):

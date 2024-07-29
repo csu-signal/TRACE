@@ -8,16 +8,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import final
 
+import config
+from base_profile import BaseProfile
 from config import K4A_DIR
 from fake_camera import FakeCamera
 from featureModules import BaseDevice, MicDevice, PrerecordedDevice
-from base_profile import BaseProfile
 from featureModules.evaluation.eval_config import EvaluationConfig
 
 # tell the script where to find certain dll's for k4a, cuda, etc.
 # body tracking sdk's tools should contain everything
 os.add_dll_directory(K4A_DIR)
 import azure_kinect
+
 
 @final
 class LiveProfile(BaseProfile):
@@ -37,8 +39,10 @@ class RecordedProfile(BaseProfile):
         self,
         mkv_path: str,
         audio_info: list[tuple[str, str]],
+        *,
         eval_config: EvaluationConfig | None = None,
         mkv_frame_rate=30,
+        timestamp_range: tuple[int, int] | None = None,
         output_dir = None
     ):
         super().__init__(eval_config=eval_config, output_dir=output_dir)
@@ -48,8 +52,20 @@ class RecordedProfile(BaseProfile):
 
         self.audio_inputs = []
 
+        if timestamp_range is None:
+            self.start_frame = 0
+            self.end_frame = None
+        else:
+            self.start_frame = self.mkv_frame_rate * timestamp_range[0]
+            self.end_frame = self.mkv_frame_rate * timestamp_range[1]
+
+    def is_done(self, frame_count):
+        return frame_count > self.end_frame
+
     def create_camera_device(self):
-        return azure_kinect.Playback(self.mkv)
+        device = azure_kinect.Playback(self.mkv)
+        device.skip_frames(self.start_frame)
+        return device
 
     def convert_audio(self, path, index):
         output_path = f"{self.video_dir}\\audio{index}.wav"
@@ -117,9 +133,9 @@ class TestDenseParaphrasingProfile(BaseProfile):
     def create_audio_devices(self):
         return []
 
-def create_wtd_eval_profiles(group, input_dir, output_dir):
-    mkv = rf"F:\Weights_Task\Data\Fib_weights_original_videos\Group_{group:02}-master.mkv"
-    audio = rf"F:\Weights_Task\Data\Group_{group:02}-audio.wav"
+def create_wtd_eval_profiles(group, input_dir, output_dir, timestamp_range=None):
+    mkv = config.WTD_MKV_PATH.format(group)
+    audio = config.WTD_AUDIO_PATH.format(group)
 
     eval_config_kwargs  = {
             "no_gt": {},
@@ -128,14 +144,20 @@ def create_wtd_eval_profiles(group, input_dir, output_dir):
             "object_gt": {"objects": True},
     }
 
+    models_kwargs = {
+        "prop_model" : config.WTD_PROP_MODEL_PATH.format(group),
+        "move_model" : config.WTD_MOVE_MODEL_PATH.format(group)
+    }
+
     profiles = []
     for name, kwargs in eval_config_kwargs.items():
-        config = EvaluationConfig(f"{input_dir}\\group{group}", **kwargs, fallback_audio=audio)
+        eval_config = EvaluationConfig(f"{input_dir}\\group{group}", **models_kwargs, **kwargs, fallback_audio=audio)
         prof = RecordedProfile(
                 mkv,
                 [(f"Group {group}", audio)],
-                eval_config=config,
-                output_dir=f"{output_dir}\\group{group}\\{name}")
+                eval_config=eval_config,
+                output_dir=f"{output_dir}\\group{group}\\{name}",
+                timestamp_range=timestamp_range)
         profiles.append(prof)
 
     return profiles

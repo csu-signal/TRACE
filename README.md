@@ -20,8 +20,8 @@ Run `pip install ./azure_kinect_wrapper`.
 
 ## Download models
 Download the following models from [here](https://colostate-my.sharepoint.com/:f:/g/personal/nkrishna_colostate_edu/EhYic6HBX7hFta6GjQIcb9gBxV_K0yYFhtHagiVyClr7gQ?e=W6Pm6I) and save at the given locations:
-- `fasterrcnn-*.pth` ==> `featureModules/objects/objectDetectionModels/best_model-objects.pth`
-- `prop_extraction_model/` ==> `featureModules/prop/data/prop_extraction_model/`
+- `fasterrcnn-7-19-demo-finetuned.pth` ==> `featureModules/objects/objectDetectionModels/best_model-objects.pth`
+- `steroid_model/` ==> `featureModules/prop/data/prop_extraction_model/`
 - `production_move_classifier.pt` ==> `featureModules/move/production_move_classifier.pt`
 
 # Running the demo
