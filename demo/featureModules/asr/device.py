@@ -34,7 +34,7 @@ class BaseDevice(ABC):
     def create_recorder_process(self, asr_queue: mp.Queue, done: Synchronized):
         """
         Returns a multiprocessing Process that records audio and sends chunks into the
-        asr_queue. When done.value becomes False, the process is responsible for putting None
+        asr_queue. When done.value becomes True, the process is responsible for putting None
         onto the queue.
         """
         raise NotImplementedError
