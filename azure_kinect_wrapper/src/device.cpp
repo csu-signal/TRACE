@@ -64,6 +64,10 @@ void Device::close() {
   std::cout << "Device closed successfully" << std::endl;
 }
 
+int Device::get_frame_count(){
+    return frame_count;
+}
+
 py::dict json_to_dict(json data) {
   return py::module::import("json").attr("loads")(data.dump());
 }

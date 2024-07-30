@@ -13,7 +13,8 @@ PYBIND11_MODULE(azure_kinect, m) {
   py::class_<Device>(m, "Device")
       .def("close", &Device::close)
       .def("get_frame", &Device::get_frame)
-      .def("get_calibration_matrices", &Device::get_calibration_matrices);
+      .def("get_calibration_matrices", &Device::get_calibration_matrices)
+      .def("get_frame_count", &Device::get_frame_count);
 
   py::class_<Playback, Device>(m, "Playback")
       .def(py::init<const char *>())

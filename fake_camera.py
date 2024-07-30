@@ -15,3 +15,6 @@ class FakeCamera:
 
     def close(self) -> None:
         return
+
+    def get_frame_count(self) -> int:
+        return 0

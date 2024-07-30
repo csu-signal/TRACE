@@ -25,6 +25,12 @@ class Device(ABC):
         """
         ...
 
+    def get_frame_count(self) -> int:
+        """
+        Returns the current frame count of the device
+        """
+        ...
+
 
 @final
 class Playback(Device):

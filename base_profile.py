@@ -30,8 +30,6 @@ from logger import Logger
 os.add_dll_directory(K4A_DIR)
 import azure_kinect
 
-
-# TODO: This could probably be written more efficiently, memory usage will get very large
 class FrameTimeConverter:
     def __init__(self) -> None:
         self.data = []
@@ -43,12 +41,12 @@ class FrameTimeConverter:
         self.data.append((frame, time))
 
     def get_time(self, frame):
-        return self._bin_search_floor(0, frame)[1]
+        return self._binary_search(0, frame)[1]
 
     def get_frame(self, time):
-        return self._bin_search_floor(1, time)[0]
+        return self._binary_search(1, time)[0]
 
-    def _bin_search_floor(self, index, val):
+    def _binary_search(self, index, val):
         assert len(self.data) > 0
         assert self.data[-1][index] >= val
         left = 0
@@ -247,6 +245,9 @@ class BaseProfile(ABC):
         # remove frame images (they take a lot of space)
         shutil.rmtree(self.processed_frame_dir)
         shutil.rmtree(self.raw_frame_dir)
+
+    def run(self):
+        pass
 
     def is_done(self, frame_count):
         return False

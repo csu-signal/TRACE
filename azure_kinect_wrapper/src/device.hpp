@@ -12,6 +12,7 @@ struct Device {
   void close();
   py::object get_frame();
   py::object get_calibration_matrices();
+  int get_frame_count();
 
 protected:
   k4a::calibration calibration;
