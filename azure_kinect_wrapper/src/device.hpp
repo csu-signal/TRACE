@@ -23,14 +23,14 @@ protected:
   // set capture handle to newest/most recent capture
   virtual void update_capture_handle() = 0;
 
-private:
+  size_t frame_count;
   k4a::transformation calibration_transform;
   k4abt::tracker body_tracker;
-  size_t frame_count;
 };
 
 struct Playback : public Device {
   Playback(const char *recording_path);
+  void skip_frames(int n_frames);
 
 protected:
   void open_device() override;

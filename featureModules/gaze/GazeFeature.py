@@ -44,13 +44,19 @@ gazeHeadAverage = {}
 gazePredAverage = {}
 
 class GazeFeature(IFeature):
-    def __init__(self, shift, csv_log_file=None):
+    LOG_FILE = "gazeOutput.csv"
+
+    def __init__(self, shift, log_dir=None):
         self.shift = shift
         self.faceDetector = MTCNN()
         self.gazeModel = keras.models.load_model(".\\featureModules\\gaze\\gazeDetectionModels\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
                                                                  'categorical_accuracy': categorical_accuracy})
 
-        self.logger = Logger(file=csv_log_file)
+        if log_dir is not None:
+            self.logger = Logger(file=log_dir / self.LOG_FILE)
+        else:
+            self.logger = Logger()
+
         self.logger.write_csv_headers("frame_index", "bodyId", "targets")
 
     def processFrame(self, bodies, w, h, rotation, translation, cameraMatrix, dist, frame, framergb, depth, blocks, blockStatus, frameIndex):
@@ -146,5 +152,9 @@ class GazeFeature(IFeature):
                     del head3D, h_Success, pred3D, p_Success
                     keras.backend.clear_session()
                     gc.collect()
+
+                descriptions = []
+                for t in targets:
+                    descriptions.append(t.description)
 
                 self.logger.append_csv(frameIndex, key, targets)

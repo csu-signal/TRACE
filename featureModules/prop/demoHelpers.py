@@ -1,5 +1,9 @@
 import torch
 import re
+import os
+import pickle
+import pandas as pd
+from sentence_transformers import SentenceTransformer, util
 
 def add_special_tokens(proposition_map):
     for x, y in proposition_map.items():
@@ -12,10 +16,7 @@ def add_special_tokens(proposition_map):
     return proposition_map
 
 
-
-
 def tokenize_props(tokenizer, proposition_ids, proposition_map, m_end, max_sentence_len=1024, truncate=True):
-    
     if max_sentence_len is None:
         max_sentence_len = tokenizer.model_max_length
 
@@ -39,6 +40,7 @@ def tokenize_props(tokenizer, proposition_ids, proposition_map, m_end, max_sente
         instance_ba = make_instance(sentence_b, sentence_a)
         pairwise_bert_instances_ba.append(instance_ba)
 
+
     def truncate_with_mentions(input_ids):
         input_ids_truncated = []
         for input_id in input_ids:
@@ -52,6 +54,7 @@ def tokenize_props(tokenizer, proposition_ids, proposition_map, m_end, max_sente
             input_ids_truncated.append(in_truncated)
 
         return torch.LongTensor(input_ids_truncated)
+
 
     def ab_tokenized(pair_wise_instances):
         instances_a, instances_b = zip(*pair_wise_instances)
@@ -95,7 +98,6 @@ def tokenize_props(tokenizer, proposition_ids, proposition_map, m_end, max_sente
                         'position_ids': torch.arange(tokenized_ba_input_ids.shape[-1]).expand(tokenized_ba_input_ids.shape)}
 
     return tokenized_ab, tokenized_ba    
-    
 
 
 def get_arg_attention_mask(input_ids, parallel_model):
@@ -154,6 +156,7 @@ def get_arg_attention_mask(input_ids, parallel_model):
 
     return attention_mask_g, arg1, arg2
 
+
 def forward_ab(parallel_model, ab_dict, device, indices, lm_only=False, cosine_sim =False):
     batch_tensor_ab = ab_dict['input_ids'][indices, :].to(device)
     batch_am_ab = ab_dict['attention_mask'][indices, :].to(device)
@@ -208,7 +211,21 @@ def extract_colors_and_numbers(text):
     return found_elements
 
 
-def is_valid_common_ground(cg, elements):
+def is_valid_common_ground_1(cg, elements):
+    cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
+    cg_numbers = re.findall(r'\b(?:10|20|30|40|50)\b', cg)
+    cg_set = set(cg_colors + cg_numbers)  # Combine and convert to set
+
+    # Combine colors and numbers from the elements dictionary into a set
+    # Assume elements['colors'] and elements['numbers'] are provided as lists
+    element_colors = elements.get("colors", [])
+    element_numbers = [str(num) for num in elements.get("numbers", [])]
+    elements_set = set(element_colors + element_numbers)
+
+    return cg_set == elements_set
+
+
+def is_valid_common_ground_2(cg, elements):
     cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
     cg_numbers = [str(num) for num in re.findall(r'\b(?:10|20|30|40|50)\b', cg)]
     #print(cg_colors, cg_numbers)
@@ -216,12 +233,95 @@ def is_valid_common_ground(cg, elements):
     number_match = not elements["numbers"] or set(cg_numbers) == set(elements["numbers"])
     return color_match and number_match
 
+
 def is_valid_individual_match(cg, elements):
     cg_colors = re.findall(r'\b(?:red|blue|green|yellow|purple)\b', cg)
     cg_numbers = [str(num) for num in re.findall(r'\b(?:10|20|30|40|50)\b', cg)]
-
+    
     for color in elements["colors"]:
         for number in elements["numbers"]:
             if color in cg_colors and number in cg_numbers:
                 return True
     return False
+
+
+def get_pickle(bert):
+    emb_path = './cg_embeddings.pkl'
+    if os.path.isfile(emb_path):
+        with open(emb_path, 'rb') as file:
+            embeddings = pickle.load(file)
+    else:
+        cg_data = pd.read_csv('featureModules/prop/data/NormalizedList.csv')
+        props = list(cg_data['Propositions'])
+        embeddings = get_cg_embeddings(props, bert, {})
+        with open(emb_path, 'wb') as write:
+            pickle.dump(embeddings, write)
+    return embeddings
+
+
+def get_cg_embeddings(filtered_common_grounds, bert, embeddings):
+    emb_path = './cg_embeddings.pkl'
+    
+    for cg in filtered_common_grounds:
+        emb = bert.encode(cg, convert_to_tensor=True)
+        embeddings[cg] = emb
+        
+    return embeddings
+
+
+def sentence_fcg_cosine(cg_embedding, sentence_embedding):
+    cosine_score = util.cos_sim(sentence_embedding, cg_embedding)
+    return cosine_score
+
+
+def get_sentence_embedding(sentence, bert):
+    sentence_embedding = bert.encode(sentence, convert_to_tensor=True)
+    return sentence_embedding
+
+
+def append_matches(top_matches, sentence):
+    new_rows = []
+    for match in top_matches:
+        new_row = {
+            "transcript": sentence,
+            "common_ground": match[0]  # match[0] is the common ground text
+        }
+        new_rows.append(new_row)
+    return new_rows
+
+
+def get_simple_cosine(sentence, filtered_common_grounds, bert, embeddings):
+    cg_cosine_scores = []
+    #embeddings = get_cg_embeddings(filtered_common_grounds, bert, embeddings)
+    sentence_embedding = get_sentence_embedding(sentence, bert)
+    for cg in filtered_common_grounds:
+        cosine_score = sentence_fcg_cosine(embeddings[cg], sentence_embedding).item()
+        cg_cosine_scores.append([sentence, cg, cosine_score])
+    df_cosine_scores = pd.DataFrame(cg_cosine_scores, columns = ['sentence', 'common ground', 'scores'])
+    highest_score_row = df_cosine_scores.loc[df_cosine_scores['scores'].idxmax()]
+    highest_score_common_ground = highest_score_row['common ground']
+
+    return highest_score_common_ground, len(filtered_common_grounds)
+
+
+def get_cosine_similarities(sentence, filtered_common_grounds, model, device, tokenizer):
+    cosine_similarities = []
+    for cg in filtered_common_grounds:
+        cg_with_token = "<m>" + " " + cg + " "  + "</m>"
+        trans_with_token = "<m>" + " "+ sentence +" " + "</m>"
+        theIndividualDict = {
+            "transcript": trans_with_token,
+            "common_ground": cg_with_token # match[0] is the common ground text
+        }
+        
+        proposition_map = {0: theIndividualDict} 
+        proposition_ids = [0]
+        tokenizer = tokenizer
+        #print(model.end_id)
+       
+        test_ab, test_ba = tokenize_props(tokenizer,proposition_ids,proposition_map,model.end_id ,max_sentence_len=512, truncate=True)    
+        
+        cosine_test_scores_ab, cosine_test_scores_ba = predict_with_XE(model, test_ab, test_ba, device, 4,cosine_sim=True)
+        cosine_similarity = (cosine_test_scores_ab + cosine_test_scores_ba) /2
+        cosine_similarities.append(cosine_similarity)
+    return cosine_similarities

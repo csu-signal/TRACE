@@ -14,8 +14,8 @@ import pyaudio
 @dataclass
 class AsrDeviceData:
     id: str
-    start: float
-    stop: float
+    start_time: float
+    stop_time: float
     frames: bytes
     sample_rate: int
     sample_width: int
@@ -45,7 +45,6 @@ class MicDevice(BaseDevice):
         return self.name
 
     def create_recorder_process(self, asr_queue: mp.Queue, done: Synchronized):
-        os.makedirs("chunks", exist_ok=True)
         return mp.Process(target=MicDevice.record_chunks, args=(self.get_id(), self.index, asr_queue, done))
 
     @staticmethod
@@ -54,15 +53,15 @@ class MicDevice(BaseDevice):
         stream = p.open(format=pyaudio.paInt16, channels=1, rate=rate, input=True, frames_per_buffer=frames_per_read, input_device_index=device_index)  # Use the selected device index
         while not done.value:
             frames = []
-            start = time.time()
+            start_time = time.time()
             for i in range(0, int(rate / frames_per_read * chunk_length_seconds)):
                 data = stream.read(frames_per_read)
                 frames.append(data)
-            stop = time.time()
+            stop_time = time.time()
             queue.put(AsrDeviceData(
                 id,
-                start,
-                stop,
+                start_time,
+                stop_time,
                 b''.join(frames),
                 rate,
                 p.get_sample_size(format),
@@ -78,7 +77,7 @@ class PrerecordedDevice(BaseDevice):
     READ_FRAME_COUNT = 512
     SAVE_INTERVAL_SECONDS = 0.5
 
-    def __init__(self, name, path, video_frame_rate=30):
+    def __init__(self, name, path, video_frame_rate):
         super().__init__()
         self.name = name
         self.path = path
@@ -96,7 +95,6 @@ class PrerecordedDevice(BaseDevice):
         return self.name
 
     def create_recorder_process(self, asr_queue: mp.Queue, done: Synchronized):
-        os.makedirs("chunks", exist_ok=True)
         self.asr_queue = asr_queue
         return mp.Process(target=PrerecordedDevice.noop)
 

@@ -355,7 +355,7 @@ def getVectorPoint(terminal, vector):
 def processPoint(landmarks, box, w, h, cameraMatrix, dist, depth):
     try:
         for index, lm in enumerate(landmarks): 
-            if(index == 0):
+            if(index == 5):
                 bx, by = lm[0], lm[1] 
             if(index == 8):  
                 tx, ty = lm[0], lm[1]
@@ -450,14 +450,14 @@ def projectedPoint(p1, p2, p3):
     return getVectorPoint(p3, perpendicular) 
 
 class TargetDescription():
-    def __init__(self, description, radius):
+    def __init__(self, description, distance):
         self.description = description
-        self.radius = radius
+        self.distance = distance
 
 def sortTarget(target):
-    return target.radius 
+    return target.distance 
 
-def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shift, gaze):
+def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shift, gaze, gesture=False, index=(0,0,0)):
     targets = []
     for block in blocks:
         targetPoint = [(block.p1[0] + block.p2[0])/2,(block.p1[1] + block.p2[1]) / 2]
@@ -488,10 +488,10 @@ def checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, shi
             thickness=3, 
             shift=shift)
 
-        block.target, raduis = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, True)
+        block.target, distance = cone.ContainsPoint(object3D[0], object3D[1], object3D[2], frame, False, gesture=gesture, index=index)
         if(block.target):
             width = 5
-            targets.append(TargetDescription(block.description, raduis))
+            targets.append(TargetDescription(block.description, distance))
             if gaze:
                 if block.description not in blockStatus:
                     blockStatus[block.description] = 1
@@ -600,7 +600,7 @@ class ConeShape:
             cv2.line(frame, vertexPointUpZ, pointUpZ, color=ZColor, thickness=5, shift=shift)
             cv2.line(frame, vertexPpointDownZ, pointDownZ, color=ZColor, thickness=5, shift=shift)
 
-    def ContainsPoint(self, x, y, z, frame, includeOverlay = False, shift = 7):        
+    def ContainsPoint(self, x, y, z, frame, includeOverlay = False, shift = 7, gesture=False, index=(0,0,0)):        
         # cone radius relative to the height at perpindicular point on vector
         proj = projectedPoint(self.vertex, self.base, [x,y,z]) 
 
@@ -630,7 +630,10 @@ class ConeShape:
 
         if (pointRadius <= coneRadius):
             # print("Target\n")
-            return True, pointRadius
+            if(gesture):
+                return True, distance3D(index, proj)
+            else: 
+                return True, -1
         # print("\n")
         return False, -1
 
@@ -888,7 +891,7 @@ class Block:
             self.description = GamrTarget.PURPLE_BLOCK
 
         if(description == 5):
-            self.description = GamrTarget.MYSTERY_BLOCK
+            self.description = GamrTarget.SCALE
 
     def toJSON(self):
         return {
@@ -981,6 +984,14 @@ def initalizeGamrFile(path):
     if os.path.exists(path):
         shutil.rmtree(path)
 
+def loadUtteranceFeatures(csvFile):
+    featuresArray = []
+    features = np.loadtxt(csvFile, delimiter=',', ndmin=2, dtype=str, usecols=list(range(0, 4)))
+    if features.size != 0: 
+        for f in features:
+            featuresArray.append(f)
+        return featuresArray
+
 ################################################################################
 
 #drawing utils
@@ -1008,3 +1019,5 @@ def convertTimestamp(seconds):
      
     return "%d:%02d:%02d" % (hour, minutes, seconds)
 
+def get_frame_bin(frame):
+    return frame // 30
