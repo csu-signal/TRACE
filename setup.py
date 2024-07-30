@@ -43,7 +43,7 @@ ext_modules = [
 
 # setup package
 setup(
-    name="azure_kinect_wrapper",
+    name="Camera_Calibration",
     python_requires=">=3.10",
     ext_modules=ext_modules,
     packages=["azure_kinect-stubs", "demo"],

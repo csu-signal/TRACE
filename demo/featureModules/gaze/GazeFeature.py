@@ -1,3 +1,4 @@
+from pathlib import Path
 from demo.featureModules.IFeature import *
 import mediapipe as mp
 import joblib
@@ -49,8 +50,15 @@ class GazeFeature(IFeature):
     def __init__(self, shift, log_dir=None):
         self.shift = shift
         self.faceDetector = MTCNN()
-        self.gazeModel = keras.models.load_model(".\\featureModules\\gaze\\gazeDetectionModels\\Model\\1", custom_objects={'euclideanLoss': euclideanLoss,
-                                                                 'categorical_accuracy': categorical_accuracy})
+
+        model_dir = str(Path(__file__).parent / "gazeDetectionModels" / "Model" / "1")
+        self.gazeModel = keras.models.load_model(
+            model_dir,
+            custom_objects={
+                "euclideanLoss": euclideanLoss,
+                "categorical_accuracy": categorical_accuracy,
+            },
+        )
 
         if log_dir is not None:
             self.logger = Logger(file=log_dir / self.LOG_FILE)

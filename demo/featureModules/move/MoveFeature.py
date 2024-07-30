@@ -30,7 +30,7 @@ class MoveFeature:
 
     def __init__(self,
                  log_dir=None,
-                 model=Path(__file__).parent / "production_move_classifier.pt"):
+                 model=str(Path(__file__).parent / "production_move_classifier.pt")):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.model = torch.load(str(model)).to(self.device)

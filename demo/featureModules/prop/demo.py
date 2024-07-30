@@ -108,7 +108,7 @@ def process_sentence(sentence, model, tokenizer, bert, embeddings, verbose=False
 
     #call tokenize props here.
     
-    new_df.to_csv("test_set.csv") #sanity check
+    # new_df.to_csv("test_set.csv") #sanity check
     
     
     test_ab, test_ba = tokenize_props(tokenizer, new_df.index.to_list(), proposition_map_test, model.end_id, max_sentence_len=512, truncate=True)    

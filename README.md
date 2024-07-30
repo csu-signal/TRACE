@@ -15,8 +15,8 @@ Both of these libraries are installed in `C:\Program Files\` on rosch.
 
 Once the installation is complete, open `azure_kinect_wrapper/setup.py` and ensure that `K4A_DIR` and `K4ABT_DIR` are set to the correct locations.
 
-## Wrapper Library
-Run `pip install ./azure_kinect_wrapper`.
+## Project Packages
+This project has 3 packages. `demo` contains the demo logic, features, and models. `azure_kinect` is a wrapper library for the Azure Kinect SDK and allows for interacting with the cameras and recordings. `azure_kinect-stubs` has type annotations for the `azure_kinect` package. To install all packages, run `pip install -e .`
 
 ## Download models
 Download the following models from [here](https://colostate-my.sharepoint.com/:f:/g/personal/nkrishna_colostate_edu/EhYic6HBX7hFta6GjQIcb9gBxV_K0yYFhtHagiVyClr7gQ?e=W6Pm6I) and save at the given locations:
@@ -25,13 +25,13 @@ Download the following models from [here](https://colostate-my.sharepoint.com/:f
 - `production_move_classifier.pt` ==> `featureModules/move/production_move_classifier.pt`
 
 # Running the demo
-In `config.py`, make sure `K4A_DIR` points to the correct installation location of the Body Tracking SDK. Run `python demo.py`.
+In `config.py`, make sure `K4A_DIR` points to the correct installation location of the Body Tracking SDK. Run `python -m demo`.
 
 # Modular Feature Interface
 - "featureModules/featureName" - contains all data/relevant files for a feature of interest and gets auto copied to the output folder each build
 - IFeature
-  - __init__ - initalize any models, setup code
-  - __processFrame__ - runs each time a frame is processed
+  - `__init__` - initalize any models, setup code
+  - `processFrame` - runs each time a frame is processed
 
 - note that the paths to the any models or loaded data needs to be realive to the location of the root directory of the repository.
 

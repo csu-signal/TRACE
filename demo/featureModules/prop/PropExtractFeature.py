@@ -23,10 +23,9 @@ class PropExtractFeature(IFeature):
     def __init__(
         self,
         log_dir=None,
-        model_dir=Path(__file__).parent / "data/prop_extraction_model",
+        model_dir=str(Path(__file__).parent / "data/prop_extraction_model"),
     ):
-        print(model_dir)
-        self.model, self.tokenizer = load_model(str(model_dir))
+        self.model, self.tokenizer = load_model(model_dir)
         self.bert = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
         self.init_logger(log_dir)
         self.embeddings = get_pickle(self.bert)
