@@ -1,5 +1,5 @@
 """
-Base profile which can be used by the demo to load different devices
+Base profile which implements standard demo behavior.
 """
 
 from dataclasses import dataclass
@@ -33,19 +33,37 @@ os.add_dll_directory(K4A_DIR)
 import azure_kinect
 
 class FrameTimeConverter:
+    """
+    A helper class that can quickly look up what time a frame was processed
+    or which frame was being processed at a given time.
+    """
     def __init__(self) -> None:
         self.data = []
 
     def add_data(self, frame, time):
+        """
+        Add a new datapoint. The frame and time must be strictly increasing
+        so binary search can be used.
+        
+        Arguments:
+        frame -- the frame number
+        time -- the current time
+        """
         # must be strictly monotonic so binary search can be used
         assert len(self.data) == 0 or frame > self.data[-1][0]
         assert len(self.data) == 0 or time > self.data[-1][1]
         self.data.append((frame, time))
 
     def get_time(self, frame):
+        """
+        Return the time that a frame was processed
+        """
         return self._binary_search(0, frame)[1]
 
     def get_frame(self, time):
+        """
+        Return the frame being processed at a certain time
+        """
         return self._binary_search(1, time)[0]
 
     def _binary_search(self, index, val):
@@ -77,6 +95,15 @@ class FrameInfo:
     frame_count: int
 
 class BaseProfile(ABC):
+    """
+    A base class for the demo behavior. This class creates all the necessary features
+    and handles any evaluation parameters. It also handles saving frames and turning the
+    output into a video.
+
+    The two abstract methods that must be implemented by a derived class are:
+    create_camera_device -- create and return an azure kinect Device
+    create_audio_devices -- create and return audio devices (which inherit from BaseDevice)
+    """
     def __init__(
             self,
             *,
@@ -100,6 +127,10 @@ class BaseProfile(ABC):
         self.saved_frame_count = 0
 
     def init_features(self):
+        """
+        Initialize features. This method should be used as opposed to __init__ to stop
+        unused profiles from initializing all features and taking up memory.
+        """
         for i in (self.output_dir, self.video_dir, self.processed_frame_dir, self.raw_frame_dir):
             os.makedirs(i, exist_ok=True)
 
@@ -177,6 +208,9 @@ class BaseProfile(ABC):
         return self.vars[var].get()
 
     def processFrame(self, frame_info: FrameInfo):
+        """
+        Process a frame with all the active features.
+        """
         device_id = 0
         h,w,_ = frame_info.output_frame.shape
 
@@ -227,7 +261,14 @@ class BaseProfile(ABC):
 
         self.update_summary(new_utterances, frame_info.frame_count)
 
-    def update_summary(self, new_utterances, frame_count):
+    def update_summary(self, new_utterances: list[int], frame_count: int):
+        """
+        Log a message after each frame.
+
+        Arguments:
+        new_utterances -- a list of utterance ids
+        frame_count -- the current frame
+        """
         for i in new_utterances:
             utterance = self.dense_paraphrasing.paraphrased_utterance_lookup[i]
             prop = self.prop.prop_lookup[i]
@@ -247,6 +288,10 @@ class BaseProfile(ABC):
             self.summary_log.append(update)
 
     def finalize(self):
+        """
+        Run after the processing is complete. Turns the saved frames into videos and removes
+        the frame directories to clear up space.
+        """
         # TODO: join_processes=True once they are guaranteed to close cleanly
         # right now it just works for 1 processor and 1 builder
         self.asr.exit(join_processes=False)
@@ -264,9 +309,11 @@ class BaseProfile(ABC):
         shutil.rmtree(self.raw_frame_dir)
 
     def preprocess(self, frame_info: FrameInfo):
+        """Run before processFrame. Save the original image."""
         cv.imwrite(f"{self.raw_frame_dir}\\frame{self.saved_frame_count:08}.png", frame_info.output_frame)
 
     def postprocess(self, frame_info: FrameInfo):
+        """Run after processFrame. Save and display the output image."""
         # resize, display, and save output
         frame_info.output_frame = cv.resize(frame_info.output_frame, (1280, 720))
         cv.imshow("output", frame_info.output_frame)
@@ -276,10 +323,26 @@ class BaseProfile(ABC):
         self.saved_frame_count += 1
 
     def is_done(self, frame_count, fail_count):
+        """
+        Return a boolean which is true if the demo should stop processing. This happens
+        when either the display window is manually closed or 20 frames have failed in a row.
+
+        Arguments:
+        frame_count -- the current frame
+        fail_count -- the number of consecutive failed frames
+        """
         return cv.getWindowProperty("output", cv.WND_PROP_VISIBLE) == 0 or fail_count > 20
 
     @staticmethod
     def frames_to_video(frame_path, output_path, rate=PLAYBACK_TARGET_FPS):
+        """
+        Given a path representing a series of images, create a video.
+
+        Arguments:
+        frame_path -- a format string representing the image paths (ex. "frame%8d.png")
+        output_path -- the path of the output video (ex. "result.mp4")
+        rate -- the frame rate of the output video, defaults to PLAYBACK_TARGET_FPS
+        """
         os.system(f"ffmpeg -framerate {rate} -i {frame_path} -c:v libx264 -pix_fmt yuv420p {output_path}")
 
     @abstractmethod

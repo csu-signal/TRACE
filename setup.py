@@ -1,3 +1,8 @@
+"""
+Package build and install information. Used when `pip install -e .`
+is run.
+"""
+
 from pybind11.setup_helpers import Pybind11Extension
 from setuptools import setup
 import platform

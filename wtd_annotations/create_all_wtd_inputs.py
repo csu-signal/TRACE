@@ -1,3 +1,10 @@
+"""
+A script to generate all inputs for evaluating this demo on
+the Weights Task Dataset. Needs to be run on rosch.
+
+Usage: `python create_all_wtd_inputs.py <dir>`
+"""
+
 import os
 import sys
 from pathlib import Path

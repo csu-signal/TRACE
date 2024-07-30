@@ -1,5 +1,6 @@
 """
 Profiles which can be used by the demo to load different devices
+and evaluation configurations.
 """
 
 import os
@@ -19,6 +20,12 @@ import azure_kinect
 
 @final
 class LiveProfile(BaseProfile):
+    """
+    A profile which uses the live camera and audio devices.
+
+    Arguments:
+    mic_info -- a list of tuples [(name, mic index), ...]
+    """
     def __init__(self, mic_info: list[tuple[str, int]]):
         super().__init__(eval_config=None)
         self.mic_info = mic_info
@@ -31,6 +38,21 @@ class LiveProfile(BaseProfile):
 
 @final
 class RecordedProfile(BaseProfile):
+    """
+    A profile which uses a prerecorded Azure Kinect mkv file and
+    audio from a saved recording. Allows for passing evaluation info
+    and early stopping of processing.
+
+    Arguments:
+    mkv_path -- the path to the mkv
+    mic_info -- a list of tuples [(name, path to audio recording), ...]
+
+    Keyword Arguments:
+    eval_config -- the evaluation config to use (default None)
+    mkv_frame_rate -- the frame rate of the mkv video (defualt 30)
+    end_time -- the number of seconds at which to stop processing (default None)
+    output_dir -- the directory to put the processing output into
+    """
     def __init__(
         self,
         mkv_path: str,
@@ -87,6 +109,9 @@ class RecordedProfile(BaseProfile):
         print(f"saved video as {self.video_dir}\\final.mp4")
 
 def create_recorded_profile(path, *, output_dir=None, eval_config=None) -> RecordedProfile:
+    """
+    Create a profile from the output of the Azure Kinect Recorder.
+    """
     return RecordedProfile(
         rf"{path}-master.mkv",
         [
@@ -102,6 +127,10 @@ def create_recorded_profile(path, *, output_dir=None, eval_config=None) -> Recor
 # TODO: remove later
 @final
 class BradyLaptopProfile(BaseProfile):
+    """
+    A profile that I (Brady) can use to test on my laptop. Uses the group
+    1 mkv file and the laptop mic.
+    """
     def __init__(self):
         super().__init__()
 
@@ -112,6 +141,17 @@ class BradyLaptopProfile(BaseProfile):
         return [MicDevice("Brady", 1)]
 
 def create_wtd_eval_profiles(group, input_dir, output_dir, end_time=None) -> list[RecordedProfile]:
+    """
+    Create a profile to run WTD evaluation with ablation. It will run 4 profiles with no ground truth,
+    asr ground truth, gesture ground truth, and object ground truth.
+
+    Arguments:
+    group -- which group to evaluation
+    input_dir -- the location of input csv files, these can be created with the
+                 "create_all_wtd_inputs.py" script
+    output_dir -- output of each processing is stored in <output_dir>/group<group>/
+    end_time -- the number of seconds in the recording after which the processing should stop
+    """
     mkv = config.WTD_MKV_PATH.format(group)
     audio = config.WTD_AUDIO_PATH.format(group)
 

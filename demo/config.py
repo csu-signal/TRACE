@@ -1,3 +1,5 @@
+""" Global configuration for the demo """
+
 # dll files needed to run azure kinect
 K4A_DIR = r"C:\Program Files\Azure Kinect Body Tracking SDK\tools"
 

@@ -2,6 +2,11 @@ import os
 import csv
 
 class Logger:
+    """
+    Simple logging class that the features can use
+    to create output csvs. Also provides
+    methods to write to text files and stdout.
+    """
     def __init__(self, *, file=None, stdout=False):
         self.file = file
         self.stdout = stdout

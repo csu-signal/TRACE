@@ -1,3 +1,7 @@
+"""
+Test ASR without running the full demo.
+"""
+
 from demo.base_profile import FrameTimeConverter
 from demo.featureModules.asr.AsrFeature import AsrFeature
 from demo.featureModules.asr.device import MicDevice, PrerecordedDevice

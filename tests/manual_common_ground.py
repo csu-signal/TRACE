@@ -1,3 +1,7 @@
+"""
+Test the common ground structure without running the full demo.
+"""
+
 from demo.featureModules.common_ground.closure_rules import CommonGround
 
 closure_rules = CommonGround()

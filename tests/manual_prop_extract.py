@@ -1,3 +1,7 @@
+"""
+Test the prop extractor without running the full demo.
+"""
+
 from demo.featureModules.prop.demo import process_sentence, load_model
 from demo.featureModules.prop.PropExtractFeature import COLORS, NUMBERS
 from sentence_transformers import SentenceTransformer
