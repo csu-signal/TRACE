@@ -7,6 +7,7 @@
 
 namespace py = pybind11;
 
+// define python interface
 PYBIND11_MODULE(azure_kinect, m) {
 
   py::class_<Device>(m, "Device")

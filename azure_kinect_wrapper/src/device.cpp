@@ -72,6 +72,8 @@ py::object get_frame_fail_return() {
   return py::make_tuple(py::none(), py::none(), json_to_dict(json::object()));
 }
 
+// return the next frame if it is obtained successfully
+// otherwise returns (None, None, {})
 py::object Device::get_frame() {
   capture_handle.reset();
   update_capture_handle();
