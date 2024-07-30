@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     groups = [1,2,4,5]
 
-    profiles = []
+    profiles: list[BaseProfile] = []
     for group in groups:
         profiles += create_wtd_eval_profiles(group, "wtd_inputs", "wtd_outputs", end_time = WTD_END_TIMES[group])
 
