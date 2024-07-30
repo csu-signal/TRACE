@@ -66,7 +66,7 @@ def process_sentence(sentence, model, tokenizer, bert, embeddings, verbose=False
     sentence = remove_stop_words(sentence)
     #inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
     
-    common_grounds_dataSet = pd.read_csv(PROP_LIST)
+    common_grounds_dataSet = pd.read_csv(NORMALIZED_PROP_LIST)
     # common_grounds_dataSet = pd.read_csv('data/NormalizedList.csv')
     common_grounds = list(common_grounds_dataSet['Propositions'])
     
