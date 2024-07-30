@@ -37,7 +37,7 @@ class AsrFeatureEval(AsrFeature):
 
         self.current_frame = 0
 
-    def exit(self):
+    def exit(self, join_processes=True):
         pass
 
     def get_chunk_file(self, file):

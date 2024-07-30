@@ -3,15 +3,11 @@ Profiles which can be used by the demo to load different devices
 """
 
 import os
-from abc import ABC, abstractmethod
-from datetime import datetime
-from pathlib import Path
 from typing import final
 
-import demo.config
+import demo.config as config
 from demo.base_profile import BaseProfile, FrameInfo
 from demo.config import K4A_DIR
-from demo.fake_camera import FakeCamera
 from demo.featureModules import BaseDevice, MicDevice, PrerecordedDevice
 from demo.featureModules.evaluation.eval_config import EvaluationConfig
 
@@ -114,17 +110,6 @@ class BradyLaptopProfile(BaseProfile):
 
     def create_audio_devices(self) -> list[BaseDevice]:
         return [MicDevice("Brady", 1)]
-
-@final
-class TestDenseParaphrasingProfile(BaseProfile):
-    def __init__(self) -> None:
-        super().__init__(eval_config=EvaluationConfig(directory="test_inputs\\dense_paraphrasing", asr=True, gesture=True))
-
-    def create_camera_device(self):
-        return FakeCamera()
-
-    def create_audio_devices(self):
-        return []
 
 def create_wtd_eval_profiles(group, input_dir, output_dir, end_time=None) -> list[RecordedProfile]:
     mkv = config.WTD_MKV_PATH.format(group)

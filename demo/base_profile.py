@@ -16,7 +16,6 @@ import cv2 as cv
 from cv2.typing import MatLike
 
 from demo.config import K4A_DIR, PLAYBACK_SKIP_FRAMES, PLAYBACK_TARGET_FPS
-from demo.fake_camera import FakeCamera
 from demo.featureModules import (AsrFeature, AsrFeatureEval, BaseDevice,
                             CommonGroundFeature, DenseParaphrasingFeature,
                             GazeBodyTrackingFeature, GazeFeature,
@@ -248,7 +247,9 @@ class BaseProfile(ABC):
             self.summary_log.append(update)
 
     def finalize(self):
-        self.asr.exit()
+        # TODO: join_processes=True once they are guaranteed to close cleanly
+        # right now it just works for 1 processor and 1 builder
+        self.asr.exit(join_processes=False)
         self.root.destroy()
 
         self.frames_to_video(
@@ -282,7 +283,7 @@ class BaseProfile(ABC):
         os.system(f"ffmpeg -framerate {rate} -i {frame_path} -c:v libx264 -pix_fmt yuv420p {output_path}")
 
     @abstractmethod
-    def create_camera_device(self) -> azure_kinect.Device | FakeCamera:
+    def create_camera_device(self) -> azure_kinect.Device:
         raise NotImplementedError
 
     @abstractmethod

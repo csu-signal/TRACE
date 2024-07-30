@@ -10,7 +10,6 @@ from demo.profiles import (
     LiveProfile,
     RecordedProfile,
     create_recorded_profile,
-    TestDenseParaphrasingProfile,
     create_wtd_eval_profiles,
 )
 from demo.base_profile import BaseProfile, FrameInfo

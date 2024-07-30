@@ -2,11 +2,10 @@ from demo.featureModules.prop.demo import process_sentence, load_model
 from demo.featureModules.prop.PropExtractFeature import COLORS, NUMBERS
 from sentence_transformers import SentenceTransformer
 from demo.featureModules.prop.demoHelpers import *
-from sentence_transformers import SentenceTransformer
-from demo.featureModules.prop.demoHelpers import *
+import demo.featureModules
 
 
-model_dir = r'featureModules\prop\data\prop_extraction_model'
+model_dir = str(Path(demo.featureModules.__file__).parent / "prop" / "data" / "prop_extraction_model")
 model, tokenizer = load_model(model_dir)
 bert = SentenceTransformer('sentence-transformers/multi-qa-distilbert-cos-v1')
 embeddings = get_pickle(bert)

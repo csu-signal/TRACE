@@ -39,7 +39,6 @@ def select_audio_device():
 def build_utterances(
     builder_queue: "mp.Queue[AsrDeviceData]",
     processor_queue: mp.Queue,
-    done,
     use_vad=True,
     max_utterance_time=10,
     output_dir = None
@@ -63,10 +62,10 @@ def build_utterances(
 
     counter = 0
 
-    while not done.value:
+    while True:
         data = builder_queue.get()
         if data is None:
-            continue
+            break
         id, start, stop, frames, sample_rate, sample_width, channels = (
             data.id,
             data.start_time,
@@ -123,15 +122,17 @@ def build_utterances(
             total_time[id] = 0
             counter += 1
 
+    processor_queue.put(None)
 
-def process_utterances(queue: "mp.Queue[AsrUtteranceData]", done, print_output=False, output_queue=None):
+
+def process_utterances(queue: "mp.Queue[AsrUtteranceData]", print_output=False, output_queue=None):
     # model = faster_whisper.WhisperModel("large-v2", compute_type="float16")
     model = faster_whisper.WhisperModel("small", compute_type="float16")
 
-    while not done.value:
+    while True:
         data = queue.get()
         if data is None:
-            continue
+            break
         name, start_time, stop_time, chunk_file = data.id, data.start_time, data.stop_time, data.audio_file
         
         segments, info = model.transcribe(chunk_file, language="en")
@@ -142,6 +143,9 @@ def process_utterances(queue: "mp.Queue[AsrUtteranceData]", done, print_output=F
 
         if output_queue is not None:
             output_queue.put((name, start_time, stop_time, transcription, chunk_file))
+
+    if output_queue is not None:
+        output_queue.put(None)
 
 
 @dataclass
@@ -167,24 +171,30 @@ class AsrFeature(IFeature):
         self.utterance_builder_queue = mp.Queue()
         self.utterance_processor_queue = mp.Queue()
         self.done = mp.Value(c_bool, False)
-        recorders = [d.create_recorder_process(self.utterance_builder_queue, self.done) for d in devices]
-        builder = mp.Process(target = build_utterances, args=(self.utterance_builder_queue, self.utterance_processor_queue, self.done), kwargs={"output_dir": log_dir})
+        self.recorders = [d.create_recorder_process(self.utterance_builder_queue, self.done) for d in devices]
+        self.builder = mp.Process(target = build_utterances, args=(self.utterance_builder_queue, self.utterance_processor_queue ), kwargs={"output_dir": log_dir})
 
         self.n_processors = n_processors
-        processors = [mp.Process(target=process_utterances, args=(self.utterance_processor_queue, self.done), kwargs={"output_queue":self.asr_output_queue}) for _ in range(self.n_processors)]
+        self.processors = [mp.Process(target=process_utterances, args=(self.utterance_processor_queue,), kwargs={"output_queue":self.asr_output_queue}) for _ in range(self.n_processors)]
 
 
-        for i in recorders + processors + [builder]:
+        for i in self.recorders + self.processors + [self.builder]:
             i.start()
 
         self.init_logger(log_dir)
 
         self.utterance_lookup: dict[int, UtteranceInfo] = {}
 
-    def exit(self):
+    def exit(self, join_processes=True):
         self.done.value = True
-        self.utterance_builder_queue.put(None)
-        self.utterance_processor_queue.put(None)
+
+        while self.asr_output_queue.get() is not None:
+            pass
+
+        if join_processes:
+            for i in self.recorders + self.processors + [self.builder]:
+                i.join()
+
 
     def init_logger(self, log_dir):
         if log_dir is not None:

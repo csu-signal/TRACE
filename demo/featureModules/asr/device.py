@@ -71,6 +71,7 @@ class MicDevice(BaseDevice):
         stream.stop_stream()
         stream.close()
         p.terminate()
+        queue.put(None)
 
 @final
 class PrerecordedDevice(BaseDevice):
