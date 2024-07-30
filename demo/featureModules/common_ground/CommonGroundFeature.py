@@ -80,7 +80,6 @@ class CommonGroundFeature(IFeature):
                     x = (int(blockWidth / 2) - int(tw / 2)) + p1
                     cv2.putText(frame, line, (x, y), cv2.FONT_HERSHEY_SIMPLEX, fontScales[numberLabels - 1], (0,0,0), fontThickness[numberLabels -1])
 
-    # TODO: create moveinfo
     def processFrame(self, frame, new_utterances: list[int], prop_lookup: dict[int, PropInfo], move_lookup: dict[int, MoveInfo], frame_count):
         for i in new_utterances:
             prop = prop_lookup[i].prop
