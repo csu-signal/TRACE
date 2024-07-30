@@ -90,7 +90,7 @@ class RecordedProfile(BaseProfile):
 
         print(f"saved video as {self.video_dir}\\final.mp4")
 
-def create_recorded_profile(path, *, output_dir=None, eval_config=None):
+def create_recorded_profile(path, *, output_dir=None, eval_config=None) -> RecordedProfile:
     return RecordedProfile(
         rf"{path}-master.mkv",
         [
@@ -126,7 +126,7 @@ class TestDenseParaphrasingProfile(BaseProfile):
     def create_audio_devices(self):
         return []
 
-def create_wtd_eval_profiles(group, input_dir, output_dir, end_time=None):
+def create_wtd_eval_profiles(group, input_dir, output_dir, end_time=None) -> list[RecordedProfile]:
     mkv = config.WTD_MKV_PATH.format(group)
     audio = config.WTD_AUDIO_PATH.format(group)
 
