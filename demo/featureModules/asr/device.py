@@ -25,13 +25,24 @@ class AsrDeviceData:
 class BaseDevice(ABC):
     @abstractmethod
     def get_id(self):
+        """
+        Return the unique identifier of the device.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def create_recorder_process(self, asr_queue: mp.Queue, done: Synchronized):
+        """
+        Returns a multiprocessing Process that records audio and sends chunks into the
+        asr_queue. When done.value becomes False, the process is responsible for putting None
+        onto the queue.
+        """
         raise NotImplementedError
 
     def handle_frame(self, frame_count: int):
+        """
+        A function that will get called while each frame is being processed.
+        """
         pass
 
 @final
@@ -97,11 +108,14 @@ class PrerecordedDevice(BaseDevice):
 
     def create_recorder_process(self, asr_queue: mp.Queue, done: Synchronized):
         self.asr_queue = asr_queue
-        return mp.Process(target=PrerecordedDevice.noop)
+        return mp.Process(target=PrerecordedDevice.noop, args=(asr_queue, done))
 
     @staticmethod
-    def noop():
-        pass
+    def noop(asr_queue, done):
+        while not done.value:
+            time.sleep(1)
+
+        asr_queue.put(None)
 
     @property
     def audio_time(self):
