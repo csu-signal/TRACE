@@ -397,3 +397,8 @@ test_set.csv
 
 stats_*/
 wtd_inputs
+
+build/
+*.egg-info/
+nlohmann/
+*.pyd

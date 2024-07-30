@@ -4,7 +4,7 @@ import numpy as np
 import json
 from enum import Enum
 import mediapipe as mp
-import utils
+import demo.featureModules.utils as utils
 
 class Joint(Enum):
         PELVIS = 0

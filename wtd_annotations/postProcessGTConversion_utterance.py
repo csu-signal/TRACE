@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from utils import loadUtteranceFeatures
+from demo.featureModules.utils import loadUtteranceFeatures
 import os
 import csv
 import re
