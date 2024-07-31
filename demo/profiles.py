@@ -4,7 +4,7 @@ and evaluation configurations.
 """
 
 import os
-from typing import final
+from typing import Iterable, final
 
 import demo.config as config
 from demo.base_profile import BaseProfile, FrameInfo
@@ -143,7 +143,13 @@ class BradyLaptopProfile(BaseProfile):
     def create_audio_devices(self) -> list[BaseDevice]:
         return [MicDevice("Brady", 1)]
 
-def create_wtd_eval_profiles(group, input_dir, output_dir, end_time=None) -> list[RecordedProfile]:
+def create_wtd_eval_profiles(
+        group: int,
+        input_dir: str,
+        output_dir: str,
+        end_time: int | None = None,
+        configs: Iterable[str] = ("no_gt", "asr_gt", "gesture_gt", "object_gt")
+) -> list[RecordedProfile]:
     """
     Create a profile to run WTD evaluation with ablation. It will run 4 profiles with no ground truth,
     asr ground truth, gesture ground truth, and object ground truth.
@@ -154,6 +160,8 @@ def create_wtd_eval_profiles(group, input_dir, output_dir, end_time=None) -> lis
                  "create_all_wtd_inputs.py" script
     output_dir -- output of each processing is stored in <output_dir>/group<group>/
     end_time -- the number of seconds in the recording after which the processing should stop
+    configs -- the set of evaluation/ablation runs to do, must be a subset of
+                ("no_gt", "asr_gt", "gesture_gt", "object_gt")
     """
     mkv = config.WTD_MKV_PATH.format(group)
     audio = config.WTD_AUDIO_PATH.format(group)
@@ -171,7 +179,8 @@ def create_wtd_eval_profiles(group, input_dir, output_dir, end_time=None) -> lis
     }
 
     profiles = []
-    for name, kwargs in eval_config_kwargs.items():
+    for name in configs:
+        kwargs = eval_config_kwargs[name]
         eval_config = EvaluationConfig(f"{input_dir}\\group{group}", **models_kwargs, **kwargs, fallback_audio=audio)
         prof = RecordedProfile(
                 mkv,
