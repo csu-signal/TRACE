@@ -72,8 +72,11 @@ class RecordedProfile(BaseProfile):
 
         self.end_frame = int(self.mkv_frame_rate * end_time) if end_time is not None else None
 
-    def is_done(self, frame_count, fail_count):
-        return super().is_done(frame_count, fail_count) or frame_count > self.end_frame
+    def is_done(self, frame_count: int, fail_count: int):
+        if self.end_frame is not None and frame_count > self.end_frame:
+            return True
+
+        return super().is_done(frame_count, fail_count)
 
     def create_camera_device(self):
         return azure_kinect.Playback(self.mkv)
