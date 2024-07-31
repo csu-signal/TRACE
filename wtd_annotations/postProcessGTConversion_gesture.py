@@ -1,6 +1,6 @@
 import argparse
 import json
-from utils import GamrCategory, GamrTarget, convertGamrValues, loadGamrFeatures, loadKeyFrameFeatures
+from demo.featureModules.utils import GamrCategory, GamrTarget, convertGamrValues, loadGamrFeatures, loadKeyFrameFeatures
 import os
 import csv
 
