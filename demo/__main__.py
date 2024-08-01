@@ -6,7 +6,6 @@ os.add_dll_directory(K4A_DIR)
 import cv2 as cv
 
 from demo.base_profile import BaseProfile
-from demo.featureModules import rec_common_ground
 from demo.profiles import (BradyLaptopProfile, LiveProfile, RecordedProfile,
                            create_recorded_profile, create_wtd_eval_profiles)
 

@@ -37,4 +37,4 @@ if __name__ == "__main__":
 
         frame_count += 1
 
-    asr.done.value = True
+    asr.exit()
