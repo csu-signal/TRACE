@@ -24,3 +24,6 @@ WTD_END_TIMES = {
     9: 3*60 + 46,
     10: 6*60 + 51,
 }
+
+# size of the output image / video in the format (width, height)
+PROCESSED_SIZE = (1280, 720)

@@ -3,6 +3,7 @@ Test ASR without running the full demo.
 """
 
 from demo.base_profile import FrameTimeConverter
+from demo.config import PROCESSED_SIZE
 from demo.featureModules.asr.AsrFeature import AsrFeature
 from demo.featureModules.asr.device import MicDevice, PrerecordedDevice
 from time import time
@@ -22,7 +23,7 @@ if __name__ == "__main__":
 
         time_to_frame.add_data(frame_count, time())
 
-        frame = np.zeros((720, 1280, 3))
+        frame = np.zeros((PROCESSED_SIZE[1], PROCESSED_SIZE[0], 3))
         new_utterances = asr.processFrame(frame, frame_count, time_to_frame.get_frame, False)
         for id in new_utterances:
             utterance_info = asr.utterance_lookup[id]

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from tkinter import LEFT, RIGHT, Checkbutton, Frame, IntVar, Label, Tk
 from typing import final
+from demo.config import PROCESSED_SIZE
 
 import numpy as np
 from PIL import Image, ImageTk
@@ -68,13 +69,13 @@ class Gui(BaseGui):
             "common ground": GuiFeatureInfo(True),
         }
 
-        self.output_frame = np.zeros((500, 500, 3), dtype=np.float32)
+        self.output_frame = np.zeros((PROCESSED_SIZE[1], PROCESSED_SIZE[0], 3), dtype=np.uint8)
         self.image_label = Label(self.root)
         self.image_label.pack(side=LEFT)
         self._update_image_callback()
 
         button_frame = Frame(self.root).pack(side=RIGHT)
-        for i, (text, var) in enumerate(self.feature_vars.items()):
+        for text, var in self.feature_vars.items():
             Checkbutton(
                 button_frame,
                 text=text,
@@ -94,7 +95,7 @@ class Gui(BaseGui):
         self.root.after(100, self._update_vars_callback)
 
     def _update_image_callback(self):
-        img = Image.fromarray(self.output_frame.astype(np.uint8))
+        img = Image.fromarray(self.output_frame)
         imgtk = ImageTk.PhotoImage(image=img)
         self.image_label.imgtk = imgtk
         self.image_label.configure(image=imgtk)
@@ -115,6 +116,13 @@ class Gui(BaseGui):
         self.root.after(0, self.root.destroy)
 
     def new_image(self, frame):
+        """
+        Update the displayed image.
+
+        Arguments:
+        frame -- a numpy array with shape (height, width, 3). Must have dtype np.uint8.
+        """
+        assert frame.dtype == np.uint8
         self.output_frame = frame
 
     def feature_active(self, name):

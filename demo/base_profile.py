@@ -11,7 +11,7 @@ from threading import Thread
 
 import cv2 as cv
 
-from demo.config import K4A_DIR, PLAYBACK_SKIP_FRAMES
+from demo.config import K4A_DIR, PLAYBACK_SKIP_FRAMES, PROCESSED_SIZE
 from demo.feature_manager import FeatureManager
 from demo.featureModules.evaluation.eval_config import EvaluationConfig
 from demo.gui import Gui
@@ -112,7 +112,7 @@ class BaseProfile(ABC):
         self.features.processFrame(frame_info, self.gui.feature_active)
 
         # postprocessing
-        frame_info.output_frame = cv.resize(frame_info.output_frame, (1280, 720))
+        frame_info.output_frame = cv.resize(frame_info.output_frame, PROCESSED_SIZE)
         self.gui.new_image(cv.cvtColor(frame_info.output_frame, cv.COLOR_BGR2RGB))
         cv.imwrite(
             f"{self.processed_frame_dir}\\frame{self.saved_frame_count:08}.png",

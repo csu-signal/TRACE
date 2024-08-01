@@ -7,7 +7,7 @@ from demo.featureModules.common_ground.CommonGroundFeature import \
 from demo.featureModules.gaze.GazeBodyTrackingFeature import GazeBodyTrackingFeature
 from demo.featureModules.gaze.GazeFeature import GazeFeature
 from demo.featureModules.gesture.GestureFeature import GestureFeature
-from demo.featureModules.move.MoveFeature import MoveFeature, rec_common_ground
+from demo.featureModules.move.MoveFeature import MoveFeature
 from demo.featureModules.objects.ObjectFeature import ObjectFeature
 from demo.featureModules.pose.PoseFeature import PoseFeature
 from demo.featureModules.prop.PropExtractFeature import PropExtractFeature

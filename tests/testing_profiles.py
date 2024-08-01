@@ -19,6 +19,9 @@ class TestDenseParaphrasingProfile(BaseProfile):
         )
         super().__init__(output_dir=output_dir, eval_config=eval)
 
+    def is_done(self, frame_count, fail_count):
+        return frame_count > 200
+
     def create_camera_device(self):  # pyright: ignore
         return FakeCamera()
 
