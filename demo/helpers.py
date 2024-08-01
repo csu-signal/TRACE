@@ -6,8 +6,9 @@ import os
 from dataclasses import dataclass
 
 import numpy as np
-from config import PLAYBACK_TARGET_FPS
 from cv2.typing import MatLike
+
+from demo.config import PLAYBACK_TARGET_FPS
 
 
 @dataclass
