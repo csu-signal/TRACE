@@ -31,7 +31,4 @@ In `demo/config.py`, make sure `K4A_DIR` points to the correct installation loca
 
 - note that the paths to the any models or loaded data needs to be relative to the location of the root directory of the repository.
 
-# Processed Recordings
-[See here](https://colostate-my.sharepoint.com/:f:/g/personal/nkrishna_colostate_edu/EjkGU4L-MbxDqX9HuML4t4MBl418eYdoVnWr9_Tmnf0BzQ?e=dAomhR)
-
 Feel free to reach out to Hannah VanderHoeven with any questions (Hannah.VanderHoeven@colostate.edu)
