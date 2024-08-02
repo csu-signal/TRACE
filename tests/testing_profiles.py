@@ -11,16 +11,17 @@ class TestDenseParaphrasingProfile(BaseProfile):
     A demo profile that loads data where dense paraphrasing should be active.
     """
 
-    def __init__(self, output_dir) -> None:
+    def __init__(self, input_dir, output_dir, max_frames) -> None:
         eval = EvaluationConfig(
-            directory=Path(__file__).parent / "demo_inputs" / "dense_paraphrasing",
+            directory=input_dir,
             asr=True,
             gesture=True,
         )
         super().__init__(output_dir=output_dir, eval_config=eval)
+        self.max_frames = max_frames
 
     def is_done(self, frame_count, fail_count):
-        return frame_count > 200
+        return frame_count > self.max_frames
 
     def create_camera_device(self):  # pyright: ignore
         return FakeCamera()
