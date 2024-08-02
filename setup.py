@@ -48,10 +48,10 @@ ext_modules = [
 
 # setup package
 setup(
-    name="Camera_Calibration",
+    name="trace",
     python_requires=">=3.10",
     ext_modules=ext_modules,
     packages=["azure_kinect-stubs", "demo"],
     include_package_data=True,
-    package_data={"azure_kinect-stubs": ["*.pyi"]}
+    package_data={"azure_kinect-stubs": ["*.pyi"]},
 )
