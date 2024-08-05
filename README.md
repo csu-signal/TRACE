@@ -1,3 +1,15 @@
+# New Setup
+
+main demo package
+- create environment
+- pre-commit install
+- pip install -e .
+
+if using azure kienct
+- install azure kinect sdk
+- change mmdemo-azure-kinect\azure_kinect_config.py
+- pip install .\mmdemo-azure-kinect
+
 # Setup instructions
 
 ## Python Environment

@@ -1,6 +1,6 @@
+from mmdemo import BaseFeature
+
+
 class Demo:
-    pass
-
-
-class MultithreadedDemo(Demo):
-    pass
+    def __init__(self, *, targets: list[BaseFeature]) -> None:
+        pass
