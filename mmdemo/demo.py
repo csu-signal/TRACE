@@ -2,7 +2,7 @@
 Demo class definition
 """
 
-from mmdemo import BaseFeature
+from mmdemo.base_feature import BaseFeature
 
 
 class Demo:
@@ -19,4 +19,6 @@ class Demo:
         pass
 
     def run(self):
-        pass
+        """
+        Run the demo
+        """

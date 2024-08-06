@@ -5,7 +5,7 @@ Base feature definition
 from abc import ABC, abstractmethod
 from typing import Type, final
 
-from mmdemo import BaseInterface
+from mmdemo.base_interface import BaseInterface
 
 
 class BaseFeature(ABC):
@@ -40,8 +40,8 @@ class BaseFeature(ABC):
             for d in self._rev_deps:
                 d._mark_dirty()
 
-    @abstractmethod
     @classmethod
+    @abstractmethod
     def get_output_interface(cls) -> Type[BaseInterface]:
         """
         Returns the output interface class (must be a
@@ -68,13 +68,11 @@ class BaseFeature(ABC):
         __init__ to avoid wasting resources when extra features
         exist.
         """
-        pass
 
     def finalize(self):
         """
         Perform any necessary cleanup.
         """
-        pass
 
     def is_done(self):
         """

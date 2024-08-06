@@ -8,7 +8,9 @@ from dataclasses import dataclass
 @dataclass
 class ObjectInfo:
     """
-    TODO: docstring once the other TODOs are resolved
+    p1 -- ?
+    p2 -- ?
+    object_class -- ?
     """
 
     # TODO: what are p1 and p2?

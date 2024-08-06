@@ -8,7 +8,7 @@ from typing import Any, Iterable
 
 import numpy as np
 
-from mmdemo import BaseInterface
+from mmdemo.base_interface import BaseInterface
 from mmdemo.interfaces.data import ObjectInfo, UtteranceInfo
 
 
@@ -17,8 +17,6 @@ class EmptyInterface(BaseInterface):
     """
     Output interface when the feature does not have any output
     """
-
-    pass
 
 
 @dataclass
@@ -85,11 +83,13 @@ class SelectedObjectsInterface(BaseInterface):
 
 @dataclass
 class GestureInterface(BaseInterface):
+    # TODO: gesture interface
     pass
 
 
 @dataclass
 class GazeInterface(BaseInterface):
+    # TODO: gaze interface
     pass
 
 
