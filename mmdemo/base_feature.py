@@ -1,3 +1,7 @@
+"""
+Base feature definition
+"""
+
 from abc import ABC, abstractmethod
 from typing import Type, final
 

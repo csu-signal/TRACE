@@ -1,2 +1,10 @@
+"""
+Base interface definition
+"""
+
+
 class BaseInterface:
-    pass
+    """
+    Base class all output interfaces in
+    the demo must inherit from.
+    """
