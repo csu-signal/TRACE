@@ -19,7 +19,7 @@ class BaseFeature(ABC):
 
     @final
     def register_dependencies(
-        self, interfaces: list[Type[BaseInterface]], deps: "list[BaseFeature]"
+        self, interfaces: list[Type[BaseInterface]], deps: "list[BaseFeature] | tuple"
     ):
         """
         Add other features as dependencies which are required
@@ -29,6 +29,11 @@ class BaseFeature(ABC):
         interfaces -- a list of required dependency interface types
         deps -- a list of dependency features
         """
+        assert len(self._deps) == 0, "Dependencies have already been registered"
+        assert len(deps) == len(
+            interfaces
+        ), f"{len(interfaces)} input features were expected but {len(deps)} were provided."
+
         for d, i_type in zip(deps, interfaces):
             assert isinstance(
                 d.get_output_interface(), i_type
@@ -47,7 +52,7 @@ class BaseFeature(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_output(self, *args: BaseInterface) -> BaseInterface | None:
+    def get_output(self, *args, **kwargs) -> BaseInterface | None:
         """
         Return output of the feature. The return type must be
         `self.get_output_interface()` to provide new data and
