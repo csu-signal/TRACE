@@ -151,4 +151,8 @@ class CommonGroundInterface(BaseInterface):
 
     qbank: set[str]
     ebank: set[str]
-    fbank: set[str]
+
+
+@dataclass
+class PoseInterface(BaseInterface):
+    """ """
