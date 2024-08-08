@@ -9,9 +9,9 @@ from mmdemo.interfaces import ColorImageInterface, ObjectInterface
 
 @final
 class Object(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies([ColorImageInterface], args)
+    @classmethod
+    def get_input_interfaces(cls):
+        return [ColorImageInterface]
 
     @classmethod
     def get_output_interface(cls):

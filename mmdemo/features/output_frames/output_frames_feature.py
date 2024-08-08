@@ -13,9 +13,9 @@ from mmdemo.interfaces import (
 
 @final
 class OutputFrames(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies([TranscriptionInterface, GazeInterface], args)
+    @classmethod
+    def get_input_interfaces(cls):
+        return [TranscriptionInterface, GazeInterface]
 
     @classmethod
     def get_output_interface(cls):

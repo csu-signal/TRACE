@@ -1,7 +1,7 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import PoseInterface, TranscriptionInterface
+from mmdemo.interfaces import BodyTrackingInterface, PoseInterface
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
@@ -9,9 +9,9 @@ from mmdemo.interfaces import PoseInterface, TranscriptionInterface
 
 @final
 class Pose(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies([TranscriptionInterface], args)
+    @classmethod
+    def get_input_interfaces(cls):
+        return [BodyTrackingInterface]
 
     @classmethod
     def get_output_interface(cls):
@@ -21,7 +21,7 @@ class Pose(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: TranscriptionInterface):
+    def get_output(self, t: BodyTrackingInterface):
         if not t.is_new():
             return None
 

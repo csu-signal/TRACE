@@ -14,11 +14,9 @@ from mmdemo.interfaces import (
 
 @final
 class Gesture(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies(
-            [ColorImageInterface, DepthImageInterface, BodyTrackingInterface], args
-        )
+    @classmethod
+    def get_input_interfaces(cls):
+        return [ColorImageInterface, DepthImageInterface, BodyTrackingInterface]
 
     @classmethod
     def get_output_interface(cls):
@@ -28,8 +26,10 @@ class Gesture(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: _):
-        if not t.is_new():
+    def get_output(
+        self, t: ColorImageInterface, s: DepthImageInterface, u: BodyTrackingInterface
+    ):
+        if not t.is_new() and not s.is_new() and not u.is_new():
             return None
 
         # call __, create interface, and return

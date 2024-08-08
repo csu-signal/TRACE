@@ -9,9 +9,9 @@ from mmdemo.interfaces import DenseParaphraseInterface, MoveInterface
 
 @final
 class Move(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies([TranscriptionInterface], args)
+    @classmethod
+    def get_input_interfaces(cls):
+        return []
 
     @classmethod
     def get_output_interface(cls):
@@ -21,7 +21,7 @@ class Move(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: TranscriptionInterface):
+    def get_output(self, t: DenseParaphraseInterface):
         if not t.is_new():
             return None
 

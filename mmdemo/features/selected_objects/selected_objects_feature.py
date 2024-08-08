@@ -13,9 +13,9 @@ from mmdemo.interfaces import (
 
 @final
 class SelectedObjects(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies([ObjectInterface, GestureInterface], args)
+    @classmethod
+    def get_input_interfaces(cls):
+        return [ObjectInterface, GestureInterface]
 
     @classmethod
     def get_output_interface(cls):

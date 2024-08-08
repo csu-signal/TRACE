@@ -13,11 +13,9 @@ from mmdemo.interfaces import (
 
 @final
 class Evaluation(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies(
-            [TranscriptionInterface, CommonGroundInterface], args
-        )
+    @classmethod
+    def get_input_interfaces(cls):
+        return [TranscriptionInterface, CommonGroundInterface]
 
     @classmethod
     def get_output_interface(cls):
@@ -27,8 +25,8 @@ class Evaluation(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: TranscriptionInterface):
-        if not t.is_new():
+    def get_output(self, t: CommonGroundInterface, s: TranscriptionInterface):
+        if not t.is_new() and s.is_new():
             return None
 
         # call __, create interface, and return

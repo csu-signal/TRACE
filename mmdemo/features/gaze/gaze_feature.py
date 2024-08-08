@@ -9,9 +9,9 @@ from mmdemo.interfaces import BodyTrackingInterface, GazeInterface
 
 @final
 class Gaze(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies([BodyTrackingInterface], args)
+    @classmethod
+    def get_input_interfaces(cls):
+        return [BodyTrackingInterface]
 
     @classmethod
     def get_output_interface(cls):

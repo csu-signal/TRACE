@@ -13,11 +13,9 @@ from mmdemo.interfaces import (
 
 @final
 class DenseParaphrasing(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies(
-            [TranscriptionInterface, SelectedObjectsInterface], args
-        )
+    @classmethod
+    def get_input_interfaces(cls):
+        return [TranscriptionInterface, SelectedObjectsInterface]
 
     @classmethod
     def get_output_interface(cls):
@@ -27,7 +25,7 @@ class DenseParaphrasing(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: TranscriptionInterface):
+    def get_output(self, t: SelectedObjectsInterface):
         if not t.is_new():
             return None
 
