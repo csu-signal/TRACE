@@ -9,11 +9,9 @@ from mmdemo.interfaces import TranscriptionInterface, UtteranceChunkInterface
 
 @final
 class ASR(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies(
-            [TranscriptionInterface], args
-        )  # TODO Check if this is needed
+    @classmethod
+    def get_input_interfaces(cls):
+        return []
 
     @classmethod
     def get_output_interface(cls):

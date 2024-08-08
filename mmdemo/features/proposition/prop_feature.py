@@ -9,9 +9,9 @@ from mmdemo.interfaces import PropositionInterface, TranscriptionInterface
 
 @final
 class Proposition(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies([TranscriptionInterface], args)
+    @classmethod
+    def get_input_interfaces(cls):
+        return []
 
     @classmethod
     def get_output_interface(cls):
