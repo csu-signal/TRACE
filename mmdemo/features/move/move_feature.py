@@ -5,6 +5,7 @@ from mmdemo.interfaces import (
     DenseParaphraseInterface,
     MoveInterface,
     TranscriptionInterface,
+    UtteranceChunkInterface,
 )
 
 # import helpers
@@ -15,7 +16,11 @@ from mmdemo.interfaces import (
 class Move(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
-        return [TranscriptionInterface, DenseParaphraseInterface]
+        return [
+            TranscriptionInterface,
+            DenseParaphraseInterface,
+            UtteranceChunkInterface,
+        ]
 
     @classmethod
     def get_output_interface(cls):
@@ -25,8 +30,13 @@ class Move(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: TranscriptionInterface, s: DenseParaphraseInterface):
-        if not t.is_new():
+    def get_output(
+        self,
+        t: TranscriptionInterface,
+        s: DenseParaphraseInterface,
+        u: UtteranceChunkInterface,
+    ):
+        if not t.is_new() and not s.is_new() and not u.is_new():
             return None
 
         # call move classifier, create interface, and return
