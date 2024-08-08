@@ -13,12 +13,12 @@ class BaseFeature(ABC):
     The base class all features in the demo must implement.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *args) -> None:
         self._deps = []
         self._rev_deps = []
+        self._register_dependencies(self.get_input_interface(), args)
 
-    @final
-    def register_dependencies(
+    def _register_dependencies(
         self, interfaces: list[Type[BaseInterface]], deps: "list[BaseFeature] | tuple"
     ):
         """
@@ -41,6 +41,15 @@ class BaseFeature(ABC):
 
             self._deps.append(d)
             d._rev_deps.append(self)
+
+    @classmethod
+    @abstractmethod
+    def get_input_interfaces(cls) -> list[Type[BaseInterface]]:
+        """
+        Returns the input interface classes (must be
+        subclasses of BaseInterface).
+        """
+        raise NotImplementedError
 
     @classmethod
     @abstractmethod
