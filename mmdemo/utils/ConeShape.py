@@ -3,7 +3,7 @@ import math
 import cv2
 import numpy as np
 
-from mmdemo.utils.utils import (
+from mmdemo.utils.SupportUtils import (
     convert2D,
     distance3D,
     getDirectionalVector,

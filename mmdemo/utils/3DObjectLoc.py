@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from numpy.linalg import norm
 
-from mmdemo.utils.utils import (
+from mmdemo.utils.SupportUtils import (
     ParseResult,
     convertTo3D,
     getDirectionalVector,
