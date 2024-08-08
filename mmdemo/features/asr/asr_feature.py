@@ -13,11 +13,9 @@ from mmdemo.interfaces import (
 
 @final
 class ASR(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies(
-            [TranscriptionInterface, UtteranceChunkInterface], args
-        )  # TODO Check if this is needed
+    @classmethod
+    def get_input_interfaces(cls):
+        return [TranscriptionInterface, UtteranceChunkInterface]
 
     @classmethod
     def get_output_interface(cls):
