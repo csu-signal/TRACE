@@ -3,7 +3,6 @@ Base feature definition
 """
 
 from abc import ABC, abstractmethod
-from typing import Type, final
 
 from mmdemo.base_interface import BaseInterface
 
@@ -16,62 +15,33 @@ class BaseFeature(ABC):
     def __init__(self, *args) -> None:
         self._deps = []
         self._rev_deps = []
-        self._register_dependencies(self.get_input_interface(), args)
+        self._register_dependencies(args)
 
-    def _register_dependencies(
-        self, interfaces: list[Type[BaseInterface]], deps: "list[BaseFeature] | tuple"
-    ):
+    def _register_dependencies(self, deps: "list[BaseFeature] | tuple"):
         """
         Add other features as dependencies which are required
         to be evaluated before this feature.
 
         Arguments:
-        interfaces -- a list of required dependency interface types
         deps -- a list of dependency features
         """
         assert len(self._deps) == 0, "Dependencies have already been registered"
-        assert len(deps) == len(
-            interfaces
-        ), f"{len(interfaces)} input features were expected but {len(deps)} were provided."
-
-        for d, i_type in zip(deps, interfaces):
-            assert isinstance(
-                d.get_output_interface(), i_type
-            ), f"A dependency did not have output interface {i_type}"
-
+        for d in deps:
             self._deps.append(d)
             d._rev_deps.append(self)
-
-    @classmethod
-    @abstractmethod
-    def get_input_interfaces(cls) -> list[Type[BaseInterface]]:
-        """
-        Returns the input interface classes (must be
-        subclasses of BaseInterface).
-        """
-        raise NotImplementedError
-
-    @classmethod
-    @abstractmethod
-    def get_output_interface(cls) -> Type[BaseInterface]:
-        """
-        Returns the output interface class (must be a
-        subclass of BaseInterface).
-        """
-        raise NotImplementedError
 
     @abstractmethod
     def get_output(self, *args, **kwargs) -> BaseInterface | None:
         """
-        Return output of the feature. The return type must be
-        `self.get_output_interface()` to provide new data and
-        `None` if there is no new data.
+        Return output of the feature. The return type must be the output
+        interface to provide new data and `None` if there is no new data.
 
         Arguments:
         args -- list of output interfaces from dependencies in the order
                 they were registered. Calling `.is_new()` on any of these
                 elements will return True if the argument has not been
-                sent before.
+                sent before. It is possible that the interface will not
+                contain any data before the first new data is sent.
         """
         raise NotImplementedError
 
@@ -88,7 +58,7 @@ class BaseFeature(ABC):
         Perform any necessary cleanup.
         """
 
-    def is_done(self):
+    def is_done(self) -> bool:
         """
         Return True if the demo should exit. This will
         always return False if not overridden.
