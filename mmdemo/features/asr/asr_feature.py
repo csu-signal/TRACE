@@ -1,7 +1,11 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import TranscriptionInterface, UtteranceChunkInterface
+from mmdemo.interfaces import (
+    ASRInterface,
+    TranscriptionInterface,
+    UtteranceChunkInterface,
+)
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
@@ -12,19 +16,19 @@ class ASR(BaseFeature):
     def __init__(self, *args):
         super().__init__()
         self.register_dependencies(
-            [TranscriptionInterface], args
+            [TranscriptionInterface, UtteranceChunkInterface], args
         )  # TODO Check if this is needed
 
     @classmethod
     def get_output_interface(cls):
-        return UtteranceChunkInterface
+        return ASRInterface
 
     def initialize(self):
         # initialize prop model
         pass
 
-    def get_output(self, t: TranscriptionInterface):
-        if not t.is_new():
+    def get_output(self, t: TranscriptionInterface, s: UtteranceChunkInterface):
+        if not t.is_new() or not s.is_new():
             return None
 
         # call __, create interface, and return

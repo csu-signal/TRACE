@@ -1,7 +1,7 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import ObjectInterface, TranscriptionInterface
+from mmdemo.interfaces import ColorImageInterface, ObjectInterface
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
@@ -11,7 +11,7 @@ from mmdemo.interfaces import ObjectInterface, TranscriptionInterface
 class Object(BaseFeature):
     def __init__(self, *args):
         super().__init__()
-        self.register_dependencies([TranscriptionInterface], args)
+        self.register_dependencies([ColorImageInterface], args)
 
     @classmethod
     def get_output_interface(cls):
@@ -21,7 +21,7 @@ class Object(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: TranscriptionInterface):
+    def get_output(self, t: ColorImageInterface):
         if not t.is_new():
             return None
 

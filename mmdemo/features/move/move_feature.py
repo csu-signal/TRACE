@@ -1,7 +1,7 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import MoveInterface, TranscriptionInterface
+from mmdemo.interfaces import DenseParaphraseInterface, MoveInterface
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...

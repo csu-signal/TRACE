@@ -156,3 +156,18 @@ class CommonGroundInterface(BaseInterface):
 @dataclass
 class PoseInterface(BaseInterface):
     """ """
+
+
+@dataclass
+class DenseParaphraseInterface(BaseInterface):
+    """ """
+
+
+@dataclass
+class ASRInterface(BaseInterface):
+    """ """
+
+
+@dataclass
+class OutputFrameInterface(BaseInterface):
+    """ """
