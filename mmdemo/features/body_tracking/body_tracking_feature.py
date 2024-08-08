@@ -9,9 +9,9 @@ from mmdemo.interfaces import BodyTrackingInterface
 
 @final
 class BodyTracking(BaseFeature):
-    def __init__(self, *args):
-        super().__init__()
-        self.register_dependencies([], args)
+    @classmethod
+    def get_input_interfaces(cls):
+        return []
 
     @classmethod
     def get_output_interface(cls):
@@ -21,7 +21,7 @@ class BodyTracking(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: _):
+    def get_output(self, t: None):
         if not t.is_new():
             return None
 
