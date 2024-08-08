@@ -1,7 +1,7 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import EmptyInterface, TranscriptionInterface
+from mmdemo.interfaces import EmptyInterface, OutputFrameInterface
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
@@ -11,7 +11,7 @@ from mmdemo.interfaces import EmptyInterface, TranscriptionInterface
 class GUI(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
-        return []
+        return [OutputFrameInterface]
 
     @classmethod
     def get_output_interface(cls):
@@ -21,7 +21,7 @@ class GUI(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: EmptyInterface):
+    def get_output(self, t: OutputFrameInterface):
         if not t.is_new():
             return None
 

@@ -1,7 +1,11 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import DenseParaphraseInterface, MoveInterface
+from mmdemo.interfaces import (
+    DenseParaphraseInterface,
+    MoveInterface,
+    TranscriptionInterface,
+)
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
@@ -11,7 +15,7 @@ from mmdemo.interfaces import DenseParaphraseInterface, MoveInterface
 class Move(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
-        return []
+        return [TranscriptionInterface, DenseParaphraseInterface]
 
     @classmethod
     def get_output_interface(cls):
@@ -21,7 +25,7 @@ class Move(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: DenseParaphraseInterface):
+    def get_output(self, t: TranscriptionInterface, s: DenseParaphraseInterface):
         if not t.is_new():
             return None
 

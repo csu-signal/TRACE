@@ -21,7 +21,7 @@ class Color(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: _):
+    def get_output(self, t: None):
         if not t.is_new():
             return None
 

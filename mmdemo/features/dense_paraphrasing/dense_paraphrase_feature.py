@@ -25,8 +25,8 @@ class DenseParaphrasing(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: SelectedObjectsInterface):
-        if not t.is_new():
+    def get_output(self, t: TranscriptionInterface, s: SelectedObjectsInterface):
+        if not t.is_new() and not s.is_new():
             return None
 
         # call prop extractor, create interface, and return
