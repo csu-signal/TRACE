@@ -4,7 +4,7 @@ import itertools
 import cv2
 import numpy as np
 
-from mmdemo.utils.utils import BodyCategory, Joint
+from mmdemo.utils.SupportUtils import BodyCategory, Joint
 
 
 def processHands(image, hand):
