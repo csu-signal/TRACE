@@ -11,6 +11,7 @@ from mmdemo.interfaces import (
     SelectedObjectsInterface,
     TranscriptionInterface,
     UtteranceChunkInterface,
+    Vectors3D,
 )
 
 # import helpers
@@ -21,16 +22,7 @@ from mmdemo.interfaces import (
 class SelectedObjects(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
-        return [
-            ObjectInterface,
-            GestureInterface,
-            ColorImageInterface,
-            DepthImageInterface,
-            BodyTrackingInterface,
-            ASRInterface,
-            UtteranceChunkInterface,
-            TranscriptionInterface,
-        ]
+        return [ObjectInterface, Vectors3D, Vectors3D]
 
     @classmethod
     def get_output_interface(cls):

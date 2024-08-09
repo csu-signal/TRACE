@@ -3,9 +3,11 @@ from typing import final
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
     BodyTrackingInterface,
+    CameraCalibrationInterface,
     ColorImageInterface,
     DepthImageInterface,
     GestureInterface,
+    Vectors3D,
 )
 
 # import helpers
@@ -18,11 +20,16 @@ class Gesture(BaseFeature):
 
     @classmethod
     def get_input_interfaces(cls):
-        return [ColorImageInterface, DepthImageInterface, BodyTrackingInterface]
+        return [
+            ColorImageInterface,
+            DepthImageInterface,
+            BodyTrackingInterface,
+            CameraCalibrationInterface,
+        ]
 
     @classmethod
     def get_output_interface(cls):
-        return GestureInterface
+        return Vectors3D
 
     def initialize(self):
         # model_path = Path(__file__).parent / "bestModel-pointing.pkl"

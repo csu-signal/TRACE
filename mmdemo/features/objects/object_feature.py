@@ -1,7 +1,13 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import ColorImageInterface, ObjectInterface
+from mmdemo.interfaces import (
+    ColorImageInterface,
+    DepthImageInterface,
+    ObjectInterface,
+    ObjectInterface2D,
+    ObjectInterface3D,
+)
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
@@ -14,11 +20,11 @@ from mmdemo.interfaces import ColorImageInterface, ObjectInterface
 class Object(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
-        return [ColorImageInterface]
+        return [ColorImageInterface, DepthImageInterface]
 
     @classmethod
     def get_output_interface(cls):
-        return ObjectInterface
+        return ObjectInterface3D
 
     def initialize(self):
         # print("Torch Device " + str(DEVICE))

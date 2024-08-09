@@ -28,23 +28,7 @@ from mmdemo.interfaces import (
 class GUI(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
-        return [
-            OutputFrameInterface,
-            CommonGroundInterface,
-            MoveInterface,
-            PropositionInterface,
-            DenseParaphraseInterface,
-            SelectedObjectsInterface,
-            GazeInterface,
-            ObjectInterface,
-            GestureInterface,
-            ColorImageInterface,
-            DepthImageInterface,
-            BodyTrackingInterface,
-            ASRInterface,
-            UtteranceChunkInterface,
-            TranscriptionInterface,
-        ]
+        return [ColorImageInterface]
 
     @classmethod
     def get_output_interface(cls):

@@ -25,16 +25,8 @@ class Move(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
         return [
-            DenseParaphraseInterface,
-            SelectedObjectsInterface,
-            ObjectInterface,
-            GestureInterface,
-            ColorImageInterface,
-            DepthImageInterface,
-            BodyTrackingInterface,
-            ASRInterface,
-            UtteranceChunkInterface,
             TranscriptionInterface,
+            UtteranceChunkInterface,
         ]
 
     @classmethod

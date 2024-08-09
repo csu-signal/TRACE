@@ -21,15 +21,15 @@ class ObjectInfo2D:
 
 
 @dataclass
-class ObjectInfo3D:
+class ObjectInfo3D(ObjectInfo2D):
     """
     center -- center of block
+    p1 -- top left in 2d?
+    p2 -- bottom right in 2d?
     object_class -- ?
     """
 
     center: tuple[float, float, float]
-
-    object_class: str
 
 
 @dataclass

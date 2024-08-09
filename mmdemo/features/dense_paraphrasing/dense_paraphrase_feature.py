@@ -24,19 +24,12 @@ class DenseParaphrasing(BaseFeature):
     def get_input_interfaces(cls):
         return [
             SelectedObjectsInterface,
-            ObjectInterface,
-            GestureInterface,
-            ColorImageInterface,
-            DepthImageInterface,
-            BodyTrackingInterface,
-            ASRInterface,
-            UtteranceChunkInterface,
             TranscriptionInterface,
         ]
 
     @classmethod
     def get_output_interface(cls):
-        return DenseParaphraseInterface
+        return TranscriptionInterface
 
     def initialize(self):
         # self.paraphrased_utterance_lookup: dict[int, UtteranceInfo] = {}
@@ -51,13 +44,6 @@ class DenseParaphrasing(BaseFeature):
     def get_output(
         self,
         select_obj: SelectedObjectsInterface,
-        obj: ObjectInterface,
-        gest: GestureInterface,
-        col: ColorImageInterface,
-        dep: DepthImageInterface,
-        bod: BodyTrackingInterface,
-        asr: ASRInterface,
-        utt: UtteranceChunkInterface,
         tran: TranscriptionInterface,
     ):
         if (

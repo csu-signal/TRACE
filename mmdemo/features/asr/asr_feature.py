@@ -1,26 +1,22 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (
-    ASRInterface,
-    TranscriptionInterface,
-    UtteranceChunkInterface,
-)
+from mmdemo.interfaces import TranscriptionInterface, UtteranceChunkInterface
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
 
 
 @final
-class ASR(BaseFeature):
+class Transcription(BaseFeature):
     # LOG_FILE = "asrOutput.csv"
     @classmethod
     def get_input_interfaces(cls):
-        return [TranscriptionInterface, UtteranceChunkInterface]
+        return [UtteranceChunkInterface]
 
     @classmethod
     def get_output_interface(cls):
-        return ASRInterface
+        return TranscriptionInterface
 
     def initialize(self):
         # self.device_lookup = {d.get_id():d for d in devices}

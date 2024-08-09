@@ -28,16 +28,6 @@ class CommonGroundTracking(BaseFeature):
         return [
             MoveInterface,
             PropositionInterface,
-            DenseParaphraseInterface,
-            SelectedObjectsInterface,
-            ObjectInterface,
-            GestureInterface,
-            ColorImageInterface,
-            DepthImageInterface,
-            BodyTrackingInterface,
-            ASRInterface,
-            UtteranceChunkInterface,
-            TranscriptionInterface,
         ]
 
     @classmethod

@@ -8,10 +8,10 @@ from mmdemo.interfaces import TranscriptionInterface, UtteranceChunkInterface
 
 
 @final
-class ASR(BaseFeature):
+class UtteranceFeature(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
-        return [TranscriptionInterface]
+        return []
 
     @classmethod
     def get_output_interface(cls):
