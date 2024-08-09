@@ -20,8 +20,8 @@ class ASR(BaseFeature):
     def initialize(self):
         pass
 
-    def get_output(self, t: TranscriptionInterface):
-        if not t.is_new():
+    def get_output(self, tran: TranscriptionInterface):
+        if not tran.is_new():
             return None
 
         # call __, create interface, and return

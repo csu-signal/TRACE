@@ -35,8 +35,8 @@ class Object(BaseFeature):
         # self.init_logger(log_dir)
         pass
 
-    def get_output(self, t: ColorImageInterface):
-        if not t.is_new():
+    def get_output(self, col: ColorImageInterface):
+        if not col.is_new():
             return None
 
         # call move classifier, create interface, and return

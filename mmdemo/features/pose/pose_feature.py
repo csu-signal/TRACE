@@ -46,8 +46,8 @@ class Pose(BaseFeature):
         # self.logger.write_csv_headers("frame_index", "participant", "engagement")
         pass
 
-    def get_output(self, t: BodyTrackingInterface):
-        if not t.is_new():
+    def get_output(self, bt: BodyTrackingInterface):
+        if not bt.is_new():
             return None
 
         # call _, create interface, and return

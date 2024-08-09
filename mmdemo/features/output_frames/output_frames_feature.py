@@ -25,8 +25,12 @@ class OutputFrames(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: TranscriptionInterface, s: GazeInterface):
-        if not t.is_new():
+    def get_output(
+        self,
+        gaze: GazeInterface,
+        tran: TranscriptionInterface,
+    ):
+        if not gaze.is_new() and not tran.is_new():
             return None
 
         # call _, create interface, and return

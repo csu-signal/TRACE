@@ -2,9 +2,20 @@ from typing import final
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
+    ASRInterface,
+    BodyTrackingInterface,
+    ColorImageInterface,
     CommonGroundInterface,
+    DenseParaphraseInterface,
+    DepthImageInterface,
     EmptyInterface,
+    GestureInterface,
+    MoveInterface,
+    ObjectInterface,
+    PropositionInterface,
+    SelectedObjectsInterface,
     TranscriptionInterface,
+    UtteranceChunkInterface,
 )
 
 # import helpers
@@ -15,7 +26,21 @@ from mmdemo.interfaces import (
 class Evaluation(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
-        return [TranscriptionInterface, CommonGroundInterface]
+        return [
+            CommonGroundInterface,
+            MoveInterface,
+            PropositionInterface,
+            DenseParaphraseInterface,
+            SelectedObjectsInterface,
+            ObjectInterface,
+            GestureInterface,
+            ColorImageInterface,
+            DepthImageInterface,
+            BodyTrackingInterface,
+            ASRInterface,
+            UtteranceChunkInterface,
+            TranscriptionInterface,
+        ]
 
     @classmethod
     def get_output_interface(cls):
@@ -25,8 +50,8 @@ class Evaluation(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: CommonGroundInterface, s: TranscriptionInterface):
-        if not t.is_new() and s.is_new():
+    def get_output(self, t: None):
+        if not t.is_new():
             return None
 
         # call __, create interface, and return

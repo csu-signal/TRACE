@@ -2,8 +2,15 @@ from typing import final
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
+    ASRInterface,
+    BodyTrackingInterface,
+    ColorImageInterface,
     DenseParaphraseInterface,
+    DepthImageInterface,
+    GestureInterface,
     MoveInterface,
+    ObjectInterface,
+    SelectedObjectsInterface,
     TranscriptionInterface,
     UtteranceChunkInterface,
 )
@@ -18,9 +25,16 @@ class Move(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
         return [
-            TranscriptionInterface,
             DenseParaphraseInterface,
+            SelectedObjectsInterface,
+            ObjectInterface,
+            GestureInterface,
+            ColorImageInterface,
+            DepthImageInterface,
+            BodyTrackingInterface,
+            ASRInterface,
             UtteranceChunkInterface,
+            TranscriptionInterface,
         ]
 
     @classmethod
@@ -57,11 +71,29 @@ class Move(BaseFeature):
 
     def get_output(
         self,
-        t: TranscriptionInterface,
-        s: DenseParaphraseInterface,
-        u: UtteranceChunkInterface,
+        dense: DenseParaphraseInterface,
+        select_obj: SelectedObjectsInterface,
+        obj: ObjectInterface,
+        gest: GestureInterface,
+        col: ColorImageInterface,
+        dep: DepthImageInterface,
+        bod: BodyTrackingInterface,
+        asr: ASRInterface,
+        utt: UtteranceChunkInterface,
+        tran: TranscriptionInterface,
     ):
-        if not t.is_new() and not s.is_new() and not u.is_new():
+        if (
+            not dense.is_new()
+            and not select_obj.is_new()
+            and not obj.is_new()
+            and not gest.is_new()
+            and not col.is_new()
+            and not dep.is_new
+            and not bod.is_new()
+            and not asr.is_new()
+            and not utt.is_new()
+            and not tran.is_new()
+        ):
             return None
 
         # call move classifier, create interface, and return

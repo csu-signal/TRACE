@@ -2,9 +2,16 @@ from typing import final
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
+    ASRInterface,
+    BodyTrackingInterface,
+    ColorImageInterface,
     DenseParaphraseInterface,
+    DepthImageInterface,
+    GestureInterface,
+    ObjectInterface,
     SelectedObjectsInterface,
     TranscriptionInterface,
+    UtteranceChunkInterface,
 )
 
 # import helpers
@@ -15,7 +22,17 @@ from mmdemo.interfaces import (
 class DenseParaphrasing(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
-        return [TranscriptionInterface, SelectedObjectsInterface]
+        return [
+            SelectedObjectsInterface,
+            ObjectInterface,
+            GestureInterface,
+            ColorImageInterface,
+            DepthImageInterface,
+            BodyTrackingInterface,
+            ASRInterface,
+            UtteranceChunkInterface,
+            TranscriptionInterface,
+        ]
 
     @classmethod
     def get_output_interface(cls):
@@ -31,8 +48,29 @@ class DenseParaphrasing(BaseFeature):
         # self.logger.write_csv_headers("frame", "utterance_id", "updated_text", "old_text", "subs_made")
         pass
 
-    def get_output(self, t: TranscriptionInterface, s: SelectedObjectsInterface):
-        if not t.is_new() and not s.is_new():
+    def get_output(
+        self,
+        select_obj: SelectedObjectsInterface,
+        obj: ObjectInterface,
+        gest: GestureInterface,
+        col: ColorImageInterface,
+        dep: DepthImageInterface,
+        bod: BodyTrackingInterface,
+        asr: ASRInterface,
+        utt: UtteranceChunkInterface,
+        tran: TranscriptionInterface,
+    ):
+        if (
+            not select_obj.is_new()
+            and not obj.is_new()
+            and not gest.is_new()
+            and not col.is_new()
+            and not dep.is_new
+            and not bod.is_new()
+            and not asr.is_new()
+            and not utt.is_new()
+            and not tran.is_new()
+        ):
             return None
 
         # call prop extractor, create interface, and return
