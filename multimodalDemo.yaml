@@ -30,3 +30,5 @@ dependencies:
     - silero-vad==5.1
     - sentence-transformers==3.0.1
     - nltk==3.8.1
+    - pytest==8.3.2
+    - pre-commit
