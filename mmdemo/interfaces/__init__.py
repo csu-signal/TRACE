@@ -9,7 +9,7 @@ from typing import Any, Iterable
 import numpy as np
 
 from mmdemo.base_interface import BaseInterface
-from mmdemo.interfaces.data import ObjectInfo, UtteranceInfo
+from mmdemo.interfaces.data import ObjectInfo2D, ObjectInfo3D, UtteranceInfo
 
 
 @dataclass
@@ -17,6 +17,28 @@ class EmptyInterface(BaseInterface):
     """
     Output interface when the feature does not have any output
     """
+
+
+class FrameCountInterface(BaseInterface):
+    """
+    frame_count -- the current frame count
+    """
+
+    frame_count: int
+
+
+class CameraCalibrationInterface(BaseInterface):
+    # TODO: brady add docstring
+    """
+    rotation
+    translation: np.ndarray
+    cameraMatrix: np.ndarray
+    distortion: np.ndarray
+    """
+    rotation: np.ndarray
+    translation: np.ndarray
+    cameraMatrix: np.ndarray
+    distortion: np.ndarray
 
 
 @dataclass
@@ -46,23 +68,32 @@ class BodyTrackingInterface(BaseInterface):
                     'join_orientation': [wxyz quaternion]
                 }, ...]
     timestamp_usec -- timestamp in microseconds
-    num_bodies -- number of unique bodies
     """
 
     bodies: dict[str, Any]
     timestamp_usec: int
-    num_bodies: int
 
 
 @dataclass
-class ObjectInterface(BaseInterface):
+class ObjectInterface2D(BaseInterface):
     """
     Object detector outputs
 
     objects -- list of object locations and classes
     """
 
-    objects: list[ObjectInfo]
+    objects: list[ObjectInfo2D]
+
+
+@dataclass
+class ObjectInterface3D(BaseInterface):
+    """
+    Object detector 3d locations
+
+    objects -- list of object locations and classes
+    """
+
+    objects: list[ObjectInfo3D]
 
 
 @dataclass
@@ -73,7 +104,7 @@ class SelectedObjectsInterface(BaseInterface):
     objects -- [(object info, selected?), ...]
     """
 
-    objects: list[tuple[ObjectInfo, bool]]
+    objects: list[tuple[ObjectInfo2D | ObjectInfo3D, bool]]
 
 
 # TODO: I assume these should be 2d for easier use with
@@ -82,15 +113,23 @@ class SelectedObjectsInterface(BaseInterface):
 
 
 @dataclass
-class GestureInterface(BaseInterface):
-    # TODO: gesture interface
-    pass
+class Vectors2D(BaseInterface):
+    # TODO: Hannah change if needed
+    """
+    vectors -- list of numpy vectors with shape (2,)
+    """
+
+    vectors: list[np.ndarray]
 
 
 @dataclass
-class GazeInterface(BaseInterface):
-    # TODO: gaze interface
-    pass
+class Vectors3D(BaseInterface):
+    # TODO: Hannah change if needed
+    """
+    vectors -- list of numpy vectors with shape (3,)
+    """
+
+    vectors: list[np.ndarray]
 
 
 @dataclass
@@ -102,12 +141,15 @@ class UtteranceChunkInterface(BaseInterface):
     audio_file -- path to the audio file
     """
 
-    info: UtteranceInfo
+    speaker_id: str
+    start_time: float
+    end_time: float
     audio_file: Path
 
 
 @dataclass
 class TranscriptionInterface(BaseInterface):
+    # TODO: brady figure out how to get frames
     """
     Transcribed utterances
 
@@ -115,30 +157,31 @@ class TranscriptionInterface(BaseInterface):
     text -- text of the utterance
     """
 
-    info: UtteranceInfo
+    speaker_id: str
+    start_time: float
+    end_time: float
     text: str
 
 
 @dataclass
 class PropositionInterface(BaseInterface):
+    # TODO: brady docstring
     """
-    info -- identifying data for the utterance
     prop -- proposition as a string
     """
-
-    info: UtteranceInfo
+    speaker_id: str
     prop: str
 
 
 @dataclass
 class MoveInterface(BaseInterface):
+    # TODO: brady docstring
     """
     info -- identifying data for the utterance
     move -- iterable containing some subset of
             {"STATEMENT", "ACCEPT", "DOUBT"}
     """
-
-    info: UtteranceInfo
+    speaker_id: str
     move: Iterable[str]
 
 
@@ -150,24 +193,14 @@ class CommonGroundInterface(BaseInterface):
     """
 
     qbank: set[str]
+    fbank: set[str]
     ebank: set[str]
 
 
 @dataclass
 class PoseInterface(BaseInterface):
-    """ """
+    """
+    poses -- list of (body_id, "leaning in" / "leaning out")
+    """
 
-
-@dataclass
-class DenseParaphraseInterface(BaseInterface):
-    """ """
-
-
-@dataclass
-class ASRInterface(BaseInterface):
-    """ """
-
-
-@dataclass
-class OutputFrameInterface(BaseInterface):
-    """ """
+    poses: list[tuple[int, str]]

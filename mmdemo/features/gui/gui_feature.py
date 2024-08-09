@@ -54,7 +54,7 @@ class GUI(BaseFeature):
         # initialize prop model
         pass
 
-    def get_output(self, t: None):  # None or .. ?
+    def get_output(self, t: TranscriptionInterface):  # None or .. ?
         if not t.is_new():
             return None
 

@@ -6,10 +6,10 @@ from dataclasses import dataclass
 
 
 @dataclass
-class ObjectInfo:
+class ObjectInfo2D:
     """
-    p1 -- ?
-    p2 -- ?
+    p1 -- top left?
+    p2 -- bottom right?
     object_class -- ?
     """
 
@@ -17,7 +17,18 @@ class ObjectInfo:
     p1: tuple[float, float]
     p2: tuple[float, float]
 
-    # TODO: should this be Gamr, float, str, ...?
+    object_class: str
+
+
+@dataclass
+class ObjectInfo3D:
+    """
+    center -- center of block
+    object_class -- ?
+    """
+
+    center: tuple[float, float, float]
+
     object_class: str
 
 
