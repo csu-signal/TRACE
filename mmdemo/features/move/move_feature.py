@@ -14,6 +14,7 @@ from mmdemo.interfaces import (
 
 @final
 class Move(BaseFeature):
+    # LOG_FILE = "moveOutput.csv"
     @classmethod
     def get_input_interfaces(cls):
         return [
@@ -27,7 +28,31 @@ class Move(BaseFeature):
         return MoveInterface
 
     def initialize(self):
-        # initialize prop model
+        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # self.model = torch.load(str(model)).to(self.device)
+        # self.model.eval()
+
+        # self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        # self.bert_model: BertModel = BertModel.from_pretrained("bert-base-uncased").to(self.device) # pyright: ignore
+
+        # self.smile = opensmile.Smile(
+        #     feature_set=opensmile.FeatureSet.eGeMAPSv02,
+        #     feature_level=opensmile.FeatureLevel.Functionals,
+        # )
+
+        # self.bert_embedding_history = torch.zeros(
+        #     (UTTERANCE_HISTORY_LEN, BERT_EMBEDDING_DIM), device=self.device
+        # )
+        # self.opensmile_embedding_history = torch.zeros(
+        #     (UTTERANCE_HISTORY_LEN, SMILE_EMBEDDING_DIM), device=self.device
+        # )
+
+        # self.class_names = ["STATEMENT", "ACCEPT", "DOUBT"]
+
+        # self.move_lookup: dict[int, MoveInfo] = {}
+
+        # self.init_logger(log_dir)
         pass
 
     def get_output(
@@ -40,6 +65,13 @@ class Move(BaseFeature):
             return None
 
         # call move classifier, create interface, and return
+
+    # def init_logger(self, log_dir):
+    #     if log_dir is not None:
+    #         self.logger = Logger(file=log_dir / self.LOG_FILE)
+    #     else:
+    #         self.logger = Logger()
+    #     self.logger.write_csv_headers("frame", "utterance_id", "statement", "accept", "doubt", "move_model_output", "text", "audio_file")
 
     # def log_move(self, frame_count, move: MoveInfo, output, text, audio_file):
     #     self.logger.append_csv(

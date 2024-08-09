@@ -23,7 +23,16 @@ class CommonGroundTracking(BaseFeature):
         return CommonGroundInterface
 
     def initialize(self):
-        # initialize prop model
+        # self.closure_rules = CommonGround()
+
+        # if log_dir is not None:
+        #     self.logger = Logger(file=log_dir / self.LOG_FILE)
+        # else:
+        #     self.logger = Logger()
+
+        # self.logger.write_csv_headers("frame", "utterance_id", "qbank", "ebank", "fbank", "prop", "move")
+
+        # self.most_recent_prop = "no prop"
         pass
 
     def get_output(

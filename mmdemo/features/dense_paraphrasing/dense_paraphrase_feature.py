@@ -22,7 +22,13 @@ class DenseParaphrasing(BaseFeature):
         return DenseParaphraseInterface
 
     def initialize(self):
-        # initialize prop model
+        # self.paraphrased_utterance_lookup: dict[int, UtteranceInfo] = {}
+
+        # if log_dir is not None:
+        #     self.logger = Logger(file=log_dir / self.LOG_FILE)
+        # else:
+        #     self.logger = Logger()
+        # self.logger.write_csv_headers("frame", "utterance_id", "updated_text", "old_text", "subs_made")
         pass
 
     def get_output(self, t: TranscriptionInterface, s: SelectedObjectsInterface):

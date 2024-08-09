@@ -13,6 +13,7 @@ from mmdemo.interfaces import (
 
 @final
 class ASR(BaseFeature):
+    # LOG_FILE = "asrOutput.csv"
     @classmethod
     def get_input_interfaces(cls):
         return [TranscriptionInterface, UtteranceChunkInterface]
@@ -22,7 +23,24 @@ class ASR(BaseFeature):
         return ASRInterface
 
     def initialize(self):
-        # initialize prop model
+        # self.device_lookup = {d.get_id():d for d in devices}
+        # self.asr_output_queue = mp.Queue()
+
+        # self.utterance_builder_queue = mp.Queue()
+        # self.utterance_processor_queue = mp.Queue()
+        # self.done = mp.Value(c_bool, False)
+        # self.recorders = [d.create_recorder_process(self.utterance_builder_queue, self.done) for d in devices]
+        # self.builder = mp.Process(target = build_utterances, args=(self.utterance_builder_queue, self.utterance_processor_queue ), kwargs={"output_dir": log_dir})
+
+        # self.n_processors = n_processors
+        # self.processors = [mp.Process(target=process_utterances, args=(self.utterance_processor_queue,), kwargs={"output_queue":self.asr_output_queue}) for _ in range(self.n_processors)]
+
+        # for i in self.recorders + self.processors + [self.builder]:
+        #     i.start()
+
+        # self.init_logger(log_dir)
+
+        # self.utterance_lookup: dict[int, UtteranceInfo] = {}
         pass
 
     def get_output(self, t: TranscriptionInterface, s: UtteranceChunkInterface):
@@ -30,6 +48,16 @@ class ASR(BaseFeature):
             return None
 
         # call __, create interface, and return
+
+    # def exit(self, join_processes=True):
+    #     self.done.value = True
+
+    #     while self.asr_output_queue.get() is not None:
+    #         pass
+
+    #     if join_processes:
+    #         for i in self.recorders + self.processors + [self.builder]:
+    #             i.join()
 
     # def init_logger(self, log_dir):
     #     if log_dir is not None:

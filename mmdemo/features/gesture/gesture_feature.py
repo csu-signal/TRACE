@@ -14,6 +14,8 @@ from mmdemo.interfaces import (
 
 @final
 class Gesture(BaseFeature):
+    # LOG_FILE = "gestureOutput.csv"
+
     @classmethod
     def get_input_interfaces(cls):
         return [ColorImageInterface, DepthImageInterface, BodyTrackingInterface]
@@ -23,7 +25,13 @@ class Gesture(BaseFeature):
         return GestureInterface
 
     def initialize(self):
-        # initialize prop model
+        # model_path = Path(__file__).parent / "bestModel-pointing.pkl"
+        # self.loaded_model = joblib.load(str(model_path))
+        # self.devicePoints = {}
+        # self.shift = shift
+        # self.blockCache = {}
+
+        # self.init_logger(log_dir)
         pass
 
     def get_output(

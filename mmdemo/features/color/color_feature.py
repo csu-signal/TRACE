@@ -18,7 +18,8 @@ class Color(BaseFeature):
         return ColorImageInterface
 
     def initialize(self):
-        # initialize prop model
+        # self.name = name
+        # self.color = color
         pass
 
     def get_output(self, t: None):
@@ -26,3 +27,13 @@ class Color(BaseFeature):
             return None
 
         # call __, create interface, and return
+
+    # colors = [
+    #         Color("red", (0, 0, 255)),
+    #         Color("blue", (255, 0, 0)),
+    #         Color("green", (19, 129, 51)),
+    #         Color("purple", (128, 0, 128)),
+    #         Color("yellow", (0, 215, 255))]
+
+    # fontScales = [1.5, 1.5, 0.75, 0.5, 0.5]
+    # fontThickness = [3, 3, 2, 2, 2]
