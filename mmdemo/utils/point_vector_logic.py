@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from mmdemo.utils.SupportUtils import ParseResult
+from mmdemo.utils.support_utils import ParseResult
 
 
 def getDirectionalVector(terminal, initial):
