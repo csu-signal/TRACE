@@ -114,6 +114,9 @@ class Demo:
         """
         Run the demo
         """
+        for f in self.graph.sorted_features:
+            f.initialize()
+
         while True:
             done = False
             for f in self.graph.sorted_features:
@@ -132,6 +135,9 @@ class Demo:
 
             if done:
                 break
+
+        for f in self.graph.sorted_features:
+            f.finalize()
 
 
 @final

@@ -64,7 +64,7 @@ class BodyTrackingInterface(BaseInterface):
     timestamp_usec -- timestamp in microseconds
     """
 
-    bodies: dict[str, Any]
+    bodies: list[dict[str, Any]]
     timestamp_usec: int
 
 
