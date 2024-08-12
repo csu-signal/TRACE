@@ -19,14 +19,6 @@ class EmptyInterface(BaseInterface):
     """
 
 
-class FrameCountInterface(BaseInterface):
-    """
-    frame_count -- the current frame count
-    """
-
-    frame_count: int
-
-
 class CameraCalibrationInterface(BaseInterface):
     # TODO: brady add docstring
     """
@@ -47,6 +39,7 @@ class ColorImageInterface(BaseInterface):
     frame -- image data with shape (h, w, 3)
     """
 
+    frame_count: int
     frame: np.ndarray
 
 
@@ -56,6 +49,7 @@ class DepthImageInterface(BaseInterface):
     frame -- depth image with shape (h, w)
     """
 
+    frame_count: int
     frame: np.ndarray
 
 

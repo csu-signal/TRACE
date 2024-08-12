@@ -1,3 +1,7 @@
+"""
+Type stubs for Azure Kinect extension
+"""
+
 import numpy as np
 
 class Device:
