@@ -71,7 +71,7 @@ class BodyTrackingInterface(BaseInterface):
 class CameraCalibrationInterface(BaseInterface):
     # TODO: brady add docstring
     """
-    rotation
+    rotation: np.ndarray
     translation: np.ndarray
     cameraMatrix: np.ndarray
     distortion: np.ndarray

@@ -1,12 +1,19 @@
-import os
-
 import cv2
 import numpy as np
-from demo.featureModules.utils import *
 from PIL import Image
+
+from mmdemo.utils.hand_utils import createHeadBoundingBox
+from mmdemo.utils.support_utils import Joint
 
 
 def headBoundingBox(body, rotation, translation, cameraMatrix, dist):
+    """
+    body --
+    rotation --
+    translation --
+    cameraMatrix --
+    dist --
+    """
     for jointIndex, joint in enumerate(body["joint_positions"]):
         if Joint(jointIndex) == Joint.EYE_RIGHT:
             points2D, _ = cv2.projectPoints(
@@ -19,6 +26,9 @@ def headBoundingBox(body, rotation, translation, cameraMatrix, dist):
 
 
 def head_cord(face):
+    """
+    face --
+    """
     head_x = face["box"][0] + face["box"][2] / 2
     head_y = face["box"][1] + face["box"][3] / 2
     return (head_x, head_y)
