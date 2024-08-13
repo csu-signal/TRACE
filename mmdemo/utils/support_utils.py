@@ -1,7 +1,6 @@
 from enum import Enum
 from glob import glob
 
-import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import trapz
@@ -79,22 +78,6 @@ class Object:
 # Red, Green, Orange, Blue, Purple
 colors = [(0, 0, 255), (0, 255, 0), (0, 140, 255), (255, 0, 0), (139, 34, 104)]
 dotColors = [(0, 0, 139), (20, 128, 48), (71, 130, 170), (205, 95, 58), (205, 150, 205)]
-
-################################################################################
-
-# drawing utils
-
-
-def convert2D(point3D, cameraMatrix, dist):
-    point, _ = cv2.projectPoints(
-        np.array(point3D),
-        np.array([0.0, 0.0, 0.0]),
-        np.array([0.0, 0.0, 0.0]),
-        cameraMatrix,
-        dist,
-    )
-
-    return point[0][0]
 
 
 ################################################################################
