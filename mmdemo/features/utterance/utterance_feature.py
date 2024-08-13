@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import final
 
+from silero_vad import load_silero_vad
+
 from mmdemo.base_feature import BaseFeature
 from mmdemo.base_interface import BaseInterface
 from mmdemo.interfaces import AudioFileInterface, ColorImageInterface
@@ -45,15 +47,30 @@ class VADUtteranceBuilder(BaseFeature):
     of input (rate, channels, etc.).
 
     Output feature is `AudioFileInterface`.
+
+    Keyword arguments:
+    `delete_input_files` -- True if input audio files should be deleted, default True
     """
 
+    def __init__(self, *args, delete_input_files=True):
+        super().__init__(*args)
+        self.delete_input_files = delete_input_files
+
     def initialize(self):
-        pass
+        self.vad = load_silero_vad()
+        self.current_data = {}
+        self.audio_settings = {}
 
     def finalize(self):
         pass
 
     def get_output(self, *args: AudioFileInterface) -> AudioFileInterface | None:
+        for audio_input in args:
+            if not audio_input.is_new():
+                continue
+
+        # TODO: next
+
         return None
 
 

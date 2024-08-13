@@ -1,6 +1,7 @@
 """
 Features which can be used as dependencies in a demo
 """
+# TODO: add camera calibration data
 
 from pathlib import Path
 from typing import final
