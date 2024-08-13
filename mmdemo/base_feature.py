@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from mmdemo.base_interface import BaseInterface
 
 
+# TODO: use Generic[T] for output interfaces?
 class BaseFeature(ABC):
     """
     The base class all features in the demo must implement.

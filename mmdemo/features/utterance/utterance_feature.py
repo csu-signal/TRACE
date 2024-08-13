@@ -1,14 +1,64 @@
+from pathlib import Path
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import TranscriptionInterface, UtteranceChunkInterface
+from mmdemo.base_interface import BaseInterface
+from mmdemo.interfaces import AudioFileInterface, ColorImageInterface
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
 
 
 @final
-class UtteranceFeature(BaseFeature):
+class MicAudio(BaseFeature):
+    def initialize(self):
+        pass
+
+    def finalize(self):
+        pass
+
+    def get_output(self) -> AudioFileInterface | None:
+        pass
+
+
+@final
+class RecordedAudio(BaseFeature):
+    def __init__(self, *, path: Path) -> None:
+        super().__init__()
+        self.path = path
+
+    def initialize(self):
+        pass
+
+    def finalize(self):
+        pass
+
+    def get_output(self) -> AudioFileInterface | None:
+        pass
+
+
+@final
+class VADUtteranceBuilder(BaseFeature):
+    """
+    Input features can be any number of features which output
+    `AudioFileInterface`. Each input feature must stay consistent in the format
+    of input (rate, channels, etc.).
+
+    Output feature is `AudioFileInterface`.
+    """
+
+    def initialize(self):
+        pass
+
+    def finalize(self):
+        pass
+
+    def get_output(self, *args: AudioFileInterface) -> AudioFileInterface | None:
+        return None
+
+
+@final
+class LiveUtteranceFeature(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
         return []
@@ -20,8 +70,20 @@ class UtteranceFeature(BaseFeature):
     def initialize(self):
         pass
 
-    def get_output(self, tran: TranscriptionInterface):
-        if not tran.is_new():
+    def finalize(self):
+        pass
+
+    def get_output(self):
+        return None
+
+
+@final
+class RecordedUtteranceFeature(BaseFeature):
+    def initialize(self):
+        return super().initialize()
+
+    def get_output(self, t: TranscriptionInterface):
+        if not t.is_new():
             return None
 
         # call __, create interface, and return

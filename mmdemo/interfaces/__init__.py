@@ -127,18 +127,44 @@ class Vectors3D(BaseInterface):
 
 
 @dataclass
-class UtteranceChunkInterface(BaseInterface):
-    """
-    Audio segments of utterances
-
-    info -- identifying data for the utterance
-    audio_file -- path to the audio file
-    """
+class _AudioChunkBase(BaseInterface):
+    """Base interface for audio chunks"""
 
     speaker_id: str
     start_time: float
     end_time: float
-    audio_file: Path
+
+
+# TODO: remove this? if so then combine _AudioChunkBase with AudioFileInterface
+# @dataclass
+# class AudioBytesInterface(_AudioChunkBase):
+#     """
+#     Audio chunks as bytes in wav format
+#
+#     `speaker_id` -- unique identifier for the speaker
+#     `start_time`, `end_time` -- start and end time in seconds
+#     `frames` -- audio data bytes
+#     `sample_rate` -- sample rate of audio bytes
+#     `sample_width` -- sample width of audio bytes
+#     `channels` -- channels of audio bytes
+#     """
+#     frames: bytes
+#     sample_rate: int
+#     sample_width: int
+#     channels: int
+
+
+@dataclass
+class AudioFileInterface(_AudioChunkBase):
+    """
+    Audio chunks as a wav file
+
+    `speaker_id` -- unique identifier for the speaker
+    `start_time`, `end_time` -- start and end time in seconds
+    `path` -- path to wav file
+    """
+
+    path: Path
 
 
 @dataclass
