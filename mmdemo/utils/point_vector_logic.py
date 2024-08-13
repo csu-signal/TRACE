@@ -59,7 +59,7 @@ def getVectorPoint(terminal, vector):
     return (terminal[0] + vector[0], terminal[1] + vector[1], terminal[2] + vector[2])
 
 
-def processPoint(landmarks, box, w, h, cameraMatrix, dist, depth):
+def processPoint(landmarks, cameraMatrix, dist, depth):
     try:
         for index, lm in enumerate(landmarks):
             if index == 5:
