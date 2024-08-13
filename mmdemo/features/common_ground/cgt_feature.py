@@ -1,21 +1,7 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (
-    ASRInterface,
-    BodyTrackingInterface,
-    ColorImageInterface,
-    CommonGroundInterface,
-    DenseParaphraseInterface,
-    DepthImageInterface,
-    GestureInterface,
-    MoveInterface,
-    ObjectInterface,
-    PropositionInterface,
-    SelectedObjectsInterface,
-    TranscriptionInterface,
-    UtteranceChunkInterface,
-)
+from mmdemo.interfaces import CommonGroundInterface, MoveInterface, PropositionInterface
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
@@ -51,31 +37,8 @@ class CommonGroundTracking(BaseFeature):
         self,
         move: MoveInterface,
         prop: PropositionInterface,
-        dense: DenseParaphraseInterface,
-        select_obj: SelectedObjectsInterface,
-        obj: ObjectInterface,
-        gest: GestureInterface,
-        col: ColorImageInterface,
-        dep: DepthImageInterface,
-        bod: BodyTrackingInterface,
-        asr: ASRInterface,
-        utt: UtteranceChunkInterface,
-        tran: TranscriptionInterface,
     ):
-        if (
-            not move.is_new()
-            and not prop.is_new()
-            and not dense.is_new()
-            and not select_obj.is_new()
-            and not obj.is_new()
-            and not gest.is_new()
-            and not col.is_new()
-            and not dep.is_new
-            and not bod.is_new()
-            and not asr.is_new()
-            and not utt.is_new()
-            and not tran.is_new()
-        ):
+        if not move.is_new() and not prop.is_new():
             return None
 
         # call prop extractor, create interface, and return
