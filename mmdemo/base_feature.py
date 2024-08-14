@@ -3,12 +3,14 @@ Base feature definition
 """
 
 from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 from mmdemo.base_interface import BaseInterface
 
+T = TypeVar("T", bound=BaseInterface)
 
-# TODO: use Generic[T] for output interfaces?
-class BaseFeature(ABC):
+
+class BaseFeature(ABC, Generic[T]):
     """
     The base class all features in the demo must implement.
     """
@@ -32,7 +34,7 @@ class BaseFeature(ABC):
             d._rev_deps.append(self)
 
     @abstractmethod
-    def get_output(self, *args, **kwargs) -> BaseInterface | None:
+    def get_output(self, *args, **kwargs) -> T | None:
         """
         Return output of the feature. The return type must be the output
         interface to provide new data and `None` if there is no new data.
