@@ -1,49 +1,139 @@
 from typing import final
-
+from pathlib import Path
+import cv2
+import numpy as np
+import torch
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (  # ObjectInterface,; ObjectInterface2D,
+from mmdemo.features.objects.config import CLASSES, DEVICE, NUM_CLASSES
+from mmdemo.features.objects.model import create_model
+from mmdemo.interfaces import (
     ColorImageInterface,
-    DepthImageInterface,
     ObjectInterface3D,
 )
+from mmdemo.interfaces.data import ObjectInfo3D
+from mmdemo.utils.Gamr import Block, GamrTarget
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
 
 # detection_threshold = 0.6
-# RESIZE_TO = (512, 512)
-
+RESIZE_TO = (512, 512)
 
 @final
 class Object(BaseFeature):
+    """
+    A feature to get and track the objects through a scene.
+
+    Input feature is `BaseFeature' which is the base class all features in the demo must implement.
+
+    Output inteface is `ObjectInterface3D`.
+    """
+       
     @classmethod
     def get_input_interfaces(cls):
-        return [ColorImageInterface, DepthImageInterface]
+        return [ColorImageInterface]
 
     @classmethod
     def get_output_interface(cls):
         return ObjectInterface3D
 
-    def initialize(self):
+    def initialize(self, detectionThreshold):
         # print("Torch Device " + str(DEVICE))
         # print("Python version " + str(platform.python_version()))
-        # # load the best objectModel and trained weights - for object detection
-        # self.objectModel = create_model(num_classes=NUM_CLASSES)
+        
+        # load the best objectModel and trained weights - for object detection
+        self.device = DEVICE
+        self.detectionThreshold = detectionThreshold
+        self.objectModel = create_model(num_classes=NUM_CLASSES)
 
-        # model_path = Path(__file__).parent / "objectDetectionModels" / "best_model-objects.pth"
-        # checkpoint = torch.load(str(model_path), map_location=DEVICE)
+        model_path = Path(__file__).parent / "objectDetectionModels" / "best_model-objects.pth"
+        checkpoint = torch.load(str(model_path), map_location=DEVICE)
 
-        # self.objectModel.load_state_dict(checkpoint['model_state_dict'], strict=False)
-        # self.objectModel.to(DEVICE).eval()
+        self.objectModel.load_state_dict(checkpoint['model_state_dict'], strict=False)
+        self.objectModel.to(DEVICE).eval()
 
+        # TODO implement logger?
         # self.init_logger(log_dir)
         pass
 
-    def get_output(self, col: ColorImageInterface):
+    def get_output(self, col: ColorImageInterface) -> ObjectInterface3D | None:
         if not col.is_new():
             return None
 
-        # call move classifier, create interface, and return
+        objects = []
+        image = cv2.resize(col.frame, RESIZE_TO)
+        image = col.frame.astype(np.float32)
+        # make the pixel range between 0 and 1
+        image /= 255.0
+        # bring color channels to front
+        image = np.transpose(image, (2, 0, 1)).astype(np.float32)
+        # convert to tensor
+        image = torch.tensor(image, dtype=torch.float).cuda()
+        # add batch dimension
+        image = torch.unsqueeze(image, 0)
+        with torch.no_grad():
+            # get predictions for the current frame
+            outputs = self.objectModel(image.to(self.device))
+        
+        # load all detection to CPU for further operations
+        outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]  
+        found = []
+        if len(outputs[0]['boxes']) != 0:
+            boxes = outputs[0]['boxes'].data.numpy()
+            scores = outputs[0]['scores'].data.numpy()
+            boxes = boxes[scores >= self.detectionThreshold].astype(np.int32)
+            draw_boxes = boxes.copy()
+            # get all the predicited class names
+            pred_classes = [CLASSES[i] for i in outputs[0]['labels'].cpu().numpy()]
+
+            for j, box in enumerate(draw_boxes):
+                class_name = pred_classes[j]
+                if(found.__contains__(class_name)):
+                    continue
+
+                found.append(class_name)
+                p1 = [box[0], box[1]]
+                p2 = [box[2], box[3]]
+                center = [(p1[0] + p2[0])/2, (p1[1] + p2[1])/2]
+                des = self.getDescription(float(class_name))
+                
+                if(des != GamrTarget.SCALE):
+                    objects.append(ObjectInfo3D(
+                        p1=p1, 
+                        p2=p2, 
+                        center=center,
+                        class_name=des))
+                    
+                    #TODO logging
+                    #self.log_block(frameIndex, block)
+                    #blockDescriptions.append(block.description)
+
+        return ObjectInterface3D(objects=objects)
+    
+    def getDescription(self, classId):
+        """
+        `self` -- instance of object feature class
+        `classId` -- the class id to be interpreted
+
+        Returns description of the object for the class id
+        """
+        if classId == 0:
+            return GamrTarget.RED_BLOCK
+
+        if classId == 1:
+            return GamrTarget.YELLOW_BLOCK
+
+        if classId == 2:
+            return GamrTarget.GREEN_BLOCK
+
+        if classId == 3:
+            return GamrTarget.BLUE_BLOCK
+
+        if classId == 4:
+            return GamrTarget.PURPLE_BLOCK
+
+        if classId == 5:
+            return GamrTarget.SCALE
 
     # def init_logger(self, log_dir):
     #     if log_dir is not None:
@@ -62,54 +152,3 @@ class Object(BaseFeature):
     #             block.p2[0],
     #             block.p2[1]
     #     )
-
-    # def processFrame(self, framergb, frameIndex):
-    #     blocks = []
-    #     blockDescriptions = []
-    #     image = cv2.resize(framergb, RESIZE_TO)
-    #     image = framergb.astype(np.float32)
-    #     # make the pixel range between 0 and 1
-    #     image /= 255.0
-    #     # bring color channels to front
-    #     image = np.transpose(image, (2, 0, 1)).astype(np.float32)
-    #     # convert to tensor
-    #     image = torch.tensor(image, dtype=torch.float).cuda()
-    #     # add batch dimension
-    #     image = torch.unsqueeze(image, 0)
-    #     with torch.no_grad():
-    #         # get predictions for the current frame
-    #         outputs = self.objectModel(image.to(DEVICE))
-
-    #     # object rendering
-    #     # load all detection to CPU for further operations
-    #     outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]
-    #     found = []
-    #     if len(outputs[0]['boxes']) != 0:
-    #         boxes = outputs[0]['boxes'].data.numpy()
-    #         scores = outputs[0]['scores'].data.numpy()
-    #         boxes = boxes[scores >= detection_threshold].astype(np.int32)
-    #         draw_boxes = boxes.copy()
-    #         # get all the predicited class names
-    #         pred_classes = [CLASSES[i] for i in outputs[0]['labels'].cpu().numpy()]
-
-    #         # draw the bounding boxes and write the class name on top of it
-    #         for j, box in enumerate(draw_boxes):
-    #             class_name = pred_classes[j]
-    #             if(found.__contains__(class_name)):
-    #                 continue
-
-    #             found.append(class_name)
-    #             p1 = [box[0], box[1]]
-    #             p2 = [box[2], box[3]]
-
-    #             block = Block(float(class_name), p1, p2)
-
-    #             if(block.description != GamrTarget.SCALE):
-    #                 blocks.append(block)
-    #                 self.log_block(frameIndex, block)
-
-    #                 blockDescriptions.append(block.description)
-    #             # print("Found Block: " + str(block.description))
-    #             # print(str(p1))
-    #             # print(str(p2))
-    #     return blocks
