@@ -9,7 +9,7 @@ from typing import Any, Iterable
 import numpy as np
 
 from mmdemo.base_interface import BaseInterface
-from mmdemo.interfaces.data import ObjectInfo2D, ObjectInfo3D, UtteranceInfo
+from mmdemo.interfaces.data import Cone, ObjectInfo2D, ObjectInfo3D
 
 
 @dataclass
@@ -106,6 +106,11 @@ class CommonGroundInterface(BaseInterface):
 
 
 @dataclass
+class ConesInterface(BaseInterface):
+    cones: list[Cone]
+
+
+@dataclass
 class DepthImageInterface(BaseInterface):
     """
     frame -- depth image with shape (h, w)
@@ -113,6 +118,17 @@ class DepthImageInterface(BaseInterface):
 
     frame_count: int
     frame: np.ndarray
+
+
+@dataclass
+class GazeConesInterface(ConesInterface):
+    body_ids: list[int]
+
+
+@dataclass
+class GestureConesInterface(ConesInterface):
+    body_ids: list[int]
+    handedness: list[str]
 
 
 @dataclass
@@ -221,7 +237,12 @@ class Vectors2DInterface(BaseInterface):
 class Vectors3DInterface(BaseInterface):
     # TODO: Hannah change if needed
     """
-    vectors -- list of numpy vectors with shape (3,)
-    """
+    A data class for storing and managing 3D vectors associated with different bodies.
 
-    vectors: list[np.ndarray]
+    Attributes:
+        vectors (Dict[str, Tuple[np.ndarray, np.ndarray]]): A dictionary mapping each body identifier to a tuple of two numpy arrays.
+            - Each key is a string representing the body identifier.
+            - Each value is a tuple containing two 3D numpy arrays: the starting point (`_point`) and the ending point (`end_point`) of the vector.
+            - Both numpy arrays have the shape (3,), representing vectors in 3-dimensional space.
+    """
+    vectors: dict[str, tuple[np.ndarray, np.ndarray]]

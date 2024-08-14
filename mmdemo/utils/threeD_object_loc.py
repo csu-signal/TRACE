@@ -4,12 +4,12 @@ import cv2
 import numpy as np
 from numpy.linalg import norm
 
-from mmdemo.utils.support_utils import (
-    ParseResult,
+from mmdemo.utils.point_vector_logic import (
     convertTo3D,
     getDirectionalVector,
     getVectorPoint,
 )
+from mmdemo.utils.support_utils import ParseResult
 
 
 def distance3D(point1, point2):

@@ -6,7 +6,7 @@ from mmdemo.interfaces import (  # GestureInterface,
     CameraCalibrationInterface,
     ColorImageInterface,
     DepthImageInterface,
-    Vectors3DInterface,
+    GestureConesInterface,
 )
 
 # import helpers
@@ -14,7 +14,7 @@ from mmdemo.interfaces import (  # GestureInterface,
 
 
 @final
-class Gesture(BaseFeature[Vectors3DInterface]):
+class Gesture(BaseFeature[GestureConesInterface]):
     # LOG_FILE = "gestureOutput.csv"
 
     @classmethod
@@ -28,7 +28,7 @@ class Gesture(BaseFeature[Vectors3DInterface]):
 
     @classmethod
     def get_output_interface(cls):
-        return Vectors3DInterface
+        return GestureConesInterface
 
     def initialize(self):
         # model_path = Path(__file__).parent / "bestModel-pointing.pkl"
@@ -48,7 +48,7 @@ class Gesture(BaseFeature[Vectors3DInterface]):
     ):
         if not col.is_new() and not depth.is_new() and not bt.is_new():
             return None
-
+        return GestureConesInterface(body_ids=_, handedness=_, cones=_)
         # call __, create interface, and return
 
     # def log_gesture(self, frame: int, descriptions: list[str], body_id, handedness: str):

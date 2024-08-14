@@ -7,7 +7,7 @@ from mmdemo.features.gaze.gaze_feature import Gaze
 from mmdemo.interfaces import (
     BodyTrackingInterface,
     CameraCalibrationInterface,
-    Vectors3DInterface,
+    GazeConesInterface,
 )
 from mmdemo.utils.support_utils import Joint
 
@@ -78,7 +78,7 @@ p3_expected = [0, 0, 0]
 def test_gaze_body_tracking_formula(gaze, cc_interface, bodies, expected_output):
     body_tracking_interface = BodyTrackingInterface(bodies=bodies, timestamp_usec=-1)
     output = gaze.get_output(body_tracking_interface, cc_interface)
-    assert isinstance(output, Vectors3DInterface)
+    assert isinstance(output, GazeConesInterface)
 
     for out, expected in zip(output.vectors, expected_output):
         assert np.isclose(out, expected)

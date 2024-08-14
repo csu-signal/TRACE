@@ -1,8 +1,17 @@
 """
 Helper dataclasses for interface definitions
 """
-
 from dataclasses import dataclass
+
+import numpy as np
+
+
+@dataclass
+class Cone:
+    base: np.ndarray
+    vertex: np.ndarray
+    base_radius: float
+    vertex_radius: float
 
 
 @dataclass
