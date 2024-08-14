@@ -15,7 +15,7 @@ from mmdemo.interfaces import (  # ASRInterface,; DenseParaphraseInterface,; Ges
 
 
 @final
-class Proposition(BaseFeature):
+class Proposition(BaseFeature[PropositionInterface]):
     # LOG_FILE = "propOutput.csv"
     @classmethod
     def get_input_interfaces(cls):

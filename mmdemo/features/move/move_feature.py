@@ -15,7 +15,7 @@ from mmdemo.interfaces import (  # ASRInterface,; DenseParaphraseInterface,; Ges
 
 
 @final
-class Move(BaseFeature):
+class Move(BaseFeature[MoveInterface]):
     # LOG_FILE = "moveOutput.csv"
     @classmethod
     def get_input_interfaces(cls):

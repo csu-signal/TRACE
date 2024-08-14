@@ -11,7 +11,7 @@ from mmdemo.interfaces import AudioFileInterface
 
 
 @final
-class VADUtteranceBuilder(BaseFeature):
+class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
     """
     Turn audio input chunks into utterances using VAD segmentation.
     This will attempt to leave one chunk with no voice activity

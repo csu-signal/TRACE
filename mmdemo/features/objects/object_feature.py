@@ -1,15 +1,14 @@
-from typing import final
 from pathlib import Path
+from typing import final
+
 import cv2
 import numpy as np
 import torch
+
 from mmdemo.base_feature import BaseFeature
 from mmdemo.features.objects.config import CLASSES, DEVICE, NUM_CLASSES
 from mmdemo.features.objects.model import create_model
-from mmdemo.interfaces import (
-    ColorImageInterface,
-    ObjectInterface3D,
-)
+from mmdemo.interfaces import ColorImageInterface, ObjectInterface3D
 from mmdemo.interfaces.data import ObjectInfo3D
 from mmdemo.utils.Gamr import Block, GamrTarget
 
@@ -19,16 +18,21 @@ from mmdemo.utils.Gamr import Block, GamrTarget
 # detection_threshold = 0.6
 RESIZE_TO = (512, 512)
 
+
 @final
-class Object(BaseFeature):
+class Object(BaseFeature[ObjectInterface3D]):
     """
     A feature to get and track the objects through a scene.
 
-    Input feature is `BaseFeature' which is the base class all features in the demo must implement.
+    Input interface is `ColorImageInterface'.
 
     Output inteface is `ObjectInterface3D`.
     """
-       
+
+    def __init__(self, *args, detection_threshold=0.6) -> None:
+        super().__init__(*args)
+        self.detectionThreshold = detection_threshold
+
     @classmethod
     def get_input_interfaces(cls):
         return [ColorImageInterface]
@@ -37,19 +41,20 @@ class Object(BaseFeature):
     def get_output_interface(cls):
         return ObjectInterface3D
 
-    def initialize(self, detectionThreshold):
+    def initialize(self):
         # print("Torch Device " + str(DEVICE))
         # print("Python version " + str(platform.python_version()))
-        
+
         # load the best objectModel and trained weights - for object detection
         self.device = DEVICE
-        self.detectionThreshold = detectionThreshold
         self.objectModel = create_model(num_classes=NUM_CLASSES)
 
-        model_path = Path(__file__).parent / "objectDetectionModels" / "best_model-objects.pth"
+        model_path = (
+            Path(__file__).parent / "objectDetectionModels" / "best_model-objects.pth"
+        )
         checkpoint = torch.load(str(model_path), map_location=DEVICE)
 
-        self.objectModel.load_state_dict(checkpoint['model_state_dict'], strict=False)
+        self.objectModel.load_state_dict(checkpoint["model_state_dict"], strict=False)
         self.objectModel.to(DEVICE).eval()
 
         # TODO implement logger?
@@ -74,42 +79,40 @@ class Object(BaseFeature):
         with torch.no_grad():
             # get predictions for the current frame
             outputs = self.objectModel(image.to(self.device))
-        
+
         # load all detection to CPU for further operations
-        outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]  
+        outputs = [{k: v.to("cpu") for k, v in t.items()} for t in outputs]
         found = []
-        if len(outputs[0]['boxes']) != 0:
-            boxes = outputs[0]['boxes'].data.numpy()
-            scores = outputs[0]['scores'].data.numpy()
+        if len(outputs[0]["boxes"]) != 0:
+            boxes = outputs[0]["boxes"].data.numpy()
+            scores = outputs[0]["scores"].data.numpy()
             boxes = boxes[scores >= self.detectionThreshold].astype(np.int32)
             draw_boxes = boxes.copy()
             # get all the predicited class names
-            pred_classes = [CLASSES[i] for i in outputs[0]['labels'].cpu().numpy()]
+            pred_classes = [CLASSES[i] for i in outputs[0]["labels"].cpu().numpy()]
 
             for j, box in enumerate(draw_boxes):
                 class_name = pred_classes[j]
-                if(found.__contains__(class_name)):
+                if found.__contains__(class_name):
                     continue
 
                 found.append(class_name)
                 p1 = [box[0], box[1]]
                 p2 = [box[2], box[3]]
-                center = [(p1[0] + p2[0])/2, (p1[1] + p2[1])/2]
+                center = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]
                 des = self.getDescription(float(class_name))
-                
-                if(des != GamrTarget.SCALE):
-                    objects.append(ObjectInfo3D(
-                        p1=p1, 
-                        p2=p2, 
-                        center=center,
-                        class_name=des))
-                    
-                    #TODO logging
-                    #self.log_block(frameIndex, block)
-                    #blockDescriptions.append(block.description)
+
+                if des != GamrTarget.SCALE:
+                    objects.append(
+                        ObjectInfo3D(p1=p1, p2=p2, center=center, class_name=des)
+                    )
+
+                    # TODO logging
+                    # self.log_block(frameIndex, block)
+                    # blockDescriptions.append(block.description)
 
         return ObjectInterface3D(objects=objects)
-    
+
     def getDescription(self, classId):
         """
         `self` -- instance of object feature class

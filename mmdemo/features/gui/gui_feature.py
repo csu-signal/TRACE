@@ -12,7 +12,7 @@ from mmdemo.interfaces import (  # ASRInterface,; BodyTrackingInterface,; Common
 
 
 @final
-class GUI(BaseFeature):
+class GUI(BaseFeature[EmptyInterface]):
     @classmethod
     def get_input_interfaces(cls):
         return [ColorImageInterface]

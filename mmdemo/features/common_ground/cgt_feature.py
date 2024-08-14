@@ -8,7 +8,7 @@ from mmdemo.interfaces import CommonGroundInterface, MoveInterface, PropositionI
 
 
 @final
-class CommonGroundTracking(BaseFeature):
+class CommonGroundTracking(BaseFeature[CommonGroundInterface]):
     @classmethod
     def get_input_interfaces(cls):
         return [

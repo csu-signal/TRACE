@@ -8,7 +8,7 @@ from mmdemo.interfaces import TranscriptionInterface  # , UtteranceChunkInterfac
 
 
 @final
-class Transcription(BaseFeature):
+class Transcription(BaseFeature[TranscriptionInterface]):
     # LOG_FILE = "asrOutput.csv"
     @classmethod
     def get_input_interfaces(cls):

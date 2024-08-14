@@ -14,7 +14,7 @@ from mmdemo.interfaces import (  # GestureInterface,
 
 
 @final
-class Gesture(BaseFeature):
+class Gesture(BaseFeature[Vectors3DInterface]):
     # LOG_FILE = "gestureOutput.csv"
 
     @classmethod

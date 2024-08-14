@@ -11,7 +11,7 @@ from mmdemo.interfaces import (  # ASRInterface,; BodyTrackingInterface,; ColorI
 
 
 @final
-class DenseParaphrasing(BaseFeature):
+class DenseParaphrasing(BaseFeature[TranscriptionInterface]):
     @classmethod
     def get_input_interfaces(cls):
         return [

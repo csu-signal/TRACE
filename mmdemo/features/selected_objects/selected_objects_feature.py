@@ -15,7 +15,7 @@ from mmdemo.interfaces import (  # ASRInterface,; GestureInterface,; ObjectInter
 
 
 @final
-class SelectedObjects(BaseFeature):
+class SelectedObjects(BaseFeature[SelectedObjectsInterface]):
     @classmethod
     def get_input_interfaces(cls):
         return []  # [ObjectInterface, Vectors3D, Vectors3D]

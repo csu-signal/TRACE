@@ -8,7 +8,7 @@ from mmdemo.interfaces import BodyTrackingInterface, PoseInterface
 
 
 @final
-class Pose(BaseFeature):
+class Pose(BaseFeature[PoseInterface]):
     @classmethod
     def get_input_interfaces(cls):
         return [BodyTrackingInterface]

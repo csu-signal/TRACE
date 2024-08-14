@@ -14,7 +14,7 @@ from mmdemo.utils.twoD_object_loc import convert2D
 
 # this is for gaze body tracking, rgb gaze will be different
 @final
-class Gaze(BaseFeature):
+class Gaze(BaseFeature[Vectors3DInterface]):
     """
     A feature to get and track the points of participants' gaze vectors.
 

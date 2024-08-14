@@ -6,7 +6,7 @@ from mmdemo.interfaces import AudioFileInterface
 
 
 @final
-class MicAudio(BaseFeature):
+class MicAudio(BaseFeature[AudioFileInterface]):
     def __init__(self, *, device_id: int) -> None:
         super().__init__()
         self.device_id = device_id
@@ -22,7 +22,7 @@ class MicAudio(BaseFeature):
 
 
 @final
-class RecordedAudio(BaseFeature):
+class RecordedAudio(BaseFeature[AudioFileInterface]):
     def __init__(self, *, path: Path) -> None:
         super().__init__()
         self.path = path

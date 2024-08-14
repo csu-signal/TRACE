@@ -15,7 +15,7 @@ from mmdemo.interfaces import (  # FrameCountInterface,; GazeInterface,
 
 
 @final
-class OutputFrames(BaseFeature):
+class OutputFrames(BaseFeature[ColorImageInterface]):
     @classmethod
     def get_input_interfaces(cls):
         return [
