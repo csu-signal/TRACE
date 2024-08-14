@@ -10,7 +10,7 @@ from mmdemo.features.objects.config import CLASSES, DEVICE, NUM_CLASSES
 from mmdemo.features.objects.model import create_model
 from mmdemo.interfaces import ColorImageInterface, ObjectInterface3D
 from mmdemo.interfaces.data import ObjectInfo3D
-from mmdemo.utils.gamr import Block, GamrTarget
+from mmdemo.utils.Gamr import Block, GamrTarget
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
