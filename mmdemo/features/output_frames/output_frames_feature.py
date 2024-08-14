@@ -2,15 +2,12 @@ from typing import final
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.base_interface import BaseInterface
-from mmdemo.interfaces import (
+from mmdemo.interfaces import (  # FrameCountInterface,; GazeInterface,
     ColorImageInterface,
     CommonGroundInterface,
-    FrameCountInterface,
-    GazeInterface,
-    OutputFrameInterface,
     SelectedObjectsInterface,
     TranscriptionInterface,
-    Vectors3D,
+    Vectors3DInterface,
 )
 
 # import helpers
@@ -23,10 +20,9 @@ class OutputFrames(BaseFeature):
     def get_input_interfaces(cls):
         return [
             ColorImageInterface,
-            FrameCountInterface,
+            # FrameCountInterface,
             CommonGroundInterface,
-            Vectors3D,
-            Vectors3D,
+            Vectors3DInterface,
             SelectedObjectsInterface,
         ]
 
@@ -41,15 +37,15 @@ class OutputFrames(BaseFeature):
     def get_output(
         self,
         *args: BaseInterface,
-        gaze: GazeInterface,
+        # gaze: GazeInterface,
         tran: TranscriptionInterface,
     ):
         for feature in args:
-            if isinstance(feature, FrameCountInterface):
-                # draw frame count
-                pass
+            # if isinstance(feature, FrameCountInterface):
+            # draw frame count
+            pass
 
-        if not gaze.is_new() and not tran.is_new():
-            return None
+        # if not gaze.is_new() and not tran.is_new():
+        #     return None
 
         # call _, create interface, and return

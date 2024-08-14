@@ -1,17 +1,13 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (
-    ASRInterface,
+from mmdemo.interfaces import (  # ASRInterface,; GestureInterface,; ObjectInterface,; UtteranceChunkInterface,
     BodyTrackingInterface,
     ColorImageInterface,
     DepthImageInterface,
-    GestureInterface,
-    ObjectInterface,
     SelectedObjectsInterface,
     TranscriptionInterface,
-    UtteranceChunkInterface,
-    Vectors3D,
+    Vectors3DInterface,
 )
 
 # import helpers
@@ -22,7 +18,7 @@ from mmdemo.interfaces import (
 class SelectedObjects(BaseFeature):
     @classmethod
     def get_input_interfaces(cls):
-        return [ObjectInterface, Vectors3D, Vectors3D]
+        return []  # [ObjectInterface, Vectors3D, Vectors3D]
 
     @classmethod
     def get_output_interface(cls):
@@ -34,23 +30,23 @@ class SelectedObjects(BaseFeature):
 
     def get_output(
         self,
-        obj: ObjectInterface,
-        gest: GestureInterface,
+        # obj: ObjectInterface,
+        # gest: GestureInterface,
         col: ColorImageInterface,
         dep: DepthImageInterface,
         bod: BodyTrackingInterface,
-        asr: ASRInterface,
-        utt: UtteranceChunkInterface,
+        # asr: ASRInterface,
+        # utt: UtteranceChunkInterface,
         tran: TranscriptionInterface,
     ):
         if (
-            not obj.is_new()
-            and not gest.is_new()
-            and not col.is_new()
+            # not obj.is_new()
+            # and not gest.is_new() and
+            not col.is_new()
             and not dep.is_new
             and not bod.is_new()
-            and not asr.is_new()
-            and not utt.is_new()
+            # and not asr.is_new()
+            # and not utt.is_new()
             and not tran.is_new()
         ):
             return None

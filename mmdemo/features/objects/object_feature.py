@@ -1,11 +1,9 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (
+from mmdemo.interfaces import (  # ObjectInterface,; ObjectInterface2D,
     ColorImageInterface,
     DepthImageInterface,
-    ObjectInterface,
-    ObjectInterface2D,
     ObjectInterface3D,
 )
 

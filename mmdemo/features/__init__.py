@@ -5,7 +5,7 @@ Premade features
 # from mmdemo.features.depth.depth_feature import Depth
 # from mmdemo.features.body_tracking.body_tracking_feature import BodyTracking
 
-from mmdemo.features.asr.asr_feature import ASR
+from mmdemo.features.asr.asr_feature import Transcription
 from mmdemo.features.common_ground.cgt_feature import CommonGroundTracking
 from mmdemo.features.dense_paraphrasing.dense_paraphrase_feature import (
     DenseParaphrasing,

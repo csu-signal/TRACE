@@ -1,21 +1,16 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (
-    ASRInterface,
+from mmdemo.interfaces import (  # ASRInterface,; DenseParaphraseInterface,; GestureInterface,; ObjectInterface,; UtteranceChunkInterface,
     BodyTrackingInterface,
     ColorImageInterface,
     CommonGroundInterface,
-    DenseParaphraseInterface,
     DepthImageInterface,
     EmptyInterface,
-    GestureInterface,
     MoveInterface,
-    ObjectInterface,
     PropositionInterface,
     SelectedObjectsInterface,
     TranscriptionInterface,
-    UtteranceChunkInterface,
 )
 
 # import helpers
@@ -30,15 +25,15 @@ class Evaluation(BaseFeature):
             CommonGroundInterface,
             MoveInterface,
             PropositionInterface,
-            DenseParaphraseInterface,
+            # DenseParaphraseInterface,
             SelectedObjectsInterface,
-            ObjectInterface,
-            GestureInterface,
+            # ObjectInterface,
+            # GestureInterface,
             ColorImageInterface,
             DepthImageInterface,
             BodyTrackingInterface,
-            ASRInterface,
-            UtteranceChunkInterface,
+            # ASRInterface,
+            # UtteranceChunkInterface,
             TranscriptionInterface,
         ]
 

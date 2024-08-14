@@ -1,13 +1,12 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (
+from mmdemo.interfaces import (  # GestureInterface,
     BodyTrackingInterface,
     CameraCalibrationInterface,
     ColorImageInterface,
     DepthImageInterface,
-    GestureInterface,
-    Vectors3D,
+    Vectors3DInterface,
 )
 
 # import helpers
@@ -29,7 +28,7 @@ class Gesture(BaseFeature):
 
     @classmethod
     def get_output_interface(cls):
-        return Vectors3D
+        return Vectors3DInterface
 
     def initialize(self):
         # model_path = Path(__file__).parent / "bestModel-pointing.pkl"
@@ -42,9 +41,12 @@ class Gesture(BaseFeature):
         pass
 
     def get_output(
-        self, t: ColorImageInterface, s: DepthImageInterface, u: BodyTrackingInterface
+        self,
+        col: ColorImageInterface,
+        depth: DepthImageInterface,
+        bt: BodyTrackingInterface,
     ):
-        if not t.is_new() and not s.is_new() and not u.is_new():
+        if not col.is_new() and not depth.is_new() and not bt.is_new():
             return None
 
         # call __, create interface, and return

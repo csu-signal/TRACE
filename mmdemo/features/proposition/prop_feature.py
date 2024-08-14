@@ -1,18 +1,13 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (
-    ASRInterface,
+from mmdemo.interfaces import (  # ASRInterface,; DenseParaphraseInterface,; GestureInterface,; ObjectInterface,
     BodyTrackingInterface,
     ColorImageInterface,
-    DenseParaphraseInterface,
     DepthImageInterface,
-    GestureInterface,
-    ObjectInterface,
     PropositionInterface,
     SelectedObjectsInterface,
     TranscriptionInterface,
-    UtteranceChunkInterface,
 )
 
 # import helpers
@@ -44,27 +39,27 @@ class Proposition(BaseFeature):
 
     def get_output(
         self,
-        dense: DenseParaphraseInterface,
+        # dense: DenseParaphraseInterface,
         select_obj: SelectedObjectsInterface,
-        obj: ObjectInterface,
-        gest: GestureInterface,
+        # obj: ObjectInterface,
+        # gest: GestureInterface,
         col: ColorImageInterface,
         dep: DepthImageInterface,
         bod: BodyTrackingInterface,
-        asr: ASRInterface,
-        utt: UtteranceChunkInterface,
+        # asr: ASRInterface,
+        # utt: UtteranceChunkInterface,
         tran: TranscriptionInterface,
     ):
         if (
-            not dense.is_new()
-            and not select_obj.is_new()
-            and not obj.is_new()
-            and not gest.is_new()
+            # not dense.is_new() and
+            not select_obj.is_new()
+            # and not obj.is_new()
+            # and not gest.is_new()
             and not col.is_new()
             and not dep.is_new
             and not bod.is_new()
-            and not asr.is_new()
-            and not utt.is_new()
+            # and not asr.is_new()
+            # and not utt.is_new()
             and not tran.is_new()
         ):
             return None

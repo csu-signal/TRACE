@@ -1,7 +1,7 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import TranscriptionInterface, UtteranceChunkInterface
+from mmdemo.interfaces import TranscriptionInterface  # , UtteranceChunkInterface
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
@@ -12,7 +12,7 @@ class Transcription(BaseFeature):
     # LOG_FILE = "asrOutput.csv"
     @classmethod
     def get_input_interfaces(cls):
-        return [UtteranceChunkInterface]
+        return []  # [UtteranceChunkInterface]
 
     @classmethod
     def get_output_interface(cls):
@@ -39,8 +39,11 @@ class Transcription(BaseFeature):
         # self.utterance_lookup: dict[int, UtteranceInfo] = {}
         pass
 
-    def get_output(self, t: TranscriptionInterface, s: UtteranceChunkInterface):
-        if not t.is_new() or not s.is_new():
+    def get_output(
+        self,
+        t: TranscriptionInterface,
+    ):  # s: UtteranceChunkInterface):
+        if not t.is_new():  # or not s.is_new():
             return None
 
         # call __, create interface, and return

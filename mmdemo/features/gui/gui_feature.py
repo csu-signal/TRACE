@@ -1,23 +1,10 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (
-    ASRInterface,
-    BodyTrackingInterface,
+from mmdemo.interfaces import (  # ASRInterface,; BodyTrackingInterface,; CommonGroundInterface,; DenseParaphraseInterface,; DepthImageInterface,; GazeInterface,; GestureInterface,; MoveInterface,; ObjectInterface,; OutputFrameInterface,; PropositionInterface,; SelectedObjectsInterface,; UtteranceChunkInterface,
     ColorImageInterface,
-    CommonGroundInterface,
-    DenseParaphraseInterface,
-    DepthImageInterface,
     EmptyInterface,
-    GazeInterface,
-    GestureInterface,
-    MoveInterface,
-    ObjectInterface,
-    OutputFrameInterface,
-    PropositionInterface,
-    SelectedObjectsInterface,
     TranscriptionInterface,
-    UtteranceChunkInterface,
 )
 
 # import helpers

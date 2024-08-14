@@ -1,17 +1,9 @@
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (
-    ASRInterface,
-    BodyTrackingInterface,
-    ColorImageInterface,
-    DenseParaphraseInterface,
-    DepthImageInterface,
-    GestureInterface,
-    ObjectInterface,
+from mmdemo.interfaces import (  # ASRInterface,; BodyTrackingInterface,; ColorImageInterface,; DenseParaphraseInterface,; DepthImageInterface,; GestureInterface,; ObjectInterface,; UtteranceChunkInterface,
     SelectedObjectsInterface,
     TranscriptionInterface,
-    UtteranceChunkInterface,
 )
 
 # import helpers
@@ -46,17 +38,7 @@ class DenseParaphrasing(BaseFeature):
         select_obj: SelectedObjectsInterface,
         tran: TranscriptionInterface,
     ):
-        if (
-            not select_obj.is_new()
-            and not obj.is_new()
-            and not gest.is_new()
-            and not col.is_new()
-            and not dep.is_new
-            and not bod.is_new()
-            and not asr.is_new()
-            and not utt.is_new()
-            and not tran.is_new()
-        ):
+        if not select_obj.is_new() and not tran.is_new():
             return None
 
         # call prop extractor, create interface, and return

@@ -1,15 +1,52 @@
 from typing import final
 
-import cv2 as cv
-import numpy as np
+import pytest
 
-from mmdemo.base_feature import BaseFeature
+from mmdemo.features.gaze.gaze_feature import Gaze
 from mmdemo.interfaces import (
     BodyTrackingInterface,
     CameraCalibrationInterface,
     Vectors3DInterface,
 )
-from mmdemo.utils.cone_shape import ConeShape
-from mmdemo.utils.support_utils import Joint
-from mmdemo.utils.threeD_object_loc import checkBlocks
-from mmdemo.utils.twoD_object_loc import convert2D
+
+
+@final
+@pytest.mark.xfail
+def test_import():
+    """
+    Check that imports work
+    """
+    from mmdemo.interfaces import (
+        BodyTrackingInterface,
+        CameraCalibrationInterface,
+        Vectors3DInterface,
+    )
+
+
+@final
+@pytest.mark.xfail
+def test_input_interfaces(gaze: Gaze):
+    args = gaze.get_input_interfaces()
+    assert len(args) == 2
+    assert isinstance(args, list)
+
+
+@pytest.mark.xfail
+def test_output_interface(gaze: Gaze):
+    assert isinstance(gaze.get_output_interface(), Vectors3DInterface)
+
+
+def test_output(gaze: Gaze):
+    output = gaze.get_output()
+    # assert isinstance(output, Vectors3DInterface)
+    assert len(output.vectors) == 2
+    assert isinstance(output.vectors[0], tuple)
+    assert isinstance(output.vectors[1], tuple)
+
+
+gaze = Gaze()
+
+test_import()
+test_input_interfaces(gaze)
+test_output_interface(gaze)
+test_output(gaze)
