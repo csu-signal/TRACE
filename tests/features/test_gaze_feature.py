@@ -66,7 +66,7 @@ p3_expected = [0, 0, 0]
 # this is the test that will run with pytest, we parameterize
 # joints and expected_output to run the test with different inputs
 @pytest.mark.parametrize(
-    "bodies,expected_outputs",
+    "bodies,expected_output",
     [
         ([p1], [p1_expected]),
         ([p2], [p2_expected]),
