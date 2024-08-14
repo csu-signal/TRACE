@@ -23,6 +23,9 @@ class Gaze(BaseFeature):
     Output inteface is `Vectors3DInterface`.
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+
     @classmethod
     def get_input_interfaces(cls):
         return [
