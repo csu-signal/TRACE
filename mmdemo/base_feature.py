@@ -51,12 +51,15 @@ class BaseFeature(ABC):
         Initialize feature. This is where all the time/memory
         heavy initialization should go. Put it here instead of
         __init__ to avoid wasting resources when extra features
-        exist.
+        exist. This method is guaranteed to be called before
+        the first `get_output` and run on the main thread.
         """
 
     def finalize(self):
         """
-        Perform any necessary cleanup.
+        Perform any necessary cleanup. This method is guaranteed
+        to be called after the final `get_output` and run on the
+        main thread.
         """
 
     def is_done(self) -> bool:
