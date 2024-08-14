@@ -31,11 +31,3 @@ def test_output_interface(objects: Object):
 def test_output(objects: Object):
     output = objects.get_output()
     assert isinstance(output, ObjectInterface3D)
-
-
-objects = Object()
-
-test_import()
-test_input_interfaces(objects)
-test_output_interface(objects)
-test_output(objects)

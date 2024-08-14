@@ -89,7 +89,7 @@ def test_import():
     )
 
 
-@pytest.mark.xfail
+@pytest.mark.skip
 def test_playback(mkv_path):
     """
     Check that loading from mkv works. These features need to be run
@@ -105,7 +105,7 @@ def test_playback(mkv_path):
     Demo(targets=[CheckOutput(color, depth, body_tracking)]).run()
 
 
-@pytest.mark.xfail
+@pytest.mark.skip
 def test_camera():
     """
     Check that camera output works. These features need to be run

@@ -30,7 +30,7 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
     """
 
     def __init__(
-        self, *args, delete_input_files=True, max_utterance_time: int | None = 5
+        self, *args, delete_input_files=True, max_utterance_time: float | None = 5
     ):
         super().__init__(*args)
         self.delete_input_files = delete_input_files
@@ -61,7 +61,7 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
             activity = len(get_speech_timestamps(audio, self.vad)) > 0
 
             # load frames and params from file
-            wave_reader = wave.open(str(audio_input), "rb")
+            wave_reader = wave.open(str(audio_input.path), "rb")
             chunk_n_frames = wave_reader.getnframes()
             chunk_frames = b""
             for _ in range(chunk_n_frames // 1024 + 1):
@@ -94,6 +94,7 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
 
             if not activity or force_output_creation:
                 if self.contains_activity[audio_input.speaker_id]:
+                    # TODO: we only want to add when there is not activity
                     # if we have stored activity, create a new utterance
                     self.current_data[audio_input.speaker_id] += chunk_frames
                     self.total_time[audio_input.speaker_id] += (
@@ -118,7 +119,7 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
         """
         Create an utterance file based on saved data and add to `self.outputs`
         """
-        next_file = self.output_dir / "chunks" / f"{self.counter:08}.wav"
+        next_file = self.output_dir / f"{self.counter:08}.wav"
         wf = wave.open(str(next_file), "wb")
         wf.setparams(params)
         wf.writeframes(self.current_data[speaker_id])
