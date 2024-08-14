@@ -68,6 +68,7 @@ class BodyTrackingInterface(BaseInterface):
     timestamp_usec: int
 
 
+@dataclass
 class CameraCalibrationInterface(BaseInterface):
     # TODO: brady add docstring
     """

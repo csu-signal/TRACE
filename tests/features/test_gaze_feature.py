@@ -1,5 +1,6 @@
 from typing import final
 
+import numpy as np
 import pytest
 
 from mmdemo.features.gaze.gaze_feature import Gaze
@@ -8,46 +9,76 @@ from mmdemo.interfaces import (
     CameraCalibrationInterface,
     Vectors3DInterface,
 )
+from mmdemo.utils.support_utils import Joint
 
 
-# TODO: Incomplete test file
-@final
-@pytest.mark.xfail
-def test_import():
-    """
-    Check that imports work
-    """
-    from mmdemo.interfaces import (
-        BodyTrackingInterface,
-        CameraCalibrationInterface,
-        Vectors3DInterface,
+# fixtures are data that we want to use in the test.
+# by default they are automatically recreated every
+# time they are used, but we can specify `scope="module"`
+# to only initialize once per file. this is helpful for
+# features that may need to load an expensive model and
+# do not store internal state
+@pytest.fixture(scope="module")
+def gaze():
+    g = Gaze()
+    g.initialize()
+    yield g
+    g.finalize()
+
+
+# here we use a fixture to get an example camera calibration
+@pytest.fixture
+def cc_interface():
+    return CameraCalibrationInterface(
+        rotation=np.eye(3),
+        translation=np.zeros(3),
+        cameraMatrix=np.array([]),
+        distortion=np.array([]),
     )
 
 
-@final
-@pytest.mark.xfail
-def test_input_interfaces(gaze: Gaze):
-    args = gaze.get_input_interfaces()
-    assert len(args) == 2
-    assert isinstance(args, list)
+def create_body_dict(nose, eye_avg, ear_avg):
+    """
+    Helper function to create body tracking interfaces
+    """
+    # TODO: create a bodies dict that has its nose joint at `nose`,
+    # average of eye joints at `eye_avg`, and average of ear joints at `ear_avg`
+    # refer to gaze feature code to figure out how to do this
+    bodies = ...
+    return BodyTrackingInterface(bodies=bodies, timestamp_usec=-1)
 
 
-@pytest.mark.xfail
-def test_output_interface(gaze: Gaze):
-    assert isinstance(gaze.get_output_interface(), Vectors3DInterface)
+# TODO: make 3 example inputs and expected outputs. also I think our
+# Vectors3DInterface is not actually correct for this feature -- gaze needs to
+# output both a direction and origin, so you will probably need to modify it in order to
+# make that possible. Also either let Hannah know how you are modifying it or work together
+# with her to do it since she will also need to do the same thing for gestures
+p1 = create_body_dict([0, 0, 0], [1, 0, 0], [0, 1, 0])
+p1_expected = [0, 0, 0]
+
+p2 = create_body_dict([0, 0, 0], [1, 0, 0], [0, 1, 0])
+p2_expected = [0, 0, 0]
+
+p3 = create_body_dict([0, 0, 0], [1, 0, 0], [0, 1, 0])
+p3_expected = [0, 0, 0]
 
 
-def test_output(gaze: Gaze):
-    output = gaze.get_output()
-    # assert isinstance(output, Vectors3DInterface)
-    assert len(output.vectors) == 2
-    assert isinstance(output.vectors[0], tuple)
-    assert isinstance(output.vectors[1], tuple)
+# this is the test that will run with pytest, we parameterize
+# joints and expected_output to run the test with different inputs
+@pytest.mark.parametrize(
+    "bodies,expected_outputs",
+    [
+        ([p1], [p1_expected]),
+        ([p2], [p2_expected]),
+        ([p3], [p3_expected]),
+        ([p1, p2, p3], [p1_expected, p2_expected, p3_expected]),
+        ([p3, p1, p2], [p3_expected, p1_expected, p2_expected]),
+    ],
+)
+def test_gaze_body_tracking_formula(gaze, cc_interface, bodies, expected_output):
+    body_tracking_interface = BodyTrackingInterface(bodies=bodies, timestamp_usec=-1)
+    output = gaze.get_output(body_tracking_interface, cc_interface)
+    assert isinstance(output, Vectors3DInterface)
 
-
-gaze = Gaze()
-
-test_import()
-test_input_interfaces(gaze)
-test_output_interface(gaze)
-test_output(gaze)
+    for out, expected in zip(output.vectors, expected_output):
+        assert np.isclose(out, expected)
