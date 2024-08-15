@@ -73,7 +73,7 @@ class Object(BaseFeature[ObjectInterface3D]):
         # bring color channels to front
         image = np.transpose(image, (2, 0, 1)).astype(np.float32)
         # convert to tensor
-        image = torch.tensor(image, dtype=torch.float).cuda()
+        image = torch.tensor(image, dtype=torch.float).to(DEVICE)
         # add batch dimension
         image = torch.unsqueeze(image, 0)
         with torch.no_grad():

@@ -402,3 +402,4 @@ build/
 *.egg-info/
 nlohmann/
 *.pyd
+.DS_Store
