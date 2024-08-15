@@ -75,7 +75,7 @@ class CheckOutput(BaseFeature):
         return None
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason="This will fail if mmdemo-azure-kinect is not installed")
 def test_import():
     """
     Check that imports work
@@ -89,7 +89,7 @@ def test_import():
     )
 
 
-@pytest.mark.skip
+@pytest.mark.skip(reason="Causes pytest crash on error")
 def test_playback(mkv_path):
     """
     Check that loading from mkv works. These features need to be run
@@ -105,7 +105,7 @@ def test_playback(mkv_path):
     Demo(targets=[CheckOutput(color, depth, body_tracking)]).run()
 
 
-@pytest.mark.skip
+@pytest.mark.skip(reason="Causes pytest crash on error")
 def test_camera():
     """
     Check that camera output works. These features need to be run
