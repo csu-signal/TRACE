@@ -59,7 +59,7 @@ class BodyTrackingInterface(BaseInterface):
     bodies -- [{
                     'body_id': unique identifier,
                     'joint_positions': [xyz position],
-                    'join_orientation': [wxyz quaternion]
+                    'joint_orientation': [wxyz quaternion]
                 }, ...]
     timestamp_usec -- timestamp in microseconds
     """
@@ -109,6 +109,7 @@ class CommonGroundInterface(BaseInterface):
 
 @dataclass
 class ConesInterface(BaseInterface):
+    # TODO: docstring
     cones: list[Cone]
 
 
@@ -126,11 +127,13 @@ class DepthImageInterface(BaseInterface):
 
 @dataclass
 class GazeConesInterface(ConesInterface):
+    # TODO: docstring
     body_ids: list[int]
 
 
 @dataclass
 class GestureConesInterface(ConesInterface):
+    # TODO: docstring
     body_ids: list[int]
     handedness: list[str]
 

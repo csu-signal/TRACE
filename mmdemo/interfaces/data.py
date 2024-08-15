@@ -10,6 +10,7 @@ from mmdemo.utils.Gamr import GamrTarget
 
 @dataclass
 class Cone:
+    # TODO: docstring
     base: np.ndarray
     vertex: np.ndarray
     base_radius: float
