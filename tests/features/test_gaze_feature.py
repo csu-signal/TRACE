@@ -155,5 +155,8 @@ def test_gaze_body_tracking_formula(gaze, cc_interface, bodies, expected_output)
     output = gaze.get_output(body_tracking_interface, cc_interface)
     assert isinstance(output, GazeConesInterface)
 
-    for out, expected in zip(output.vectors, expected_output):
-        assert np.isclose(out, expected)
+    for cone, expected in zip(output.cones, expected_output):
+        assert np.isclose(cone.vertex, expected.vertex)
+        assert np.isclose(cone.base, expected.base)
+        assert np.isclose(cone.vertex_radius, expected.vertex_radius)
+        assert np.isclose(cone.base_radius, expected.base_radius)
