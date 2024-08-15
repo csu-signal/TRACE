@@ -9,7 +9,7 @@ from mmdemo.interfaces import (
     CameraCalibrationInterface,
     GazeConesInterface,
 )
-from mmdemo.utils.support_utils import Joint
+from mmdemo.interfaces.data import Cone
 
 
 # fixtures are data that we want to use in the test.
@@ -37,14 +37,53 @@ def cc_interface():
     )
 
 
-def create_body_dict(nose, eye_avg, ear_avg):
+def create_body_dict(id, nose, left_eye, right_eye, left_ear, right_ear):
     """
     Helper function to create body tracking interfaces
     """
     # TODO: create a bodies dict that has its nose joint at `nose`,
     # average of eye joints at `eye_avg`, and average of ear joints at `ear_avg`
     # refer to gaze feature code to figure out how to do this
-    bodies = ...
+    bodies = [
+        {
+            "body_id": id,
+            "joint_positions": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                nose,
+                left_eye,
+                left_ear,
+                right_eye,
+                right_ear,
+            ],
+            "join_orientation": [],
+        }
+    ]
     return BodyTrackingInterface(bodies=bodies, timestamp_usec=-1)
 
 
@@ -53,14 +92,50 @@ def create_body_dict(nose, eye_avg, ear_avg):
 # output both a direction and origin, so you will probably need to modify it in order to
 # make that possible. Also either let Hannah know how you are modifying it or work together
 # with her to do it since she will also need to do the same thing for gestures
-p1 = create_body_dict([0, 0, 0], [1, 0, 0], [0, 1, 0])
-p1_expected = [0, 0, 0]
 
-p2 = create_body_dict([0, 0, 0], [1, 0, 0], [0, 1, 0])
-p2_expected = [0, 0, 0]
+# The coordinate system is oriented such that the positive X-axis points right,
+# the positive Y-axis points down, and the positive Z-axis points forward.
 
-p3 = create_body_dict([0, 0, 0], [1, 0, 0], [0, 1, 0])
-p3_expected = [0, 0, 0]
+#                            nose                l.eye            r.eye                l.ear             r.ear
+p1 = create_body_dict(
+    1,
+    [-200, -75, 1.5],
+    [-201, -84, 1.45],
+    [-203, -85, 1.55],
+    [-202, -79, 1.3],
+    [-204, -80, 1.7],
+)
+p1_expected = Cone(
+    base=[-201.33333333333333333333333333333, -81.333333333333333333333333333333, 1.5],
+    vertex=[353.366546267, 750.71648567, 1.5],
+    base_radius=80,
+    vertex_radius=100,
+)
+
+p2 = create_body_dict(
+    2, [2, -70, 1.7], [0, -80, 1.75], [4, -80, 1.75], [-2, -75, 1.9], [6, -75, 1.9]
+)
+p2_expected = Cone(
+    base=[2, -76.666666666666666666666666666667, 1.7333333333333333333333333333333],
+    vertex=[2, 1310.08382389, -3.81366862667],
+    base_radius=80,
+    vertex_radius=100,
+)
+
+p3 = create_body_dict(
+    3,
+    [190, -80, 1.3],
+    [193, -90, 1.25],
+    [191, -89, 1.35],
+    [194, -85, 1.5],
+    [192, -84, 1.1],
+)
+p3_expected = Cone(
+    base=[191.33333333333333333333333333333, -86.333333333333333333333333333333, 1.3],
+    vertex=[-363.36654629678666666666666666667, 745.71648566666666666666666666667, 1.3],
+    base_radius=80,
+    vertex_radius=100,
+)
 
 
 # this is the test that will run with pytest, we parameterize
