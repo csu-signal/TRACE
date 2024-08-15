@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from typing import final
 
 import numpy as np
@@ -11,6 +13,9 @@ from mmdemo.utils.Gamr import GamrTarget
 
 @pytest.fixture(scope="module")
 def object_detector():
+    """
+    Fixture to load object detector. Only runs once per file.
+    """
     o = Object()
     o.initialize()
     yield o
@@ -25,7 +30,12 @@ def object_detector():
     ]
 )
 def test_file(request, test_data_dir):
-    return test_data_dir / request.param
+    """
+    Fixture to get test files.
+    """
+    file: Path = test_data_dir / request.param
+    assert file.is_file(), "Test file does not exist"
+    return file
 
 
 def test_output(object_detector: Object, test_file):
@@ -42,4 +52,7 @@ def test_output(object_detector: Object, test_file):
         assert len(info.center) == 3, "Center should be a 3d value"
         assert len(info.p1) == 2, "p1 should be a 2d value"
         assert len(info.p2) == 2, "p2 should be a 2d value"
+        assert (
+            info.p1[0] <= info.p2[0] and info.p1[1] <= info.p2[1]
+        ), "the bottom right corner (p2) should have larger values than the top left corner (p1)"
         assert isinstance(info.object_class, GamrTarget)
