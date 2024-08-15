@@ -11,6 +11,7 @@ class GamrCategory(str, Enum):
     DEIXIS = "deixis"
 
 
+# TODO: can probably move to interfaces/data.py?
 class GamrTarget(str, Enum):
     UNKNOWN = "unknown"
     SCALE = "scale"

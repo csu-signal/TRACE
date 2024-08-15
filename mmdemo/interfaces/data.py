@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from mmdemo.utils.Gamr import GamrTarget
+
 
 @dataclass
 class Cone:
@@ -19,14 +21,14 @@ class ObjectInfo2D:
     """
     p1 -- top left?
     p2 -- bottom right?
-    object_class -- ?
+    object_class -- GamrTarget representing the object
     """
 
     # TODO: what are p1 and p2?
     p1: tuple[float, float]
     p2: tuple[float, float]
 
-    object_class: str
+    object_class: GamrTarget
 
 
 @dataclass
@@ -35,7 +37,7 @@ class ObjectInfo3D(ObjectInfo2D):
     center -- center of block
     p1 -- top left in 2d?
     p2 -- bottom right in 2d?
-    object_class -- ?
+    object_class -- GamrTarget representing the object
     """
 
     center: tuple[float, float, float]

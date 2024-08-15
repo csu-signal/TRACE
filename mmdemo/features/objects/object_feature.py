@@ -104,7 +104,7 @@ class Object(BaseFeature[ObjectInterface3D]):
 
                 if des != GamrTarget.SCALE:
                     objects.append(
-                        ObjectInfo3D(p1=p1, p2=p2, center=center, class_name=des)
+                        ObjectInfo3D(p1=p1, p2=p2, center=center, object_class=des)
                     )
 
                     # TODO logging

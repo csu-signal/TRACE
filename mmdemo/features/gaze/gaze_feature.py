@@ -6,7 +6,6 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
     BodyTrackingInterface,
     CameraCalibrationInterface,
-    ColorImageInterface,
     GazeConesInterface,
 )
 from mmdemo.interfaces.data import Cone
@@ -33,7 +32,6 @@ class Gaze(BaseFeature[GazeConesInterface]):
         return [
             BodyTrackingInterface,
             CameraCalibrationInterface,
-            ColorImageInterface,
         ]
 
     @classmethod
@@ -47,9 +45,8 @@ class Gaze(BaseFeature[GazeConesInterface]):
         self,
         bt: BodyTrackingInterface,
         cc: CameraCalibrationInterface,
-        col: ColorImageInterface,
     ) -> GazeConesInterface | None:
-        if not bt.is_new() and not cc.is_new() and not col.is_new():
+        if not bt.is_new() and not cc.is_new():
             return None
         cones = []
         body_ids = []

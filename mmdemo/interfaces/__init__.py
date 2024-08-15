@@ -86,7 +86,8 @@ class CameraCalibrationInterface(BaseInterface):
 @dataclass
 class ColorImageInterface(BaseInterface):
     """
-    frame -- image data with shape (h, w, 3)
+    frame -- image data with shape (h, w, 3) in RGB format.
+        The values should be integers between 0 and 255.
     """
 
     frame_count: int
@@ -113,7 +114,8 @@ class ConesInterface(BaseInterface):
 @dataclass
 class DepthImageInterface(BaseInterface):
     """
-    frame -- depth image with shape (h, w)
+    frame -- depth image with shape (h, w). The values should
+        have type uint16 (integers between 0 and 65535).
     """
 
     frame_count: int
