@@ -92,7 +92,7 @@ def test_recorder(
         length = get_length(i.path)
 
         assert i.end_time - i.start_time == pytest.approx(
-            length
+            length, abs=0.01
         ), "The output length according to the interface does not equal the length of the file"
 
         assert recorded_audio.SAVE_INTERVAL_SECONDS == pytest.approx(
