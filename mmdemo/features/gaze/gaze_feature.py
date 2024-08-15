@@ -24,6 +24,9 @@ class Gaze(BaseFeature[GazeConesInterface]):
     Output inteface is `GazeConesInterface`.
     """
 
+    BASE_RADIUS = 80
+    VERTEX_RADIUS = 100
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -50,7 +53,7 @@ class Gaze(BaseFeature[GazeConesInterface]):
             return None
         cones = []
         body_ids = []
-        bod_id = 1
+
         for body in bt.bodies:
             nose = self.get_joint(Joint.NOSE, body, cc)
 
@@ -69,10 +72,9 @@ class Gaze(BaseFeature[GazeConesInterface]):
             origin_point = origin
             end_point = origin + 1000 * dir
 
-            cone = Cone(origin_point, end_point, 80, 100)
+            cone = Cone(origin_point, end_point, self.BASE_RADIUS, self.VERTEX_RADIUS)
             cones.append(cone)
-            body_ids.append(bod_id)
-            bod_id += 1
+            body_ids.append(body["body_id"])
             # p1 = convert2D(
             #     p1_3d,
             #     cc.cameraMatrix,

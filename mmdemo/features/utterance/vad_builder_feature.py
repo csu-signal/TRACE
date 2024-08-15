@@ -25,12 +25,12 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
     Output feature is `AudioFileInterface`.
 
     Keyword arguments:
-    `delete_input_files` -- True if input audio files should be deleted, default True
-    `max_utterance_time` -- the maximum number of seconds an utterance can be or None
+    `delete_input_files` -- True if input audio files should be deleted, default False
+    `max_utterance_time` -- the maximum number of seconds an utterance can be or None, default 5
     """
 
     def __init__(
-        self, *args, delete_input_files=True, max_utterance_time: float | None = 5
+        self, *args, delete_input_files=False, max_utterance_time: float | None = 5
     ):
         super().__init__(*args)
         self.delete_input_files = delete_input_files
@@ -46,7 +46,7 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
         self.starts = defaultdict(float)
         self.total_time = defaultdict(float)
 
-        self.output_dir = Path("chunks")
+        self.output_dir = Path("chunks") / "vad"
         os.makedirs(self.output_dir, exist_ok=True)
 
         self.outputs = deque()
