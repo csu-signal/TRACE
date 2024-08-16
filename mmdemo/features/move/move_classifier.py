@@ -23,14 +23,9 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from torch import optim
 from torch.utils.data import DataLoader, Dataset
 
-warnings.filterwarnings("ignore")
-
-seed = 30
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
+# warnings.filterwarnings("ignore")
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(device)
 LLM = "bert-base-uncased"
 lv1_lv3 = dict(
     {

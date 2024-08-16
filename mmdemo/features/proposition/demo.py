@@ -1,8 +1,9 @@
+import logging
 import string
 
 import pandas as pd
 import torch
-from nltk import download, word_tokenize
+from nltk import word_tokenize
 from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer, util
 from transformers import AutoModel, AutoTokenizer
@@ -22,11 +23,14 @@ from mmdemo.features.proposition.demo_helpers import (
 )
 from mmdemo.features.proposition.models import CrossEncoder
 
-download("stopwords")
-download("punkt")
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # device = 'cpu'
+
+
+loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
+for logger in loggers:
+    if "transformers" in logger.name.lower():
+        logger.setLevel(logging.ERROR)
 
 
 def remove_stop_words(utterance):

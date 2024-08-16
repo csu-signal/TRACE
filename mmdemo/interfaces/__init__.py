@@ -147,12 +147,12 @@ class EmptyInterface(BaseInterface):
 
 @dataclass
 class MoveInterface(BaseInterface):
-    # TODO: brady docstring
     """
-    info -- identifying data for the utterance
+    speaker_id -- the speaker who created the move
     move -- iterable containing some subset of
             {"STATEMENT", "ACCEPT", "DOUBT"}
     """
+
     speaker_id: str
     move: Iterable[str]
 

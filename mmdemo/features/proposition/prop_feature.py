@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import final
 
+import nltk
 from sentence_transformers import SentenceTransformer
 
 from mmdemo.base_feature import BaseFeature
@@ -22,6 +23,8 @@ class Proposition(BaseFeature[PropositionInterface]):
             "sentence-transformers/multi-qa-distilbert-cos-v1"
         )
         self.embeddings = get_pickle(self.bert)
+        nltk.download("stopwords")
+        nltk.download("punkt")
 
     def get_output(
         self,
