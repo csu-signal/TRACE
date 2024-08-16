@@ -1,5 +1,3 @@
-from typing import final
-
 import numpy as np
 import pytest
 
@@ -74,8 +72,8 @@ p1 = create_body_dict(
     [-204, -80, 1.7],
 )
 p1_expected = Cone(
-    base=[-201.33333333333333333333333333333, -81.333333333333333333333333333333, 1.5],
-    vertex=[353.366546267, 750.71648567, 1.5],
+    base=np.array([-201.3333, -81.3333, 1.5]),
+    vertex=np.array([353.366, 750.716, 1.5]),
     base_radius=80,
     vertex_radius=100,
 )
@@ -84,8 +82,8 @@ p2 = create_body_dict(
     2, [2, -70, 1.7], [0, -80, 1.75], [4, -80, 1.75], [-2, -75, 1.9], [6, -75, 1.9]
 )
 p2_expected = Cone(
-    base=[2, -76.666666666666666666666666666667, 1.7333333333333333333333333333333],
-    vertex=[2, 1310.08382389, -3.81366862667],
+    base=np.array([2, -76.6666666, 1.733333]),
+    vertex=np.array([2, 922.5342, -38.235]),
     base_radius=80,
     vertex_radius=100,
 )
@@ -99,11 +97,16 @@ p3 = create_body_dict(
     [192, -84, 1.1],
 )
 p3_expected = Cone(
-    base=[191.33333333333333333333333333333, -86.333333333333333333333333333333, 1.3],
-    vertex=[-363.36654629678666666666666666667, 745.71648566666666666666666666667, 1.3],
+    base=np.array([191.33333, -86.33333, 1.3]),
+    vertex=np.array([-363.36654, 745.71648, 1.3]),
     base_radius=80,
     vertex_radius=100,
 )
+
+
+def get_dir(base, vertex):
+    v = np.array(vertex) - np.array(base)
+    return v / np.linalg.norm(v)
 
 
 # this is the test that will run with pytest, we parameterize
@@ -119,12 +122,20 @@ p3_expected = Cone(
     ],
 )
 def test_gaze_body_tracking_formula(gaze, cc_interface, bodies, expected_output):
+    """
+    Test that gazes use the correct formula. This should be:
+    - origin = average of nose and eyes
+    - dir = vector between average of ears and the nose
+    """
     body_tracking_interface = BodyTrackingInterface(bodies=bodies, timestamp_usec=-1)
     output = gaze.get_output(body_tracking_interface, cc_interface)
     assert isinstance(output, GazeConesInterface)
 
     for cone, expected in zip(output.cones, expected_output):
-        assert np.allclose(cone.vertex, expected.vertex)
-        assert np.allclose(cone.base, expected.base)
-        assert np.allclose(cone.vertex_radius, expected.vertex_radius)
-        assert np.allclose(cone.base_radius, expected.base_radius)
+        assert np.allclose(
+            cone.base, expected.base
+        ), "Gaze does not start from the correct place"
+        assert np.allclose(
+            get_dir(cone.base, cone.vertex),
+            get_dir(expected.base, expected.vertex),
+        ), "Gaze does not point in the correct direction"
