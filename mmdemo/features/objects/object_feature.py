@@ -8,9 +8,10 @@ import torch
 from mmdemo.base_feature import BaseFeature
 from mmdemo.features.objects.config import CLASSES, DEVICE, NUM_CLASSES
 from mmdemo.features.objects.model import create_model
-from mmdemo.interfaces import ColorImageInterface, ObjectInterface3D
+from mmdemo.interfaces import CameraCalibrationInterface, ColorImageInterface, DepthImageInterface, ObjectInterface3D
 from mmdemo.interfaces.data import ObjectInfo3D
 from mmdemo.utils.Gamr import Block, GamrTarget
+from mmdemo.utils.point_vector_logic import convertTo3D
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
@@ -35,7 +36,7 @@ class Object(BaseFeature[ObjectInterface3D]):
 
     @classmethod
     def get_input_interfaces(cls):
-        return [ColorImageInterface]
+        return [ColorImageInterface, DepthImageInterface, CameraCalibrationInterface]
 
     @classmethod
     def get_output_interface(cls):
@@ -61,8 +62,8 @@ class Object(BaseFeature[ObjectInterface3D]):
         # self.init_logger(log_dir)
         pass
 
-    def get_output(self, col: ColorImageInterface) -> ObjectInterface3D | None:
-        if not col.is_new():
+    def get_output(self, col: ColorImageInterface, dep: DepthImageInterface, calibration: CameraCalibrationInterface) -> ObjectInterface3D | None:
+        if not col.is_new() and not dep.is_new() and not calibration.is_new():
             return None
 
         objects = []
@@ -100,11 +101,12 @@ class Object(BaseFeature[ObjectInterface3D]):
                 p1 = [box[0], box[1]]
                 p2 = [box[2], box[3]]
                 center = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]
+                center3d, _ = convertTo3D(calibration.cameraMatrix, calibration.distortion, dep.frame, int(center[0]), int(center[1]))
                 des = self.getDescription(float(class_name))
 
                 if des != GamrTarget.SCALE:
                     objects.append(
-                        ObjectInfo3D(p1=p1, p2=p2, center=center, object_class=des)
+                        ObjectInfo3D(p1=p1, p2=p2, center=center3d, object_class=des)
                     )
 
                     # TODO logging
