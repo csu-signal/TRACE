@@ -57,5 +57,5 @@ def test_whisper_transcription(
 
     # edit distance between strings should be within 10
     assert (
-        levenshtein(filtered_text, expected_transcription) < 10
+        test_utils.levenshtein(filtered_text, expected_transcription) < 10
     ), "Output string is too different from the expected"
