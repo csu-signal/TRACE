@@ -96,7 +96,7 @@ def create_body_dict(id, nose, left_eye, right_eye, left_ear, right_ear):
 # The coordinate system is oriented such that the positive X-axis points right,
 # the positive Y-axis points down, and the positive Z-axis points forward.
 
-#                            nose                l.eye            r.eye                l.ear             r.ear
+# body_id, nose, l.eye, r.eye, l.ear, r.ear
 p1 = create_body_dict(
     1,
     [-200, -75, 1.5],
