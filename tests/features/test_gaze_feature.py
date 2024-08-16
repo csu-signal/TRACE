@@ -10,6 +10,7 @@ from mmdemo.interfaces import (
     GazeConesInterface,
 )
 from mmdemo.interfaces.data import Cone
+from mmdemo.utils.support_utils import Joint
 
 
 # fixtures are data that we want to use in the test.
@@ -41,50 +42,17 @@ def create_body_dict(id, nose, left_eye, right_eye, left_ear, right_ear):
     """
     Helper function to create body tracking interfaces
     """
-    # TODO: create a bodies dict that has its nose joint at `nose`,
-    # average of eye joints at `eye_avg`, and average of ear joints at `ear_avg`
-    # refer to gaze feature code to figure out how to do this
-    bodies = [
-        {
-            "body_id": id,
-            "joint_positions": [
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
-                nose,
-                left_eye,
-                left_ear,
-                right_eye,
-                right_ear,
-            ],
-            "join_orientation": [],
-        }
-    ]
-    return BodyTrackingInterface(bodies=bodies, timestamp_usec=-1)
+    return {
+        "body_id": id,
+        "joint_positions": {
+            Joint.NOSE.value: nose,
+            Joint.EYE_LEFT.value: left_eye,
+            Joint.EAR_LEFT.value: left_ear,
+            Joint.EYE_RIGHT.value: right_eye,
+            Joint.EAR_RIGHT.value: right_ear,
+        },
+        "joint_orientation": [],
+    }
 
 
 # TODO: make 3 example inputs and expected outputs. also I think our
@@ -156,7 +124,7 @@ def test_gaze_body_tracking_formula(gaze, cc_interface, bodies, expected_output)
     assert isinstance(output, GazeConesInterface)
 
     for cone, expected in zip(output.cones, expected_output):
-        assert np.isclose(cone.vertex, expected.vertex)
-        assert np.isclose(cone.base, expected.base)
-        assert np.isclose(cone.vertex_radius, expected.vertex_radius)
-        assert np.isclose(cone.base_radius, expected.base_radius)
+        assert np.allclose(cone.vertex, expected.vertex)
+        assert np.allclose(cone.base, expected.base)
+        assert np.allclose(cone.vertex_radius, expected.vertex_radius)
+        assert np.allclose(cone.base_radius, expected.base_radius)
