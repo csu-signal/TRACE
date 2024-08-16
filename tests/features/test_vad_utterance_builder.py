@@ -65,7 +65,7 @@ def vad_builder(chunk_length):
         ),
     ],
 )
-def test_vad_segmentation_multiple_speakers(
+def test_vad_segmentation(
     vad_builder,
     activity_path,
     no_activity_path,
