@@ -15,16 +15,6 @@ NUMBERS = ["10", "20", "30", "40", "50"]
 @final
 class Proposition(BaseFeature[PropositionInterface]):
     # TODO: docstring
-    @classmethod
-    def get_input_interfaces(cls):
-        return [
-            TranscriptionInterface,
-        ]
-
-    @classmethod
-    def get_output_interface(cls):
-        return PropositionInterface
-
     def initialize(self):
         model_dir = str(Path(__file__).parent / "data/prop_extraction_model")
         self.model, self.tokenizer = load_model(model_dir)
