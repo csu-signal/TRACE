@@ -49,7 +49,7 @@ class Gaze(BaseFeature[GazeConesInterface]):
         bt: BodyTrackingInterface,
         cc: CameraCalibrationInterface,
     ) -> GazeConesInterface | None:
-        if not bt.is_new() and not cc.is_new():
+        if not bt.is_new() or not cc.is_new():
             return None
         cones = []
         body_ids = []
