@@ -8,16 +8,6 @@ from mmdemo.features.utterance.vad_builder_feature import VADUtteranceBuilder
 from mmdemo.interfaces import AudioFileInterface
 
 
-def get_length(wav_path):
-    """
-    Helper function to get length of wav file
-    """
-    wf = wave.open(str(wav_path), "rb")
-    length = wf.getnframes() / wf.getframerate()
-    wf.close()
-    return length
-
-
 @pytest.fixture
 def activity_path(test_data_dir):
     """
@@ -35,12 +25,12 @@ def no_activity_path(test_data_dir):
 
 
 @pytest.fixture
-def chunk_length(activity_path, no_activity_path):
+def chunk_length(activity_path, no_activity_path, test_utils):
     """
     Length of activity/no activity wav file
     """
-    activity_length = get_length(activity_path)
-    no_activity_length = get_length(no_activity_path)
+    activity_length = test_utils.get_length(activity_path)
+    no_activity_length = test_utils.get_length(no_activity_path)
     assert (
         activity_length == no_activity_length
     ), "activity and no activity files must be the same length"
@@ -82,6 +72,7 @@ def test_vad_segmentation_multiple_speakers(
     chunk_length,
     inputs: list[str],
     expected: list[list[int]],
+    test_utils,
 ):
     """
     Test that the segmentation works correctly for both single and multiple
@@ -127,8 +118,8 @@ def test_vad_segmentation_multiple_speakers(
     for output_audio in feature_outputs:
         # check that the file length is the same as `end - start` time
         length = output_audio.end_time - output_audio.start_time
-        actual_length = get_length(output_audio.path)
-        assert get_length(output_audio.path) == pytest.approx(
+        actual_length = test_utils.get_length(output_audio.path)
+        assert test_utils.get_length(output_audio.path) == pytest.approx(
             length
         ), f"AudioFileInterface length is {length} but the actual file length is {actual_length}"
 
