@@ -38,7 +38,7 @@ class DenseParaphrasing(BaseFeature[TranscriptionInterface]):
         select_obj: SelectedObjectsInterface,
         tran: TranscriptionInterface,
     ):
-        if not select_obj.is_new() and not tran.is_new():
+        if not select_obj.is_new() or not tran.is_new():
             return None
 
         # call prop extractor, create interface, and return

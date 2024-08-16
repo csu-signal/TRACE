@@ -1,86 +1,58 @@
+from pathlib import Path
 from typing import final
 
-from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (  # ASRInterface,; DenseParaphraseInterface,; GestureInterface,; ObjectInterface,; UtteranceChunkInterface,
-    BodyTrackingInterface,
-    ColorImageInterface,
-    DepthImageInterface,
-    MoveInterface,
-    SelectedObjectsInterface,
-    TranscriptionInterface,
-)
+import opensmile
+import torch
+from transformers import BertModel, BertTokenizer, PreTrainedModel
 
-# import helpers
-# from mmdemo.features.proposition.helpers import ...
+from mmdemo.base_feature import BaseFeature
+from mmdemo.interfaces import AudioFileInterface, MoveInterface, TranscriptionInterface
+
+UTTERANCE_HISTORY_LEN = 4
+BERT_EMBEDDING_DIM = 768
+SMILE_EMBEDDING_DIM = 88
 
 
 @final
 class Move(BaseFeature[MoveInterface]):
-    # LOG_FILE = "moveOutput.csv"
-    @classmethod
-    def get_input_interfaces(cls):
-        return [
-            TranscriptionInterface,
-            # UtteranceChunkInterface,
-        ]
+    """
+    Determine moves of participants (statement, accept, doubt)
 
-    @classmethod
-    def get_output_interface(cls):
-        return MoveInterface
+    Input interfaces are `TranscriptionInterface`, `AudioFileInterface`
+    Output interface is `MoveInterface`
+    """
 
     def initialize(self):
-        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # self.model = torch.load(str(model)).to(self.device)
-        # self.model.eval()
+        model_path = Path(__file__).parent / "production_move_classifier.pt"
 
-        # self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-        # self.bert_model: BertModel = BertModel.from_pretrained("bert-base-uncased").to(self.device) # pyright: ignore
+        self.model = torch.load(str(model_path)).to(self.device)
+        self.model.eval()
 
-        # self.smile = opensmile.Smile(
-        #     feature_set=opensmile.FeatureSet.eGeMAPSv02,
-        #     feature_level=opensmile.FeatureLevel.Functionals,
-        # )
+        self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        self.bert_model = BertModel.from_pretrained("bert-base-uncased").to(self.device)
 
-        # self.bert_embedding_history = torch.zeros(
-        #     (UTTERANCE_HISTORY_LEN, BERT_EMBEDDING_DIM), device=self.device
-        # )
-        # self.opensmile_embedding_history = torch.zeros(
-        #     (UTTERANCE_HISTORY_LEN, SMILE_EMBEDDING_DIM), device=self.device
-        # )
+        self.smile = opensmile.Smile(
+            feature_set=opensmile.FeatureSet.eGeMAPSv02,
+            feature_level=opensmile.FeatureLevel.Functionals,
+        )
 
-        # self.class_names = ["STATEMENT", "ACCEPT", "DOUBT"]
+        self.bert_embedding_history = torch.zeros(
+            (UTTERANCE_HISTORY_LEN, BERT_EMBEDDING_DIM), device=self.device
+        )
+        self.opensmile_embedding_history = torch.zeros(
+            (UTTERANCE_HISTORY_LEN, SMILE_EMBEDDING_DIM), device=self.device
+        )
 
-        # self.move_lookup: dict[int, MoveInfo] = {}
-
-        # self.init_logger(log_dir)
-        pass
+        self.class_names = ["STATEMENT", "ACCEPT", "DOUBT"]
 
     def get_output(
         self,
-        # dense: DenseParaphraseInterface,
-        select_obj: SelectedObjectsInterface,
-        # obj: ObjectInterface,
-        # gest: GestureInterface,
-        col: ColorImageInterface,
-        dep: DepthImageInterface,
-        bod: BodyTrackingInterface,
-        # asr: ASRInterface,
-        # utt: UtteranceChunkInterface,
-        tran: TranscriptionInterface,
+        transcription: TranscriptionInterface,
+        audio: AudioFileInterface,
     ):
-        if (
-            # not dense.is_new() and
-            not select_obj.is_new()
-            # and not obj.is_new()
-            # and not gest.is_new()
-            and not col.is_new()
-            and not dep.is_new
-            and not bod.is_new()
-            # and not asr.is_new()
-            # and not utt.is_new()
-            and not tran.is_new()
-        ):
+        if not transcription.is_new() or not audio.is_new():
             return None
 
         # call move classifier, create interface, and return

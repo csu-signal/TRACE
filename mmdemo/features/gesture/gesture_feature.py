@@ -46,7 +46,7 @@ class Gesture(BaseFeature[GestureConesInterface]):
         depth: DepthImageInterface,
         bt: BodyTrackingInterface,
     ):
-        if not col.is_new() and not depth.is_new() and not bt.is_new():
+        if not col.is_new() or not depth.is_new() or not bt.is_new():
             return None
         return GestureConesInterface(body_ids=_, handedness=_, cones=_)
         # call __, create interface, and return

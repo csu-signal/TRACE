@@ -39,16 +39,7 @@ class SelectedObjects(BaseFeature[SelectedObjectsInterface]):
         # utt: UtteranceChunkInterface,
         tran: TranscriptionInterface,
     ):
-        if (
-            # not obj.is_new()
-            # and not gest.is_new() and
-            not col.is_new()
-            and not dep.is_new
-            and not bod.is_new()
-            # and not asr.is_new()
-            # and not utt.is_new()
-            and not tran.is_new()
-        ):
+        if not col.is_new() or not dep.is_new or not bod.is_new() or not tran.is_new():
             return None
 
         # call _, create interface, and return
