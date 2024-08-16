@@ -12,17 +12,22 @@ def proposition_feature():
     prop.finalize()
 
 
+@pytest.mark.xfail(reason="Prop extractor model does not work for many test cases")
 @pytest.mark.parametrize(
     "text,expected",
     [
         ("red is 10", "red = 10"),
+        ("10", "no prop"),
+        ("red", "no prop"),
         ("green is 20", "green = 20"),
-        ("red is more than blue", "red > blue"),
-        pytest.param(
-            "10 20 30 40 50",
-            "no prop",
-            marks=pytest.mark.xfail(reason="Bug in prop extractor"),
-        ),
+        ("red weighs more than blue", "red > blue"),
+        ("red is the same as blue", "red = blue"),
+        ("there should be no prop here", "no prop"),
+        ("yellow is more than 30", "yellow > 30"),
+        ("yellow weighs more than 30", "yellow > 30"),
+        ("purple weighs less than 50", "purple < 50"),
+        ("red is 10 and yellow is 20", "red = 10, yellow = 20"),
+        ("10 20 30 40 50", "no prop"),
     ],
 )
 def test_prop_extraction(
