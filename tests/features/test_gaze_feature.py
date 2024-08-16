@@ -53,12 +53,6 @@ def create_body_dict(id, nose, left_eye, right_eye, left_ear, right_ear):
     }
 
 
-# TODO: make 3 example inputs and expected outputs. also I think our
-# Vectors3DInterface is not actually correct for this feature -- gaze needs to
-# output both a direction and origin, so you will probably need to modify it in order to
-# make that possible. Also either let Hannah know how you are modifying it or work together
-# with her to do it since she will also need to do the same thing for gestures
-
 # The coordinate system is oriented such that the positive X-axis points right,
 # the positive Y-axis points down, and the positive Z-axis points forward.
 

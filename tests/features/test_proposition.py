@@ -21,7 +21,7 @@ def proposition_feature():
     ],
 )
 def test_prop_extraction(
-    prop_feature: Proposition,
+    proposition_feature: Proposition,
     text,
     expected,
 ):

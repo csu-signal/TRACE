@@ -7,7 +7,7 @@ from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer, util
 from transformers import AutoModel, AutoTokenizer
 
-from mmdemo.features.proposition.demoHelpers import (
+from mmdemo.features.proposition.demo_helpers import (
     NORMALIZED_PROP_LIST,
     add_special_tokens,
     append_matches,
