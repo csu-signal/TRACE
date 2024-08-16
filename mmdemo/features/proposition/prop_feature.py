@@ -5,19 +5,20 @@ import cv2
 from sentence_transformers import SentenceTransformer
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.features.proposition.demo import load_model
+from mmdemo.features.proposition.demo import load_model, process_sentence
 from mmdemo.features.proposition.demo_helpers import get_pickle
+from mmdemo.features.proposition.prop_info import PropInfo
 from mmdemo.interfaces import PropositionInterface, TranscriptionInterface
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
 
+COLORS = ["red", "blue", "green", "purple", "yellow"]
+NUMBERS = ["10", "20", "30", "40", "50"]
+
 
 @final
 class Proposition(BaseFeature[PropositionInterface]):
-    COLORS = ["red", "blue", "green", "purple", "yellow"]
-    NUMBERS = ["10", "20", "30", "40", "50"]
-
     def __init__(self) -> None:
         super().__init__()
 
@@ -49,8 +50,8 @@ class Proposition(BaseFeature[PropositionInterface]):
     ):
         if not tran.is_new():
             return None
-        for i in new_utterance_ids:
-            utterance_info = utterance_lookup[i]
+        for i in tran.start_time:
+            utterance_info = tran.text[i]
 
             contains_color = any(i in utterance_info.text for i in COLORS)
             contains_number = any(i in utterance_info.text for i in NUMBERS)
