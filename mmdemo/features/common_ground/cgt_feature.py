@@ -1,7 +1,4 @@
-import re
 from typing import final
-
-import cv2
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.features.common_ground.closure_rules import CommonGround
