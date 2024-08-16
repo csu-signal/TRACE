@@ -28,7 +28,7 @@ def test_prop_extraction(
     """
     Test that prop extraction works correctly.
     """
-    output = prop_feature.get_output(
+    output = proposition_feature.get_output(
         TranscriptionInterface(speaker_id="test", start_time=0, end_time=1, text=text)
     )
     assert isinstance(output, PropositionInterface)
