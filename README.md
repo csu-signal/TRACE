@@ -1,11 +1,13 @@
 # New Setup
 
 main demo package
+
 - create environment
 - pre-commit install
 - pip install -e .
 
 if using azure kienct
+
 - install azure kinect sdk
 - change mmdemo-azure-kinect\azure_kinect_config.py
 - pip install .\mmdemo-azure-kinect
@@ -13,6 +15,7 @@ if using azure kienct
 # Setup instructions
 
 ## Python Environment
+
 Python 3.10 or higher is required if using conda because of [this unresolved issue](https://github.com/conda/conda/issues/10897). A conda environment can be created with `conda env create --file multimodalDemo.yaml`.
 
 To update the enviroment using the most current yaml file activate it and run `conda env update --file multimodalDemo.yaml --prune`
@@ -24,10 +27,13 @@ Both the [Azure Kinect SDK](https://github.com/microsoft/Azure-Kinect-Sensor-SDK
 Once the installation is complete, open `setup.py` and ensure that `K4A_DIR` and `K4ABT_DIR` are set to the correct locations.
 
 ## Project Packages
+
 This project has 3 packages. `demo` contains the demo logic, features, and models. `azure_kinect` is a wrapper library for the Azure Kinect SDK and allows for interacting with the cameras and recordings. `azure_kinect-stubs` has type annotations for the `azure_kinect` package. To install all packages, run `pip install -e .` from the root directory of the repository.
 
 ## Download models
+
 Download the following models from [here](https://colostate-my.sharepoint.com/:f:/g/personal/nkrishna_colostate_edu/EhYic6HBX7hFta6GjQIcb9gBxV_K0yYFhtHagiVyClr7gQ?e=W6Pm6I) and save at the given locations:
+
 - `fasterrcnn-7-19-demo-finetuned.pth` ==> `demo/featureModules/objects/objectDetectionModels/best_model-objects.pth`
 - `steroid_model/` ==> `demo/featureModules/prop/data/prop_extraction_model/`
 - `production_move_classifier.pt` ==> `demo/featureModules/move/production_move_classifier.pt`
@@ -36,6 +42,7 @@ Download the following models from [here](https://colostate-my.sharepoint.com/:f
 In `demo/config.py`, make sure `K4A_DIR` points to the correct installation location of the Body Tracking SDK. Run `python -m demo`.
 
 # Modular Feature Interface
+
 - "featureModules/featureName" - contains all data/relevant files for a feature of interest and gets auto copied to the output folder each build
 - IFeature
   - `__init__` - initalize any models, setup code
@@ -43,4 +50,4 @@ In `demo/config.py`, make sure `K4A_DIR` points to the correct installation loca
 
 - note that the paths to the any models or loaded data needs to be relative to the location of the root directory of the repository.
 
-Feel free to reach out to Hannah VanderHoeven with any questions (Hannah.VanderHoeven@colostate.edu)
+Feel free to reach out to Hannah VanderHoeven with any questions: Hannah.VanderHoeven@colostate.edu
