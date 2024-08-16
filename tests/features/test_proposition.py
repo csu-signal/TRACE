@@ -18,6 +18,11 @@ def proposition_feature():
         ("red is 10", "red = 10"),
         ("green is 20", "green = 20"),
         ("red is more than blue", "red > blue"),
+        pytest.param(
+            "10 20 30 40 50",
+            "no prop",
+            marks=pytest.mark.xfail(reason="Bug in prop extractor"),
+        ),
     ],
 )
 def test_prop_extraction(
