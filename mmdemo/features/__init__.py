@@ -5,7 +5,6 @@ Premade features
 # from mmdemo.features.depth.depth_feature import Depth
 # from mmdemo.features.body_tracking.body_tracking_feature import BodyTracking
 
-from mmdemo.features.asr.asr_feature import Transcription
 from mmdemo.features.common_ground.cgt_feature import CommonGroundTracking
 from mmdemo.features.dense_paraphrasing.dense_paraphrase_feature import (
     DenseParaphrasing,
@@ -20,3 +19,6 @@ from mmdemo.features.output_frames.output_frames_feature import OutputFrames
 
 # from mmdemo.features.proposition.prop_feature import Proposition
 from mmdemo.features.selected_objects.selected_objects_feature import SelectedObjects
+from mmdemo.features.transcription.whisper_transcription_feature import (
+    WhisperTranscription,
+)

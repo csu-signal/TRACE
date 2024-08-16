@@ -7,7 +7,7 @@ from mmdemo.interfaces import AudioFileInterface, TranscriptionInterface
 
 
 @final
-class Transcription(BaseFeature[TranscriptionInterface]):
+class WhisperTranscription(BaseFeature[TranscriptionInterface]):
     def initialize(self):
         self.model = faster_whisper.WhisperModel("small", compute_type="float16")
 
