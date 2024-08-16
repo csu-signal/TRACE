@@ -1,17 +1,27 @@
-from mmdemo_azure_kinect import create_output_features
-
-import mmdemo
 import mmdemo.features as fs
+from mmdemo.base_feature import BaseFeature
+from mmdemo.demo import Demo
+
+
+class PrintFeature(BaseFeature):
+    def get_output(self, arg):
+        if not arg.is_new():
+            return None
+        print(arg)
+        return arg
+
 
 if __name__ == "__main__":
-    color, depth, body_tracking = create_output_features()
+    mic = fs.MicAudio(device_id=1)
 
-    gaze = fs.GazeBodyTracking(body_tracking)
+    utterances = fs.VADUtteranceBuilder(mic)
 
-    objects = fs.Blocks(color, model="path to model")
+    transcription = PrintFeature(fs.WhisperTranscription(utterances))
 
-    output_frame = fs.Frame([gaze, objects])
+    props = PrintFeature(fs.Proposition(transcription))
 
-    gui = fs.Gui(output_frame)
+    moves = PrintFeature(fs.Move(transcription, utterances))
 
-    mmdemo.Demo(targets=[gui]).run()
+    cgt = fs.CommonGroundTracking(moves, props)
+
+    Demo(targets=[cgt]).run()
