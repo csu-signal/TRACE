@@ -15,8 +15,8 @@ from mmdemo.interfaces import (
     ObjectInterface3D,
 )
 from mmdemo.interfaces.data import ObjectInfo3D
+from mmdemo.utils.coordinates import pixel_to_camera_3d
 from mmdemo.utils.Gamr import Block, GamrTarget
-from mmdemo.utils.point_vector_logic import convertTo3D
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
@@ -30,22 +30,20 @@ class Object(BaseFeature[ObjectInterface3D]):
     """
     A feature to get and track the objects through a scene.
 
-    Input interface is `ColorImageInterface'.
+    Input interfaces are `ColorImageInterface, DepthImageInterface, CameraCalibrationInterface'.
 
     Output inteface is `ObjectInterface3D`.
     """
 
-    def __init__(self, *args, detection_threshold=0.6) -> None:
-        super().__init__(*args)
+    def __init__(
+        self,
+        color: BaseFeature[ColorImageInterface],
+        depth: BaseFeature[DepthImageInterface],
+        calibration: BaseFeature[CameraCalibrationInterface],
+        detection_threshold=0.6,
+    ) -> None:
+        super().__init__(color, depth, calibration)
         self.detectionThreshold = detection_threshold
-
-    @classmethod
-    def get_input_interfaces(cls):
-        return [ColorImageInterface, DepthImageInterface, CameraCalibrationInterface]
-
-    @classmethod
-    def get_output_interface(cls):
-        return ObjectInterface3D
 
     def initialize(self):
         # print("Torch Device " + str(DEVICE))
@@ -62,10 +60,6 @@ class Object(BaseFeature[ObjectInterface3D]):
 
         self.objectModel.load_state_dict(checkpoint["model_state_dict"], strict=False)
         self.objectModel.to(DEVICE).eval()
-
-        # TODO implement logger?
-        # self.init_logger(log_dir)
-        pass
 
     def get_output(
         self,
@@ -110,24 +104,14 @@ class Object(BaseFeature[ObjectInterface3D]):
                 found.append(class_name)
                 p1 = [box[0], box[1]]
                 p2 = [box[2], box[3]]
-                center = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]
-                center3d, _ = convertTo3D(
-                    calibration.cameraMatrix,
-                    calibration.distortion,
-                    dep.frame,
-                    int(center[0]),
-                    int(center[1]),
-                )
+                center = [(p1[0] + p2[0]) // 2, (p1[1] + p2[1]) // 2]
+                center3d = pixel_to_camera_3d(center, dep, calibration)
                 des = self.getDescription(float(class_name))
 
                 if des != GamrTarget.SCALE:
                     objects.append(
                         ObjectInfo3D(p1=p1, p2=p2, center=center3d, object_class=des)
                     )
-
-                    # TODO logging
-                    # self.log_block(frameIndex, block)
-                    # blockDescriptions.append(block.description)
 
         return ObjectInterface3D(objects=objects)
 

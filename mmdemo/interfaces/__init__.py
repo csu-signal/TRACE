@@ -74,12 +74,12 @@ class CameraCalibrationInterface(BaseInterface):
     """
     rotation: np.ndarray
     translation: np.ndarray
-    cameraMatrix: np.ndarray
+    camera_matrix: np.ndarray
     distortion: np.ndarray
     """
     rotation: np.ndarray
     translation: np.ndarray
-    cameraMatrix: np.ndarray
+    camera_matrix: np.ndarray
     distortion: np.ndarray
 
 

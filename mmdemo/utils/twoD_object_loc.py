@@ -33,16 +33,3 @@ def isInside(x1, y1, x2, y2, x3, y3, x, y):
         return True
     else:
         return False
-
-
-# conter
-def convert2D(point3D, cameraMatrix, dist):
-    point, _ = cv2.projectPoints(
-        np.array(point3D),
-        np.array([0.0, 0.0, 0.0]),
-        np.array([0.0, 0.0, 0.0]),
-        cameraMatrix,
-        dist,
-    )
-
-    return point[0][0]

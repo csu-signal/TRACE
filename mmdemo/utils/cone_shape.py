@@ -2,13 +2,17 @@ import math
 
 import cv2
 import numpy as np
+
+from mmdemo.interfaces import CameraCalibrationInterface
+from mmdemo.utils.coordinates import camera_3d_to_pixel
 from mmdemo.utils.point_vector_logic import getDirectionalVector
 from mmdemo.utils.threeD_object_loc import distance3D, projectedPoint
-from mmdemo.utils.twoD_object_loc import convert2D
 
 
 class ConeShape:
-    def __init__(self, vertex, base, nearRadius, farRadius, cameraMatrix, dist):
+    def __init__(
+        self, vertex, base, nearRadius, farRadius, cc: CameraCalibrationInterface
+    ):
         vector = getDirectionalVector(vertex, base)
         self.VectorX = vector[0]
         self.VectorY = vector[1]
@@ -36,8 +40,7 @@ class ConeShape:
         self.vertex = vertex
         self.base = base
 
-        self.cameraMatrix = cameraMatrix
-        self.dist = dist
+        self.cc = cc
 
         self.Height = distance3D(vertex, base)
         # print(("Height: {0:0.2f}\n").format(self.Height))
@@ -70,10 +73,10 @@ class ConeShape:
             ZColor = (243, 82, 121)
 
         if includeY:
-            baseUp2DY = convert2D(baseUpY, self.cameraMatrix, self.dist)
-            baseDown2DY = convert2D(baseDownY, self.cameraMatrix, self.dist)
-            vertexUp2DY = convert2D(vertexUpY, self.cameraMatrix, self.dist)
-            vertexDown2DY = convert2D(vertexDownY, self.cameraMatrix, self.dist)
+            baseUp2DY = camera_3d_to_pixel(baseUpY, self.cc)
+            baseDown2DY = camera_3d_to_pixel(baseDownY, self.cc)
+            vertexUp2DY = camera_3d_to_pixel(vertexUpY, self.cc)
+            vertexDown2DY = camera_3d_to_pixel(vertexDownY, self.cc)
 
             pointUpY = (int(baseUp2DY[0] * 2**shift), int(baseUp2DY[1] * 2**shift))
             pointDownY = (
@@ -103,10 +106,10 @@ class ConeShape:
             )
 
         if includeZ:
-            vertexUp2DZ = convert2D(vertexUpZ, self.cameraMatrix, self.dist)
-            vertexDown2DZ = convert2D(vertexDownZ, self.cameraMatrix, self.dist)
-            baseUp2DZ = convert2D(baseUpZ, self.cameraMatrix, self.dist)
-            baseDown2DZ = convert2D(baseDownZ, self.cameraMatrix, self.dist)
+            vertexUp2DZ = camera_3d_to_pixel(vertexUpZ, self.cc)
+            vertexDown2DZ = camera_3d_to_pixel(vertexDownZ, self.cc)
+            baseUp2DZ = camera_3d_to_pixel(baseUpZ, self.cc)
+            baseDown2DZ = camera_3d_to_pixel(baseDownZ, self.cc)
 
             pointUpZ = (int(baseUp2DZ[0] * 2**shift), int(baseUp2DZ[1] * 2**shift))
             pointDownZ = (
@@ -153,7 +156,7 @@ class ConeShape:
             return False, -1
 
         if includeOverlay:
-            proj2D = convert2D(proj, self.cameraMatrix, self.dist)
+            proj2D = camera_3d_to_pixel(proj, self.cc)
             projShifted = (int(proj2D[0] * 2**shift), int(proj2D[1] * 2**shift))
             cv2.circle(
                 frame,

@@ -15,6 +15,7 @@ from mmdemo_azure_kinect.device_type import DeviceType
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
     BodyTrackingInterface,
+    CameraCalibrationInterface,
     ColorImageInterface,
     DepthImageInterface,
 )
@@ -84,6 +85,30 @@ class AzureKinectBodyTracking(BaseFeature):
         )
 
 
+@final
+class AzureKinectCameraCalibration(BaseFeature):
+    """
+    Feature to get camera calibration info from Azure Kinect.
+
+    The input interface is `_AzureKinectInterface`, which is a private
+    interface that is created using helper functions.
+
+    The output interface is `CameraCalibrationInterface`.
+    """
+
+    def get_output(
+        self, azure_input: _AzureKinectInterface
+    ) -> CameraCalibrationInterface | None:
+        if not azure_input.is_new():
+            return None
+        return CameraCalibrationInterface(
+            camera_matrix=azure_input.camera_matrix,
+            distortion=azure_input.distortion,
+            rotation=azure_input.rotation,
+            translation=azure_input.translation,
+        )
+
+
 def create_azure_kinect_features(
     device_type: DeviceType,
     *,
@@ -94,9 +119,9 @@ def create_azure_kinect_features(
     playback_end_seconds: int | None = None
 ):
     """
-    Returns 3 features which output ColorImageInterface, DepthImageInterface,
-    and BodyTrackingInterface using information from an Azure Kinect camera or
-    playback mkv file.
+    Returns 4 features which output ColorImageInterface, DepthImageInterface,
+    BodyTrackingInterface, and CameraCalibrationInterface using information
+    from an Azure Kinect camera or playback mkv file.
 
     Arguments:
     `device_type` -- an instance of the DeviceType enum specifying if the
@@ -121,5 +146,6 @@ def create_azure_kinect_features(
     color = AzureKinectColor(input_feature)
     depth = AzureKinectDepth(input_feature)
     body_tracking = AzureKinectBodyTracking(input_feature)
+    calibration = AzureKinectCameraCalibration(input_feature)
 
-    return color, depth, body_tracking
+    return color, depth, body_tracking, calibration

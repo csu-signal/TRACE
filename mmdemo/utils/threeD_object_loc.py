@@ -4,11 +4,9 @@ import cv2
 import numpy as np
 from numpy.linalg import norm
 
-from mmdemo.utils.point_vector_logic import (
-    convertTo3D,
-    getDirectionalVector,
-    getVectorPoint,
-)
+from mmdemo.interfaces import CameraCalibrationInterface, DepthImageInterface
+from mmdemo.utils.coordinates import pixel_to_camera_3d
+from mmdemo.utils.point_vector_logic import getDirectionalVector, getVectorPoint
 from mmdemo.utils.support_utils import ParseResult
 
 
@@ -44,9 +42,8 @@ def sortTarget(target):
 def checkBlocks(
     blocks,
     blockStatus,
-    cameraMatrix,
-    dist,
-    depth,
+    calibration: CameraCalibrationInterface,
+    depth: DepthImageInterface,
     cone,
     frame,
     shift,
@@ -56,25 +53,14 @@ def checkBlocks(
 ):
     targets = []
     for block in blocks:
-        targetPoint = [(block.p1[0] + block.p2[0]) / 2, (block.p1[1] + block.p2[1]) / 2]
+        targetPoint = [
+            (block.p1[0] + block.p2[0]) // 2,
+            (block.p1[1] + block.p2[1]) // 2,
+        ]
         # print("Check Block: " + str(block.description))
 
         try:
-            object3D, success = convertTo3D(
-                cameraMatrix, dist, depth, int(targetPoint[0]), int(targetPoint[1])
-            )
-            if success == ParseResult.InvalidDepth:
-                # print("Ignoring invalid depth")
-
-                # if block.description not in blockStatus:
-                #     cv2.rectangle(frame,
-                #         (int(block.p1[0] * 2**shift), int(block.p1[1] * 2**shift)),
-                #         (int(block.p2[0] * 2**shift), int(block.p2[1] * 2**shift)),
-                #         color=(0,0,0),
-                #         thickness=5,
-                #         shift=shift)
-                #     cv2.circle(frame, (int(targetPoint[0] * 2**shift), int(targetPoint[1] * 2**shift)), radius=10, color=(0,0,0), thickness=10, shift=shift)
-                continue
+            object3D = pixel_to_camera_3d(targetPoint, depth, calibration)
         except:
             continue
 

@@ -8,6 +8,7 @@ from mmdemo.interfaces import (
     GazeConesInterface,
 )
 from mmdemo.interfaces.data import Cone
+from mmdemo.utils.coordinates import world_3d_to_camera_3d
 from mmdemo.utils.support_utils import Joint
 
 
@@ -23,17 +24,6 @@ def gaze():
     g.initialize()
     yield g
     g.finalize()
-
-
-# here we use a fixture to get an example camera calibration
-@pytest.fixture
-def cc_interface():
-    return CameraCalibrationInterface(
-        rotation=np.eye(3),
-        translation=np.zeros(3),
-        cameraMatrix=np.array([]),
-        distortion=np.array([]),
-    )
 
 
 def create_body_dict(id, nose, left_eye, right_eye, left_ear, right_ear):
@@ -126,10 +116,14 @@ def test_gaze_body_tracking_formula(gaze, cc_interface, bodies, expected_output)
     assert isinstance(output, GazeConesInterface)
 
     for cone, expected in zip(output.cones, expected_output):
+        # expected is in world coords while the output should be in camera coords
+        expected_base = world_3d_to_camera_3d(expected.base, cc_interface)
+        expected_vertex = world_3d_to_camera_3d(expected.vertex, cc_interface)
+
         assert np.allclose(
-            cone.base, expected.base
+            cone.base, expected_base
         ), "Gaze does not start from the correct place"
         assert np.allclose(
             get_dir(cone.base, cone.vertex),
-            get_dir(expected.base, expected.vertex),
+            get_dir(expected_base, expected_vertex),
         ), "Gaze does not point in the correct direction"

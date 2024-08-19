@@ -9,8 +9,8 @@ from mmdemo.interfaces import (
     GazeConesInterface,
 )
 from mmdemo.interfaces.data import Cone
+from mmdemo.utils.coordinates import world_3d_to_camera_3d
 from mmdemo.utils.support_utils import Joint
-from mmdemo.utils.twoD_object_loc import convert2D
 
 
 # this is for gaze body tracking, rgb gaze will be different
@@ -75,16 +75,6 @@ class Gaze(BaseFeature[GazeConesInterface]):
             cone = Cone(origin_point, end_point, self.BASE_RADIUS, self.VERTEX_RADIUS)
             cones.append(cone)
             body_ids.append(body["body_id"])
-            # p1 = convert2D(
-            #     p1_3d,
-            #     cc.cameraMatrix,
-            #     cc.distortion,
-            # )
-            # p2 = convert2D(
-            #     p2_3d,
-            #     cc.cameraMatrix,
-            #     cc.distortion,
-            # )
 
         return GazeConesInterface(body_ids=body_ids, cones=cones)
 
@@ -99,4 +89,4 @@ class Gaze(BaseFeature[GazeConesInterface]):
         Returns camera coordinates of requested joint
         """
         r_w = np.array(body["joint_positions"][joint.value])
-        return np.dot(cc.rotation, r_w) + cc.translation
+        return world_3d_to_camera_3d(r_w, cc)

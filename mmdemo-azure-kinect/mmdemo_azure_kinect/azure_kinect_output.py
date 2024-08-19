@@ -38,12 +38,20 @@ class _AzureKinectInterface(BaseInterface):
     depth -- depth image
     body_tracking -- body tracking output dict
     frame_count -- current frame
+    camera_matrix -- camera matrix of camera
+    distortion -- distortion of camera
+    rotation -- rotation of camera
+    translation -- translation of camera
     """
 
     color: np.ndarray
     depth: np.ndarray
     body_tracking: dict
     frame_count: int
+    camera_matrix: np.ndarray
+    distortion: np.ndarray
+    rotation: np.ndarray
+    translation: np.ndarray
 
 
 @final
@@ -89,6 +97,13 @@ class _AzureKinectDevice(BaseFeature):
             ), "Playback frame rate must be a divisor of mkv frame rate"
             self.device = Playback(str(self.mkv_path))
 
+        (
+            self.camera_matrix,
+            self.rotation,
+            self.translation,
+            self.distortion,
+        ) = self.device.get_calibration_matrices()
+
         self.frame_count = 0
 
     def finalize(self):
@@ -108,10 +123,14 @@ class _AzureKinectDevice(BaseFeature):
         color_rgb = cv.cvtColor(color, cv.COLOR_BGRA2RGB)
 
         return _AzureKinectInterface(
-            color_rgb,
-            depth,
-            body_tracking,
-            self.frame_count,
+            color=color_rgb,
+            depth=depth,
+            body_tracking=body_tracking,
+            frame_count=self.frame_count,
+            camera_matrix=self.camera_matrix,
+            distortion=self.distortion,
+            rotation=self.rotation,
+            translation=self.translation,
         )
 
     def is_done(self) -> bool:

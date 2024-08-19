@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+from mmdemo.interfaces import CameraCalibrationInterface, DepthImageInterface
+from mmdemo.utils.coordinates import pixel_to_camera_3d
 from mmdemo.utils.support_utils import ParseResult
 
 
@@ -17,49 +19,13 @@ def getDirectionalVector2D(terminal, initial):
     return (vectorX, vectorY)
 
 
-def convertTo3D(cameraMatrix, dist, depth, u, v):
-    dv, du = depth.shape
-
-    ## ignore frames with invalid depth info
-    if u > du - 1 or v > dv - 1:
-        return [], ParseResult.InvalidDepth
-
-    z = depth[v, u]
-    # print("X: " + str(u) + " Y: " + str(v))
-    # print("Z: " + str(z))
-    if z == 0:
-        # print("Invalid Depth, Z returned 0")
-        return [], ParseResult.InvalidDepth
-
-    f_x = cameraMatrix[0, 0]
-    f_y = cameraMatrix[1, 1]
-    c_x = cameraMatrix[0, 2]
-    c_y = cameraMatrix[1, 2]
-
-    points_undistorted = np.array([])
-    points_undistorted = cv2.undistortPoints((u, v), cameraMatrix, dist, P=cameraMatrix)
-    points_undistorted = np.squeeze(points_undistorted, axis=1)
-
-    result = []
-    for idx in range(points_undistorted.shape[0]):
-        # try:
-
-        x = (points_undistorted[idx, 0] - c_x) / f_x * z
-        y = (points_undistorted[idx, 1] - c_y) / f_y * z
-        result.append(x.astype(float))
-        result.append(y.astype(float))
-        result.append(z.astype(float))
-
-    # except:
-    #     print("An exception occurred")
-    return result, ParseResult.Success
-
-
 def getVectorPoint(terminal, vector):
     return (terminal[0] + vector[0], terminal[1] + vector[1], terminal[2] + vector[2])
 
 
-def processPoint(landmarks, cameraMatrix, dist, depth):
+def processPoint(
+    landmarks, calibration: CameraCalibrationInterface, depth: DepthImageInterface
+):
     try:
         for index, lm in enumerate(landmarks):
             if index == 5:
@@ -67,11 +33,8 @@ def processPoint(landmarks, cameraMatrix, dist, depth):
             if index == 8:
                 tx, ty = lm[0], lm[1]
 
-        tip3D, tSuccess = convertTo3D(cameraMatrix, dist, depth, tx, ty)
-        base3D, bSuccess = convertTo3D(cameraMatrix, dist, depth, bx, by)
-
-        if tSuccess == ParseResult.InvalidDepth or bSuccess == ParseResult.InvalidDepth:
-            return (0, 0, 0, 0, 0, 0, 0, ParseResult.InvalidDepth)
+        tip3D = pixel_to_camera_3d([int(tx), int(ty)], depth, calibration)
+        base3D = pixel_to_camera_3d([int(bx), int(by)], depth, calibration)
 
         vector3D = getDirectionalVector(tip3D, base3D)
         nextPoint = getVectorPoint(tip3D, vector3D)
@@ -85,7 +48,7 @@ def processPoint(landmarks, cameraMatrix, dist, depth):
         return (tx, ty, tip3D, bx, by, base3D, nextPoint, ParseResult.Success)
     except Exception as error:
         print(error)
-        return (0, 0, 0, 0, 0, 0, 0, ParseResult.Exception)
+        return (0, 0, 0, 0, 0, 0, 0, ParseResult.InvalidDepth)
 
 
 def getRadiusPoint(rUp, rDown, vectorPoint):
