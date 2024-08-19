@@ -24,7 +24,6 @@ from mmdemo.features.proposition.demo_helpers import (
 from mmdemo.features.proposition.models import CrossEncoder
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# device = 'cpu'
 
 
 loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]

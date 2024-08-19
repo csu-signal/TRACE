@@ -21,8 +21,8 @@ def pixel_to_camera_3d(
         calibration.camera_matrix,
         calibration.distortion,
         depth.frame,
-        pixel[0],
-        pixel[1],
+        int(pixel[0]),
+        int(pixel[1]),
     )
 
 
@@ -69,7 +69,7 @@ def _convertTo3D(cameraMatrix, dist, depth, u, v):
     c_y = cameraMatrix[1, 2]
 
     points_undistorted = cv.undistortPoints(
-        np.array([u, v]), cameraMatrix, dist, P=cameraMatrix
+        np.array([u, v], dtype=np.float32), cameraMatrix, dist, P=cameraMatrix
     )
     points_undistorted = np.squeeze(points_undistorted, axis=1)
 

@@ -2,14 +2,11 @@ import numpy as np
 import pytest
 
 from mmdemo.features.gaze.gaze_feature import Gaze
-from mmdemo.interfaces import (
-    BodyTrackingInterface,
-    CameraCalibrationInterface,
-    GazeConesInterface,
-)
+from mmdemo.interfaces import BodyTrackingInterface, GazeConesInterface
 from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import world_3d_to_camera_3d
 from mmdemo.utils.support_utils import Joint
+from tests.utils.data import read_frame_pkl
 
 
 # fixtures are data that we want to use in the test.
@@ -24,6 +21,15 @@ def gaze():
     g.initialize()
     yield g
     g.finalize()
+
+
+@pytest.fixture
+def calibration(test_data_dir):
+    file = test_data_dir / "frame_01.pkl"
+    assert file.is_file(), "Test file does not exist"
+
+    _, _, _, cal = read_frame_pkl(test_data_dir / "frame_01.pkl")
+    return cal
 
 
 def create_body_dict(id, nose, left_eye, right_eye, left_ear, right_ear):
@@ -105,20 +111,20 @@ def get_dir(base, vertex):
         ([p3, p1, p2], [p3_expected, p1_expected, p2_expected]),
     ],
 )
-def test_gaze_body_tracking_formula(gaze, cc_interface, bodies, expected_output):
+def test_gaze_body_tracking_formula(gaze, calibration, bodies, expected_output):
     """
     Test that gazes use the correct formula. This should be:
     - origin = average of nose and eyes
     - dir = vector between average of ears and the nose
     """
     body_tracking_interface = BodyTrackingInterface(bodies=bodies, timestamp_usec=-1)
-    output = gaze.get_output(body_tracking_interface, cc_interface)
+    output = gaze.get_output(body_tracking_interface, calibration)
     assert isinstance(output, GazeConesInterface)
 
     for cone, expected in zip(output.cones, expected_output):
         # expected is in world coords while the output should be in camera coords
-        expected_base = world_3d_to_camera_3d(expected.base, cc_interface)
-        expected_vertex = world_3d_to_camera_3d(expected.vertex, cc_interface)
+        expected_base = world_3d_to_camera_3d(expected.base, calibration)
+        expected_vertex = world_3d_to_camera_3d(expected.vertex, calibration)
 
         assert np.allclose(
             cone.base, expected_base

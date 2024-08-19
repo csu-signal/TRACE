@@ -5,7 +5,7 @@ RESIZE_TO = 416  # resize the image for training and transforms
 NUM_EPOCHS = 10  # number of epochs to train for
 NUM_WORKERS = 4
 
-DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # training images and XML files directory
 TRAIN_DIR = "data/weights-dataset/train"

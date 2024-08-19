@@ -25,7 +25,7 @@ from torch.utils.data import DataLoader, Dataset
 
 # warnings.filterwarnings("ignore")
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 LLM = "bert-base-uncased"
 lv1_lv3 = dict(
     {
