@@ -12,6 +12,9 @@ from mmdemo.utils.Gamr import GamrTarget
 from mmdemo.utils.camera_calibration_utils import getCalibrationFromFile, getMasterCameraMatrix
 import json
 
+from tests.utils.data import read_frame_pkl
+from tests.utils.fake_feature import FakeFeature
+
 testDataDir = Path(__file__).parent.parent / "data"
 
 @pytest.fixture(scope="module")
@@ -19,7 +22,7 @@ def object_detector():
     """
     Fixture to load object detector. Only runs once per file.
     """
-    o = Object()
+    o = Object(FakeFeature(), FakeFeature(), FakeFeature())
     o.initialize()
     yield o
     o.finalize()
@@ -27,33 +30,26 @@ def object_detector():
 
 @pytest.fixture(
     params=[
-        "raw_frame_1.png",
-        "raw_frame_2.png",
-        "raw_frame_3.png",
+        "frame_01.pkl",
+        "frame_02.pkl",
+        "gesture_01.pkl",
+        "gesture_01.pkl",
     ]
 )
-def test_file(request, test_data_dir):
+def test_data(request, test_data_dir):
     """
-    Fixture to get test files.
+    Fixture to get test data.
     """
     file: Path = test_data_dir / request.param
     assert file.is_file(), "Test file does not exist"
-    return file
+    
+    return read_frame_pkl(file)
 
 
-def test_output(object_detector: Object, test_file):
-    img = Image.open(test_file)
+def test_output(object_detector: Object, test_data):
+    color, depth, _, calibration = test_data
 
-    file: Path = testDataDir / "calibration.json"
-    assert file.is_file(), str(file) + " test file does not exist"
-    skeletonJsonFile = open(file)
-    skeletonData = json.load(skeletonJsonFile)
-    _, rotation, translation, dist = getCalibrationFromFile(skeletonData["camera_calibration"])
-
-    img_interface = ColorImageInterface(frame_count=0, frame=np.asarray(img))
-    depth = DepthImageInterface(frame_count=0, frame=np.zeros(shape=(640, 576)))
-    cameraCalibration = CameraCalibrationInterface(cameraMatrix=getMasterCameraMatrix(), rotation=rotation, translation=translation, distortion=dist)
-    output = object_detector.get_output(img_interface, depth, cameraCalibration)
+    output = object_detector.get_output(color, depth, calibration)
 
     assert isinstance(output, ObjectInterface3D), str(output)
     assert (

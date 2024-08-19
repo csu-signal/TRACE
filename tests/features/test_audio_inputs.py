@@ -9,17 +9,18 @@ import pytest
 from mmdemo.base_feature import BaseFeature
 from mmdemo.features.utterance.audio_input_features import MicAudio, RecordedAudio
 from mmdemo.interfaces import AudioFileInterface, ColorImageInterface
+from tests.utils.audio import get_length
 
 
 @pytest.fixture(params=["testing.wav"])
-def audio_file(request, test_data_dir, test_utils):
+def audio_file(request, test_data_dir):
     file: Path = test_data_dir / request.param
     assert file.is_file(), "Test file does not exist"
     assert (
-        test_utils.get_length(file) >= 5
+        get_length(file) >= 5
     ), "This test requires all files to be at least 5 seconds long"
     assert (
-        test_utils.get_length(file) < 90
+        get_length(file) < 90
     ), "This test requires all files to less than 90 seconds long"
     return file
 
@@ -53,9 +54,9 @@ def recorded_audio(audio_file, video_frame_rate):
     [16, 60, 160, 310, 410, 99999],
 )
 def test_recorder(
-    recorded_audio: RecordedAudio, frame_count, video_frame_rate, audio_file, test_utils
+    recorded_audio: RecordedAudio, frame_count, video_frame_rate, audio_file
 ):
-    if frame_count / video_frame_rate > test_utils.get_length(audio_file):
+    if frame_count / video_frame_rate > get_length(audio_file):
         recorded_audio.get_output(
             ColorImageInterface(frame_count=frame_count, frame=np.zeros((5, 5, 3)))
         )
@@ -79,7 +80,7 @@ def test_recorder(
     ), "The number of chunks is not what was expected by this frame"
 
     for i in all_outputs:
-        length = test_utils.get_length(i.path)
+        length = get_length(i.path)
 
         assert i.end_time - i.start_time == pytest.approx(
             length, abs=0.01

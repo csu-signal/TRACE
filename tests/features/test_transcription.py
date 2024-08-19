@@ -8,6 +8,8 @@ from mmdemo.features.transcription.whisper_transcription_feature import (
     WhisperTranscription,
 )
 from mmdemo.interfaces import AudioFileInterface, TranscriptionInterface
+from tests.utils.audio import get_length
+from tests.utils.text import levenshtein
 
 
 @pytest.fixture(scope="module")
@@ -27,7 +29,6 @@ def test_whisper_transcription(
     audio_file,
     expected_transcription,
     test_data_dir,
-    test_utils,
 ):
     """
     Test that transcription works correctly. Audio files
@@ -36,7 +37,7 @@ def test_whisper_transcription(
     """
     full_path = test_data_dir / audio_file
     end_time = time.time()
-    start_time = end_time - test_utils.get_length(full_path)
+    start_time = end_time - get_length(full_path)
 
     output = transcription_feature.get_output(
         AudioFileInterface(
@@ -57,5 +58,5 @@ def test_whisper_transcription(
 
     # edit distance between strings should be within 10
     assert (
-        test_utils.levenshtein(filtered_text, expected_transcription) < 10
+        levenshtein(filtered_text, expected_transcription) < 10
     ), "Output string is too different from the expected"
