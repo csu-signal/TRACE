@@ -13,6 +13,7 @@ from mmdemo.interfaces import (  # GestureInterface,
     GestureConesInterface,
 )
 from mmdemo.utils.cone_shape import ConeShape
+from mmdemo.interfaces.data import Cone
 from mmdemo.utils.hand_utils import createBoundingBox, getAverageHandLocations, processHands
 from mmdemo.utils.point_vector_logic import processPoint
 from mmdemo.utils.support_utils import Handedness, ParseResult
@@ -65,7 +66,7 @@ class Gesture(BaseFeature[GestureConesInterface]):
         body_ids = []
         handedness = []
         h, w, c = col.frame.shape
-        framergb=cv2.cvtColor(col.color_image, cv2.COLOR_BGR2RGB)
+        framergb=cv2.cvtColor(col.frame, cv2.COLOR_BGR2RGB)
         for _, body in enumerate(bt.bodies):
             leftXAverage, leftYAverage, rightXAverage, rightYAverage = getAverageHandLocations(
                 body, w, h, cal.rotation, cal.translation, cal.cameraMatrix, cal.distortion)
@@ -159,6 +160,7 @@ class Gesture(BaseFeature[GestureConesInterface]):
 
                             if success == ParseResult.Success:
                                 return ConeShape(mediaPipe5, nextPoint, 40, 70, cameraMatrix, dist)
+                                #return Cone(mediaPipe5, nextPoint, 40, 70)
                             else:
                                 return None
                             

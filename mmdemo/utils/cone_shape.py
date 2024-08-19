@@ -2,13 +2,9 @@ import math
 
 import cv2
 import numpy as np
-
-from mmdemo.utils.support_utils import (
-    convert2D,
-    distance3D,
-    getDirectionalVector,
-    projectedPoint,
-)
+from mmdemo.utils.point_vector_logic import getDirectionalVector
+from mmdemo.utils.threeD_object_loc import distance3D, projectedPoint
+from mmdemo.utils.twoD_object_loc import convert2D
 
 
 class ConeShape:
