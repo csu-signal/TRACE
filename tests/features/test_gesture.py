@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from typing import final
@@ -7,11 +8,20 @@ import pytest
 from PIL import Image
 
 from mmdemo.features.gesture.gesture_feature import Gesture
-from mmdemo.interfaces import BodyTrackingInterface, CameraCalibrationInterface, ColorImageInterface, DepthImageInterface, GestureConesInterface
-from mmdemo.utils.camera_calibration_utils import getCalibrationFromFile, getMasterCameraMatrix
-import json
+from mmdemo.interfaces import (
+    BodyTrackingInterface,
+    CameraCalibrationInterface,
+    ColorImageInterface,
+    DepthImageInterface,
+    GestureConesInterface,
+)
+from mmdemo.utils.camera_calibration_utils import (
+    getCalibrationFromFile,
+    getMasterCameraMatrix,
+)
 
 testDataDir = Path(__file__).parent.parent / "data"
+
 
 @pytest.fixture(scope="module")
 def gesture_detector():
@@ -47,20 +57,29 @@ def test_output(gesture_detector: Gesture, test_file):
     assert file.is_file(), str(file) + " test file does not exist"
     skeletonJsonFile = open(file)
     skeletonData = json.load(skeletonJsonFile)
-    _, rotation, translation, dist = getCalibrationFromFile(skeletonData["camera_calibration"])
+    _, rotation, translation, dist = getCalibrationFromFile(
+        skeletonData["camera_calibration"]
+    )
 
     img_interface = ColorImageInterface(frame_count=0, frame=np.asarray(img))
     depth = DepthImageInterface(frame_count=0, frame=np.zeros(shape=(640, 576)))
-    cameraCalibration = CameraCalibrationInterface(cameraMatrix=getMasterCameraMatrix(), rotation=rotation, translation=translation, distortion=dist)
+    cameraCalibration = CameraCalibrationInterface(
+        cameraMatrix=getMasterCameraMatrix(),
+        rotation=rotation,
+        translation=translation,
+        distortion=dist,
+    )
     bodyTracking = BodyTrackingInterface(bodies=[], timestamp_usec=1000)
-    output = gesture_detector.get_output(img_interface, depth, bodyTracking, cameraCalibration)
+    output = gesture_detector.get_output(
+        img_interface, depth, bodyTracking, cameraCalibration
+    )
 
     assert isinstance(output, GestureConesInterface), str(output)
     assert (
         len(output.cones) > 0
     ), "No cones were identified, so there may be a problem with the model"
 
-    #TODO check cone data similar to objects
+    # TODO check cone data similar to objects
     # for info in output.objects:
     #     assert len(info.center) == 3, str(info.center) + " center should be a 3d value"
     #     assert len(info.p1) == 2, "p1 should be a 2d value"
