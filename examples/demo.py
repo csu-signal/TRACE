@@ -15,18 +15,22 @@ class PrintFeature(BaseFeature):
         if not all(i.is_new() for i in args):
             return None
 
-        with open(f"frame{self.c:05}.pkl", "wb") as f:
-            pickle.dump(args, f)
+        if self.c in [0, 197, 359, 1073]:
+            with open(f"frame{self.c:05}.pkl", "wb") as f:
+                pickle.dump(args, f)
 
         self.c += 1
+    
+    def is_done(self) -> bool:
+        return self.c > 1100
 
 
 if __name__ == "__main__":
     color, depth, bt, calibration = create_azure_kinect_features(
         DeviceType.PLAYBACK,
-        mkv_path="C:\\Users\\brady\\Desktop\\Group_01-master.mkv",
-        mkv_frame_rate=120,
-        playback_frame_rate=1,
+        mkv_path=r"F:\brady_recording_tests\full_run_7_26\run03-master.mkv",
+        mkv_frame_rate=30,
+        playback_frame_rate=30,
     )
 
     # mic = fs.MicAudio(device_id=1)
