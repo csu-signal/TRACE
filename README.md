@@ -2,10 +2,6 @@
 
 TODO: description here
 
-# Usage
-
-TODO
-
 # Setup
 ## Main package
 Python 3.10 or higher is required if using conda because of [this unresolved issue](https://github.com/conda/conda/issues/10897). The conda environment can be created with `conda env create --file multimodalDemo.yaml`.
