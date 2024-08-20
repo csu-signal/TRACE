@@ -10,58 +10,70 @@ import numpy as np
 import pytest
 
 from mmdemo.utils.coordinates import (
+    CoordinateConversionError,
     camera_3d_to_pixel,
     camera_3d_to_world_3d,
     pixel_to_camera_3d,
     world_3d_to_camera_3d,
 )
-from tests.utils.data import read_frame_pkl
+
+# the interval at which rows and cols
+# of the point cloud will be selected for testing
+INTERVAL = 17
 
 
-@pytest.fixture(params=["frame_01.pkl"])
-def test_frame_depth_and_calibration(request, test_data_dir):
-    file = test_data_dir / request.param
-    assert file.is_file(), "Test file does not exist"
-    _, depth, _, cal = read_frame_pkl(file)
-    return depth, cal
+def test_camera_3d_to_pixel(point_cloud):
+    cloud, depth, calibration = point_cloud
+
+    assert (
+        np.linalg.norm(depth) > 0
+    ), "Depth image only contains 0 so testing will not work correctly"
+
+    for r in range(0, cloud.shape[0], INTERVAL):
+        for c in range(0, cloud.shape[1], INTERVAL):
+            point_3d = cloud[r, c]
+            if np.linalg.norm(point_3d) == 0:
+                # don't test when 3d point is invalid
+                pass
+
+            expected = np.array([c, r])
+            output = camera_3d_to_pixel(point_3d, calibration)
+
+            assert np.allclose(output, expected)
+            assert output.dtype == expected.dtype
 
 
-@pytest.fixture(params=[(100, 100, 100), (100, 50, 150), (340, 200, 100)])
+def test_pixel_to_camera_3d(point_cloud):
+    cloud, depth, calibration = point_cloud
+
+    assert (
+        np.linalg.norm(depth) > 0
+    ), "Depth image only contains 0 so testing will not work correctly"
+
+    for r in range(0, cloud.shape[0], INTERVAL):
+        for c in range(0, cloud.shape[1], INTERVAL):
+            point_2d = np.array([c, r])
+
+            expected = cloud[r, c]
+            try:
+                output = pixel_to_camera_3d(point_2d, depth, calibration)
+                assert np.allclose(output, expected)
+                assert output.dtype == expected.dtype
+
+            except CoordinateConversionError:
+                assert (
+                    np.linalg.norm(expected) == 0
+                ), "Conversion should fail exactly when the point cloud has (0,0,0)"
+
+
+@pytest.fixture(params=[(100, 200, 300), (100, 500, 90), (-10, -50, 80)])
 def point_3d(request):
-    return np.array(request.param, dtype=np.float32)
+    return np.array(request.param, dtype=np.float64)
 
 
-@pytest.fixture(params=[(500, 500), (700, 900), (1000, 500)])
-def point_2d(request):
-    return np.array(request.param, dtype=np.int32)
-
-
-@pytest.mark.xfail(reason="I think we need points on the depth image for this to work")
-def test_camera_3d_inverse(point_3d, test_frame_depth_and_calibration):
-    depth, calibration = test_frame_depth_and_calibration
-
-    output = camera_3d_to_pixel(point_3d, calibration)
-    output = pixel_to_camera_3d(output, depth, calibration)
-
-    assert np.allclose(point_3d, output)
-    assert point_3d.dtype == output.dtype
-
-
-def test_2d_inverse(point_2d, test_frame_depth_and_calibration):
-    depth, calibration = test_frame_depth_and_calibration
-
-    output = pixel_to_camera_3d(point_2d, depth, calibration)
-    output = camera_3d_to_pixel(output, calibration)
-
-    assert np.allclose(point_2d, output)
-    assert point_2d.dtype == output.dtype
-
-
-def test_camera_world_inverse(point_3d, test_frame_depth_and_calibration):
-    _, calibration = test_frame_depth_and_calibration
-
-    output = camera_3d_to_world_3d(point_3d, calibration)
-    output = world_3d_to_camera_3d(output, calibration)
+def test_camera_world_inverse(point_3d, camera_calibration):
+    output = camera_3d_to_world_3d(point_3d, camera_calibration)
+    output = world_3d_to_camera_3d(output, camera_calibration)
 
     assert np.allclose(point_3d, output)
     assert point_3d.dtype == output.dtype

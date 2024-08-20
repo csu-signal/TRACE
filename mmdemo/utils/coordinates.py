@@ -31,7 +31,11 @@ def pixel_to_camera_3d(
 
 
 def camera_3d_to_pixel(point, calibration: CameraCalibrationInterface):
-    return _convert2D(point, calibration.camera_matrix, calibration.distortion)
+    return (
+        _convert2D(point, calibration.camera_matrix, calibration.distortion)
+        .round()
+        .astype(np.int64)
+    )
 
 
 def world_3d_to_camera_3d(point, calibration: CameraCalibrationInterface):

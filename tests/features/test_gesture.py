@@ -1,13 +1,8 @@
-from pathlib import Path
-
 import pytest
 
 from mmdemo.features.gesture.gesture_feature import Gesture
 from mmdemo.interfaces import GestureConesInterface
 from mmdemo.utils.hands import Handedness
-from tests.utils.data import read_frame_pkl
-
-testDataDir = Path(__file__).parent.parent / "data"
 
 
 @pytest.fixture(scope="module")
@@ -21,28 +16,10 @@ def gesture_detector():
     g.finalize()
 
 
-@pytest.fixture(
-    params=[
-        "gesture_01.pkl",
-        "gesture_02.pkl",
-        "frame_01.pkl",
-        "frame_02.pkl",
-    ]
-)
-def test_data(request, test_data_dir):
-    """
-    Fixture to get test files. Files with gesture
-    in the name should contain a gesture and other
-    files should not.
-    """
-    file: Path = test_data_dir / request.param
-    assert file.is_file(), "Test file does not exist"
-    return read_frame_pkl(file), "gesture" in request.param
-
-
 @pytest.mark.model_dependent
-def test_output(gesture_detector: Gesture, test_data):
-    (color, depth, body_tracking, calibration), has_gesture = test_data
+def test_output(gesture_detector: Gesture, azure_kinect_frame, azure_kinect_frame_file):
+    color, depth, body_tracking, calibration = azure_kinect_frame
+    has_gesture = "gesture" in str(azure_kinect_frame_file)
 
     output = gesture_detector.get_output(color, depth, body_tracking, calibration)
 
