@@ -7,10 +7,20 @@ from numpy import trapz
 from numpy.linalg import norm
 
 
-# https://mediapipe.readthedocs.io/en/latest/solutions/hands.html
-class Handedness(Enum):
-    Left = "Right"
-    Right = "Left"
+def createHeadBoundingBox(xAverage, yAverage, xRange, yRange):
+    xMax = xAverage + xRange
+    xMin = xAverage - xRange
+    yMax = yAverage + yRange
+    yMin = yAverage - yRange
+    xSpan = xMax - xMin
+    ySpan = yMax - yMin
+
+    return [
+        int(xMin - (xSpan)),
+        int(yMin - (ySpan)),
+        int(xMax + (xSpan)),
+        int(yMax + (ySpan)),
+    ]
 
 
 class ParseResult(Enum):
@@ -20,52 +30,6 @@ class ParseResult(Enum):
     InvalidDepth = (3,)
     NoObjects = (4,)
     NoGamr = 5
-
-
-class Joint(Enum):
-    PELVIS = 0
-    SPINE_NAVEL = 1
-    SPINE_CHEST = 2
-    NECK = 3
-    CLAVICLE_LEFT = 4
-    SHOULDER_LEFT = 5
-    ELBOW_LEFT = 6
-    WRIST_LEFT = 7
-    HAND_LEFT = 8
-    HANDTIP_LEFT = 9
-    THUMB_LEFT = 10
-    CLAVICLE_RIGHT = 11
-    SHOULDER_RIGHT = 12
-    ELBOW_RIGHT = 13
-    WRIST_RIGHT = 14
-    HAND_RIGHT = 15
-    HANDTIP_RIGHT = 16
-    THUMB_RIGHT = 17
-    HIP_LEFT = 18
-    KNEE_LEFT = 19
-    ANKLE_LEFT = 20
-    FOOT_LEFT = 21
-    HIP_RIGHT = 22
-    KNEE_RIGHT = 23
-    ANKLE_RIGHT = 24
-    FOOT_RIGHT = 25
-    HEAD = 26
-    NOSE = 27
-    EYE_LEFT = 28
-    EAR_LEFT = 29
-    EYE_RIGHT = 30
-    EAR_RIGHT = 31
-
-
-class BodyCategory(Enum):
-    HEAD = 0
-    RIGHT_ARM = 1
-    RIGHT_HAND = 7
-    LEFT_ARM = 2
-    LEFT_HAND = 6
-    TORSO = 3
-    RIGHT_LEG = 4
-    LEFT_LEG = 5
 
 
 class Object:

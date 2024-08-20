@@ -1,12 +1,12 @@
 from pathlib import Path
 from typing import final
 
-import cv2
 import joblib
 import mediapipe as mp
+import numpy as np
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (  # GestureInterface,
+from mmdemo.interfaces import (
     BodyTrackingInterface,
     CameraCalibrationInterface,
     ColorImageInterface,
@@ -14,22 +14,17 @@ from mmdemo.interfaces import (  # GestureInterface,
     GestureConesInterface,
 )
 from mmdemo.interfaces.data import Cone
-from mmdemo.utils.cone_shape import ConeShape
-from mmdemo.utils.hand_utils import (
-    createBoundingBox,
-    getAverageHandLocations,
-    processHands,
-)
-from mmdemo.utils.point_vector_logic import processPoint
-from mmdemo.utils.support_utils import Handedness, ParseResult
-
-# import helpers
-# from mmdemo.features.proposition.helpers import ...
+from mmdemo.utils.coordinates import CoordinateConversionError, pixel_to_camera_3d
+from mmdemo.utils.hands import Handedness, get_average_hand_pixel, normalize_landmarks
 
 
 @final
 class Gesture(BaseFeature[GestureConesInterface]):
-    # LOG_FILE = "gestureOutput.csv"
+    BASE_RADIUS = 40
+    VERTEX_RADIUS = 70
+
+    HAND_BOUNDING_BOX_WIDTH = 192
+    HAND_BOUNDING_BOX_HEIGHT = 192
 
     @classmethod
     def get_input_interfaces(cls):
@@ -48,181 +43,126 @@ class Gesture(BaseFeature[GestureConesInterface]):
         model_path = Path(__file__).parent / "bestModel-pointing.pkl"
         self.loaded_model = joblib.load(str(model_path))
 
-        mpHands = mp.solutions.hands
-        self.hands = mpHands.Hands(
+        self.hands = mp.solutions.hands.Hands(
             max_num_hands=1,
             static_image_mode=True,
             min_detection_confidence=0.4,
             min_tracking_confidence=0,
         )
 
-        # self.devicePoints = {}
-        # self.shift = shift
-        # self.blockCache = {}
-
-        # self.init_logger(log_dir)
-        pass
-
     def get_output(
         self,
-        col: ColorImageInterface,
+        color: ColorImageInterface,
         depth: DepthImageInterface,
         bt: BodyTrackingInterface,
-        cal: CameraCalibrationInterface,
+        calibration: CameraCalibrationInterface,
     ):
-        if (
-            not col.is_new()
-            or not depth.is_new()
-            or not bt.is_new()
-            or not cal.is_new()
-        ):
+        if not color.is_new() or not depth.is_new() or not bt.is_new():
             return None
 
-        cones = []
-        body_ids = []
-        handedness = []
-        h, w, c = col.frame.shape
-        framergb = cv2.cvtColor(col.frame, cv2.COLOR_BGR2RGB)
+        cones_output = []
+        body_ids_output = []
+        handedness_output = []
         for _, body in enumerate(bt.bodies):
-            (
-                leftXAverage,
-                leftYAverage,
-                rightXAverage,
-                rightYAverage,
-            ) = getAverageHandLocations(
-                body,
-                w,
-                h,
-                cal.rotation,
-                cal.translation,
-                cal.camera_matrix,
-                cal.distortion,
-            )
-            rightBox = createBoundingBox(rightXAverage, rightYAverage)
-            leftBox = createBoundingBox(leftXAverage, leftYAverage)
-            leftCone = self.findCones(
-                col.frame, framergb, Handedness.Left, leftBox, cal, depth
-            )
+            for handedness in (Handedness.Left, Handedness.Right):
+                # loop through both hands of all bodies
 
-            if leftCone != None:
-                cones.append(leftCone)
-                body_ids.append(int(body["body_id"]))
-                handedness.append(Handedness.Left)
+                # create a box around the hand using azure kinect info
+                avg = get_average_hand_pixel(body, calibration, handedness)
+                offset = (
+                    np.array(
+                        [self.HAND_BOUNDING_BOX_WIDTH, self.HAND_BOUNDING_BOX_HEIGHT]
+                    )
+                    / 2
+                )
+                box = np.array([avg - offset, avg + offset], dtype=np.int64)
 
-            rightCone = self.findCones(
-                col.frame, framergb, Handedness.Right, rightBox, cal, depth
-            )
+                # see if the hand is pointing
+                pointing_info = self.find_pointing_hands(color, handedness, box)
+                if pointing_info is None:
+                    continue
+                base, tip = pointing_info
 
-            if rightCone != None:
-                cones.append(rightCone)
-                body_ids.append(int(body["body_id"]))
-                handedness.append(Handedness.Right)
+                try:
+                    # calculate 3d cone if the hand is pointing
+                    base3D = pixel_to_camera_3d(base, depth, calibration)
+                    tip3D = pixel_to_camera_3d(tip, depth, calibration)
+
+                    finger_length = tip3D - base3D
+
+                    # cone vertex is at 5 finger lengths from the base
+                    cones_output.append(
+                        Cone(
+                            base3D,
+                            base3D + 5 * finger_length,
+                            self.BASE_RADIUS,
+                            self.VERTEX_RADIUS,
+                        )
+                    )
+                    body_ids_output.append(body["body_id"])
+                    handedness_output.append(handedness)
+
+                except CoordinateConversionError:
+                    pass
 
         return GestureConesInterface(
-            body_ids=body_ids, handedness=handedness, cones=cones
+            body_ids=body_ids_output, handedness=handedness_output, cones=cones_output
         )
-        # call __, create interface, and return
 
-    # TODO logging
-    # def log_gesture(self, frame: int, descriptions: list[str], body_id, handedness: str):
-    #     self.logger.append_csv(frame, json.dumps(descriptions), body_id, handedness)
+    def find_pointing_hands(
+        self,
+        color: ColorImageInterface,
+        handedness: Handedness,
+        box: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray] | None:
+        """
+        Find points inside of a given box of the frame.
 
-    # TODO rendering logic
-    #     for key in self.devicePoints:
-    #         if(key == deviceId):
-    #             if includeText:
-    #                 if(len(self.devicePoints[key]) == 0):
-    #                     cv2.putText(frame, "NO POINTS", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2, cv2.LINE_AA)
-    #                 else:
-    #                     cv2.putText(frame, "POINTS DETECTED", (50,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
-    #                     pointsFound = True
-    #             for hand in self.devicePoints[key]:
-    #                 for point in hand:
-    #                     cv2.circle(frame, point, radius=2, thickness= 2, color=(0,255,0))
+        Arguments:
+        color -- color image interface
+        handedness -- Handedness.Left or Handedness.Right
+        box -- [upper left, lower right] where both points are (x,y)
 
-    def findCones(self, frame, framergb, handedness, box, calibration, depth):
-        ## to help visualize where the hand localization is focused
-        # dotColor = dotColors[bodyId % len(dotColors)]
-        # cv2.rectangle(frame,
-        #     (box[0]* 2**self.shift, box[1]* 2**self.shift),
-        #     (box[2]* 2**self.shift, box[3]* 2**self.shift),
-        #     color=dotColor,
-        #     thickness=3,
-        #     shift=self.shift)
+        Returns:
+        base -- pixel location of base of index finger
+        tip -- pixel location of tip of index finger
+        """
+        # subframe containing only the hand
+        hand_frame = color.frame[box[0][1] : box[1][1], box[0][0] : box[1][0]]
 
-        # media pipe on the sub box only
-        frameBox = framergb[box[1] : box[3], box[0] : box[2]]
-        h, w, c = frameBox.shape
+        # run mediapipe
+        mediapipe_results = self.hands.process(hand_frame)
 
-        if h > 0 and w > 0:
-            results = self.hands.process(frameBox)
+        # if we don't have results for hand landmarks, then exit
+        if not mediapipe_results.multi_hand_landmarks:
+            return None
 
-            handedness_result = results.multi_handedness
-            if results.multi_hand_landmarks:
-                for index, handslms in enumerate(results.multi_hand_landmarks):
-                    returned_handedness = handedness_result[index].classification[0]
-                    if returned_handedness.label == handedness.value:
-                        normalized = processHands(frame, handslms)
-                        prediction = self.loaded_model.predict_proba([normalized])
-                        # print(prediction)
+        # loop through detected hands
+        for handedness_value, hand_landmarks in zip(
+            mediapipe_results.multi_handedness,
+            mediapipe_results.multi_hand_landmarks,
+        ):
+            # only look at detected hands that match the handedness input
+            if handedness_value.classification[0].label != handedness.value:
+                continue
 
-                        if prediction[0][0] >= 0.3:
-                            landmarks = []
-                            for lm in handslms.landmark:
-                                lmx, lmy = (
-                                    int(lm.x * w) + box[0],
-                                    int(lm.y * h) + box[1],
-                                )
-                                # cv2.circle(frame, (lmx, lmy), radius=2, thickness= 2, color=(0,0,255))
-                                landmarks.append([lmx, lmy])
+            # predict if the hand is pointing and exit if not
+            normalized = normalize_landmarks(
+                hand_landmarks, hand_frame.shape[1], hand_frame.shape[0]
+            )
+            prediction = self.loaded_model.predict_proba([normalized])
+            if prediction[0][0] < 0.3:
+                continue
 
-                            (
-                                tx,
-                                ty,
-                                mediaPipe8,
-                                bx,
-                                by,
-                                mediaPipe5,
-                                nextPoint,
-                                success,
-                            ) = processPoint(landmarks, calibration, depth)
-                            # cv2.putText(frame, str(success), (50,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+            # finger landmarks
+            mcp_lm = hand_landmarks.landmark[5]
+            tip_lm = hand_landmarks.landmark[8]
 
-                            if success == ParseResult.Success:
-                                return ConeShape(
-                                    mediaPipe5, nextPoint, 40, 70, calibration
-                                )
-                                # return Cone(mediaPipe5, nextPoint, 40, 70)
-                            else:
-                                return None
+            # mediapipe outputs values between 0 and 1 so we need to scale the landmark
+            # (w, h)
+            scale_factor = np.array([hand_frame.shape[1], hand_frame.shape[0]])
 
-                                # TODO move to rendering feature
-                                # point8_2D = convert2D(mediaPipe8, cameraMatrix, dist)
-                                # point5_2D = convert2D(mediaPipe5, cameraMatrix, dist)
-                                # pointExtended_2D = convert2D(nextPoint, cameraMatrix, dist)
+            mcp_joint = np.array([mcp_lm.x, mcp_lm.y]) * scale_factor + box[0]
+            tip_joint = np.array([tip_lm.x, tip_lm.y]) * scale_factor + box[0]
 
-                                # point_8 = (int(point8_2D[0] * 2**self.shift),int(point8_2D[1] * 2**self.shift))
-                                # point_5 = (int(point5_2D[0] * 2**self.shift),int(point5_2D[1] * 2**self.shift))
-                                # point_Extended = (int(pointExtended_2D[0] * 2**self.shift),int(pointExtended_2D[1] * 2**self.shift))
-
-                                # cv2.line(frame, point_8, point_Extended, color=(0, 165, 255), thickness=5, shift=self.shift)
-                                # cv2.line(frame, point_5, point_8, color=(0, 165, 255), thickness=5, shift=self.shift)
-
-                                # cv2.circle(frame, point_8, radius=15, color=(255,0,0), thickness=15, shift=self.shift)
-                                # cv2.circle(frame, (int(tx), int(ty)), radius=4, color=(0, 0, 255), thickness=-1)
-                                # cv2.circle(frame, point_5, radius=15, color=(255,0,0), thickness=15, shift=self.shift)
-                                # cv2.circle(frame, (int(bx), int(by)), radius=4, color=(0, 0, 255), thickness=-1)
-                                # cv2.circle(frame, point_Extended, radius=15, color=(255,0,0), thickness=15, shift=self.shift)
-                                # cone.projectRadiusLines(self.shift, frame, True, False, False)
-
-                                ## TODO move to target checking features
-                                # targets = checkBlocks(blocks, blockStatus, cameraMatrix, dist, depth, cone, frame, self.shift, False, gesture=True, index=mediaPipe8)
-                                # frame_bin = get_frame_bin(frameIndex)
-                                # if(targets):
-                                #     self.blockCache[frame_bin] = [t.description for t in targets]
-
-                                # descriptions = []
-                                # for t in targets:
-                                #     descriptions.append(t.description)
-
-                                # self.log_gesture(frameIndex, [d.value for d in descriptions], bodyId, handedness.value)
+            return mcp_joint.astype(np.int64), tip_joint.astype(np.int64)

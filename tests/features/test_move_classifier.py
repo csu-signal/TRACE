@@ -24,6 +24,7 @@ def move_feature():
 
 
 # TODO: record actual inputs to have audio files
+@pytest.mark.model_dependent
 @pytest.mark.parametrize(
     "text,audio_file,expected",
     [

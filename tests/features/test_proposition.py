@@ -12,7 +12,7 @@ def proposition_feature():
     prop.finalize()
 
 
-@pytest.mark.xfail(reason="Prop extractor model does not work for many test cases")
+@pytest.mark.model_dependent
 @pytest.mark.parametrize(
     "text,expected",
     [

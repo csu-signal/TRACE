@@ -15,7 +15,7 @@ from mmdemo.interfaces import (
     ObjectInterface3D,
 )
 from mmdemo.interfaces.data import ObjectInfo3D
-from mmdemo.utils.coordinates import pixel_to_camera_3d
+from mmdemo.utils.coordinates import CoordinateConversionError, pixel_to_camera_3d
 from mmdemo.utils.Gamr import Block, GamrTarget
 
 # import helpers
@@ -98,20 +98,25 @@ class Object(BaseFeature[ObjectInterface3D]):
 
             for j, box in enumerate(draw_boxes):
                 class_name = pred_classes[j]
-                if found.__contains__(class_name):
+                if class_name in found:
                     continue
 
-                found.append(class_name)
-                p1 = [box[0], box[1]]
-                p2 = [box[2], box[3]]
-                center = [(p1[0] + p2[0]) // 2, (p1[1] + p2[1]) // 2]
-                center3d = pixel_to_camera_3d(center, dep, calibration)
-                des = self.getDescription(float(class_name))
+                try:
+                    p1 = [box[0], box[1]]
+                    p2 = [box[2], box[3]]
+                    center = [(p1[0] + p2[0]) // 2, (p1[1] + p2[1]) // 2]
+                    center3d = pixel_to_camera_3d(center, dep, calibration)
+                    des = self.getDescription(float(class_name))
 
-                if des != GamrTarget.SCALE:
-                    objects.append(
-                        ObjectInfo3D(p1=p1, p2=p2, center=center3d, object_class=des)
-                    )
+                    found.append(class_name)
+                    if des != GamrTarget.SCALE:
+                        objects.append(
+                            ObjectInfo3D(
+                                p1=p1, p2=p2, center=center3d, object_class=des
+                            )
+                        )
+                except CoordinateConversionError:
+                    pass
 
         return ObjectInterface3D(objects=objects)
 
@@ -125,20 +130,22 @@ class Object(BaseFeature[ObjectInterface3D]):
         if classId == 0:
             return GamrTarget.RED_BLOCK
 
-        if classId == 1:
+        elif classId == 1:
             return GamrTarget.YELLOW_BLOCK
 
-        if classId == 2:
+        elif classId == 2:
             return GamrTarget.GREEN_BLOCK
 
-        if classId == 3:
+        elif classId == 3:
             return GamrTarget.BLUE_BLOCK
 
-        if classId == 4:
+        elif classId == 4:
             return GamrTarget.PURPLE_BLOCK
 
-        if classId == 5:
+        elif classId == 5:
             return GamrTarget.SCALE
+
+        raise ValueError("Unknown class id")
 
     # def init_logger(self, log_dir):
     #     if log_dir is not None:

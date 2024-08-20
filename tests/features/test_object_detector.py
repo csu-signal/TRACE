@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from typing import final
@@ -7,15 +8,22 @@ import pytest
 from PIL import Image
 
 from mmdemo.features.objects.object_feature import Object
-from mmdemo.interfaces import CameraCalibrationInterface, ColorImageInterface, DepthImageInterface, ObjectInterface3D
+from mmdemo.interfaces import (
+    CameraCalibrationInterface,
+    ColorImageInterface,
+    DepthImageInterface,
+    ObjectInterface3D,
+)
+from mmdemo.utils.camera_calibration_utils import (
+    getCalibrationFromFile,
+    getMasterCameraMatrix,
+)
 from mmdemo.utils.Gamr import GamrTarget
-from mmdemo.utils.camera_calibration_utils import getCalibrationFromFile, getMasterCameraMatrix
-import json
-
 from tests.utils.data import read_frame_pkl
 from tests.utils.fake_feature import FakeFeature
 
 testDataDir = Path(__file__).parent.parent / "data"
+
 
 @pytest.fixture(scope="module")
 def object_detector():
@@ -42,10 +50,11 @@ def test_data(request, test_data_dir):
     """
     file: Path = test_data_dir / request.param
     assert file.is_file(), "Test file does not exist"
-    
+
     return read_frame_pkl(file)
 
 
+@pytest.mark.model_dependent
 def test_output(object_detector: Object, test_data):
     color, depth, _, calibration = test_data
 

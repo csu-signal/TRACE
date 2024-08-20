@@ -14,6 +14,10 @@ import numpy as np
 from mmdemo.interfaces import CameraCalibrationInterface, DepthImageInterface
 
 
+class CoordinateConversionError(Exception):
+    pass
+
+
 def pixel_to_camera_3d(
     pixel, depth: DepthImageInterface, calibration: CameraCalibrationInterface
 ):
@@ -61,7 +65,7 @@ def _convertTo3D(cameraMatrix, dist, depth, u, v):
 
     if z == 0:
         # print("Invalid Depth, Z returned 0")
-        raise ValueError("Invalid Depth, Z returned 0")
+        raise CoordinateConversionError("Invalid Depth, Z returned 0")
 
     f_x = cameraMatrix[0, 0]
     f_y = cameraMatrix[1, 1]

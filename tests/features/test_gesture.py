@@ -1,24 +1,11 @@
-import json
-import os
 from pathlib import Path
-from typing import final
 
-import numpy as np
 import pytest
-from PIL import Image
 
 from mmdemo.features.gesture.gesture_feature import Gesture
-from mmdemo.interfaces import (
-    BodyTrackingInterface,
-    CameraCalibrationInterface,
-    ColorImageInterface,
-    DepthImageInterface,
-    GestureConesInterface,
-)
-from mmdemo.utils.camera_calibration_utils import (
-    getCalibrationFromFile,
-    getMasterCameraMatrix,
-)
+from mmdemo.interfaces import GestureConesInterface
+from mmdemo.utils.hands import Handedness
+from tests.utils.data import read_frame_pkl
 
 testDataDir = Path(__file__).parent.parent / "data"
 
@@ -36,55 +23,42 @@ def gesture_detector():
 
 @pytest.fixture(
     params=[
-        "raw_frame_1.png",
-        "raw_frame_2.png",
-        "raw_frame_3.png",
+        "gesture_01.pkl",
+        "gesture_02.pkl",
+        "frame_01.pkl",
+        "frame_02.pkl",
     ]
 )
-def test_file(request, test_data_dir):
+def test_data(request, test_data_dir):
     """
-    Fixture to get test files.
+    Fixture to get test files. Files with gesture
+    in the name should contain a gesture and other
+    files should not.
     """
     file: Path = test_data_dir / request.param
     assert file.is_file(), "Test file does not exist"
-    return file
+    return read_frame_pkl(file), "gesture" in request.param
 
 
-def test_output(gesture_detector: Gesture, test_file):
-    img = Image.open(test_file)
+def test_output(gesture_detector: Gesture, test_data):
+    (color, depth, body_tracking, calibration), has_gesture = test_data
 
-    file: Path = testDataDir / "calibration.json"
-    assert file.is_file(), str(file) + " test file does not exist"
-    skeletonJsonFile = open(file)
-    skeletonData = json.load(skeletonJsonFile)
-    _, rotation, translation, dist = getCalibrationFromFile(
-        skeletonData["camera_calibration"]
-    )
-
-    img_interface = ColorImageInterface(frame_count=0, frame=np.asarray(img))
-    depth = DepthImageInterface(frame_count=0, frame=np.zeros(shape=(640, 576)))
-    cameraCalibration = CameraCalibrationInterface(
-        cameraMatrix=getMasterCameraMatrix(),
-        rotation=rotation,
-        translation=translation,
-        distortion=dist,
-    )
-    bodyTracking = BodyTrackingInterface(bodies=[], timestamp_usec=1000)
-    output = gesture_detector.get_output(
-        img_interface, depth, bodyTracking, cameraCalibration
-    )
+    output = gesture_detector.get_output(color, depth, body_tracking, calibration)
 
     assert isinstance(output, GestureConesInterface), str(output)
-    assert (
-        len(output.cones) > 0
-    ), "No cones were identified, so there may be a problem with the model"
+    if has_gesture:
+        assert len(output.cones) == 1, "Test inputs should have one gesture"
+    else:
+        assert len(output.cones) == 0, "Test inputs should have no gestures"
 
-    # TODO check cone data similar to objects
-    # for info in output.objects:
-    #     assert len(info.center) == 3, str(info.center) + " center should be a 3d value"
-    #     assert len(info.p1) == 2, "p1 should be a 2d value"
-    #     assert len(info.p2) == 2, "p2 should be a 2d value"
-    #     assert (
-    #         info.p1[0] <= info.p2[0] and info.p1[1] <= info.p2[1]
-    #     ), "the bottom right corner (p2) should have larger values than the top left corner (p1)"
-    #     assert isinstance(info.object_class, GamrTarget), str(info.object_class)
+    assert len(output.cones) == len(output.handedness)
+    assert len(output.cones) == len(output.body_ids)
+
+    for cone, body_id, handedness in zip(
+        output.cones, output.body_ids, output.handedness
+    ):
+        assert cone.base.shape == (3,), "base should be 3d np array"
+        assert cone.vertex.shape == (3,), "vertex should be 3d np array"
+
+        assert isinstance(body_id, int)
+        assert isinstance(handedness, Handedness)
