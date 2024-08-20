@@ -29,4 +29,6 @@ Run `pip install .\mmdemo-azure-kinect` from the root directory of the repo.
 
 The source code is formatted using `black` and `isort`. This can be set up to run automatically by running `pre-commit install`.
 
+TODO: testing, `pytest tests/ -m "not model_dependent"`
+
 Feel free to reach out to Hannah VanderHoeven with any questions: Hannah.VanderHoeven@colostate.edu

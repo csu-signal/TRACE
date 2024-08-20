@@ -20,24 +20,12 @@ from mmdemo.utils.hands import Handedness, get_average_hand_pixel, normalize_lan
 
 @final
 class Gesture(BaseFeature[GestureConesInterface]):
+    # TODO: brady add docstring
     BASE_RADIUS = 40
     VERTEX_RADIUS = 70
 
     HAND_BOUNDING_BOX_WIDTH = 192
     HAND_BOUNDING_BOX_HEIGHT = 192
-
-    @classmethod
-    def get_input_interfaces(cls):
-        return [
-            ColorImageInterface,
-            DepthImageInterface,
-            BodyTrackingInterface,
-            CameraCalibrationInterface,
-        ]
-
-    @classmethod
-    def get_output_interface(cls):
-        return GestureConesInterface
 
     def initialize(self):
         model_path = Path(__file__).parent / "bestModel-pointing.pkl"
@@ -91,6 +79,7 @@ class Gesture(BaseFeature[GestureConesInterface]):
                     finger_length = tip3D - base3D
 
                     # cone vertex is at 5 finger lengths from the base
+                    # TODO: brady make the cone length a class attribute
                     cones_output.append(
                         Cone(
                             base3D,
