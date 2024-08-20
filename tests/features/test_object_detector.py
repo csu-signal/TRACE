@@ -1,23 +1,9 @@
-import json
-import os
 from pathlib import Path
-from typing import final
 
-import numpy as np
 import pytest
-from PIL import Image
 
 from mmdemo.features.objects.object_feature import Object
-from mmdemo.interfaces import (
-    CameraCalibrationInterface,
-    ColorImageInterface,
-    DepthImageInterface,
-    ObjectInterface3D,
-)
-from mmdemo.utils.camera_calibration_utils import (
-    getCalibrationFromFile,
-    getMasterCameraMatrix,
-)
+from mmdemo.interfaces import ObjectInterface3D
 from mmdemo.utils.Gamr import GamrTarget
 from tests.utils.data import read_frame_pkl
 from tests.utils.fake_feature import FakeFeature

@@ -5,7 +5,7 @@ from mmdemo.features.gaze.gaze_feature import Gaze
 from mmdemo.interfaces import BodyTrackingInterface, GazeConesInterface
 from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import world_3d_to_camera_3d
-from mmdemo.utils.support_utils import Joint
+from mmdemo.utils.joints import Joint
 from tests.utils.data import read_frame_pkl
 
 

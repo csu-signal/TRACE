@@ -1,34 +1,15 @@
-# New Setup
+# TRACE
 
-main demo package
+TODO: description here
 
-- create environment
-- pre-commit install
-- pip install -e .
-
-if using azure kienct
-
-- install azure kinect sdk
-- change mmdemo-azure-kinect\azure_kinect_config.py
-- pip install .\mmdemo-azure-kinect
-
-# Setup instructions
-
+# Setup
 ## Python Environment
+Python 3.10 or higher is required if using conda because of [this unresolved issue](https://github.com/conda/conda/issues/10897). The conda environment can be created with `conda env create --file multimodalDemo.yaml`.
 
-Python 3.10 or higher is required if using conda because of [this unresolved issue](https://github.com/conda/conda/issues/10897). A conda environment can be created with `conda env create --file multimodalDemo.yaml`.
+To update the enviroment using the most current yaml file, activate it and run `conda env update --file multimodalDemo.yaml --prune`
 
-To update the enviroment using the most current yaml file activate it and run `conda env update --file multimodalDemo.yaml --prune`
-
-## Azure Kinect SDK
-
-Both the [Azure Kinect SDK](https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/docs/usage.md#installation) and [Body Tracking SDK](https://learn.microsoft.com/en-us/azure/kinect-dk/body-sdk-download) are required and can be downloaded/installed for Windows from the linked websites. Use version 1.4.2 of the azure kinect sdk and version 1.1.2 of the body tracking sdk if possible.
-
-Once the installation is complete, open `setup.py` and ensure that `K4A_DIR` and `K4ABT_DIR` are set to the correct locations.
-
-## Project Packages
-
-This project has 3 packages. `demo` contains the demo logic, features, and models. `azure_kinect` is a wrapper library for the Azure Kinect SDK and allows for interacting with the cameras and recordings. `azure_kinect-stubs` has type annotations for the `azure_kinect` package. To install all packages, run `pip install -e .` from the root directory of the repository.
+## Install Python Package
+Install the package with `pip install -e .` from the root directory of the repo.
 
 ## Download models
 
@@ -38,16 +19,21 @@ Download the following models from [here](https://colostate-my.sharepoint.com/:f
 - `steroid_model/` ==> `demo/featureModules/prop/data/prop_extraction_model/`
 - `production_move_classifier.pt` ==> `demo/featureModules/move/production_move_classifier.pt`
 
-# Running the demo
-In `demo/config.py`, make sure `K4A_DIR` points to the correct installation location of the Body Tracking SDK. Run `python -m demo`.
+# Setup Azure Kinect features (optional, only for Windows)
 
-# Modular Feature Interface
+## Install Azure Kinect SDK
 
-- "featureModules/featureName" - contains all data/relevant files for a feature of interest and gets auto copied to the output folder each build
-- IFeature
-  - `__init__` - initalize any models, setup code
-  - `processFrame` - runs each time a frame is processed
+Both the [Azure Kinect SDK](https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/docs/usage.md#installation) and [Body Tracking SDK](https://learn.microsoft.com/en-us/azure/kinect-dk/body-sdk-download) are required and can be downloaded/installed for Windows from the linked websites. Use version 1.4.2 of the azure kinect sdk and version 1.1.2 of the body tracking sdk if possible.
 
-- note that the paths to the any models or loaded data needs to be relative to the location of the root directory of the repository.
+Once the installation is complete, open `mmdemo-azure-kinect\azure_kinect_config.py` and ensure that `K4A_DIR`, `K4ABT_DIR`, and `K4A_DLL_DIR` are set to the correct locations.
+
+
+## Install python subpackage
+Run `pip install .\mmdemo-azure-kinect` from the root directory of the repo.
+
+
+# Development
+
+The source code is formatted using `black` and `isort`. This can be set up to run automatically by running `pre-commit install`.
 
 Feel free to reach out to Hannah VanderHoeven with any questions: Hannah.VanderHoeven@colostate.edu

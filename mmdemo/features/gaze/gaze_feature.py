@@ -10,7 +10,7 @@ from mmdemo.interfaces import (
 )
 from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import world_3d_to_camera_3d
-from mmdemo.utils.support_utils import Joint
+from mmdemo.utils.joints import Joint
 
 
 # this is for gaze body tracking, rgb gaze will be different

@@ -40,6 +40,7 @@ def test_data(request, test_data_dir):
     return read_frame_pkl(file), "gesture" in request.param
 
 
+@pytest.mark.model_dependent
 def test_output(gesture_detector: Gesture, test_data):
     (color, depth, body_tracking, calibration), has_gesture = test_data
 
@@ -47,9 +48,9 @@ def test_output(gesture_detector: Gesture, test_data):
 
     assert isinstance(output, GestureConesInterface), str(output)
     if has_gesture:
-        assert len(output.cones) == 1, "Test inputs should have one gesture"
+        assert len(output.cones) == 1, "This test input should have one gesture"
     else:
-        assert len(output.cones) == 0, "Test inputs should have no gestures"
+        assert len(output.cones) == 0, "This test input should have no gestures"
 
     assert len(output.cones) == len(output.handedness)
     assert len(output.cones) == len(output.body_ids)
