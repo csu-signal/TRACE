@@ -11,7 +11,7 @@ class BaseInterface:
     Base class all output interfaces in the demo must inherit from.
     """
 
-    _new: bool = field(default=True, init=False)
+    _new: bool = field(default=True, init=False, repr=False)
 
     def is_new(self) -> bool:
         """

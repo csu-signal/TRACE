@@ -1,9 +1,11 @@
 """
 Test coordinate conversions
 
-Right now correctness is checked by performing a conversion and then the
-inverse of its conversion. More tests should be added later with specific
-calibration matrix values.
+The correct values are obtained by using the azure kinect
+sdk to generate a point cloud. These are compared to the
+outputs of our functions. The azure kinect output is rounded
+so a tolerance of 2 is allowed when comparing to the expected
+output.
 """
 
 import numpy as np
@@ -23,10 +25,13 @@ INTERVAL = 17
 
 
 def test_camera_3d_to_pixel(point_cloud):
+    """
+    Make sure converting 3d points to pixels works correctly.
+    """
     cloud, depth, calibration = point_cloud
 
     assert (
-        np.linalg.norm(depth) > 0
+        np.linalg.norm(depth.frame) > 0
     ), "Depth image only contains 0 so testing will not work correctly"
 
     for r in range(0, cloud.shape[0], INTERVAL):
@@ -34,20 +39,23 @@ def test_camera_3d_to_pixel(point_cloud):
             point_3d = cloud[r, c]
             if np.linalg.norm(point_3d) == 0:
                 # don't test when 3d point is invalid
-                pass
+                continue
 
             expected = np.array([c, r])
             output = camera_3d_to_pixel(point_3d, calibration)
 
-            assert np.allclose(output, expected)
+            assert np.allclose(output, expected, atol=2)
             assert output.dtype == expected.dtype
 
 
 def test_pixel_to_camera_3d(point_cloud):
+    """
+    Make sure converting pixels to 3d points works correctly.
+    """
     cloud, depth, calibration = point_cloud
 
     assert (
-        np.linalg.norm(depth) > 0
+        np.linalg.norm(depth.frame) > 0
     ), "Depth image only contains 0 so testing will not work correctly"
 
     for r in range(0, cloud.shape[0], INTERVAL):
@@ -57,7 +65,7 @@ def test_pixel_to_camera_3d(point_cloud):
             expected = cloud[r, c]
             try:
                 output = pixel_to_camera_3d(point_2d, depth, calibration)
-                assert np.allclose(output, expected)
+                assert np.allclose(output, expected, atol=2)
                 assert output.dtype == expected.dtype
 
             except CoordinateConversionError:
@@ -72,6 +80,9 @@ def point_3d(request):
 
 
 def test_camera_world_inverse(point_3d, camera_calibration):
+    """
+    Make sure converting between 3d coordinate systems works correctly.
+    """
     output = camera_3d_to_world_3d(point_3d, camera_calibration)
     output = world_3d_to_camera_3d(output, camera_calibration)
 

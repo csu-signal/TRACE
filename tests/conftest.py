@@ -36,26 +36,42 @@ def azure_kinect_frame(azure_kinect_frame_file):
     return read_frame_pkl(azure_kinect_frame_file)
 
 
+@pytest.fixture(params=["frame_01.pkl"])
+def camera_calibration_file(request, test_data_dir):
+    file = test_data_dir / request.param
+    assert file.is_file(), "Test file does not exist"
+    return file
+
+
 @pytest.fixture
-def camera_calibration(azure_kinect_frame_file):
+def camera_calibration(camera_calibration_file):
     """
     Return camera calibration interface
     """
-    _, _, _, cal = read_frame_pkl(azure_kinect_frame_file)
+    _, _, _, cal = read_frame_pkl(camera_calibration_file)
     return cal
 
 
-@pytest.fixture(params=["point_cloud_01.pkl"])
-def point_cloud(request, test_data_dir):
+@pytest.fixture(params=["point_cloud_01.pkl", "point_cloud_02.pkl"])
+def point_cloud_file(request, test_data_dir):
+    file = test_data_dir / request.param
+    assert file.is_file(), "Test file does not exist"
+    return file
+
+
+@pytest.fixture
+def point_cloud(point_cloud_file):
     """
-    Return (3d point map, depth, calibration) for testing.
+    Return (3d point map, depth interface, calibration interface)
+    for testing.
 
     The 3d point map is a (h,w,3) numpy vector where
     the first two coords correspond to the pixel and
     the last coord corresponds to the (x,y,z) position
-    in 3d space of that pixle.
+    in 3d space of that pixel.
+
+    Note that the point map has values rounded to the
+    nearest integer and uses the camera's coordinates.
     """
-    file = test_data_dir / request.param
-    assert file.is_file(), "Test file does not exist"
-    cloud, depth, cal = read_point_cloud_pkl(file)
+    cloud, depth, cal = read_point_cloud_pkl(point_cloud_file)
     return cloud, depth, cal

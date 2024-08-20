@@ -17,7 +17,7 @@ def cgt_feature():
     cgt.finalize()
 
 
-# TODO: See if Nikhil can write tests for these:
+# TODO: See if Nikhil can help with tests for these:
 #   - multiple moves at the same time
 #   - accepts / doubts with no previous statement
 #   - !=, >, <, >=, <=
