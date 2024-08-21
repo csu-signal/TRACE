@@ -21,21 +21,51 @@ class CoordinateConversionError(Exception):
 def pixel_to_camera_3d(
     pixel, depth: DepthImageInterface, calibration: CameraCalibrationInterface
 ):
-    return _convertTo3D(
+    """
+    2d pixel coords to 3d camera coords
+    """
+
+    z = depth.frame[int(pixel[1]), int(pixel[0])]
+
+    if z == 0:
+        # print("Invalid Depth, Z returned 0")
+        raise CoordinateConversionError("Invalid Depth, Z returned 0")
+
+    f_x = calibration.camera_matrix[0, 0]
+    f_y = calibration.camera_matrix[1, 1]
+    c_x = calibration.camera_matrix[0, 2]
+    c_y = calibration.camera_matrix[1, 2]
+
+    points_undistorted = cv.undistortPoints(
+        np.array(pixel, dtype=np.float32),
         calibration.camera_matrix,
         calibration.distortion,
-        depth.frame,
-        int(pixel[0]),
-        int(pixel[1]),
+        P=calibration.camera_matrix,
+    )
+    points_undistorted = np.squeeze(points_undistorted, axis=1)
+
+    return np.array(
+        [
+            (points_undistorted[0, 0] - c_x) / f_x * z,
+            (points_undistorted[0, 1] - c_y) / f_y * z,
+            z,
+        ]
     )
 
 
 def camera_3d_to_pixel(point, calibration: CameraCalibrationInterface):
-    return (
-        _convert2D(point, calibration.camera_matrix, calibration.distortion)
-        .round()
-        .astype(int)
+    """
+    3d camera coords to 2d pixel coords
+    """
+
+    point, _ = cv.projectPoints(
+        np.array(point),
+        np.array([0.0, 0.0, 0.0]),
+        np.array([0.0, 0.0, 0.0]),
+        calibration.camera_matrix,
+        calibration.distortion,
     )
+    return point[0][0].round().astype(int)
 
 
 def world_3d_to_camera_3d(point, calibration: CameraCalibrationInterface):
@@ -44,49 +74,3 @@ def world_3d_to_camera_3d(point, calibration: CameraCalibrationInterface):
 
 def camera_3d_to_world_3d(point, calibration: CameraCalibrationInterface):
     return np.dot(np.linalg.inv(calibration.rotation), point - calibration.translation)
-
-
-def _convert2D(point3D, cameraMatrix, dist):
-    """
-    3d camera coords to 2d pixel coords
-    """
-    point, _ = cv.projectPoints(
-        np.array(point3D),
-        np.array([0.0, 0.0, 0.0]),
-        np.array([0.0, 0.0, 0.0]),
-        cameraMatrix,
-        dist,
-    )
-
-    return point[0][0]
-
-
-def _convertTo3D(cameraMatrix, dist, depth, u, v):
-    """
-    2d (x, y) coords to 3d camera coords
-    """
-    z = depth[v, u]
-
-    if z == 0:
-        # print("Invalid Depth, Z returned 0")
-        raise CoordinateConversionError("Invalid Depth, Z returned 0")
-
-    f_x = cameraMatrix[0, 0]
-    f_y = cameraMatrix[1, 1]
-    c_x = cameraMatrix[0, 2]
-    c_y = cameraMatrix[1, 2]
-
-    points_undistorted = cv.undistortPoints(
-        np.array([u, v], dtype=np.float32), cameraMatrix, dist, P=cameraMatrix
-    )
-    points_undistorted = np.squeeze(points_undistorted, axis=1)
-
-    result = []
-    for idx in range(points_undistorted.shape[0]):
-        x = (points_undistorted[idx, 0] - c_x) / f_x * z
-        y = (points_undistorted[idx, 1] - c_y) / f_y * z
-        result.append(x.astype(float))
-        result.append(y.astype(float))
-        result.append(z.astype(float))
-
-    return np.array(result)

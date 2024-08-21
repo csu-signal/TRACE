@@ -67,7 +67,7 @@ class Object(BaseFeature[ObjectInterface3D]):
         dep: DepthImageInterface,
         calibration: CameraCalibrationInterface,
     ) -> ObjectInterface3D | None:
-        if not col.is_new() or not dep.is_new() or not calibration.is_new():
+        if not col.is_new() or not dep.is_new():
             return None
 
         objects = []

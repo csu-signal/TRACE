@@ -19,9 +19,9 @@ class Gaze(BaseFeature[GazeConesInterface]):
     """
     A feature to get and track the points of participants' gaze vectors.
 
-    Input feature is `BaseFeature' which is the base class all features in the demo must implement.
+    Input interfaces are `BodyTrackingInterface` and `CameraCalibrationInterface`.
 
-    Output inteface is `GazeConesInterface`.
+    Output interface is `GazeConesInterface`.
     """
 
     BASE_RADIUS = 80
@@ -49,7 +49,7 @@ class Gaze(BaseFeature[GazeConesInterface]):
         bt: BodyTrackingInterface,
         cc: CameraCalibrationInterface,
     ) -> GazeConesInterface | None:
-        if not bt.is_new() or not cc.is_new():
+        if not bt.is_new():
             return None
         cones = []
         body_ids = []
