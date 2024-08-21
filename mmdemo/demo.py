@@ -4,7 +4,6 @@ Demo class definition
 
 import logging
 from collections import deque
-from typing import final
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.base_interface import BaseInterface

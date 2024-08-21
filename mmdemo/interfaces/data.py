@@ -1,6 +1,7 @@
 """
 Helper dataclasses for interface definitions
 """
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -17,10 +18,20 @@ class Cone:
     vertex_radius: float
 
     def conePointsBase(self):
-        return [self.base[0], self.base[1] + self.base_radius, self.base[2]], [self.base[0], self.base[1] - self.base_radius, self.base[2]], [self.base[0], self.base[1], self.base[2] + self.base_radius], [self.base[0], self.base[1], self.base[2] - self.base_radius]
-    
+        return (
+            [self.base[0], self.base[1] + self.base_radius, self.base[2]],
+            [self.base[0], self.base[1] - self.base_radius, self.base[2]],
+            [self.base[0], self.base[1], self.base[2] + self.base_radius],
+            [self.base[0], self.base[1], self.base[2] - self.base_radius],
+        )
+
     def conePointsVertex(self):
-        return [self.vertex[0], self.vertex[1] + self.vertex_radius, self.vertex[2]], [self.vertex[0], self.vertex[1] - self.vertex_radius, self.vertex[2]], [self.vertex[0], self.vertex[1], self.vertex[2] + self.vertex_radius], [self.vertex[0], self.vertex[1], self.vertex[2] - self.vertex_radius]
+        return (
+            [self.vertex[0], self.vertex[1] + self.vertex_radius, self.vertex[2]],
+            [self.vertex[0], self.vertex[1] - self.vertex_radius, self.vertex[2]],
+            [self.vertex[0], self.vertex[1], self.vertex[2] + self.vertex_radius],
+            [self.vertex[0], self.vertex[1], self.vertex[2] - self.vertex_radius],
+        )
 
 
 @dataclass
