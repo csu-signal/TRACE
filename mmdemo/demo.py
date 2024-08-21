@@ -138,34 +138,3 @@ class Demo:
 
         for f in self.graph.sorted_features:
             f.finalize()
-
-
-@final
-class EmptyFeature(BaseFeature):
-    def __init__(self, *args, name="EmptyFeature"):
-        super().__init__(*args)
-        self.name = name
-
-    def get_output(self, *args):
-        print(f"{self}({[', '.join([str(i) for i in args])]})")
-
-    def __repr__(self) -> str:
-        return self.name
-
-    def is_done(self):
-        return True
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-
-    f1 = EmptyFeature(name="f1")
-    f2 = EmptyFeature(f1, name="f2")
-    f3 = EmptyFeature(f2, f1, name="f3")
-    f5 = EmptyFeature(f2, f1, name="f5")
-    f6 = EmptyFeature(f2, f1, name="f6")
-    f4 = EmptyFeature(f3, f1, name="f4")
-
-    demo = Demo(targets=[f3, f5])
-
-    demo.run()
