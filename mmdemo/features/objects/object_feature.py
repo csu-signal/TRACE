@@ -71,8 +71,16 @@ class Object(BaseFeature[ObjectInterface3D]):
             return None
 
         objects = []
+
+        # TODO: WARNING -- the next line does not do anything
+        # because `image` is redefined on the line after.
+        # This is how it has been the whole time and the model
+        # performs fine, but it is also slower than it would be
+        # if we resized. Actually resizing seems to hurt performance
+        # so it will just be left like this for now.
         image = cv2.resize(col.frame, RESIZE_TO)
         image = col.frame.astype(np.float32)
+
         # make the pixel range between 0 and 1
         image /= 255.0
         # bring color channels to front

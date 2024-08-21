@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.demo import Demo
@@ -25,10 +26,17 @@ class ShowOutput(BaseFeature[EmptyInterface]):
                 thickness=5,
             )
 
+        # output_frame = cv.resize(output_frame, (output_frame.shape[1] // 4, output_frame.shape[0] // 4))
+
+        cv.imshow("", output_frame)
+        cv.waitKey(1)
+
 
 if __name__ == "__main__":
     color, depth, body_tracking, calibration = create_azure_kinect_features(
-        DeviceType.PLAYBACK
+        DeviceType.PLAYBACK,
+        mkv_path=r"C:\Users\brady\Desktop\Group_01-master.mkv",
+        playback_frame_rate=5,
     )
     objects = Object(color, depth, calibration)
     output = ShowOutput(color, objects)

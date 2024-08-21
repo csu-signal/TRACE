@@ -48,59 +48,32 @@ class BodyCategory(Enum):
 
 
 def getPointSubcategory(joint):
-    if (
-        joint == Joint.PELVIS
-        or joint == Joint.NECK
-        or joint == Joint.SPINE_NAVEL
-        or joint == Joint.SPINE_CHEST
-    ):
-        return BodyCategory.TORSO
-    if (
-        joint == Joint.CLAVICLE_LEFT
-        or joint == Joint.SHOULDER_LEFT
-        or joint == Joint.ELBOW_LEFT
-    ):
-        return BodyCategory.LEFT_ARM
-    if (
-        joint == Joint.WRIST_LEFT
-        or joint == Joint.HAND_LEFT
-        or joint == Joint.HANDTIP_LEFT
-        or joint == Joint.THUMB_LEFT
-    ):
-        return BodyCategory.LEFT_HAND
-    if (
-        joint == Joint.CLAVICLE_RIGHT
-        or joint == Joint.SHOULDER_RIGHT
-        or joint == Joint.ELBOW_RIGHT
-    ):
-        return BodyCategory.RIGHT_ARM
-    if (
-        joint == Joint.WRIST_RIGHT
-        or joint == Joint.HAND_RIGHT
-        or joint == Joint.HANDTIP_RIGHT
-        or joint == Joint.THUMB_RIGHT
-    ):
-        return BodyCategory.RIGHT_HAND
-    if (
-        joint == Joint.HIP_LEFT
-        or joint == Joint.KNEE_LEFT
-        or joint == Joint.ANKLE_LEFT
-        or joint == Joint.FOOT_LEFT
-    ):
-        return BodyCategory.LEFT_LEG
-    if (
-        joint == Joint.HIP_RIGHT
-        or joint == Joint.KNEE_RIGHT
-        or joint == Joint.ANKLE_RIGHT
-        or joint == Joint.FOOT_RIGHT
-    ):
-        return BodyCategory.RIGHT_LEG
-    if (
-        joint == Joint.HEAD
-        or joint == Joint.NOSE
-        or joint == Joint.EYE_LEFT
-        or joint == Joint.EAR_LEFT
-        or joint == Joint.EYE_RIGHT
-        or joint == Joint.EAR_RIGHT
-    ):
-        return BodyCategory.HEAD
+    match joint:
+        case Joint.PELVIS | Joint.NECK | Joint.SPINE_NAVEL | Joint.SPINE_CHEST:
+            return BodyCategory.TORSO
+        case Joint.CLAVICLE_LEFT | Joint.SHOULDER_LEFT | Joint.ELBOW_LEFT:
+            return BodyCategory.LEFT_ARM
+        case Joint.WRIST_LEFT | Joint.HAND_LEFT | Joint.HANDTIP_LEFT | Joint.THUMB_LEFT:
+            return BodyCategory.LEFT_HAND
+        case Joint.CLAVICLE_RIGHT | Joint.SHOULDER_RIGHT | Joint.ELBOW_RIGHT:
+            return BodyCategory.RIGHT_ARM
+        case (
+            Joint.WRIST_RIGHT
+            | Joint.HAND_RIGHT
+            | Joint.HANDTIP_RIGHT
+            | Joint.THUMB_RIGHT
+        ):
+            return BodyCategory.RIGHT_HAND
+        case Joint.HIP_LEFT | Joint.KNEE_LEFT | Joint.ANKLE_LEFT | Joint.FOOT_LEFT:
+            return BodyCategory.LEFT_LEG
+        case Joint.HIP_RIGHT | Joint.KNEE_RIGHT | Joint.ANKLE_RIGHT | Joint.FOOT_RIGHT:
+            return BodyCategory.RIGHT_LEG
+        case (
+            Joint.HEAD
+            | Joint.NOSE
+            | Joint.EYE_LEFT
+            | Joint.EAR_LEFT
+            | Joint.EYE_RIGHT
+            | Joint.EAR_RIGHT
+        ):
+            return BodyCategory.HEAD
