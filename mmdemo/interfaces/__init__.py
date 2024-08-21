@@ -4,7 +4,7 @@ Premade output interfaces
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Sequence
 
 import numpy as np
 
@@ -206,7 +206,7 @@ class SelectedObjectsInterface(BaseInterface):
     objects -- [(object info, selected?), ...]
     """
 
-    objects: list[tuple[ObjectInfo2D | ObjectInfo3D, bool]]
+    objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D, bool]]
 
 
 @dataclass
