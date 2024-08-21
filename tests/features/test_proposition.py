@@ -2,11 +2,12 @@ import pytest
 
 from mmdemo.features.proposition.prop_feature import Proposition
 from mmdemo.interfaces import PropositionInterface, TranscriptionInterface
+from tests.utils.fake_feature import FakeFeature
 
 
 @pytest.fixture(scope="module")
 def proposition_feature():
-    prop = Proposition()
+    prop = Proposition(FakeFeature())
     prop.initialize()
     yield prop
     prop.finalize()

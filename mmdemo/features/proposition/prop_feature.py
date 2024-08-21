@@ -15,7 +15,17 @@ NUMBERS = ["10", "20", "30", "40", "50"]
 
 @final
 class Proposition(BaseFeature[PropositionInterface]):
-    # TODO: docstring
+    """
+    Extract propositions from a transcription.
+
+    Input interface is `TranscriptionInterface`
+
+    Output interface is `PropositionInterface`
+    """
+
+    def __init__(self, transcription: BaseFeature[TranscriptionInterface]):
+        super().__init__(transcription)
+
     def initialize(self):
         model_dir = str(Path(__file__).parent / "data/prop_extraction_model")
         self.model, self.tokenizer = load_model(model_dir)

@@ -12,6 +12,7 @@ from mmdemo.interfaces import (
 )
 from mmdemo.interfaces.data import Cone, ObjectInfo3D
 from mmdemo.utils.Gamr import GamrTarget
+from tests.utils.fake_feature import FakeFeature
 
 
 @pytest.fixture(scope="module")
@@ -19,10 +20,12 @@ def emnlp_frame():
     """
     Fixture to load output frame feature. Only runs once per file.
     """
-    o = EMNLPFrame()
-    o.initialize()
-    yield o
-    o.finalize()
+    frame = EMNLPFrame(
+        FakeFeature(), FakeFeature(), FakeFeature(), FakeFeature(), FakeFeature()
+    )
+    frame.initialize()
+    yield frame
+    frame.finalize()
 
 
 @pytest.fixture

@@ -30,7 +30,10 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
     """
 
     def __init__(
-        self, *args, delete_input_files=False, max_utterance_time: float | None = 5
+        self,
+        *args: BaseFeature[AudioFileInterface],
+        delete_input_files=False,
+        max_utterance_time: float | None = 5,
     ):
         super().__init__(*args)
         self.delete_input_files = delete_input_files
@@ -94,12 +97,12 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
 
             if not activity or force_output_creation:
                 if self.contains_activity[audio_input.speaker_id]:
-                    # TODO: we only want to add when there is not activity
                     # if we have stored activity, create a new utterance
-                    self.current_data[audio_input.speaker_id] += chunk_frames
-                    self.total_time[audio_input.speaker_id] += (
-                        audio_input.end_time - audio_input.start_time
-                    )
+                    if not activity:
+                        self.current_data[audio_input.speaker_id] += chunk_frames
+                        self.total_time[audio_input.speaker_id] += (
+                            audio_input.end_time - audio_input.start_time
+                        )
                     self.create_utterance(audio_input.speaker_id, params)
 
                 # reset to only storing the last chunk

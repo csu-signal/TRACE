@@ -10,6 +10,7 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.features.utterance.audio_input_features import MicAudio, RecordedAudio
 from mmdemo.interfaces import AudioFileInterface, ColorImageInterface
 from tests.utils.audio import get_length
+from tests.utils.fake_feature import FakeFeature
 
 
 @pytest.fixture(params=["testing.wav"])
@@ -25,12 +26,6 @@ def audio_file(request, test_data_dir):
     return file
 
 
-@final
-class FakeColor(BaseFeature[ColorImageInterface]):
-    def get_output(self):
-        return None
-
-
 @pytest.fixture(params=[200, 100])
 def video_frame_rate(request):
     """
@@ -41,7 +36,9 @@ def video_frame_rate(request):
 
 @pytest.fixture
 def recorded_audio(audio_file, video_frame_rate):
-    rec = RecordedAudio(FakeColor(), path=audio_file, video_frame_rate=video_frame_rate)
+    rec = RecordedAudio(
+        FakeFeature(), path=audio_file, video_frame_rate=video_frame_rate
+    )
     rec.initialize()
     yield rec
     rec.finalize()

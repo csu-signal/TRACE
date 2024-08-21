@@ -10,6 +10,7 @@ from mmdemo.interfaces import (
 )
 from mmdemo.interfaces.data import Cone, ObjectInfo3D
 from mmdemo.utils.Gamr import GamrTarget
+from tests.utils.fake_feature import FakeFeature
 
 
 @pytest.fixture(scope="module")
@@ -17,7 +18,7 @@ def selected_objects():
     """
     Fixture to load object detector. Only runs once per file.
     """
-    so = SelectedObjects()
+    so = SelectedObjects(FakeFeature())
     so.initialize()
     yield so
     so.finalize()

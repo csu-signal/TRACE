@@ -20,12 +20,29 @@ from mmdemo.utils.hands import Handedness, get_average_hand_pixel, normalize_lan
 
 @final
 class Gesture(BaseFeature[GestureConesInterface]):
-    # TODO: brady add docstring
+    """
+    Detect when and where participants are pointing.
+
+    Input interfaces are `ColorImageInterface`, `DepthImageInterface`,
+    `BodyTrackingInterface`, `CameraCalibrationInterface`
+
+    Output interface is `GestureConesInterface`
+    """
+
     BASE_RADIUS = 40
     VERTEX_RADIUS = 70
 
     HAND_BOUNDING_BOX_WIDTH = 192
     HAND_BOUNDING_BOX_HEIGHT = 192
+
+    def __init__(
+        self,
+        color: BaseFeature[ColorImageInterface],
+        depth: BaseFeature[DepthImageInterface],
+        bt: BaseFeature[BodyTrackingInterface],
+        calibration: BaseFeature[CameraCalibrationInterface],
+    ):
+        super().__init__(color, depth, bt, calibration)
 
     def initialize(self):
         model_path = Path(__file__).parent / "bestModel-pointing.pkl"

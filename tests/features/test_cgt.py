@@ -2,6 +2,7 @@ import pytest
 
 from mmdemo.features.common_ground.cgt_feature import CommonGroundTracking
 from mmdemo.interfaces import CommonGroundInterface, MoveInterface, PropositionInterface
+from tests.utils.fake_feature import FakeFeature
 
 
 @pytest.fixture(scope="module")
@@ -11,7 +12,7 @@ def cgt_feature():
     so the order that tests are run will matter because an
     internal state is stored
     """
-    cgt = CommonGroundTracking()
+    cgt = CommonGroundTracking(FakeFeature(), FakeFeature())
     cgt.initialize()
     yield cgt
     cgt.finalize()

@@ -22,6 +22,13 @@ class SelectedObjects(BaseFeature[SelectedObjectsInterface]):
     Output interface is `SelectedObjectsInterface`.
     """
 
+    def __init__(
+        self,
+        objects: BaseFeature[ObjectInterface3D],
+        *cones: BaseFeature[ConesInterface]
+    ) -> None:
+        super().__init__(objects, *cones)
+
     def get_output(self, obj: ObjectInterface3D, *cones_list: ConesInterface):
         if not obj.is_new():
             return None

@@ -4,22 +4,21 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.features.common_ground.closure_rules import CommonGround
 from mmdemo.interfaces import CommonGroundInterface, MoveInterface, PropositionInterface
 
-# import helpers
-# from mmdemo.features.proposition.helpers import ...
-
 
 @final
 class CommonGroundTracking(BaseFeature[CommonGroundInterface]):
-    @classmethod
-    def get_input_interfaces(cls):
-        return [
-            MoveInterface,
-            PropositionInterface,
-        ]
+    """
+    Track the common ground of participants solving the Weights Task.
 
-    @classmethod
-    def get_output_interface(cls):
-        return CommonGroundInterface
+    Input interfaces are `MoveInterface` and `PropositionInterface`
+
+    Output interface is `CommonGroundInterface`
+    """
+
+    def __init__(
+        self, move: BaseFeature[MoveInterface], prop: BaseFeature[PropositionInterface]
+    ):
+        super().__init__(move, prop)
 
     def initialize(self):
         self.closure_rules = CommonGround()

@@ -9,13 +9,16 @@ from mmdemo.interfaces import BodyTrackingInterface, PoseInterface
 
 @final
 class Pose(BaseFeature[PoseInterface]):
-    @classmethod
-    def get_input_interfaces(cls):
-        return [BodyTrackingInterface]
+    """
+    Detect the pose of participants
 
-    @classmethod
-    def get_output_interface(cls):
-        return PoseInterface
+    Input interface is `BodyTrackingInterface`
+
+    Output interface is `PoseInterface`
+    """
+
+    def __init__(self, bt: BaseFeature[BodyTrackingInterface]):
+        super().__init__(bt)
 
     def initialize(self):
         # #  required arguments

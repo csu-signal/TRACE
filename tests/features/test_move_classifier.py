@@ -8,6 +8,7 @@ from mmdemo.interfaces import (
     PropositionInterface,
     TranscriptionInterface,
 )
+from tests.utils.fake_feature import FakeFeature
 
 
 @pytest.fixture(scope="module")
@@ -17,7 +18,7 @@ def move_feature():
     so the order that tests are run will matter because an
     internal state is stored
     """
-    move = Move()
+    move = Move(FakeFeature(), FakeFeature())
     move.initialize()
     yield move
     move.finalize()

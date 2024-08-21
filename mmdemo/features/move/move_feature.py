@@ -43,6 +43,13 @@ class Move(BaseFeature[MoveInterface]):
     Output interface is `MoveInterface`
     """
 
+    def __init__(
+        self,
+        transcription: BaseFeature[TranscriptionInterface],
+        audio: BaseFeature[AudioFileInterface],
+    ) -> None:
+        super().__init__(transcription, audio)
+
     def initialize(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

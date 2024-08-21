@@ -3,6 +3,8 @@ from typing import final
 
 import cv2 as cv
 import numpy as np
+from pandas.core.dtypes.cast import common_dtype_categorical_compat
+from pandas.core.generic import common
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
@@ -45,6 +47,16 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
 
     Output interface is `ColorImageInterface`
     """
+
+    def __init__(
+        self,
+        color: BaseFeature[ColorImageInterface],
+        gaze: BaseFeature[GazeConesInterface],
+        gesture: BaseFeature[GestureConesInterface],
+        sel_objects: BaseFeature[SelectedObjectsInterface],
+        common_ground: BaseFeature[CommonGroundInterface],
+    ):
+        super().__init__(color, gaze, gesture, sel_objects, common_ground)
 
     def get_output(
         self,

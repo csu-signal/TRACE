@@ -27,22 +27,12 @@ class Gaze(BaseFeature[GazeConesInterface]):
     BASE_RADIUS = 80
     VERTEX_RADIUS = 100
 
-    def __init__(self) -> None:
-        super().__init__()
-
-    @classmethod
-    def get_input_interfaces(cls):
-        return [
-            BodyTrackingInterface,
-            CameraCalibrationInterface,
-        ]
-
-    @classmethod
-    def get_output_interface(cls):
-        return GazeConesInterface
-
-    def initialize(self):
-        pass
+    def __init__(
+        self,
+        bt: BaseFeature[BodyTrackingInterface],
+        cal: BaseFeature[CameraCalibrationInterface],
+    ) -> None:
+        super().__init__(bt, cal)
 
     def get_output(
         self,
