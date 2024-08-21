@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mmdemo.features.gaze.gaze_feature import Gaze
+from mmdemo.features.gaze.gaze_body_tracking_feature import GazeBodyTracking
 from mmdemo.interfaces import BodyTrackingInterface, GazeConesInterface
 from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import world_3d_to_camera_3d
@@ -16,8 +16,8 @@ from tests.utils.fake_feature import FakeFeature
 # features that may need to load an expensive model and
 # do not store internal state
 @pytest.fixture(scope="module")
-def gaze():
-    g = Gaze(FakeFeature(), FakeFeature())
+def gaze_bt():
+    g = GazeBodyTracking(FakeFeature(), FakeFeature())
     g.initialize()
     yield g
     g.finalize()
@@ -102,14 +102,16 @@ def get_dir(base, vertex):
         ([p3, p1, p2], [p3_expected, p1_expected, p2_expected]),
     ],
 )
-def test_gaze_body_tracking_formula(gaze, camera_calibration, bodies, expected_output):
+def test_gaze_body_tracking_formula(
+    gaze_bt, camera_calibration, bodies, expected_output
+):
     """
     Test that gazes use the correct formula. This should be:
     - origin = average of nose and eyes
     - dir = vector between average of ears and the nose
     """
     body_tracking_interface = BodyTrackingInterface(bodies=bodies, timestamp_usec=-1)
-    output = gaze.get_output(body_tracking_interface, camera_calibration)
+    output = gaze_bt.get_output(body_tracking_interface, camera_calibration)
     assert isinstance(output, GazeConesInterface)
 
     for cone, expected in zip(output.cones, expected_output):

@@ -13,11 +13,11 @@ from mmdemo.utils.coordinates import world_3d_to_camera_3d
 from mmdemo.utils.joints import Joint
 
 
-# this is for gaze body tracking, rgb gaze will be different
 @final
-class Gaze(BaseFeature[GazeConesInterface]):
+class GazeBodyTracking(BaseFeature[GazeConesInterface]):
     """
-    A feature to get and track the points of participants' gaze vectors.
+    A feature to get and track the points of participants' gaze vectors using
+    Azure Kinect body tracking data.
 
     Input interfaces are `BodyTrackingInterface` and `CameraCalibrationInterface`.
 
@@ -71,7 +71,6 @@ class Gaze(BaseFeature[GazeConesInterface]):
     @final
     def get_joint(self, joint, body, cc):
         """
-        `self` -- instance of Gaze class
         `joint` -- the joint to be retrieved
         `body` -- the body whose joint is being retrieved
         `cc` -- instance of `CameraCalibrationInterface`
