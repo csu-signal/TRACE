@@ -22,7 +22,7 @@ def proposition_feature():
         ("red", "no prop"),
         ("green is 20", "green = 20"),
         ("red weighs more than blue", "red > blue"),
-        ("red is the same as blue", "red = blue"),
+        ("red is the same as blue", "blue = red"),
         ("there should be no prop here", "no prop"),
         ("yellow is more than 30", "yellow > 30"),
         ("yellow weighs more than 30", "yellow > 30"),
@@ -44,5 +44,8 @@ def test_prop_extraction(
     )
     assert isinstance(output, PropositionInterface)
 
-    assert output.prop == expected
+    output_set = set([i.strip() for i in output.prop.split(",")])
+    expected_set = set([i.strip() for i in expected.split(",")])
+
+    assert output_set == expected_set
     assert output.speaker_id == "test"

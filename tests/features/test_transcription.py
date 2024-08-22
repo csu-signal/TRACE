@@ -1,6 +1,5 @@
 import string
 import time
-import wave
 
 import pytest
 

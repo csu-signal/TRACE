@@ -1,18 +1,22 @@
-from typing import final
 from pathlib import Path
+from typing import final
+
+import torch
+import torch.nn as nn
+
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import BodyTrackingInterface, PoseInterface
-import torch.nn as nn
-import torch
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...
+
 
 class SkeletonPoseClassifier(nn.Module):
     """
     Base model, input single body, binary output. Two feedforward layers.
     Note: label of a frame is a very strong predictor of the next, how to incorporate without risk?
     """
+
     def __init__(self, input_size, hidden_size, output_size):
         super(SkeletonPoseClassifier, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
@@ -27,6 +31,7 @@ class SkeletonPoseClassifier(nn.Module):
         x = self.sigmoid(x)
         return x
 
+
 @final
 class Pose(BaseFeature[PoseInterface]):
     """
@@ -37,13 +42,18 @@ class Pose(BaseFeature[PoseInterface]):
     Output interface is `PoseInterface`
     """
 
-    def __init__(self, bt: BaseFeature[BodyTrackingInterface]):
+    def __init__(
+        self,
+        bt: BaseFeature[BodyTrackingInterface],
+        *,
+        left_position=-400,
+        middle_position=400
+    ):
         super().__init__(bt)
+        self.left_position = left_position
+        self.middle_position = middle_position
 
-    def initialize(self, leftPosition, middlePosition):
-        self.left_position = leftPosition
-        self.middle_position = middlePosition
-
+    def initialize(self):
         #  required arguments
         input_size = 224
         hidden_size = 300
@@ -52,16 +62,28 @@ class Pose(BaseFeature[PoseInterface]):
         model_dir = Path(__file__).parent / "poseModels"
 
         # initialize a model
-        self.leftModel = SkeletonPoseClassifier(input_size = input_size,hidden_size=hidden_size,output_size=output_size)
-        self.leftModel.load_state_dict(torch.load(str(model_dir / "skeleton_pose_classifier_left.pt")))
+        self.leftModel = SkeletonPoseClassifier(
+            input_size=input_size, hidden_size=hidden_size, output_size=output_size
+        )
+        self.leftModel.load_state_dict(
+            torch.load(str(model_dir / "skeleton_pose_classifier_left.pt"))
+        )
         self.leftModel.eval()
 
-        self.middleModel = SkeletonPoseClassifier(input_size = input_size,hidden_size=hidden_size,output_size=output_size)
-        self.middleModel.load_state_dict(torch.load(str(model_dir / "skeleton_pose_classifier_middle.pt")))
+        self.middleModel = SkeletonPoseClassifier(
+            input_size=input_size, hidden_size=hidden_size, output_size=output_size
+        )
+        self.middleModel.load_state_dict(
+            torch.load(str(model_dir / "skeleton_pose_classifier_middle.pt"))
+        )
         self.middleModel.eval()
 
-        self.rightModel = SkeletonPoseClassifier(input_size = input_size,hidden_size=hidden_size,output_size=output_size)
-        self.rightModel.load_state_dict(torch.load(str(model_dir / "skeleton_pose_classifier_right.pt")))
+        self.rightModel = SkeletonPoseClassifier(
+            input_size=input_size, hidden_size=hidden_size, output_size=output_size
+        )
+        self.rightModel.load_state_dict(
+            torch.load(str(model_dir / "skeleton_pose_classifier_right.pt"))
+        )
         self.rightModel.eval()
 
         # if log_dir is not None:
@@ -78,29 +100,33 @@ class Pose(BaseFeature[PoseInterface]):
 
         poses = []
         for b in bt.bodies:
-            x = b['joint_positions'][1][0]
+            x = b["joint_positions"][1][0]
             if x < self.left_position:
-               # print("left")
+                # print("left")
                 poseModel = self.leftModel
                 body = b
                 position = "left"
             elif x > self.left_position and x < self.middle_position:
-                #print("middle")
+                # print("middle")
                 poseModel = self.middleModel
                 body = b
                 position = "middle"
             else:
-                #print("right")
+                # print("right")
                 poseModel = self.rightModel
                 body = b
                 position = "right"
 
             tensors = []
-            orientation_data = body['joint_orientations']
-            position_data = body['joint_positions']
+            orientation_data = body["joint_orientations"]
+            position_data = body["joint_positions"]
             o = torch.tensor(orientation_data).flatten()
-            p = torch.tensor(position_data).flatten() / 1000 # normalize to scale of orientations
-            tensors.append(torch.concat([o, p])) # concatenating orientation to position
+            p = (
+                torch.tensor(position_data).flatten() / 1000
+            )  # normalize to scale of orientations
+            tensors.append(
+                torch.concat([o, p])
+            )  # concatenating orientation to position
             del o, p
             torch.cuda.empty_cache()
             output = poseModel(torch.stack(tensors))

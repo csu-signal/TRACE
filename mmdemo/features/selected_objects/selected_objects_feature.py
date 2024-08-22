@@ -5,6 +5,8 @@ import numpy as np
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
     ConesInterface,
+    GazeConesInterface,
+    GestureConesInterface,
     ObjectInterface3D,
     SelectedObjectsInterface,
 )

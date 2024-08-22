@@ -1,13 +1,7 @@
 import pytest
 
 from mmdemo.features.move.move_feature import Move
-from mmdemo.features.proposition.prop_feature import Proposition
-from mmdemo.interfaces import (
-    AudioFileInterface,
-    MoveInterface,
-    PropositionInterface,
-    TranscriptionInterface,
-)
+from mmdemo.interfaces import AudioFileInterface, MoveInterface, TranscriptionInterface
 from tests.utils.fake_feature import FakeFeature
 
 

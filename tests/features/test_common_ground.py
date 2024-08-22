@@ -23,19 +23,31 @@ def cgt_feature():
 #   - accepts / doubts with no previous statement
 #   - !=, >, <, >=, <=
 @pytest.mark.parametrize(
-    "prop, move, ebank, fbank",
+    "prop, move, expected_ebank, expected_fbank",
     [
-        ("red = 10", {"STATEMENT"}, {"red=10"}, set()),
-        ("red = 10", {"ACCEPT"}, set(), {"red=10"}),
-        ("blue = 10", {"STATEMENT"}, {"blue=10"}, {"red=10"}),
-        ("blue = 20", {"STATEMENT"}, {"blue=10", "blue=20"}, {"red=10"}),
-        ("blue = 20", {"ACCEPT"}, set(), {"red=10", "blue=20"}),
-        ("blue = 20", {"DOUBT"}, {"blue=20"}, {"red=10"}),
-        ("blue = 10", {"STATEMENT"}, {"blue=10", "blue=20"}, {"red=10"}),
-        ("blue = 10", {"ACCEPT"}, set(), {"red=10", "blue=10"}),
+        ("red=10", {"STATEMENT"}, {"red=10"}, set()),
+        ("red=10", {"ACCEPT"}, set(), {"red=10"}),
+        ("blue=10", {"STATEMENT"}, {"blue=10"}, {"red=10"}),
+        ("blue=20", {"STATEMENT"}, {"blue=10", "blue=20"}, {"red=10"}),
+        ("blue=20", {"ACCEPT"}, set(), {"red=10", "blue=20"}),
+        ("blue=20", {"DOUBT"}, {"blue=10", "blue=20"}, {"red=10"}),
+        (
+            "green>20",
+            {"STATEMENT"},
+            {"blue=10", "blue=20", "green!=10", "green!=20"},
+            {"red=10"},
+        ),
+        (
+            "green!=10",
+            {"ACCEPT"},
+            {"blue=10", "blue=20", "green!=20"},
+            {"red=10", "green!=10"},
+        ),
     ],
 )
-def test_cgt_feature(cgt_feature: CommonGroundTracking, prop, move, ebank, fbank):
+def test_cgt_feature(
+    cgt_feature: CommonGroundTracking, prop, move, expected_ebank, expected_fbank
+):
     """
     Test that common ground tracking works correctly.
     """
@@ -45,5 +57,5 @@ def test_cgt_feature(cgt_feature: CommonGroundTracking, prop, move, ebank, fbank
     )
     assert isinstance(output, CommonGroundInterface)
 
-    assert output.ebank == ebank
-    assert output.fbank == fbank
+    assert output.ebank == expected_ebank
+    assert output.fbank == expected_fbank

@@ -22,7 +22,7 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
     `AudioFileInterface`. Each input feature must stay consistent
     in the format of input (rate, channels, etc.).
 
-    Output feature is `AudioFileInterface`.
+    Output interface is `AudioFileInterface`.
 
     Keyword arguments:
     `delete_input_files` -- True if input audio files should be deleted, default False
