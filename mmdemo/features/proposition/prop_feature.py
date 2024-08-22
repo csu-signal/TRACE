@@ -34,7 +34,7 @@ class Proposition(BaseFeature[PropositionInterface]):
         )
         self.embeddings = get_pickle(self.bert)
         nltk.download("stopwords")
-        nltk.download("punkt")
+        nltk.download("punkt_tab")
 
     def get_output(
         self,
