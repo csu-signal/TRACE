@@ -2,7 +2,7 @@ import pytest
 
 from mmdemo.features.objects.object_feature import Object
 from mmdemo.interfaces import ObjectInterface3D
-from mmdemo.utils.Gamr import GamrTarget
+from mmdemo.interfaces.data import GamrTarget
 from tests.utils.fake_feature import FakeFeature
 
 

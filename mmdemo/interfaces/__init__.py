@@ -9,48 +9,38 @@ from typing import Any, Iterable, Sequence
 import numpy as np
 
 from mmdemo.base_interface import BaseInterface
-from mmdemo.interfaces.data import Cone, ObjectInfo2D, ObjectInfo3D
+from mmdemo.interfaces.data import Cone, Handedness, ObjectInfo2D, ObjectInfo3D
 
 
 @dataclass
-class _AudioChunkBase(BaseInterface):
-    """Base interface for audio chunks"""
-
-    speaker_id: str
-    start_time: float
-    end_time: float
-
-
-# TODO: remove this? if so then combine _AudioChunkBase with AudioFileInterface
-# @dataclass
-# class AudioBytesInterface(_AudioChunkBase):
-#     """
-#     Audio chunks as bytes in wav format
-#
-#     `speaker_id` -- unique identifier for the speaker
-#     `start_time`, `end_time` -- start and end time in seconds
-#     `frames` -- audio data bytes
-#     `sample_rate` -- sample rate of audio bytes
-#     `sample_width` -- sample width of audio bytes
-#     `channels` -- channels of audio bytes
-#     """
-#     frames: bytes
-#     sample_rate: int
-#     sample_width: int
-#     channels: int
+class EmptyInterface(BaseInterface):
+    """
+    Output interface when the feature does not have any output
+    """
 
 
 @dataclass
-class AudioFileInterface(_AudioChunkBase):
+class ColorImageInterface(BaseInterface):
     """
-    Audio chunks as a wav file
-
-    `speaker_id` -- unique identifier for the speaker
-    `start_time`, `end_time` -- start and end time in seconds
-    `path` -- path to wav file
+    frame_count -- the current frame count
+    frame -- image data with shape (h, w, 3) in RGB format.
+        The values should be integers between 0 and 255.
     """
 
-    path: Path
+    frame_count: int
+    frame: np.ndarray
+
+
+@dataclass
+class DepthImageInterface(BaseInterface):
+    """
+    frame_count -- the current frame count
+    frame -- depth image with shape (h, w). The values should
+        have type uint16 (integers between 0 and 65535).
+    """
+
+    frame_count: int
+    frame: np.ndarray
 
 
 @dataclass
@@ -84,45 +74,18 @@ class CameraCalibrationInterface(BaseInterface):
 
 
 @dataclass
-class ColorImageInterface(BaseInterface):
+class PoseInterface(BaseInterface):
     """
-    frame_count -- the current frame count
-    frame -- image data with shape (h, w, 3) in RGB format.
-        The values should be integers between 0 and 255.
+    poses -- list of (body_id, "leaning in" / "leaning out")
     """
 
-    frame_count: int
-    frame: np.ndarray
-
-
-@dataclass
-class CommonGroundInterface(BaseInterface):
-    """
-    qbank, fbank, ebank -- sets of propositions describing the
-        current common ground
-    """
-
-    qbank: set[str]
-    fbank: set[str]
-    ebank: set[str]
+    poses: list[tuple[int, str]]
 
 
 @dataclass
 class ConesInterface(BaseInterface):
     # TODO: docstring
     cones: list[Cone]
-
-
-@dataclass
-class DepthImageInterface(BaseInterface):
-    """
-    frame_count -- the current frame count
-    frame -- depth image with shape (h, w). The values should
-        have type uint16 (integers between 0 and 65535).
-    """
-
-    frame_count: int
-    frame: np.ndarray
 
 
 @dataclass
@@ -135,26 +98,7 @@ class GazeConesInterface(ConesInterface):
 class GestureConesInterface(ConesInterface):
     # TODO: docstring
     body_ids: list[int]
-    handedness: list[str]
-
-
-@dataclass
-class EmptyInterface(BaseInterface):
-    """
-    Output interface when the feature does not have any output
-    """
-
-
-@dataclass
-class MoveInterface(BaseInterface):
-    """
-    speaker_id -- the speaker who created the move
-    move -- iterable containing some subset of
-            {"STATEMENT", "ACCEPT", "DOUBT"}
-    """
-
-    speaker_id: str
-    move: Iterable[str]
+    handedness: list[Handedness]
 
 
 @dataclass
@@ -180,25 +124,6 @@ class ObjectInterface3D(BaseInterface):
 
 
 @dataclass
-class PoseInterface(BaseInterface):
-    """
-    poses -- list of (body_id, "leaning in" / "leaning out")
-    """
-
-    poses: list[tuple[int, str]]
-
-
-@dataclass
-class PropositionInterface(BaseInterface):
-    # TODO: brady docstring
-    """
-    prop -- proposition as a string
-    """
-    speaker_id: str
-    prop: str
-
-
-@dataclass
 class SelectedObjectsInterface(BaseInterface):
     """
     Which objects are selected by participants
@@ -207,6 +132,22 @@ class SelectedObjectsInterface(BaseInterface):
     """
 
     objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D, bool]]
+
+
+@dataclass
+class AudioFileInterface(BaseInterface):
+    """
+    Audio chunks as a wav file
+
+    `speaker_id` -- unique identifier for the speaker
+    `start_time`, `end_time` -- start and end time in seconds
+    `path` -- path to wav file
+    """
+
+    speaker_id: str
+    start_time: float
+    end_time: float
+    path: Path
 
 
 @dataclass
@@ -225,31 +166,35 @@ class TranscriptionInterface(BaseInterface):
     text: str
 
 
-# TODO: I assume these should be 2d for easier use with
-# with rgb-only demos. We could also have separate ones
-# for 2d/3d?
+@dataclass
+class PropositionInterface(BaseInterface):
+    # TODO: brady docstring
+    """
+    prop -- proposition as a string
+    """
+    speaker_id: str
+    prop: str
 
 
 @dataclass
-class Vectors2DInterface(BaseInterface):
-    # TODO: Hannah change if needed
+class MoveInterface(BaseInterface):
     """
-    vectors -- list of numpy vectors with shape (2,)
+    speaker_id -- the speaker who created the move
+    move -- iterable containing some subset of
+            {"STATEMENT", "ACCEPT", "DOUBT"}
     """
 
-    vectors: list[np.ndarray]
+    speaker_id: str
+    move: Iterable[str]
 
 
 @dataclass
-class Vectors3DInterface(BaseInterface):
-    # TODO: Hannah change if needed
+class CommonGroundInterface(BaseInterface):
     """
-    A data class for storing and managing 3D vectors associated with different bodies.
+    qbank, fbank, ebank -- sets of propositions describing the
+        current common ground
+    """
 
-    Attributes:
-        vectors (Dict[str, Tuple[np.ndarray, np.ndarray]]): A dictionary mapping each body identifier to a tuple of two numpy arrays.
-            - Each key is a string representing the body identifier.
-            - Each value is a tuple containing two 3D numpy arrays: the starting point (`_point`) and the ending point (`end_point`) of the vector.
-            - Both numpy arrays have the shape (3,), representing vectors in 3-dimensional space.
-    """
-    vectors: dict[str, tuple[np.ndarray, np.ndarray]]
+    qbank: set[str]
+    fbank: set[str]
+    ebank: set[str]

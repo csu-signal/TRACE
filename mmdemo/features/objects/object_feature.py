@@ -14,9 +14,8 @@ from mmdemo.interfaces import (
     DepthImageInterface,
     ObjectInterface3D,
 )
-from mmdemo.interfaces.data import ObjectInfo3D
+from mmdemo.interfaces.data import GamrTarget, ObjectInfo3D
 from mmdemo.utils.coordinates import CoordinateConversionError, pixel_to_camera_3d
-from mmdemo.utils.Gamr import Block, GamrTarget
 
 # import helpers
 # from mmdemo.features.proposition.helpers import ...

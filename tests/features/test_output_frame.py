@@ -10,8 +10,7 @@ from mmdemo.interfaces import (
     GestureConesInterface,
     SelectedObjectsInterface,
 )
-from mmdemo.interfaces.data import Cone, ObjectInfo3D
-from mmdemo.utils.Gamr import GamrTarget
+from mmdemo.interfaces.data import Cone, GamrTarget, Handedness, ObjectInfo3D
 from tests.utils.fake_feature import FakeFeature
 
 
@@ -67,7 +66,7 @@ def gesture():
             ),
         ],
         body_ids=[3],
-        handedness=["left"],
+        handedness=[Handedness.Left],
     )
 
 

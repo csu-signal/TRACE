@@ -6,6 +6,7 @@ import mediapipe as mp
 import numpy as np
 
 from mmdemo.base_feature import BaseFeature
+from mmdemo.features.gesture.helpers import get_average_hand_pixel, normalize_landmarks
 from mmdemo.interfaces import (
     BodyTrackingInterface,
     CameraCalibrationInterface,
@@ -13,9 +14,8 @@ from mmdemo.interfaces import (
     DepthImageInterface,
     GestureConesInterface,
 )
-from mmdemo.interfaces.data import Cone
+from mmdemo.interfaces.data import Cone, Handedness
 from mmdemo.utils.coordinates import CoordinateConversionError, pixel_to_camera_3d
-from mmdemo.utils.hands import Handedness, get_average_hand_pixel, normalize_landmarks
 
 
 @final

@@ -2,7 +2,7 @@ import pytest
 
 from mmdemo.features.gesture.gesture_feature import Gesture
 from mmdemo.interfaces import GestureConesInterface
-from mmdemo.utils.hands import Handedness
+from mmdemo.interfaces.data import Handedness
 from tests.utils.fake_feature import FakeFeature
 
 

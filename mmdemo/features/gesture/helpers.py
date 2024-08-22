@@ -1,17 +1,31 @@
 import itertools
-from enum import Enum
 
 import numpy as np
 
 from mmdemo.interfaces import CameraCalibrationInterface
+from mmdemo.interfaces.data import Handedness
 from mmdemo.utils.coordinates import camera_3d_to_pixel, world_3d_to_camera_3d
 from mmdemo.utils.joints import BodyCategory, Joint, getPointSubcategory
 
 
-# https://mediapipe.readthedocs.io/en/latest/solutions/hands.html
-class Handedness(Enum):
-    Left = "Right"
-    Right = "Left"
+def get_average_hand_pixel(
+    body: dict, calibration: CameraCalibrationInterface, handedness: Handedness
+):
+    vals = []
+
+    if handedness == Handedness.Left:
+        category = BodyCategory.LEFT_HAND
+    else:
+        category = BodyCategory.RIGHT_HAND
+
+    for jointIndex, joint in enumerate(body["joint_positions"]):
+        bodyLocation = getPointSubcategory(Joint(jointIndex))
+        if bodyLocation == category:
+            points_camera_3D = world_3d_to_camera_3d(joint, calibration)
+            points2D = camera_3d_to_pixel(points_camera_3D, calibration)
+            vals.append(points2D)
+
+    return np.mean(vals, axis=0)
 
 
 def normalize_landmarks(hand_landmarks, image_width, image_height):
@@ -46,26 +60,6 @@ def normalize_landmarks(hand_landmarks, image_width, image_height):
     normalized_landmarks = list(map(lambda x: x / max_value, normalized_landmarks))
 
     return normalized_landmarks
-
-
-def get_average_hand_pixel(
-    body: dict, calibration: CameraCalibrationInterface, handedness: Handedness
-):
-    vals = []
-
-    if handedness == Handedness.Left:
-        category = BodyCategory.LEFT_HAND
-    else:
-        category = BodyCategory.RIGHT_HAND
-
-    for jointIndex, joint in enumerate(body["joint_positions"]):
-        bodyLocation = getPointSubcategory(Joint(jointIndex))
-        if bodyLocation == category:
-            points_camera_3D = world_3d_to_camera_3d(joint, calibration)
-            points2D = camera_3d_to_pixel(points_camera_3D, calibration)
-            vals.append(points2D)
-
-    return np.mean(vals, axis=0)
 
 
 def createBoundingBox(center, w, h):

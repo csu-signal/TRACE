@@ -8,8 +8,7 @@ from mmdemo.interfaces import (
     ObjectInterface3D,
     SelectedObjectsInterface,
 )
-from mmdemo.interfaces.data import Cone, ObjectInfo3D
-from mmdemo.utils.Gamr import GamrTarget
+from mmdemo.interfaces.data import Cone, GamrTarget, ObjectInfo3D
 from tests.utils.fake_feature import FakeFeature
 
 

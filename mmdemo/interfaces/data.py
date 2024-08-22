@@ -3,10 +3,28 @@ Helper dataclasses for interface definitions
 """
 
 from dataclasses import dataclass
+from enum import Enum
 
 import numpy as np
 
-from mmdemo.utils.Gamr import GamrTarget
+
+class GamrTarget(str, Enum):
+    UNKNOWN = "unknown"
+    SCALE = "scale"
+    RED_BLOCK = "red"
+    BLUE_BLOCK = "blue"
+    YELLOW_BLOCK = "yellow"
+    GREEN_BLOCK = "green"
+    PURPLE_BLOCK = "purple"
+    BROWN_BLOCK = "brown"
+    MYSTERY_BLOCK = "mystery"
+    BLOCKS = "blocks"
+
+
+# https://mediapipe.readthedocs.io/en/latest/solutions/hands.html
+class Handedness(Enum):
+    Left = "Right"
+    Right = "Left"
 
 
 @dataclass
