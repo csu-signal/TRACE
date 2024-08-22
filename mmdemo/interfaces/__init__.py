@@ -76,10 +76,10 @@ class CameraCalibrationInterface(BaseInterface):
 @dataclass
 class PoseInterface(BaseInterface):
     """
-    poses -- list of (body_id, "leaning in" / "leaning out")
+    poses -- list of (participant id, "leaning in" / "leaning out")
     """
 
-    poses: list[tuple[int, str]]
+    poses: list[tuple[str, str]]
 
 
 @dataclass
