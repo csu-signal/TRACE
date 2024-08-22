@@ -104,15 +104,32 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         return ColorImageInterface(frame=output_frame, frame_count=color.frame_count)
 
     def projectVectorLines(self, cone, frame, calibration, includeY, includeZ, gaze):
+        """
+        Projects the vector lines on the frame.
+
+        Arguments:
+        cone -- the cone object
+        frame -- the frame
+        calibration -- the camera calibration settings
+        includeY -- a flag to include the Y lines
+        includeZ -- a flag to include the Z lines
+        gaze -- a flag indicating if we are rendering a gaze vector
+        """
         baseUpY, baseDownY, baseUpZ, baseDownZ = cone.conePointsBase()
         vertexUpY, vertexDownY, vertexUpZ, vertexDownZ = cone.conePointsVertex()
 
         if gaze:
             yColor = (255, 107, 170)
             ZColor = (107, 255, 138)
+            vectorColor = (255, 107, 170)
         else:
             yColor = (255, 255, 0)
             ZColor = (243, 82, 121)
+            vectorColor = (0, 165, 255)
+
+        base2D = camera_3d_to_pixel(cone.base, calibration)
+        vertex2D = camera_3d_to_pixel(cone.vertex, calibration)
+        cv.line(frame, base2D, vertex2D, color=vectorColor, thickness=5)
 
         if includeY:
             baseUp2DY = camera_3d_to_pixel(baseUpY, calibration)
@@ -145,6 +162,16 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
             cv.line(frame, vertexPpointDownZ, pointDownZ, color=ZColor, thickness=5)
 
     def getPropValues(self, propStrings, match):
+        """
+        Gets the prop values
+
+        Arguments:
+        propStrings -- the prop strings array
+        match -- the matching color name
+
+        Returns:
+        label -- the prop label
+        """
         label = []
         for prop in propStrings:
             prop_match = re.match(r"(" + match + r")\s*(=|<|>|!=)\s*(.*)", prop)
@@ -159,6 +186,16 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         return label
 
     def renderBanks(self, frame, xSpace, yCord, bankLabel, bankValues):
+        """
+        Renders the bank blocks
+
+        Arguments:
+        frame -- the frame
+        xSpace -- the X spacing offset
+        yCord -- the Y cord to render
+        bankLabel -- the bank label
+        bankValues -- the bank values
+        """
         blocks = len(colors) + 1
         blockWidth = 112
         blockHeight = 112

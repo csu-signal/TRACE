@@ -128,5 +128,6 @@ def test_emnlp_frame(
         output.frame is not color.frame
     ), "Do not modify the color frame itself. This could break other features."
 
-    cv.imshow("Output", output.frame)
+    resize = cv.resize(output.frame, (960, 540))
+    cv.imshow("Output", resize)
     cv.waitKey(1000)
