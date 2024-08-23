@@ -28,4 +28,6 @@ if __name__ == "__main__":
     moves = Move(transcription, utterances)
     cgt = CommonGroundTracking(moves, props)
 
-    Demo(targets=[PrintFeature(transcription, props)]).run()
+    demo = Demo(targets=[PrintFeature(transcription, props)])
+    demo.show_dependency_graph()
+    # demo.run()

@@ -5,9 +5,19 @@ Demo class definition
 import logging
 from collections import deque
 
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+import networkx as nx
+
 from mmdemo.base_feature import BaseFeature
 from mmdemo.base_interface import BaseInterface
 from mmdemo.interfaces import EmptyInterface
+
+logger = logging.getLogger(__name__)
+
+
+class DemoError(Exception):
+    pass
 
 
 class FeatureGraph:
@@ -18,15 +28,13 @@ class FeatureGraph:
         self._find_required_features()
 
         if len(self.unused_features) > 0:
-            logging.warning(
+            logger.warning(
                 f"Unused features in demo ({', '.join([str(i) for i in self.unused_features])})"
             )
 
-        self._assert_no_cycles()
-
         self._find_feature_ordering()
 
-        logging.info("Feature graph and topological sort complete")
+        logger.info("Feature graph and topological sort complete")
 
     def _find_all_features(self):
         """
@@ -64,10 +72,6 @@ class FeatureGraph:
         self.required_features = [self.features_by_id[i] for i in required_feature_ids]
         self.unused_features = [self.features_by_id[i] for i in unused_feature_ids]
 
-    def _assert_no_cycles(self):
-        # TODO: make sure there are no cycles and error if there are
-        pass
-
     def _find_feature_ordering(self):
         """
         Perform topological sort on the required features. Outputs
@@ -80,6 +84,7 @@ class FeatureGraph:
         while set(sorted_feature_ids) != required_feature_ids:
             # add features which have all dependencies already in the sorted list
             remaining_features = required_feature_ids - set(sorted_feature_ids)
+            added_node = False
             for n in remaining_features:
                 remaining_deps = [
                     i
@@ -88,8 +93,72 @@ class FeatureGraph:
                 ]
                 if len(remaining_deps) == 0:
                     sorted_feature_ids.append(n)
+                    added_node = True
+
+            if not added_node:
+                raise DemoError(
+                    "Cycle detected in dependency graph, so there is no valid topological sort"
+                )
 
         self.sorted_features = [self.features_by_id[i] for i in sorted_feature_ids]
+
+    def show(self):
+        G = nx.DiGraph()
+        for feature_id in self.features_by_id.keys():
+            G.add_node(feature_id)
+        for feature_id, feature in self.features_by_id.items():
+            for dep in feature._deps:
+                G.add_edge(id(dep), feature_id)
+
+        # calculate classes of features and node ordering
+        targets = {id(f) for f in self.targets}
+        unused = {id(f) for f in self.unused_features}
+        inputs = set()
+        for layer, nodes in enumerate(nx.topological_generations(G)):
+            if layer == 0:
+                inputs.update(nodes)
+            for node in nodes:
+                G.nodes[node]["layer"] = layer
+        pos = nx.multipartite_layout(G, subset_key="layer")
+
+        # calculate colors of features
+        INPUT_COLOR = "#aaffaa"
+        TARGET_COLOR = "#ffaaaa"
+        UNUSED_COLOR = "#aaaaaa"
+        DEFAULT_COLOR = "#aaaaff"
+
+        def get_node_color(f_id):
+            if f_id in unused:
+                return UNUSED_COLOR
+            elif f_id in targets:
+                return TARGET_COLOR
+            elif f_id in inputs:
+                return INPUT_COLOR
+            else:
+                return DEFAULT_COLOR
+
+        color_map = list(map(get_node_color, self.features_by_id.keys()))
+
+        # calculate labels of features
+        labels_dict = {
+            f_id: f.__class__.__name__ for f_id, f in self.features_by_id.items()
+        }
+
+        # define legend for plot
+        plt.legend(
+            handles=[
+                mpatches.Patch(color=INPUT_COLOR, label="Inputs"),
+                mpatches.Patch(color=TARGET_COLOR, label="Targets"),
+                mpatches.Patch(color=DEFAULT_COLOR, label="Default"),
+                mpatches.Patch(color=UNUSED_COLOR, label="Unused"),
+            ]
+        )
+
+        # draw and show graph
+        nx.draw_networkx(
+            G, pos, node_color=color_map, labels=labels_dict, node_size=5000
+        )
+        plt.show()
 
 
 class Demo:
@@ -137,3 +206,9 @@ class Demo:
 
         for f in self.graph.sorted_features:
             f.finalize()
+
+    def show_dependency_graph(self):
+        """
+        Show the dependency graph using networkx and matplotlib
+        """
+        self.graph.show()
