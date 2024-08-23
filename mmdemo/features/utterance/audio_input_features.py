@@ -57,7 +57,7 @@ class MicAudio(BaseFeature[AudioFileInterface]):
         queue,
         done,
         output_dir,
-        chunk_length_seconds=0.5,
+        chunk_length_seconds=1,
         rate=16000,
         frames_per_read=512,
         format=pyaudio.paInt16,
@@ -117,7 +117,7 @@ class MicAudio(BaseFeature[AudioFileInterface]):
 @final
 class RecordedAudio(BaseFeature[AudioFileInterface]):
     READ_FRAME_COUNT = 512
-    SAVE_INTERVAL_SECONDS = 0.5
+    SAVE_INTERVAL_SECONDS = 1
 
     def __init__(
         self,

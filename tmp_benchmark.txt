@@ -1,0 +1,28 @@
+Total evaluation time (% of total):
+  Object -- 60.83%
+  _AzureKinectDevice -- 14.21%
+  Proposition -- 11.75%
+  WhisperTranscription -- 4.30%
+  EMNLPFrame -- 3.06%
+  Gesture -- 2.44%
+  VADUtteranceBuilder -- 1.99%
+  Move -- 1.22%
+  MicAudio -- 0.12%
+  GazeBodyTracking -- 0.02%
+  AzureKinectColor -- 0.01%
+  ...
+
+Average time per new output (seconds):
+  Proposition -- 7.64E-01
+  WhisperTranscription -- 2.80E-01
+  Move -- 7.92E-02
+  Object -- 6.16E-02
+  VADUtteranceBuilder -- 1.65E-02
+  _AzureKinectDevice -- 1.44E-02
+  EMNLPFrame -- 3.21E-03
+  Gesture -- 1.78E-03
+  CommonGroundTracking -- 2.04E-04
+  MicAudio -- 6.16E-05
+  GazeBodyTracking -- 1.58E-05
+  AzureKinectColor -- 1.27E-05
+  ...

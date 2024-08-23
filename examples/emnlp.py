@@ -30,8 +30,21 @@ class ShowOutput(BaseFeature[EmptyInterface]):
         if not frame.is_new():
             return None
 
-        cv.imshow("", frame.frame)
+        cv.imshow("output", frame.frame)
         cv.waitKey(1)
+
+    def is_done(self):
+        return cv.getWindowProperty("output", cv.WND_PROP_VISIBLE) < 1
+
+
+class PrintOutput(BaseFeature):
+    def get_output(self, *args):
+        if not all(i.is_new() for i in args):
+            return None
+
+        for i in args:
+            print(i)
+        print()
 
 
 if __name__ == "__main__":
@@ -49,7 +62,7 @@ if __name__ == "__main__":
     selected_objects = SelectedObjects(objects, gesture)  # pyright: ignore
 
     # transcriptions from microphone
-    audio = MicAudio(device_id=1, speaker_id="group")
+    audio = MicAudio(device_id=6, speaker_id="group")
     utterance_audio = VADUtteranceBuilder(audio, delete_input_files=True)
     transcriptions = WhisperTranscription(utterance_audio)
 
@@ -68,7 +81,15 @@ if __name__ == "__main__":
     cgt = CommonGroundTracking(moves, props)
 
     # create output frame for video
-    output_frame = EMNLPFrame(color, gaze, gesture, selected_objects, cgt)
+    output_frame = EMNLPFrame(color, gaze, gesture, selected_objects, cgt, calibration)
 
     # run demo and show output
-    Demo(targets=[ShowOutput(output_frame)]).run()
+    demo = Demo(
+        targets=[
+            ShowOutput(output_frame),
+            PrintOutput(dense_paraphrased_transcriptions, props, moves),
+        ]
+    )
+    demo.show_dependency_graph()
+    demo.run()
+    demo.print_time_benchmarks()

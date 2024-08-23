@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import final
+import warnings
 
 import joblib
 import mediapipe as mp
@@ -81,9 +82,21 @@ class Gesture(BaseFeature[GestureConesInterface]):
                     / 2
                 )
                 box = np.array([avg - offset, avg + offset], dtype=np.int64)
+                # TODO: make sure this works
+                if (
+                    box[0][0] < 0
+                    or box[0][1] < 0
+                    or box[1][0] >= color.frame.shape[1]
+                    or box[1][1] >= color.frame.shape[0]
+                ):
+                    print("gesture on the edge")
+                    return None
 
                 # see if the hand is pointing
-                pointing_info = self.find_pointing_hands(color, handedness, box)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    pointing_info = self.find_pointing_hands(color, handedness, box)
+
                 if pointing_info is None:
                     continue
                 base, tip = pointing_info

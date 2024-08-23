@@ -53,8 +53,12 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         gesture: BaseFeature[GestureConesInterface],
         sel_objects: BaseFeature[SelectedObjectsInterface],
         common_ground: BaseFeature[CommonGroundInterface],
+        calibration: BaseFeature[CameraCalibrationInterface],
     ):
-        super().__init__(color, gaze, gesture, sel_objects, common_ground)
+        super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration)
+
+    def initialize(self):
+        self.has_cgt_data = False
 
     def get_output(
         self,
@@ -70,7 +74,6 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
             or not gaze.is_new()
             or not gesture.is_new()
             or not objects.is_new()
-            or not common.is_new()
         ):
             return None
 
@@ -98,8 +101,15 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
             )
 
         # render common ground
-        self.renderBanks(output_frame, 130, 260, "FBank", common.fbank)
-        self.renderBanks(output_frame, 130, 130, "EBank", common.ebank)
+        if self.has_cgt_data or common.is_new():
+            self.has_cgt_data = True
+            self.renderBanks(output_frame, 130, 260, "FBank", common.fbank)
+            self.renderBanks(output_frame, 130, 130, "EBank", common.ebank)
+        else:
+            self.renderBanks(output_frame, 130, 260, "FBank", set())
+            self.renderBanks(output_frame, 130, 130, "EBank", set())
+
+        output_frame = cv.resize(output_frame, (1280, 720))
 
         return ColorImageInterface(frame=output_frame, frame_count=color.frame_count)
 

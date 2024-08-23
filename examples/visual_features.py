@@ -58,9 +58,8 @@ class ShowOutput(BaseFeature[EmptyInterface]):
 
 if __name__ == "__main__":
     color, depth, body_tracking, calibration = create_azure_kinect_features(
-        DeviceType.PLAYBACK,
-        mkv_path=r"C:\Users\brady\Desktop\Group_01-master.mkv",
-        playback_frame_rate=5,
+        DeviceType.CAMERA,
+        camera_index=0
     )
     objects = Object(color, depth, calibration)
     gaze = GazeBodyTracking(body_tracking, calibration)

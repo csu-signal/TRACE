@@ -336,12 +336,12 @@ def append_matches(top_matches, sentence):
     return new_rows
 
 
-def get_simple_cosine(sentence, filtered_common_grounds, bert, embeddings):
+def get_simple_cosine(sentence, filtered_common_grounds, bert, embeddings, device):
     cg_cosine_scores = []
     # embeddings = get_cg_embeddings(filtered_common_grounds, bert, embeddings)
     sentence_embedding = get_sentence_embedding(sentence, bert)
     for cg in filtered_common_grounds:
-        cosine_score = sentence_fcg_cosine(embeddings[cg], sentence_embedding).item()
+        cosine_score = sentence_fcg_cosine(embeddings[cg].to(device), sentence_embedding.to(device)).item()
         cg_cosine_scores.append([sentence, cg, cosine_score])
     df_cosine_scores = pd.DataFrame(
         cg_cosine_scores, columns=["sentence", "common ground", "scores"]

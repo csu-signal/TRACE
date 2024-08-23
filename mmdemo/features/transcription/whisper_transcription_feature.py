@@ -1,6 +1,7 @@
 from typing import final
 
 import faster_whisper
+import os
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import AudioFileInterface, TranscriptionInterface
@@ -20,6 +21,7 @@ class WhisperTranscription(BaseFeature[TranscriptionInterface]):
         super().__init__(audio)
 
     def initialize(self):
+        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
         self.model = faster_whisper.WhisperModel("small")
 
     def get_output(

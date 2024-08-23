@@ -5,7 +5,7 @@ import pytest
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.base_interface import BaseInterface
-from mmdemo.demo import Demo
+from mmdemo.demo import Demo, DemoError
 
 
 @dataclass
@@ -89,3 +89,21 @@ def test_unused_features(graph):
     assert [i.initialized for i in (a, b, c, d, e, f, g, h, i)] == expected
     assert [i.evaluated for i in (a, b, c, d, e, f, g, h, i)] == expected
     assert [i.finalized for i in (a, b, c, d, e, f, g, h, i)] == expected
+
+
+def test_cycle_detection(graph):
+    a, b, c, d, e, f, g, h, i = graph
+
+    # make sure no error happens
+    Demo(targets=[i])
+
+    a._register_dependencies([h])
+
+    # error should happen now
+    errored = False
+    try:
+        Demo(targets=[i])
+    except DemoError:
+        errored = True
+
+    assert errored, "Demo should have raised a DemoError exception when a cycle exists"
