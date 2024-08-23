@@ -20,7 +20,12 @@ def emnlp_frame():
     Fixture to load output frame feature. Only runs once per file.
     """
     frame = EMNLPFrame(
-        FakeFeature(), FakeFeature(), FakeFeature(), FakeFeature(), FakeFeature()
+        FakeFeature(),
+        FakeFeature(),
+        FakeFeature(),
+        FakeFeature(),
+        FakeFeature(),
+        FakeFeature(),
     )
     frame.initialize()
     yield frame
