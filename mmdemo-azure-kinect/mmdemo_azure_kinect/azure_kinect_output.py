@@ -1,5 +1,5 @@
 """
-Private interface and feature to get output of Azure Kinect
+Private interface and feature to get output of Azure Kinect devices
 """
 
 import os
@@ -20,7 +20,10 @@ from typing import final
 
 import cv2 as cv
 import numpy as np
+
+# this is the C++ wrapper library around the azure kinect sdk
 from _azure_kinect import Camera, Playback
+
 from mmdemo_azure_kinect.device_type import DeviceType
 
 from mmdemo.base_feature import BaseFeature
@@ -84,6 +87,7 @@ class _AzureKinectDevice(BaseFeature):
         self.playback_end_seconds = playback_end_seconds
 
     def initialize(self):
+        # check that correct arguments are present
         if self.device_type == DeviceType.CAMERA:
             assert self.camera_index is not None, "Camera index required"
             self.device = Camera(self.camera_index)
@@ -110,6 +114,7 @@ class _AzureKinectDevice(BaseFeature):
         self.device.close()
 
     def get_output(self):
+        # skip frames to only output at the playback_frame_rate
         if self.device_type == DeviceType.PLAYBACK:
             self.device.skip_frames(  # pyright: ignore
                 self.mkv_frame_rate // self.playback_frame_rate - 1  # pyright: ignore
@@ -120,6 +125,7 @@ class _AzureKinectDevice(BaseFeature):
         if color is None or depth is None or len(body_tracking) == 0:
             return None
 
+        # color interface needs RGB but the wrapper returns BGRA
         color_rgb = cv.cvtColor(color, cv.COLOR_BGRA2RGB)
 
         return _AzureKinectInterface(
@@ -140,6 +146,7 @@ class _AzureKinectDevice(BaseFeature):
             and self.frame_count
             > self.mkv_frame_rate * self.playback_end_seconds  # pyright: ignore
         ):
+            # exit demo if a playback file is past the given end time
             return True
 
         return False

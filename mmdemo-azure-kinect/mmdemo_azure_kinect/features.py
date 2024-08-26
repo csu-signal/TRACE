@@ -118,8 +118,8 @@ def create_azure_kinect_features(
     playback_end_seconds: int | None = None
 ):
     """
-    Returns 4 features which output ColorImageInterface, DepthImageInterface,
-    BodyTrackingInterface, and CameraCalibrationInterface using information
+    Returns 4 features which output `ColorImageInterface`, `DepthImageInterface`,
+    `BodyTrackingInterface`, and `CameraCalibrationInterface` using information
     from an Azure Kinect camera or playback mkv file.
 
     Arguments:
@@ -130,7 +130,7 @@ def create_azure_kinect_features(
     `camera_index` -- the index of the Azure Kinect camera, used for `DeviceType.CAMERA`
     `mkv_path` -- the path to an Azure Kinect playback mkv file, used for `DeviceType.PLAYBACK`
     `mkv_frame_rate` -- frame rate of the mkv file, default 30, used for `DeviceType.PLAYBACK`
-    `playback_frame_rate` -- simulated frame rate of the playback, default 5, this can reduce the number of frames which need to be processed, used for `DeviceType.PLAYBACK`
+    `playback_frame_rate` -- simulated frame rate of the playback, default 5, this can reduce the number of frames which need to be processed, used for `DeviceType.PLAYBACK`. This does not change the frame counts of the features, it just ignores a certain number of frames.
     `playback_end_seconds` -- the number of seconds to end playback after or None, default None, used for `DeviceType.PLAYBACK`
     """
     input_feature = _AzureKinectDevice(
