@@ -2,6 +2,16 @@
 
 This directory contains a separate Python package that allows for creating demo features from Azure Kinect cameras and mkv playback files. This will only successfully build on Windows, so it is a separate package in order to allow the main library to be used on any operating system.
 
+## Example Usage
+```python
+from mmdemo_azure_kinect import create_azure_kinect_features, DeviceType
+
+color, depth, body_tracking = create_azure_kinect_features(
+    device_type=DeviceType.CAMERA, camera_index=0
+)
+```
+In the example above, `color`, `depth`, and `body_tracking` are features which can be used as dependencies of other features in a demo.
+
 ## Setup Instructions
 
 ### Azure Kinect SDK
@@ -22,12 +32,3 @@ These setup instructions will install the following:
 - `_azure_kinect-stubs`, type stubs for `_azure_kinect`. This will be used by your language tools to provide type hints and docstrings for the Python bindings.
 - `azure_kinect_config`, global config settings related to Azure Kinect features.
 
-## Example Usage
-```python
-from mmdemo_azure_kinect import create_azure_kinect_features, DeviceType
-
-color, depth, body_tracking = create_azure_kinect_features(
-    device_type=DeviceType.CAMERA, camera_index=0
-)
-```
-In the example above, `color`, `depth`, and `body_tracking` are features which can be used as dependencies of other features in a demo.

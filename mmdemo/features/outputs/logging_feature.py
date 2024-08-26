@@ -1,14 +1,17 @@
-from collections import defaultdict
 import csv
-import time
 import os
-from pathlib import Path
+import time
+from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
+from typing import final
+
 from mmdemo.base_feature import BaseFeature
 from mmdemo.base_interface import BaseInterface
 from mmdemo.interfaces import EmptyInterface
 
 
+@final
 class Log(BaseFeature[EmptyInterface]):
     """
     Log output to stdout and/or csv files. If logging to csv files,
