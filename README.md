@@ -2,13 +2,13 @@
 
 This repository allows for easily constructing and running complex multimodal demonstrations.
 
-A demo is organized as a collection of “features”, each of which serves a specific purpose. Examples of features are body tracking, gaze, gesture, audio transcriptions, proposition extraction, common ground tracking, logging, and more.
+A demo is organized as a collection of "features", each of which serves a specific purpose. Examples of features are body tracking, gaze, gesture, audio transcriptions, proposition extraction, common ground tracking, logging, and more.
 
-All features specify an output “interface”, which is a class representing the data a feature will output. Features also specify zero or more input interfaces, which they require in order to calculate the output. For example, the Proposition feature has PropositionInterface as its output interface and TranscriptionInterface as its only input interface.
+All features specify an output "interface", which is a class representing the data a feature will output. Features also specify zero or more input interfaces, which they require in order to calculate the output. For example, the Proposition feature has PropositionInterface as its output interface and TranscriptionInterface as its only input interface.
 
-If a feature A needs input interface X, it can set another feature B with output interface X as a “dependency”, and the output of feature B will be automatically passed into feature A. The full demo is structured as a directed graph with features as vertices and edges between a feature and all of its dependencies. This framework allows for easily creating, modifying, and running any multimodal demo which can be organized into modular features.
+If a feature A needs input interface X, it can set another feature B with output interface X as a "dependency", and the output of feature B will be automatically passed into feature A. The full demo is structured as a directed graph with features as vertices and edges between a feature and all of its dependencies. This framework allows for easily creating, modifying, and running any multimodal demo which can be organized into modular features.
 
-This repository contains a python package called “mmdemo” that provides a “Demo” class to run a demo according to its dependency graph structure. This package also contains premade features used in our common ground tracking demo and a framework to easily create new features. Another package in this repository is “mmdemo-azure-kinect”, which provides features for interacting with Azure Kinect cameras and recordings (only availible on Windows). Finally, we have comprehensive tests to make sure all of the premade features and demo logic works as expected.
+This repository contains a python package called "mmdemo" that provides a "Demo" class to run a demo according to its dependency graph structure. This package also contains premade features used in our common ground tracking demo and a framework to easily create new features. Another package in this repository is "mmdemo-azure-kinect", which provides features for interacting with Azure Kinect cameras and recordings (only availible on Windows). Finally, we have comprehensive tests to make sure all of the premade features and demo logic works as expected.
 
 ## Usage
 
