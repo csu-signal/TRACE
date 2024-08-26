@@ -1,14 +1,10 @@
 import pytest
 
-from mmdemo.features.dense_paraphrasing.dense_paraphrasing_feature import (
-    DenseParaphrasing,
-)
-from mmdemo.features.dense_paraphrasing.frame_time_converter import FrameTimeConverter
-from mmdemo.features.dense_paraphrasing.referenced_objects_feature import (
-    ReferencedObjects,
+from mmdemo.features.transcription.frame_time_converter import FrameTimeConverter
+from mmdemo.features.objects.accumulated_selected_objects_feature import (
+    AccumulatedSelectedObjects,
 )
 from mmdemo.interfaces import (
-    EmptyInterface,
     SelectedObjectsInterface,
     TranscriptionInterface,
 )
@@ -18,7 +14,7 @@ from tests.utils.fake_feature import FakeFeature
 
 @pytest.fixture
 def referenced_objects(monkeypatch):
-    ref = ReferencedObjects(FakeFeature(), FakeFeature())
+    ref = AccumulatedSelectedObjects(FakeFeature(), FakeFeature())
     ref.initialize()
 
     # fake frame time converter where the time is always
@@ -115,7 +111,7 @@ gt = GamrTarget
     ],
 )
 def test_referenced_objects(
-    referenced_objects: ReferencedObjects,
+    referenced_objects: AccumulatedSelectedObjects,
     classes_by_bin,
     expected_classes,
     utterance_frames,

@@ -13,7 +13,7 @@ class Demonstrative:
 
 
 @final
-class DenseParaphrasing(BaseFeature[TranscriptionInterface]):
+class DenseParaphrasedTranscription(BaseFeature[TranscriptionInterface]):
     """
     Substitute demonstratives like "this" and "that" in a transcription with
     selected object names

@@ -1,10 +1,10 @@
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 
 from mmdemo.demo import Demo
-from mmdemo.features import (CommonGroundTracking, DenseParaphrasing,
+from mmdemo.features import (CommonGroundTracking, DenseParaphrasedTranscription,
                              DisplayFrame, EMNLPFrame, GazeBodyTracking,
                              Gesture, Log, MicAudio, Move, Object, Proposition,
-                             ReferencedObjects, SelectedObjects,
+                             AccumulatedSelectedObjects, SelectedObjects,
                              VADUtteranceBuilder, WhisperTranscription)
 
 if __name__ == "__main__":
@@ -28,8 +28,8 @@ if __name__ == "__main__":
 
     # which objects are referenced (by gesture) during a transcription
     # and dense paraphrased transcription
-    referenced_objects = ReferencedObjects(selected_objects, transcriptions)
-    dense_paraphrased_transcriptions = DenseParaphrasing(
+    referenced_objects = AccumulatedSelectedObjects(selected_objects, transcriptions)
+    dense_paraphrased_transcriptions = DenseParaphrasedTranscription(
         transcriptions, referenced_objects
     )
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         targets=[
             DisplayFrame(output_frame),
             Log(dense_paraphrased_transcriptions, props, moves, csv=True),
-            Log(transcriptions, dense_paraphrased_transcriptions, stdout=True)
+            Log(transcriptions, stdout=True)
         ]
     )
     demo.show_dependency_graph()

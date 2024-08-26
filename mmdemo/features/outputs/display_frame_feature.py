@@ -37,7 +37,8 @@ class DisplayFrame(BaseFeature[EmptyInterface]):
         if not color.is_new():
             return None
 
-        cv.imshow(self.window_name, color.frame)
+        bgr = cv.cvtColor(color.frame, cv.COLOR_RGB2BGR)
+        cv.imshow(self.window_name, bgr)
         cv.waitKey(1)
 
         return EmptyInterface()

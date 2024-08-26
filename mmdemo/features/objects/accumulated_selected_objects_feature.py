@@ -2,12 +2,12 @@ import time
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.features.dense_paraphrasing.frame_time_converter import FrameTimeConverter
+from mmdemo.features.objects.frame_time_converter import FrameTimeConverter
 from mmdemo.interfaces import SelectedObjectsInterface, TranscriptionInterface
 
 
 @final
-class ReferencedObjects(BaseFeature[SelectedObjectsInterface]):
+class AccumulatedSelectedObjects(BaseFeature[SelectedObjectsInterface]):
     """
     Determine which objects are being referenced in a given transcription
     by accumulating the selected objects by frame.

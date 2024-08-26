@@ -1,7 +1,7 @@
 import pytest
 
-from mmdemo.features.dense_paraphrasing.dense_paraphrasing_feature import (
-    DenseParaphrasing,
+from mmdemo.features.transcription.dense_paraphrasing_feature import (
+    DenseParaphrasedTranscription,
 )
 from mmdemo.interfaces import SelectedObjectsInterface, TranscriptionInterface
 from mmdemo.interfaces.data import GamrTarget, ObjectInfo2D
@@ -10,7 +10,7 @@ from tests.utils.fake_feature import FakeFeature
 
 @pytest.fixture(scope="module")
 def dense_paraphrasing_feature():
-    dp = DenseParaphrasing(FakeFeature(), FakeFeature())
+    dp = DenseParaphrasedTranscription(FakeFeature(), FakeFeature())
     dp.initialize()
     yield dp
     dp.finalize()

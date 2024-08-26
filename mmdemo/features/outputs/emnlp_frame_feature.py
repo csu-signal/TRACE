@@ -111,6 +111,7 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
             self.renderBanks(output_frame, 130, 130, "EBank", set())
 
         output_frame = cv.resize(output_frame, (1280, 720))
+        output_frame = cv.cvtColor(output_frame, cv.COLOR_BGR2RGB)
 
         return ColorImageInterface(frame=output_frame, frame_count=color.frame_count)
 
