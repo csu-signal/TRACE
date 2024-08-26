@@ -7,11 +7,19 @@
 using namespace nlohmann;
 namespace py = pybind11;
 
-// make a 2d numpy array from an array of doubles
+// note: template functions can't be defined in .cpp as easily so
+// they are defined here instead
+
+/* Extract predictions of joint positions and orientations from a body
+ * tracking frame. Store as json in the expected format for the python
+ * library.*/
 json body_frame_info(k4abt::frame frame);
 
-// note: template functions can't be defined in .cpp as easily
-// get predictions of joint positions and orientations
+
+/* Turn a json object into a python dictionary */ 
+py::dict json_to_dict(json data);
+
+/* Make a 2d numpy array from an array of doubles */
 template <size_t size> py::array_t<double> make_1d_array(double arr[size]) {
   py::array_t<double> out(size);
   double *ptr = (double *)out.request().ptr;
@@ -23,7 +31,7 @@ template <size_t size> py::array_t<double> make_1d_array(double arr[size]) {
   return out;
 }
 
-// make a 1d numpy array from an array of doubles
+/* make a 1d numpy array from an array of doubles */
 template <size_t rows, size_t cols>
 py::array_t<double> make_2d_array(double arr[rows][cols]) {
   py::array_t<double> out(rows * cols);

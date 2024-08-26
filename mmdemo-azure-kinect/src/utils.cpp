@@ -33,3 +33,8 @@ json body_frame_info(k4abt::frame frame) {
 
   return frame_result_json;
 }
+
+py::dict json_to_dict(json data) {
+  return py::module::import("json").attr("loads")(data.dump());
+}
+

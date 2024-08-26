@@ -19,7 +19,7 @@ From the root directory of this repository, run `pip install -e .\mmdemo-azure-k
 These setup instructions will install the following:
 - `mmdemo_azure_kinect`, a module which provides functions for creating Azure Kinect input features that can be used with the `mmdemo` library.
 - `_azure_kinect`, Python bindings for the Azure Kinect SDK. These can be used to create camera/playback devices and obtain color, depth, and body tracking information.
-- `_azure_kinect-stubs`, type stubs for `_azure_kinect`. This will be used by an LSP to provide type hints and docstrings for the Python bindings.
+- `_azure_kinect-stubs`, type stubs for `_azure_kinect`. This will be used by your language tools to provide type hints and docstrings for the Python bindings.
 - `azure_kinect_config`, global config settings related to Azure Kinect features.
 
 ## Example Usage
