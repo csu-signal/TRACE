@@ -213,9 +213,9 @@ def test_sorted_objects(selected_objects: SelectedObjects):
     )
     assert isinstance(out, SelectedObjectsInterface)
     assert all([sel for _,sel in out.objects])
-    assert out.objects[0][0] == GamrTarget.RED_BLOCK
-    assert out.objects[1][0] == GamrTarget.BLUE_BLOCK
-    assert out.objects[2][0] == GamrTarget.GREEN_BLOCK
+    assert out.objects[0][0].object_class == GamrTarget.RED_BLOCK
+    assert out.objects[1][0].object_class == GamrTarget.BLUE_BLOCK
+    assert out.objects[2][0].object_class == GamrTarget.GREEN_BLOCK
 
 
     # check output when cone goes from end to start
@@ -234,6 +234,6 @@ def test_sorted_objects(selected_objects: SelectedObjects):
     )
     assert isinstance(out, SelectedObjectsInterface)
     assert all([sel for _,sel in out.objects])
-    assert out.objects[0][0] == GamrTarget.GREEN_BLOCK
-    assert out.objects[1][0] == GamrTarget.BLUE_BLOCK
-    assert out.objects[2][0] == GamrTarget.RED_BLOCK
+    assert out.objects[0][0].object_class == GamrTarget.GREEN_BLOCK
+    assert out.objects[1][0].object_class == GamrTarget.BLUE_BLOCK
+    assert out.objects[2][0].object_class == GamrTarget.RED_BLOCK
