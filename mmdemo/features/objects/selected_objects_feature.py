@@ -35,7 +35,9 @@ class SelectedObjects(BaseFeature[SelectedObjectsInterface]):
         if not obj.is_new():
             return None
 
-        selected_indices = set()
+        # track minimum distance from all cones
+        # which select an object for sorting
+        best_selected_dist = {}
 
         for cones in cones_list:
             if not cones.is_new():
@@ -44,12 +46,22 @@ class SelectedObjects(BaseFeature[SelectedObjectsInterface]):
             for cone in cones.cones:
                 for i in range(len(obj.objects)):
                     if self.cone_contains_point(cone, obj.objects[i].center):
-                        selected_indices.add(i)
+                        dist = self.get_sorting_dist(cone, obj.objects[i].center)
+                        if i not in best_selected_dist or best_selected_dist[i] > dist:
+                            best_selected_dist[i] = dist
 
-        selected = list(
-            zip(obj.objects, [i in selected_indices for i in range(len(obj.objects))])
+        # [(object, selected?, closest dist to a selecting cone)]
+        selected = zip(
+            obj.objects,
+            [i in best_selected_dist for i in range(len(obj.objects))],
+            [
+                best_selected_dist[i] if i in best_selected_dist else float("inf")
+                for i in range(len(obj.objects))
+            ],
         )
-        return SelectedObjectsInterface(objects=selected)
+        selected = list(selected)
+        selected.sort(key=lambda x: x[2])
+        return SelectedObjectsInterface(objects=[(i[0], i[1]) for i in selected])
 
     @staticmethod
     def cone_contains_point(cone: Cone, point_3d):
@@ -82,3 +94,17 @@ class SelectedObjects(BaseFeature[SelectedObjectsInterface]):
             return False
 
         return True
+
+    @staticmethod
+    def get_sorting_dist(cone: Cone, point_3d):
+        """
+        Get the distance used for sorting objects. If two objects
+        are selected by a single cone, their order will be sorted by
+        this value in increasing order.
+        """
+        # TODO: we used to sort by perpendicular distance from projection, then by
+        # distance to the projection. Both of these could have weird cases but I'm
+        # not sure what the best distance to sort by is. I think absolute distance
+        # might make the most sense, but change if needed. If this is changed,
+        # also change the test.
+        return np.linalg.norm(cone.base - np.array(point_3d))

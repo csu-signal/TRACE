@@ -3,25 +3,21 @@ from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.demo import Demo
-from mmdemo.features.common_ground.cgt_feature import CommonGroundTracking
-from mmdemo.features.dense_paraphrasing.dense_paraphrasing_feature import (
-    DenseParaphrasing,
-)
-from mmdemo.features.dense_paraphrasing.referenced_objects_feature import (
+from mmdemo.features import (
+    GazeBodyTracking,
+    Gesture,
+    Object,
+    SelectedObjects,
     ReferencedObjects,
-)
-from mmdemo.features.gaze.gaze_body_tracking_feature import GazeBodyTracking
-from mmdemo.features.gesture.gesture_feature import Gesture
-from mmdemo.features.move.move_feature import Move
-from mmdemo.features.objects.object_feature import Object
-from mmdemo.features.output_frames.emnlp_frame_feature import EMNLPFrame
-from mmdemo.features.proposition.prop_feature import Proposition
-from mmdemo.features.selected_objects.selected_objects_feature import SelectedObjects
-from mmdemo.features.transcription.whisper_transcription_feature import (
+    VADUtteranceBuilder,
+    MicAudio,
     WhisperTranscription,
+    DenseParaphrasing,
+    Proposition,
+    Move,
+    CommonGroundTracking,
+    EMNLPFrame,
 )
-from mmdemo.features.utterance.audio_input_features import MicAudio
-from mmdemo.features.utterance.vad_builder_feature import VADUtteranceBuilder
 from mmdemo.interfaces import ColorImageInterface, EmptyInterface
 
 

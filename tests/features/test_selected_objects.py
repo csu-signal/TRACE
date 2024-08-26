@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from scipy.spatial.transform import Rotation as R
 
-from mmdemo.features.selected_objects.selected_objects_feature import SelectedObjects
+from mmdemo.features.objects.selected_objects_feature import SelectedObjects
 from mmdemo.interfaces import (
     ConesInterface,
     ObjectInterface3D,
@@ -68,6 +68,14 @@ def objects(transformation):
     )
 
 
+def hash_obj(obj):
+    """
+    Hash of object string so a lookup dict can
+    be created
+    """
+    return hash(str(obj))
+
+
 @pytest.mark.parametrize(
     "cone_info,expected",
     [
@@ -109,11 +117,15 @@ def test_cone_contains_point(
         expected
     ), "The wrong number of objects are returned"
 
-    for (out_obj, out_sel), (expected_obj, expected_sel) in zip(
-        out_vals.objects, zip(objects.objects, expected)
-    ):
-        assert out_obj == expected_obj, "Objects are not as expected"
-        assert out_sel == expected_sel, "Object selection is not as expected"
+    expected_lookup = {
+        hash_obj(expected_obj): expected_sel
+        for expected_obj, expected_sel in zip(objects.objects, expected)
+    }
+
+    for out_obj, out_sel in out_vals.objects:
+        assert (
+            expected_lookup[hash_obj(out_obj)] == out_sel
+        ), "Selection does not match the expected result"
 
 
 def test_multiple_cones(selected_objects):
@@ -163,5 +175,65 @@ def test_multiple_cones(selected_objects):
 
     out = selected_objects.get_output(ObjectInterface3D(objects=objects), *cones_list)
     assert isinstance(out, SelectedObjectsInterface)
+    assert len(out.objects) == len(objects)
 
-    assert [b for _, b in out.objects] == expected
+    expected_lookup = {hash_obj(o): s for o, s in zip(objects, expected)}
+
+    for obj, sel in out.objects:
+        assert expected_lookup[hash_obj(obj)] == sel, "Selection does not match"
+
+
+def test_sorted_objects(selected_objects: SelectedObjects):
+    """
+    Selected objects should be sorted by distance to the cone base. Expected behavior
+    is not well defined when multiple cones are selecting objects.
+    """
+    objects = [
+        ObjectInfo3D(p1=(0, 0), p2=(0, 0), center=(0, i, 0), object_class=t)
+        for i, t in [
+            (1, GamrTarget.RED_BLOCK),
+            (2, GamrTarget.BLUE_BLOCK),
+            (3, GamrTarget.GREEN_BLOCK),
+        ]
+    ]
+
+    # check output when cone goes from start to end
+    out = selected_objects.get_output(
+        ObjectInterface3D(objects=objects),
+        ConesInterface(
+            cones=[
+                Cone(
+                    base=np.array([0, 0, 0]),
+                    vertex=np.array([0, 5, 0]),
+                    base_radius=1,
+                    vertex_radius=1,
+                )
+            ]
+        ),
+    )
+    assert isinstance(out, SelectedObjectsInterface)
+    assert all([sel for _,sel in out.objects])
+    assert out.objects[0][0] == GamrTarget.RED_BLOCK
+    assert out.objects[1][0] == GamrTarget.BLUE_BLOCK
+    assert out.objects[2][0] == GamrTarget.GREEN_BLOCK
+
+
+    # check output when cone goes from end to start
+    out = selected_objects.get_output(
+        ObjectInterface3D(objects=objects),
+        ConesInterface(
+            cones=[
+                Cone(
+                    base=np.array([0, 5, 0]),
+                    vertex=np.array([0, 0, 0]),
+                    base_radius=1,
+                    vertex_radius=1,
+                )
+            ]
+        ),
+    )
+    assert isinstance(out, SelectedObjectsInterface)
+    assert all([sel for _,sel in out.objects])
+    assert out.objects[0][0] == GamrTarget.GREEN_BLOCK
+    assert out.objects[1][0] == GamrTarget.BLUE_BLOCK
+    assert out.objects[2][0] == GamrTarget.RED_BLOCK
