@@ -43,7 +43,7 @@ protected:
    */
   virtual void update_capture_handle() = 0;
 
-  size_t frame_count;
+  int frame_count;
 
   // stores calibration and capture data
   k4a::calibration calibration;

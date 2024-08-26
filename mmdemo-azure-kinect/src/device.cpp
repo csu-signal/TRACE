@@ -60,7 +60,7 @@ py::object Device::get_calibration_matrices() {
       make_2d_array<3, 3>(camera_matrix_arr),
       make_2d_array<3, 3>(rotation_arr),
       make_1d_array<3>(translation_arr),
-      make_1d_array<8>(distortion_arr
+      make_1d_array<8>(distortion_arr)
   );
 }
 

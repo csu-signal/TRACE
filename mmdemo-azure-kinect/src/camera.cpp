@@ -1,4 +1,5 @@
 #include "device.hpp"
+#include <iostream>
 
 // camera implementation
 
