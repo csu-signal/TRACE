@@ -18,7 +18,9 @@ def cgt_feature():
     cgt.finalize()
 
 
-# TODO: See if Nikhil can help with tests for these:
+# TODO: I am not sure what the expected behavior
+# is for the following, but if we find out then we should
+# add tests
 #   - multiple moves at the same time
 #   - accepts / doubts with no previous statement
 #   - !=, >, <, >=, <=

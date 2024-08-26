@@ -77,6 +77,7 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         ):
             return None
 
+        # ensure we are not modifying the color frame itself
         output_frame = np.copy(color.frame)
         output_frame = cv.cvtColor(output_frame, cv.COLOR_RGB2BGR)
 

@@ -124,14 +124,15 @@ def test_emnlp_frame(
 ):
     color, _, _, calibration = azure_kinect_frame
 
+    color_frame_copy = np.copy(color.frame)
     output = emnlp_frame.get_output(
         color, gaze, gesture, objects, common_ground, calibration
     )
     assert isinstance(output, ColorImageInterface)
     assert output.frame_count == color.frame_count, "Frame count should not change"
     assert (
-        output.frame is not color.frame
+        np.linalg.norm(color_frame_copy - color.frame) == 0
     ), "Do not modify the color frame itself. This could break other features."
 
-    cv.imshow("Output", output.frame)
-    cv.waitKey(1000)
+    # cv.imshow("Output", output.frame)
+    # cv.waitKey(1000)
