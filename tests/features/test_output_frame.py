@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 import pytest
 
-from mmdemo.features.output_frames.emnlp_frame_feature import EMNLPFrame
+from mmdemo.features.outputs.emnlp_frame_feature import EMNLPFrame
 from mmdemo.interfaces import (
     ColorImageInterface,
     CommonGroundInterface,
@@ -133,6 +133,5 @@ def test_emnlp_frame(
         output.frame is not color.frame
     ), "Do not modify the color frame itself. This could break other features."
 
-    resize = cv.resize(output.frame, (960, 540))
-    cv.imshow("Output", resize)
+    cv.imshow("Output", output.frame)
     cv.waitKey(1000)

@@ -403,3 +403,5 @@ build/
 nlohmann/
 *.pyd
 .DS_Store
+
+logging-output*/

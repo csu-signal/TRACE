@@ -36,6 +36,21 @@ def dense_paraphrasing_feature():
             [GamrTarget.GREEN_BLOCK, GamrTarget.RED_BLOCK, GamrTarget.BLUE_BLOCK],
             "green is 20 and green, red, blue are 10",
         ),
+        (
+            "This is 20",
+            [],
+            "This is 20",
+        ),
+        (
+            "These are 20",
+            [],
+            "These are 20",
+        ),
+        (
+            "This is 10 and that is 20",
+            [GamrTarget.RED_BLOCK],
+            "red is 10 and that is 20",
+        ),
     ],
 )
 def test_dense_paraphrasing(

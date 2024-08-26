@@ -60,13 +60,14 @@ class DenseParaphrasing(BaseFeature[TranscriptionInterface]):
             obj.object_class.value for obj, sel in selected_objects.objects if sel
         ]
 
-        text = re.sub(
-            self.plural_demo_regex,
-            ", ".join(targets),
-            text,
-            count=1,
-            flags=re.IGNORECASE,
-        )
+        if len(targets) > 0:
+            text = re.sub(
+                self.plural_demo_regex,
+                ", ".join(targets),
+                text,
+                count=1,
+                flags=re.IGNORECASE,
+            )
 
         for i in range(len(targets)):
             text = re.sub(
