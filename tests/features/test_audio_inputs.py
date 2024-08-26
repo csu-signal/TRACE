@@ -1,14 +1,14 @@
 import time
-import wave
 from pathlib import Path
-from typing import final
 
 import numpy as np
 import pytest
 
-from mmdemo.base_feature import BaseFeature
 from mmdemo.features.utterance.audio_input_features import MicAudio, RecordedAudio
-from mmdemo.interfaces import AudioFileInterface, ColorImageInterface
+from mmdemo.interfaces import (
+    AudioFileListInterface,
+    ColorImageInterface,
+)
 from tests.utils.audio import get_length
 from tests.utils.fake_feature import FakeFeature
 
@@ -50,9 +50,16 @@ def recorded_audio(audio_file, video_frame_rate):
     "frame_count",
     [16, 60, 160, 310, 410, 99999],
 )
-def test_recorder(
+def test_recorded_audio(
     recorded_audio: RecordedAudio, frame_count, video_frame_rate, audio_file
 ):
+    """
+    Test that the RecordedAudio feature works correctly. It should produce
+    audio chunks of the correct length and output the correct number of chunks
+    for the current frame.
+    """
+
+    # check that the feature exists when it is supposed to
     if frame_count / video_frame_rate > get_length(audio_file):
         recorded_audio.get_output(
             ColorImageInterface(frame_count=frame_count, frame=np.zeros((5, 5, 3)))
@@ -60,16 +67,16 @@ def test_recorder(
         assert recorded_audio.is_done(), "Feature should exit if the file is complete"
         return
 
-    # get all outputs at a set frame rate
-    all_outputs: list[AudioFileInterface] = []
+    # get feature output at a set frame rate
     rec_output = recorded_audio.get_output(
         ColorImageInterface(frame_count=frame_count, frame=np.zeros((5, 5, 3)))
     )
-    while rec_output is not None:
-        all_outputs.append(rec_output)
-        rec_output = recorded_audio.get_output(
-            ColorImageInterface(frame_count=frame_count, frame=np.zeros((5, 5, 3)))
-        )
+    if rec_output is not None:
+        assert isinstance(rec_output, AudioFileListInterface)
+        all_outputs = rec_output.audio_files
+    else:
+        all_outputs = []
+
 
     assert (
         len(all_outputs)
@@ -98,9 +105,14 @@ def mic_audio():
 
 @pytest.mark.xfail(reason="Will fail if no audio device with index 1 is availible")
 def test_mic(mic_audio):
+    """
+    Test that the MicAudio feature can record and produce output
+    """
     start_time = time.time()
     while time.time() - start_time < 5:
-        if mic_audio.get_output() is not None:
+        output = mic_audio.get_output()
+        if output is not None:
+            assert isinstance(output, AudioFileListInterface)
             return
         time.sleep(0.1)
 

@@ -1,7 +1,7 @@
 import pytest
 
 from mmdemo.features.utterance.vad_builder_feature import VADUtteranceBuilder
-from mmdemo.interfaces import AudioFileInterface
+from mmdemo.interfaces import AudioFileInterface, AudioFileListInterface
 from tests.utils.audio import get_length
 
 
@@ -77,7 +77,9 @@ def test_vad_segmentation(
 ):
     """
     Test that the segmentation works correctly for both single and multiple
-    speakers.
+    speakers. This test passes audio chunks which either have voice activity
+    or no voice activity into the feature and checks that the output is
+    correctly segmented.
 
     `input` -- a list of string where 0 represents an audio clip with no voice
                activity and 1 represents an audio clip with voice activity.
@@ -110,7 +112,12 @@ def test_vad_segmentation(
                 input_interfaces.append(activity_interface)
 
         # get all current output from the feature
-        output = vad_builder.get_output(*input_interfaces)
+        output = vad_builder.get_output(
+            AudioFileListInterface([]),
+            AudioFileListInterface(audio_files=input_interfaces),
+            AudioFileListInterface([]),
+        )
+
         while output is not None:
             feature_outputs.append(output)
             output = vad_builder.get_output()

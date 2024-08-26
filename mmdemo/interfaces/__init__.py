@@ -151,6 +151,18 @@ class AudioFileInterface(BaseInterface):
 
 
 @dataclass
+class AudioFileListInterface(BaseInterface):
+    """
+    An interface to return a list of AudioFileInterfces. This
+    is useful because sometimes multiple audio files will need
+    to be returned in a single frame.
+
+    `audio_files` -- the list of audio files
+    """
+    audio_files: list[AudioFileInterface]
+
+
+@dataclass
 class TranscriptionInterface(BaseInterface):
     # TODO: brady figure out how to get frames
     """

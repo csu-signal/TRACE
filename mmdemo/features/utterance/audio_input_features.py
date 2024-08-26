@@ -11,12 +11,26 @@ from typing import final
 import pyaudio
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import AudioFileInterface, ColorImageInterface
+from mmdemo.interfaces import AudioFileInterface, AudioFileListInterface, ColorImageInterface
 
 
-# TODO: if updates are happening slower than audio, we might need to either accumulate data to send in one big file or return a new interface which has a list of files
 @final
-class MicAudio(BaseFeature[AudioFileInterface]):
+class MicAudio(BaseFeature[AudioFileListInterface]):
+    """
+    Record audio chunks from a mic. The output of this feature
+    will likely need to be passed through an utterance segmentation
+    feature before being used.
+
+    There is no input interface.
+
+    The output interface is `AudioFileListInterface`. The list version
+    of the interface is needed because if the demo is processing at a slower
+    rate than chunk production, the audio will lag behind in the demo.
+
+    Keyword arguments:
+    `device_id` -- the index of the audio device to open
+    `speaker_id` -- a unique identifier for the speaker of this audio
+    """
     def __init__(self, *, device_id: int, speaker_id: str | None = None) -> None:
         super().__init__()
         self.device_id = device_id
@@ -29,6 +43,7 @@ class MicAudio(BaseFeature[AudioFileInterface]):
         self.queue = mp.Queue()
         self.done = mp.Value(c_bool, False)
 
+        # start recorder process
         self.process = mp.Process(
             target=MicAudio.record_chunks,
             args=(
@@ -45,10 +60,15 @@ class MicAudio(BaseFeature[AudioFileInterface]):
         self.done.value = True
         self.process.join()
 
-    def get_output(self) -> AudioFileInterface | None:
+    def get_output(self) -> AudioFileListInterface | None:
         if self.queue.empty():
             return None
-        return self.queue.get()
+
+        # take files from the recorder queue and output them
+        files = []
+        while not self.queue.empty():
+            files.append(self.queue.get())
+        return AudioFileListInterface(audio_files=files)
 
     @staticmethod
     def record_chunks(
@@ -59,9 +79,26 @@ class MicAudio(BaseFeature[AudioFileInterface]):
         output_dir,
         chunk_length_seconds=1,
         rate=16000,
-        frames_per_read=512,
-        format=pyaudio.paInt16,
     ):
+        """
+        This method is run in a separate process to record
+        chunks. This way there is no missed audio.
+
+        Arguments:
+        `speaker_id` -- an identifier for the speaker of the audio
+        `device_id` -- the index of the audio device to open
+        `queue` -- the output queue of the process
+        `done` -- a boolean shared variable to mark when the process should exit
+        `output_dir` -- the output directory of audio chunks
+
+        Keyword arguments:
+        `chunk_length_seconds` -- the length of each audio chunk (default 1)
+        `rate` -- the audio rate in Hz (default 16000)
+        """
+
+        format = pyaudio.paInt16
+        frames_per_read=512
+
         # create recorder
         p = pyaudio.PyAudio()
         stream = p.open(
@@ -113,10 +150,31 @@ class MicAudio(BaseFeature[AudioFileInterface]):
             queue.get()
 
 
-# TODO: also may need to be modified to return a list of audio files if recording is faster than updates
 @final
-class RecordedAudio(BaseFeature[AudioFileInterface]):
+class RecordedAudio(BaseFeature[AudioFileListInterface]):
+    """
+    Produce audio chunks from a wav file. The output of this feature
+    will likely need to be passed through an utterance segmentation
+    feature before being used.
+
+    The input interface is `ColorImageInterface` (so the frame count can
+    be accessed)
+
+    The output interface is `AudioFileListInterface`. The list version
+    of the interface is needed because if the demo is processing at a slower
+    rate than chunk production, the audio will lag behind in the demo.
+
+    Keyword arguments:
+    `path` -- the path to the wav file
+    `speaker_id` -- a unique identifier for the speaker of this audio
+    `video_frame_rate` -- the frame rate of the video which is being used
+        to get frame counts. This is needed to determine how much time has
+        passed at the current frame in the video.
+    """
+    # the number of frames read at a time
     READ_FRAME_COUNT = 512
+
+    # the length of output audio files
     SAVE_INTERVAL_SECONDS = 1
 
     def __init__(
@@ -139,7 +197,25 @@ class RecordedAudio(BaseFeature[AudioFileInterface]):
     def audio_time(self):
         return self.num_frames_read / self.reader.getframerate()
 
+    def initialize(self):
+        # create output directory, open input file, and initialize
+        # params
+        os.makedirs(self.output_dir, exist_ok=True)
+        self.reader = wave.open(str(self.path), "rb")
+        self.num_frames_read = 0
+        self.last_save_time = 0
+        self.counter = 0
+        self.frames = b""
+
+        self.output = deque()
+
+    def finalize(self):
+        self.reader.close()
+
     def save_if_needed(self):
+        """
+        Save a new audio chunk if enough frames have been accumulated
+        """
         if self.audio_time - self.last_save_time >= self.SAVE_INTERVAL_SECONDS:
             next_file = self.output_dir / f"{self.counter:08}.wav"
 
@@ -161,31 +237,26 @@ class RecordedAudio(BaseFeature[AudioFileInterface]):
             self.frames = b""
             self.counter += 1
 
-    def initialize(self):
-        os.makedirs(self.output_dir, exist_ok=True)
-        self.reader = wave.open(str(self.path), "rb")
-        self.num_frames_read = 0
-        self.last_save_time = 0
-        self.counter = 0
-        self.frames = b""
-
-        self.output = deque()
-
-    def finalize(self):
-        self.reader.close()
-
-    def get_output(self, im: ColorImageInterface) -> AudioFileInterface | None:
+    def get_output(self, im: ColorImageInterface) -> AudioFileListInterface | None:
         # while audio time < video time
         while self.audio_time < im.frame_count / self.video_frame_rate:
+
+            # accumulate frames and save the current audio if
+            # needed
             self.frames += self.reader.readframes(self.READ_FRAME_COUNT)
             self.num_frames_read += self.READ_FRAME_COUNT
-
             self.save_if_needed()
 
         if len(self.output) == 0:
             return None
 
-        return self.output.popleft()
+        # return all saved audio files
+        files = []
+        while len(self.output) > 0:
+            files.append(self.output.popleft())
+
+        return AudioFileListInterface(audio_files=files)
 
     def is_done(self):
+        # if the audio file is complete, the demo can exit
         return self.audio_time > self.reader.getnframes() / self.reader.getframerate()

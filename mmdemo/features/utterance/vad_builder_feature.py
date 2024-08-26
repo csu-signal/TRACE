@@ -7,7 +7,7 @@ from typing import final
 from silero_vad import get_speech_timestamps, load_silero_vad, read_audio
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import AudioFileInterface
+from mmdemo.interfaces import AudioFileInterface, AudioFileListInterface
 
 
 @final
@@ -17,12 +17,13 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
     This will attempt to leave one chunk with no voice activity
     on each side of the utterance.
 
+    Input interfaces are any number `AudioFileListInterface`.
+    Each input feature must stay consistent in the format of
+    input (rate, channels, etc.).
 
-    Input features can be any number of features which output
-    `AudioFileInterface`. Each input feature must stay consistent
-    in the format of input (rate, channels, etc.).
-
-    Output interface is `AudioFileInterface`.
+    Output interface is `AudioFileInterface`. If the frame rate is too
+    slow the output of this feature may fall behind, but this is unlikely
+    since utterances don't happen very often.
 
     Keyword arguments:
     `delete_input_files` -- True if input audio files should be deleted, default False
@@ -31,7 +32,7 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
 
     def __init__(
         self,
-        *args: BaseFeature[AudioFileInterface],
+        *args: BaseFeature[AudioFileListInterface],
         delete_input_files=False,
         max_utterance_time: float | None = 5,
     ):
@@ -44,6 +45,7 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
 
         self.vad = load_silero_vad()
 
+        # store current state of utterances for each speaker
         self.current_data = defaultdict(bytes)
         self.contains_activity = defaultdict(bool)
         self.starts = defaultdict(float)
@@ -54,65 +56,68 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
 
         self.outputs = deque()
 
-    def get_output(self, *args: AudioFileInterface) -> AudioFileInterface | None:
-        for audio_input in args:
-            if not audio_input.is_new():
+    def get_output(self, *args: AudioFileListInterface) -> AudioFileInterface | None:
+        for audio_input_list in args:
+            if not audio_input_list.is_new():
                 continue
 
-            # run through vad
-            audio = read_audio(str(audio_input.path))
-            activity = len(get_speech_timestamps(audio, self.vad)) > 0
+            for audio_input in audio_input_list.audio_files:
 
-            # load frames and params from file
-            wave_reader = wave.open(str(audio_input.path), "rb")
-            chunk_n_frames = wave_reader.getnframes()
-            chunk_frames = b""
-            for _ in range(chunk_n_frames // 1024 + 1):
-                chunk_frames += wave_reader.readframes(1024)
-            params = wave_reader.getparams()
-            wave_reader.close()
+                # run input through vad
+                audio = read_audio(str(audio_input.path))
+                activity = len(get_speech_timestamps(audio, self.vad)) > 0
 
-            if self.delete_input_files:
-                os.remove(audio_input.path)
+                # load frames and params from file
+                wave_reader = wave.open(str(audio_input.path), "rb")
+                chunk_n_frames = wave_reader.getnframes()
+                chunk_frames = b""
+                for _ in range(chunk_n_frames // 1024 + 1):
+                    chunk_frames += wave_reader.readframes(1024)
+                params = wave_reader.getparams()
+                wave_reader.close()
 
-            if activity:
-                # add to the stored frames
+                if self.delete_input_files:
+                    os.remove(audio_input.path)
 
-                if len(self.current_data[audio_input.speaker_id]) == 0:
-                    # if no data has been stored yet, set the start time
+                if activity:
+                    if len(self.current_data[audio_input.speaker_id]) == 0:
+                        # if no data has been stored yet, set the start time
+                        self.starts[audio_input.speaker_id] = audio_input.start_time
+                        self.total_time[audio_input.speaker_id] = 0
+
+                    # add audio to the stored frames and update params
+                    self.current_data[audio_input.speaker_id] += chunk_frames
+                    self.total_time[audio_input.speaker_id] += (
+                        audio_input.end_time - audio_input.start_time
+                    )
+                    self.contains_activity[audio_input.speaker_id] = True
+
+                # force output file to be created if the time is too long
+                force_output_creation = (
+                    self.max_utterance_time is not None
+                    and self.total_time[audio_input.speaker_id]
+                    >= self.max_utterance_time
+                )
+
+                if not activity or force_output_creation:
+                    if self.contains_activity[audio_input.speaker_id]:
+                        # if we have stored activity, create a new utterance
+                        if not activity:
+                            self.current_data[audio_input.speaker_id] += chunk_frames
+                            self.total_time[audio_input.speaker_id] += (
+                                audio_input.end_time - audio_input.start_time
+                            )
+                        self.create_utterance(audio_input.speaker_id, params)
+
+                    # reset to only storing the last chunk
                     self.starts[audio_input.speaker_id] = audio_input.start_time
-                    self.total_time[audio_input.speaker_id] = 0
+                    self.current_data[audio_input.speaker_id] = chunk_frames
+                    self.total_time[audio_input.speaker_id] = (
+                        audio_input.end_time - audio_input.start_time
+                    )
+                    self.contains_activity[audio_input.speaker_id] = False
 
-                self.current_data[audio_input.speaker_id] += chunk_frames
-                self.total_time[audio_input.speaker_id] += (
-                    audio_input.end_time - audio_input.start_time
-                )
-                self.contains_activity[audio_input.speaker_id] = True
-
-            # force output file to be created if the time is too long
-            force_output_creation = (
-                self.max_utterance_time is not None
-                and self.total_time[audio_input.speaker_id] >= self.max_utterance_time
-            )
-
-            if not activity or force_output_creation:
-                if self.contains_activity[audio_input.speaker_id]:
-                    # if we have stored activity, create a new utterance
-                    if not activity:
-                        self.current_data[audio_input.speaker_id] += chunk_frames
-                        self.total_time[audio_input.speaker_id] += (
-                            audio_input.end_time - audio_input.start_time
-                        )
-                    self.create_utterance(audio_input.speaker_id, params)
-
-                # reset to only storing the last chunk
-                self.starts[audio_input.speaker_id] = audio_input.start_time
-                self.current_data[audio_input.speaker_id] = chunk_frames
-                self.total_time[audio_input.speaker_id] = (
-                    audio_input.end_time - audio_input.start_time
-                )
-                self.contains_activity[audio_input.speaker_id] = False
-
+        # return one output at a time
         if len(self.outputs) > 0:
             return self.outputs.popleft()
 
