@@ -28,6 +28,13 @@ class CommonGround:
             "purple": set(),
             "yellow": set(),
         }
+        self.removed_evidence = {
+            "red": set(),
+            "blue": set(),
+            "green": set(),
+            "purple": set(),
+            "yellow": set(),
+        }
         # initialize QBank (Cartesian product of blocks and weights),
         # EBank (empty), and FBank (empty)
         self.generate_banks()
@@ -239,6 +246,7 @@ class CommonGround:
                                 self.evidence_against[block].add(not_weight)
                 # ACCEPTs remove impossible weights
                 elif "ACCEPT" in move and f"{block}{relation}{rhs}" in self.ebank:
+                    self.removed_evidence[block].update(self.evidence_for[block])
                     if relation == "=":
                         # if block = weight
                         if rhs_weight:
@@ -415,6 +423,8 @@ class CommonGround:
                     elif relation == "!=":
                         self.poss[block].add(rhs_weight)
                         self.evidence_against[block].add(rhs_weight)
+                    self.evidence_for[block].update(self.removed_evidence[block])
+                    self.removed_evidence[block].clear()
 
             else:
                 pass
