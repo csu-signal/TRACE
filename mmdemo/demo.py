@@ -2,8 +2,8 @@
 Demo class definition
 """
 
-import time
 import logging
+import time
 from collections import deque
 
 import matplotlib.patches as mpatches
@@ -179,8 +179,8 @@ class Demo:
             id(i): EmptyInterface() for i in self.graph.sorted_features
         }
 
-        self.evaluation_time = {k: 0. for k in self.interface_lookup.keys()}
-        self.evaluation_time_on_new = {k: 0. for k in self.interface_lookup.keys()}
+        self.evaluation_time = {k: 0.0 for k in self.interface_lookup.keys()}
+        self.evaluation_time_on_new = {k: 0.0 for k in self.interface_lookup.keys()}
         self.new_count = {k: 0 for k in self.interface_lookup.keys()}
 
         self.has_run = False
@@ -237,14 +237,22 @@ class Demo:
         Print the time it takes for all features to be evaluated
         """
         assert self.has_run, "Run the demo first"
-        abs_times = [(self.graph.features_by_id[i], self.evaluation_time[i], self.evaluation_time_on_new[i] / self.new_count[i]) for i in self.interface_lookup.keys() if self.new_count[i] > 0]
+        abs_times = [
+            (
+                self.graph.features_by_id[i],
+                self.evaluation_time[i],
+                self.evaluation_time_on_new[i] / self.new_count[i],
+            )
+            for i in self.interface_lookup.keys()
+            if self.new_count[i] > 0
+        ]
         total_time = sum(map(lambda x: x[1], abs_times))
-        rel_times = [(name, t/total_time, avg) for name,t,avg in abs_times]
+        rel_times = [(name, t / total_time, avg) for name, t, avg in abs_times]
 
         print("Total evaluation time (% of total):")
         rel_times.sort(key=lambda x: x[1], reverse=True)
         for name, t, _ in rel_times:
-            if t*100 < 1e-2:
+            if t * 100 < 1e-2:
                 print("  ...")
                 break
             print(f"  {name.__class__.__name__} -- {t*100:.2f}%")

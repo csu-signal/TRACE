@@ -161,7 +161,9 @@ def process_sentence(sentence, model, tokenizer, bert, embeddings, verbose=False
 
     if len(filtered_common_grounds) > 137:
         print("Using cosine similarity")
-        return get_simple_cosine(sentence, filtered_common_grounds, bert, embeddings, device)
+        return get_simple_cosine(
+            sentence, filtered_common_grounds, bert, embeddings, device
+        )
 
     cosine_similarities = get_cosine_similarities(
         sentence, filtered_common_grounds, model, device, tokenizer

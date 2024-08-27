@@ -1,13 +1,10 @@
+import random
 from typing import final
 
 import cv2 as cv
-import random
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (
-    ColorImageInterface,
-    EmptyInterface,
-)
+from mmdemo.interfaces import ColorImageInterface, EmptyInterface
 
 
 @final

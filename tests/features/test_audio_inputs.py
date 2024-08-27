@@ -5,10 +5,7 @@ import numpy as np
 import pytest
 
 from mmdemo.features.utterance.audio_input_features import MicAudio, RecordedAudio
-from mmdemo.interfaces import (
-    AudioFileListInterface,
-    ColorImageInterface,
-)
+from mmdemo.interfaces import AudioFileListInterface, ColorImageInterface
 from tests.utils.audio import get_length
 from tests.utils.fake_feature import FakeFeature
 
@@ -76,7 +73,6 @@ def test_recorded_audio(
         all_outputs = rec_output.audio_files
     else:
         all_outputs = []
-
 
     assert (
         len(all_outputs)

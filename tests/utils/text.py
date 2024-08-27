@@ -1,4 +1,3 @@
-
 def levenshtein(s1, s2):
     """
     Edit distance using DP
@@ -24,4 +23,3 @@ def levenshtein(s1, s2):
         previous_row = current_row
 
     return previous_row[-1]
-

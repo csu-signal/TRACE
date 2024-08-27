@@ -36,7 +36,6 @@ class Cone:
     vertex_radius: float
 
 
-
 @dataclass
 class ObjectInfo2D:
     """

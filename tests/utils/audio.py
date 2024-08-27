@@ -1,5 +1,6 @@
 import wave
 
+
 def get_length(wav_path):
     """
     Helper function to get length of wav file
@@ -8,4 +9,3 @@ def get_length(wav_path):
     length = wf.getnframes() / wf.getframerate()
     wf.close()
     return length
-

@@ -1,12 +1,12 @@
 from mmdemo.demo import Demo
 from mmdemo.features import (
     CommonGroundTracking,
-    Move,
     Log,
-    Proposition,
-    WhisperTranscription,
     MicAudio,
+    Move,
+    Proposition,
     VADUtteranceBuilder,
+    WhisperTranscription,
 )
 
 if __name__ == "__main__":

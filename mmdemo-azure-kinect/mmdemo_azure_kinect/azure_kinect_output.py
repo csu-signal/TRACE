@@ -23,7 +23,6 @@ import numpy as np
 
 # this is the C++ wrapper library around the azure kinect sdk
 from _azure_kinect import Camera, Playback
-
 from mmdemo_azure_kinect.device_type import DeviceType
 
 from mmdemo.base_feature import BaseFeature

@@ -1,6 +1,7 @@
 import os
-from pathlib import Path
 import random
+from pathlib import Path
+
 
 def create_tmp_dir() -> Path:
     """

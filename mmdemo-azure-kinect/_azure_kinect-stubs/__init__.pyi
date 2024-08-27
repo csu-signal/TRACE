@@ -8,7 +8,6 @@ class Device:
     def close(self) -> None:
         """Close the device"""
         ...
-
     def get_frame(self) -> tuple[np.ndarray | None, np.ndarray | None, dict]:
         """
         On success, returns (color image, depth image, dict of body
@@ -28,17 +27,15 @@ class Device:
         }
         """
         ...
-
     def get_calibration_matrices(
         self,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Returns (camera_matrix, rotation, translation, distortion).
 
-        camera_matrix -- 
+        camera_matrix --
         """
         ...
-
     def get_frame_count(self) -> int:
         """Returns the current frame count of the device"""
         ...
@@ -50,7 +47,6 @@ class Playback(Device):
         path -- the path to the MKV file of the Azure Kinect Recording
         """
         ...
-
     def skip_frames(self, n_frames: int) -> None:
         """
         Skip frames in the recording. This works like

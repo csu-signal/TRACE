@@ -11,7 +11,11 @@ from typing import final
 import pyaudio
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import AudioFileInterface, AudioFileListInterface, ColorImageInterface
+from mmdemo.interfaces import (
+    AudioFileInterface,
+    AudioFileListInterface,
+    ColorImageInterface,
+)
 from mmdemo.utils.files import create_tmp_dir
 
 
@@ -32,6 +36,7 @@ class MicAudio(BaseFeature[AudioFileListInterface]):
     `device_id` -- the index of the audio device to open
     `speaker_id` -- a unique identifier for the speaker of this audio
     """
+
     def __init__(self, *, device_id: int, speaker_id: str | None = None) -> None:
         super().__init__()
         self.device_id = device_id
@@ -97,7 +102,7 @@ class MicAudio(BaseFeature[AudioFileListInterface]):
         """
 
         format = pyaudio.paInt16
-        frames_per_read=512
+        frames_per_read = 512
 
         # create recorder
         p = pyaudio.PyAudio()
@@ -171,6 +176,7 @@ class RecordedAudio(BaseFeature[AudioFileListInterface]):
         to get frame counts. This is needed to determine how much time has
         passed at the current frame in the video.
     """
+
     # the number of frames read at a time
     READ_FRAME_COUNT = 512
 
@@ -192,7 +198,9 @@ class RecordedAudio(BaseFeature[AudioFileListInterface]):
         if speaker_id is not None:
             self.speaker_id = speaker_id
         else:
-            self.speaker_id = f"recorded" + hashlib.sha256(str(self.path).encode()).hexdigest()[:16]
+            self.speaker_id = (
+                f"recorded" + hashlib.sha256(str(self.path).encode()).hexdigest()[:16]
+            )
 
     @property
     def audio_time(self):
@@ -241,7 +249,6 @@ class RecordedAudio(BaseFeature[AudioFileListInterface]):
     def get_output(self, im: ColorImageInterface) -> AudioFileListInterface | None:
         # while audio time < video time
         while self.audio_time < im.frame_count / self.video_frame_rate:
-
             # accumulate frames and save the current audio if
             # needed
             self.frames += self.reader.readframes(self.READ_FRAME_COUNT)

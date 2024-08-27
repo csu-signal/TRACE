@@ -1,16 +1,13 @@
-from typing import final
-import shutil
 import os
+import shutil
 from datetime import datetime
 from pathlib import Path
+from typing import final
 
 import cv2 as cv
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import (
-    ColorImageInterface,
-    EmptyInterface,
-)
+from mmdemo.interfaces import ColorImageInterface, EmptyInterface
 from mmdemo.utils.files import create_tmp_dir
 
 

@@ -159,6 +159,7 @@ class AudioFileListInterface(BaseInterface):
 
     `audio_files` -- the list of audio files
     """
+
     audio_files: list[AudioFileInterface]
 
 

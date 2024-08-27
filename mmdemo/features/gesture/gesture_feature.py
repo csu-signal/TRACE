@@ -1,6 +1,6 @@
+import warnings
 from pathlib import Path
 from typing import final
-import warnings
 
 import joblib
 import mediapipe as mp

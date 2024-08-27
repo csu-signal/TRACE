@@ -5,9 +5,9 @@ from typing import final
 
 from silero_vad import get_speech_timestamps, load_silero_vad, read_audio
 
-from mmdemo.utils.files import create_tmp_dir
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import AudioFileInterface, AudioFileListInterface
+from mmdemo.utils.files import create_tmp_dir
 
 
 @final
@@ -61,7 +61,6 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
                 continue
 
             for audio_input in audio_input_list.audio_files:
-
                 # run input through vad
                 audio = read_audio(str(audio_input.path))
                 activity = len(get_speech_timestamps(audio, self.vad)) > 0
@@ -110,12 +109,15 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
                 # force output file to be created if the time is too long.
                 # this will only happen if there has been activity, otherwise
                 # an utterance would have just been created
-                if self.max_utterance_time is not None and self.total_time[audio_input.speaker_id] >= self.max_utterance_time:
+                if (
+                    self.max_utterance_time is not None
+                    and self.total_time[audio_input.speaker_id]
+                    >= self.max_utterance_time
+                ):
                     # create utterance and remove all data
                     self.create_utterance(audio_input.speaker_id, params)
                     self.current_data[audio_input.speaker_id] = b""
                     self.contains_activity[audio_input.speaker_id] = False
-
 
         # return one output at a time
         if len(self.outputs) > 0:

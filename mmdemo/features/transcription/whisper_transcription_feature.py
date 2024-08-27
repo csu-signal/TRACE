@@ -1,7 +1,7 @@
+import os
 from typing import final
 
 import faster_whisper
-import os
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import AudioFileInterface, TranscriptionInterface

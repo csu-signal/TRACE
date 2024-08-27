@@ -23,7 +23,6 @@ from mmdemo.features import (
     WhisperTranscription,
 )
 
-
 MKV_PATH = Path(
     rf"F:\Weights_Task\Data\Fib_weights_original_videos\Group_01-master.mkv"
 )
@@ -40,8 +39,11 @@ def convert_audio(input_path, output_path):
         f"ffmpeg -i {input_path} -filter:a loudnorm -ar 16000 -ac 1 -acodec pcm_s16le {output_path}"
     )
 
+
 def add_audio_to_video(video, audio, output):
-    os.system(f"ffmpeg -i {video} -i {audio} -map 0:v -map 1:a -c:v copy -shortest {output}")
+    os.system(
+        f"ffmpeg -i {video} -i {audio} -map 0:v -map 1:a -c:v copy -shortest {output}"
+    )
 
 
 if __name__ == "__main__":
