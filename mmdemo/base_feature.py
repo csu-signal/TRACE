@@ -38,6 +38,8 @@ class BaseFeature(ABC, Generic[T]):
         """
         Return output of the feature. The return type must be the output
         interface to provide new data and `None` if there is no new data.
+        It is very important that this function does not modify any of the
+        input interfaces because they may be reused for other features.
 
         Arguments:
         args -- list of output interfaces from dependencies in the order
