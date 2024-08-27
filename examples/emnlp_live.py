@@ -5,7 +5,7 @@ from mmdemo.features import (CommonGroundTracking, DenseParaphrasedTranscription
                              DisplayFrame, EMNLPFrame, GazeBodyTracking,
                              Gesture, Log, MicAudio, Move, Object, Proposition,
                              AccumulatedSelectedObjects, SelectedObjects,
-                             VADUtteranceBuilder, WhisperTranscription)
+                             VADUtteranceBuilder, WhisperTranscription, SaveVideo)
 
 if __name__ == "__main__":
     # azure kinect features from camera
@@ -47,6 +47,7 @@ if __name__ == "__main__":
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
+            SaveVideo(output_frame, frame_rate=10),
             Log(dense_paraphrased_transcriptions, props, moves, csv=True),
             Log(transcriptions, stdout=True)
         ]

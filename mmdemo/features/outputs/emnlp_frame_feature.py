@@ -13,6 +13,7 @@ from mmdemo.interfaces import (
     GestureConesInterface,
     SelectedObjectsInterface,
 )
+from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import camera_3d_to_pixel
 
 
@@ -83,11 +84,15 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
 
         # render gaze vectors
         for cone in gaze.cones:
-            self.projectVectorLines(cone, output_frame, calibration, False, False, True)
+            EMNLPFrame.projectVectorLines(
+                cone, output_frame, calibration, False, False, True
+            )
 
         # render gesture vectors
         for cone in gesture.cones:
-            self.projectVectorLines(cone, output_frame, calibration, True, False, False)
+            EMNLPFrame.projectVectorLines(
+                cone, output_frame, calibration, True, False, False
+            )
 
         # render objects
         for obj in objects.objects:
@@ -104,20 +109,33 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         # render common ground
         if self.has_cgt_data or common.is_new():
             self.has_cgt_data = True
-            self.renderBanks(output_frame, 130, 260, "FBank", common.fbank)
-            self.renderBanks(output_frame, 130, 130, "EBank", common.ebank)
+            EMNLPFrame.renderBanks(output_frame, 130, 260, "FBank", common.fbank)
+            EMNLPFrame.renderBanks(output_frame, 130, 130, "EBank", common.ebank)
         else:
-            self.renderBanks(output_frame, 130, 260, "FBank", set())
-            self.renderBanks(output_frame, 130, 130, "EBank", set())
+            EMNLPFrame.renderBanks(output_frame, 130, 260, "FBank", set())
+            EMNLPFrame.renderBanks(output_frame, 130, 130, "EBank", set())
+
+        # draw frame count
+        cv.putText(
+            output_frame,
+            "FRAME:" + str(color.frame_count),
+            (50, 50),
+            cv.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 0, 255),
+            2,
+            cv.LINE_AA,
+        )
 
         output_frame = cv.resize(output_frame, (1280, 720))
         output_frame = cv.cvtColor(output_frame, cv.COLOR_BGR2RGB)
 
         return ColorImageInterface(frame=output_frame, frame_count=color.frame_count)
 
-    def projectVectorLines(self, cone, frame, calibration, includeY, includeZ, gaze):
+    @staticmethod
+    def projectVectorLines(cone: Cone, frame, calibration, includeY, includeZ, gaze):
         """
-        Projects the vector lines on the frame.
+        Draws lines representing a 3d cone onto the frame.
 
         Arguments:
         cone -- the cone object
@@ -127,8 +145,10 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         includeZ -- a flag to include the Z lines
         gaze -- a flag indicating if we are rendering a gaze vector
         """
-        baseUpY, baseDownY, baseUpZ, baseDownZ = cone.conePointsBase()
-        vertexUpY, vertexDownY, vertexUpZ, vertexDownZ = cone.conePointsVertex()
+        baseUpY, baseDownY, baseUpZ, baseDownZ = EMNLPFrame.conePointsBase(cone)
+        vertexUpY, vertexDownY, vertexUpZ, vertexDownZ = EMNLPFrame.conePointsVertex(
+            cone
+        )
 
         if gaze:
             yColor = (255, 107, 170)
@@ -173,7 +193,8 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
             cv.line(frame, vertexPointUpZ, pointUpZ, color=ZColor, thickness=5)
             cv.line(frame, vertexPpointDownZ, pointDownZ, color=ZColor, thickness=5)
 
-    def getPropValues(self, propStrings, match):
+    @staticmethod
+    def getPropValues(propStrings, match):
         """
         Gets the prop values
 
@@ -197,7 +218,8 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
                     label.append(rhs)
         return label
 
-    def renderBanks(self, frame, xSpace, yCord, bankLabel, bankValues):
+    @staticmethod
+    def renderBanks(frame, xSpace, yCord, bankLabel, bankValues):
         """
         Renders the bank blocks
 
@@ -235,7 +257,7 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
                 thickness=-1,
             )
 
-            labels = self.getPropValues(bankValues, color.name)
+            labels = EMNLPFrame.getPropValues(bankValues, color.name)
             numberLabels = min(len(labels), 5)
             if numberLabels > 0:
                 for i, line in enumerate(labels):
@@ -258,3 +280,21 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
                         (0, 0, 0),
                         fontThickness[numberLabels - 1],
                     )
+
+    @staticmethod
+    def conePointsBase(cone):
+        return (
+            [cone.base[0], cone.base[1] + cone.base_radius, cone.base[2]],
+            [cone.base[0], cone.base[1] - cone.base_radius, cone.base[2]],
+            [cone.base[0], cone.base[1], cone.base[2] + cone.base_radius],
+            [cone.base[0], cone.base[1], cone.base[2] - cone.base_radius],
+        )
+
+    @staticmethod
+    def conePointsVertex(cone):
+        return (
+            [cone.vertex[0], cone.vertex[1] + cone.vertex_radius, cone.vertex[2]],
+            [cone.vertex[0], cone.vertex[1] - cone.vertex_radius, cone.vertex[2]],
+            [cone.vertex[0], cone.vertex[1], cone.vertex[2] + cone.vertex_radius],
+            [cone.vertex[0], cone.vertex[1], cone.vertex[2] - cone.vertex_radius],
+        )

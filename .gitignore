@@ -13,3 +13,7 @@ logging-output*/
 chunks/
 
 wtd_inputs/
+
+tmp_*/
+*.mp4
+*.wav

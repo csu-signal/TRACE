@@ -1,11 +1,11 @@
 import os
 import wave
 from collections import defaultdict, deque
-from pathlib import Path
 from typing import final
 
 from silero_vad import get_speech_timestamps, load_silero_vad, read_audio
 
+from mmdemo.utils.files import create_tmp_dir
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import AudioFileInterface, AudioFileListInterface
 
@@ -51,8 +51,7 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
         self.starts = defaultdict(float)
         self.total_time = defaultdict(float)
 
-        self.output_dir = Path("chunks") / "vad"
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.output_dir = create_tmp_dir()
 
         self.outputs = deque()
 
@@ -91,22 +90,13 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
                         audio_input.end_time - audio_input.start_time
                     )
                     self.contains_activity[audio_input.speaker_id] = True
-
-                # force output file to be created if the time is too long
-                force_output_creation = (
-                    self.max_utterance_time is not None
-                    and self.total_time[audio_input.speaker_id]
-                    >= self.max_utterance_time
-                )
-
-                if not activity or force_output_creation:
+                else:
                     if self.contains_activity[audio_input.speaker_id]:
                         # if we have stored activity, create a new utterance
-                        if not activity:
-                            self.current_data[audio_input.speaker_id] += chunk_frames
-                            self.total_time[audio_input.speaker_id] += (
-                                audio_input.end_time - audio_input.start_time
-                            )
+                        self.current_data[audio_input.speaker_id] += chunk_frames
+                        self.total_time[audio_input.speaker_id] += (
+                            audio_input.end_time - audio_input.start_time
+                        )
                         self.create_utterance(audio_input.speaker_id, params)
 
                     # reset to only storing the last chunk
@@ -116,6 +106,16 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
                         audio_input.end_time - audio_input.start_time
                     )
                     self.contains_activity[audio_input.speaker_id] = False
+
+                # force output file to be created if the time is too long.
+                # this will only happen if there has been activity, otherwise
+                # an utterance would have just been created
+                if self.max_utterance_time is not None and self.total_time[audio_input.speaker_id] >= self.max_utterance_time:
+                    # create utterance and remove all data
+                    self.create_utterance(audio_input.speaker_id, params)
+                    self.current_data[audio_input.speaker_id] = b""
+                    self.contains_activity[audio_input.speaker_id] = False
+
 
         # return one output at a time
         if len(self.outputs) > 0:

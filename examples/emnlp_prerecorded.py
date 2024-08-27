@@ -1,10 +1,11 @@
-from pathlib import Path
 import os
+from pathlib import Path
 
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 
 from mmdemo.demo import Demo
 from mmdemo.features import (
+    AccumulatedSelectedObjects,
     CommonGroundTracking,
     DenseParaphrasedTranscription,
     DisplayFrame,
@@ -16,11 +17,22 @@ from mmdemo.features import (
     Object,
     Proposition,
     RecordedAudio,
-    AccumulatedSelectedObjects,
+    SaveVideo,
     SelectedObjects,
     VADUtteranceBuilder,
     WhisperTranscription,
 )
+
+
+MKV_PATH = Path(
+    rf"F:\Weights_Task\Data\Fib_weights_original_videos\Group_01-master.mkv"
+)
+MKV_END = 5 * 60 + 30
+AUDIO_PATH = Path(rf"F:\Weights_Task\Data\Group_01-audio.wav")
+PLAYBACK_FRAME_RATE = 5
+
+OUTPUT_FRAMES = Path("output_frames.mp4")
+FINAL_OUTPUT = Path("final_output.mp4")
 
 
 def convert_audio(input_path, output_path):
@@ -28,21 +40,22 @@ def convert_audio(input_path, output_path):
         f"ffmpeg -i {input_path} -filter:a loudnorm -ar 16000 -ac 1 -acodec pcm_s16le {output_path}"
     )
 
+def add_audio_to_video(video, audio, output):
+    os.system(f"ffmpeg -i {video} -i {audio} -map 0:v -map 1:a -c:v copy -shortest {output}")
+
 
 if __name__ == "__main__":
-    # azure kinect features from camera
-    mkv_path = Path(
-        rf"F:\Weights_Task\Data\Fib_weights_original_videos\Group_01-master.mkv"
-    )
-
     color, depth, body_tracking, calibration = create_azure_kinect_features(
-        DeviceType.PLAYBACK, mkv_path=mkv_path, playback_end_seconds=5 * 60 + 30
+        DeviceType.PLAYBACK,
+        mkv_path=MKV_PATH,
+        playback_end_seconds=MKV_END,
+        playback_frame_rate=PLAYBACK_FRAME_RATE,
     )
 
-    audio_path = Path("audio_wtd_group01.wav")
-    convert_audio(Path(rf"F:\Weights_Task\Data\Group_01-audio.wav"), audio_path)
+    converted_audio_file = Path("audio_wtd_converted.wav")
+    convert_audio(AUDIO_PATH, converted_audio_file)
 
-    audio = RecordedAudio(color, path=audio_path)
+    audio = RecordedAudio(color, path=converted_audio_file)
     vad_utt_audio = VADUtteranceBuilder(audio, delete_input_files=True)
     transcriptions = WhisperTranscription(vad_utt_audio)
 
@@ -66,11 +79,14 @@ if __name__ == "__main__":
     demo = Demo(
         targets=[
             DisplayFrame(output),
+            SaveVideo(output, frame_rate=PLAYBACK_FRAME_RATE, video_name=OUTPUT_FRAMES),
             Log(dense, prop, move, csv=True),
-            Log(transcriptions, stdout=True)
+            Log(transcriptions, stdout=True),
         ]
     )
 
     demo.show_dependency_graph()
     demo.run()
     demo.print_time_benchmarks()
+
+    add_audio_to_video(OUTPUT_FRAMES, converted_audio_file, FINAL_OUTPUT)

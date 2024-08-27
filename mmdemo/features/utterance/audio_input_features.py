@@ -12,6 +12,7 @@ import pyaudio
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import AudioFileInterface, AudioFileListInterface, ColorImageInterface
+from mmdemo.utils.files import create_tmp_dir
 
 
 @final
@@ -35,10 +36,9 @@ class MicAudio(BaseFeature[AudioFileListInterface]):
         super().__init__()
         self.device_id = device_id
         self.speaker_id = speaker_id if speaker_id is not None else f"mic{device_id:03}"
-        self.output_dir = Path("chunks") / f"mic{device_id:03}"
 
     def initialize(self):
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.output_dir = create_tmp_dir()
 
         self.queue = mp.Queue()
         self.done = mp.Value(c_bool, False)
@@ -189,9 +189,10 @@ class RecordedAudio(BaseFeature[AudioFileListInterface]):
         self.path = path
         self.video_frame_rate = video_frame_rate
 
-        stub = f"recorded" + hashlib.sha256(str(self.path).encode()).hexdigest()[:16]
-        self.speaker_id = speaker_id if speaker_id is not None else stub
-        self.output_dir = Path("chunks") / stub
+        if speaker_id is not None:
+            self.speaker_id = speaker_id
+        else:
+            self.speaker_id = f"recorded" + hashlib.sha256(str(self.path).encode()).hexdigest()[:16]
 
     @property
     def audio_time(self):
@@ -200,7 +201,7 @@ class RecordedAudio(BaseFeature[AudioFileListInterface]):
     def initialize(self):
         # create output directory, open input file, and initialize
         # params
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.output_dir = create_tmp_dir()
         self.reader = wave.open(str(self.path), "rb")
         self.num_frames_read = 0
         self.last_save_time = 0
