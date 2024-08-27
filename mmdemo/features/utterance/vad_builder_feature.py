@@ -1,4 +1,5 @@
 import os
+import shutil
 import wave
 from collections import defaultdict, deque
 from typing import final
@@ -54,6 +55,9 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
         self.output_dir = create_tmp_dir()
 
         self.outputs = deque()
+
+    def finalize(self):
+        shutil.rmtree(self.output_dir)
 
     def get_output(self, *args: AudioFileListInterface) -> AudioFileInterface | None:
         for audio_input_list in args:

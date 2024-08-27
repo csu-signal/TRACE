@@ -35,12 +35,19 @@ FINAL_OUTPUT = Path("final_output.mp4")
 
 
 def convert_audio(input_path, output_path):
+    """
+    Ensure the input audio will be in the correct format using ffmpeg.
+    Also normalizes the loudness of the audio.
+    """
     os.system(
         f"ffmpeg -i {input_path} -filter:a loudnorm -ar 16000 -ac 1 -acodec pcm_s16le {output_path}"
     )
 
 
 def add_audio_to_video(video, audio, output):
+    """
+    Add audio to a video using ffmpeg
+    """
     os.system(
         f"ffmpeg -i {video} -i {audio} -map 0:v -map 1:a -c:v copy -shortest {output}"
     )
@@ -89,6 +96,6 @@ if __name__ == "__main__":
 
     demo.show_dependency_graph()
     demo.run()
-    demo.print_time_benchmarks()
-
     add_audio_to_video(OUTPUT_FRAMES, converted_audio_file, FINAL_OUTPUT)
+
+    demo.print_time_benchmarks()

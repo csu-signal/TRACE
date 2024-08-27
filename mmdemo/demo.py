@@ -17,6 +17,111 @@ from mmdemo.interfaces import EmptyInterface
 logger = logging.getLogger(__name__)
 
 
+class Demo:
+    """
+    Create a runnable demo instance
+
+    Arguments:
+        targets -- list of features which will be updated
+            during the demo. The dependencies of these
+            features will also be updated.
+    """
+
+    def __init__(self, *, targets: list[BaseFeature]) -> None:
+        self.graph = FeatureGraph(targets)
+
+        self.interface_lookup: dict[int, BaseInterface] = {
+            id(i): EmptyInterface() for i in self.graph.sorted_features
+        }
+
+        self.evaluation_time = {k: 0.0 for k in self.interface_lookup.keys()}
+        self.evaluation_time_on_new = {k: 0.0 for k in self.interface_lookup.keys()}
+        self.new_count = {k: 0 for k in self.interface_lookup.keys()}
+
+        self.has_run = False
+
+    def run(self):
+        """
+        Run the demo
+        """
+        assert not self.has_run, "Demo has already been run"
+
+        for f in self.graph.sorted_features:
+            f.initialize()
+
+        while True:
+            done = False
+            for f in self.graph.sorted_features:
+                self.interface_lookup[id(f)]._new = False
+
+                args = [self.interface_lookup[id(d)] for d in f._deps]
+
+                start_time = time.time()
+                output = f.get_output(*args)
+                end_time = time.time()
+                self.evaluation_time[id(f)] += end_time - start_time
+
+                if output is not None:
+                    self.evaluation_time_on_new[id(f)] += end_time - start_time
+                    self.new_count[id(f)] += 1
+
+                    assert (
+                        output.is_new()
+                    ), "interface._new was modified when it should not have been"
+                    self.interface_lookup[id(f)] = output
+
+                if f.is_done():
+                    done = True
+
+            if done:
+                break
+
+        for f in self.graph.sorted_features:
+            f.finalize()
+
+        self.has_run = True
+
+    def show_dependency_graph(self):
+        """
+        Show the dependency graph using networkx and matplotlib
+        """
+        self.graph.show()
+
+    def print_time_benchmarks(self):
+        """
+        Print the time it takes for all features to be evaluated
+        """
+        assert self.has_run, "Run the demo first"
+        abs_times = [
+            (
+                self.graph.features_by_id[i],
+                self.evaluation_time[i],
+                self.evaluation_time_on_new[i] / self.new_count[i],
+            )
+            for i in self.interface_lookup.keys()
+            if self.new_count[i] > 0
+        ]
+        total_time = sum(map(lambda x: x[1], abs_times))
+        rel_times = [(name, t / total_time, avg) for name, t, avg in abs_times]
+
+        print("Total evaluation time (% of total):")
+        rel_times.sort(key=lambda x: x[1], reverse=True)
+        for name, t, _ in rel_times:
+            if t * 100 < 1e-2:
+                print("  ...")
+                break
+            print(f"  {name.__class__.__name__} -- {t*100:.2f}%")
+        print()
+
+        print("Average time per new output (seconds):")
+        rel_times.sort(key=lambda x: x[2], reverse=True)
+        for name, t, avg in rel_times:
+            if avg < 1e-5:
+                print("  ...")
+                break
+            print(f"  {name.__class__.__name__} -- {avg:.2E}")
+
+
 class DemoError(Exception):
     pass
 
@@ -160,108 +265,3 @@ class FeatureGraph:
             G, pos, node_color=color_map, labels=labels_dict, node_size=500, font_size=6
         )
         plt.show()
-
-
-class Demo:
-    """
-    Create a runnable demo instance
-
-    Arguments:
-        targets -- list of features which will be updated
-            during the demo. The dependencies of these
-            features will also be updated.
-    """
-
-    def __init__(self, *, targets: list[BaseFeature]) -> None:
-        self.graph = FeatureGraph(targets)
-
-        self.interface_lookup: dict[int, BaseInterface] = {
-            id(i): EmptyInterface() for i in self.graph.sorted_features
-        }
-
-        self.evaluation_time = {k: 0.0 for k in self.interface_lookup.keys()}
-        self.evaluation_time_on_new = {k: 0.0 for k in self.interface_lookup.keys()}
-        self.new_count = {k: 0 for k in self.interface_lookup.keys()}
-
-        self.has_run = False
-
-    def run(self):
-        """
-        Run the demo
-        """
-        assert not self.has_run, "Demo has already been run"
-
-        for f in self.graph.sorted_features:
-            f.initialize()
-
-        while True:
-            done = False
-            for f in self.graph.sorted_features:
-                self.interface_lookup[id(f)]._new = False
-
-                args = [self.interface_lookup[id(d)] for d in f._deps]
-
-                start_time = time.time()
-                output = f.get_output(*args)
-                end_time = time.time()
-                self.evaluation_time[id(f)] += end_time - start_time
-
-                if output is not None:
-                    self.evaluation_time_on_new[id(f)] += end_time - start_time
-                    self.new_count[id(f)] += 1
-
-                    assert (
-                        output.is_new()
-                    ), "interface._new was modified when it should not have been"
-                    self.interface_lookup[id(f)] = output
-
-                if f.is_done():
-                    done = True
-
-            if done:
-                break
-
-        for f in self.graph.sorted_features:
-            f.finalize()
-
-        self.has_run = True
-
-    def show_dependency_graph(self):
-        """
-        Show the dependency graph using networkx and matplotlib
-        """
-        self.graph.show()
-
-    def print_time_benchmarks(self):
-        """
-        Print the time it takes for all features to be evaluated
-        """
-        assert self.has_run, "Run the demo first"
-        abs_times = [
-            (
-                self.graph.features_by_id[i],
-                self.evaluation_time[i],
-                self.evaluation_time_on_new[i] / self.new_count[i],
-            )
-            for i in self.interface_lookup.keys()
-            if self.new_count[i] > 0
-        ]
-        total_time = sum(map(lambda x: x[1], abs_times))
-        rel_times = [(name, t / total_time, avg) for name, t, avg in abs_times]
-
-        print("Total evaluation time (% of total):")
-        rel_times.sort(key=lambda x: x[1], reverse=True)
-        for name, t, _ in rel_times:
-            if t * 100 < 1e-2:
-                print("  ...")
-                break
-            print(f"  {name.__class__.__name__} -- {t*100:.2f}%")
-        print()
-
-        print("Average time per new output (seconds):")
-        rel_times.sort(key=lambda x: x[2], reverse=True)
-        for name, t, avg in rel_times:
-            if avg < 1e-5:
-                print("  ...")
-                break
-            print(f"  {name.__class__.__name__} -- {avg:.2E}")

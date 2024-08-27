@@ -1,6 +1,7 @@
 import hashlib
 import multiprocessing as mp
 import os
+import shutil
 import time
 import wave
 from collections import deque
@@ -64,6 +65,8 @@ class MicAudio(BaseFeature[AudioFileListInterface]):
     def finalize(self):
         self.done.value = True
         self.process.join()
+
+        shutil.rmtree(self.output_dir)
 
     def get_output(self) -> AudioFileListInterface | None:
         if self.queue.empty():
@@ -220,6 +223,7 @@ class RecordedAudio(BaseFeature[AudioFileListInterface]):
 
     def finalize(self):
         self.reader.close()
+        shutil.rmtree(self.output_dir)
 
     def save_if_needed(self):
         """
