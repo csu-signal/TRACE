@@ -2,15 +2,15 @@ import time
 from typing import final
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.features.objects.frame_time_converter import FrameTimeConverter
 from mmdemo.interfaces import SelectedObjectsInterface, TranscriptionInterface
+from mmdemo.utils.frame_time_converter import FrameTimeConverter
 
 
 @final
 class AccumulatedSelectedObjects(BaseFeature[SelectedObjectsInterface]):
     """
     Determine which objects are being referenced in a given transcription
-    by accumulating the selected objects by frame.
+    by accumulating the selected objects over the time of the transcription.
 
     Input interfaces are `SelectedObjectsInterface` and `TranscriptionInterface`.
 
