@@ -56,7 +56,7 @@ See [mmdemo-azure-kinect/README.md](mmdemo-azure-kinect/README.md).
 ## Development
 
 ### Creating new features
-Every feature must inherit from `BaseFeature[T]`, where `T` is an output interface which inherits from `BaseInterface`. The required methods are documented in [mmdemo/base_feature.py](mmdemo/base_feature.py) For example, if we wanted to create a feature which takes a color image as input and outputs a predicted depth image, we would do something along the lines of the following:
+Every feature must inherit from `BaseFeature[T]`, where `T` is an output interface which inherits from `BaseInterface`. The required methods are documented in [mmdemo/base_feature.py](mmdemo/base_feature.py). For example, if we wanted to create a feature which takes a color image as input and outputs a predicted depth image, we would do something along the lines of the following:
 ```python
 @final
 class DepthPredictor(BaseFeature[DepthImageInterface]):
@@ -74,7 +74,7 @@ class DepthPredictor(BaseFeature[DepthImageInterface]):
         pred = ...
         return DepthImageInterface(frame=pred, frame_count=color.frame_count)
 ```
-This feature could now seamlessly be used as a dependency to any feature that requires a depth image as input. See `mmdemo/features/` for examples of how existing features are implemented. Also note that a feature should never directly modifify any of its input interfaces or dependent features. This breaks the modularity of the program and could cause other features to break in unexpected ways.
+This feature could now seamlessly be used as a dependency to any feature that requires a depth image as input. See `mmdemo/features/` for examples of how existing features are implemented. Also note that a feature should never directly modify any of its input interfaces or dependent features. This breaks the modularity of the program and could cause other features to break in unexpected ways.
 
 ### Testing
 
