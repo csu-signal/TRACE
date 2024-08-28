@@ -10,7 +10,8 @@ build/
 
 test_set.csv
 logging-output*/
+wtd_inputs/
 
 tmp_*/
 *.mp4
-# *.wav
+*.wav

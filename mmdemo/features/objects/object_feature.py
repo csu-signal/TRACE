@@ -153,21 +153,3 @@ class Object(BaseFeature[ObjectInterface3D]):
             return GamrTarget.SCALE
 
         raise ValueError("Unknown class id")
-
-    # def init_logger(self, log_dir):
-    #     if log_dir is not None:
-    #         self.logger = Logger(file=log_dir / self.LOG_FILE)
-    #     else:
-    #         self.logger = Logger()
-
-    #     self.logger.write_csv_headers("frame_index", "class", "p10", "p11", "p20", "p21")
-
-    # def log_block(self, frame_index, block: Block):
-    #     self.logger.append_csv(
-    #             frame_index,
-    #             block.description.value,
-    #             block.p1[0],
-    #             block.p1[1],
-    #             block.p2[0],
-    #             block.p2[1]
-    #     )

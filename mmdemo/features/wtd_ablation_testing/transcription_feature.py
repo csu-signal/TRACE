@@ -42,15 +42,20 @@ class _TranscriptionAndAudioGroundTruth(BaseFeature[_TranscriptionAndAudioInterf
     Input interface is `ColorImageInterface`. Output interface is `_TranscriptionAndAudioInterface`.
 
     Keyword arguments:
-    `csv_path` -- path to the WTD annotation asrOutput csv file. The audio paths in this
-    csv should be relative to the parent directory of this file.
+    `csv_path` -- path to the WTD annotation utterances.csv file.
+    `chunk_dir_path` -- path to the WTD annotation chunks directory
     """
 
     def __init__(
-        self, color: BaseFeature[ColorImageInterface], *, csv_path: Path
+        self,
+        color: BaseFeature[ColorImageInterface],
+        *,
+        csv_path: Path,
+        chunk_dir_path: Path
     ) -> None:
         super().__init__(color)
         self.csv_path = csv_path
+        self.chunk_dir_path = chunk_dir_path
 
     def initialize(self):
         self.data = _TranscriptionAndAudioGroundTruth.read_csv(self.csv_path)
@@ -81,11 +86,11 @@ class _TranscriptionAndAudioGroundTruth(BaseFeature[_TranscriptionAndAudioInterf
         # we have a valid utterance to return, so increment
         # the current index and return the utterance
         self.current_index += 1
-        start_time = self.frame_time_converter.get_time(row_data["start_frame"])
-        stop_time = self.frame_time_converter.get_time(row_data["stop_frame"])
+        start_time = self.frame_time_converter.get_time(int(row_data["start_frame"]))
+        stop_time = self.frame_time_converter.get_time(int(row_data["stop_frame"]))
 
         return _TranscriptionAndAudioInterface(
-            audio_file=Path(row_data["audio_file"]),
+            audio_file=self.chunk_dir_path / row_data["audio_file"],
             speaker_id=row_data["speaker_id"],
             start_time=start_time,
             end_time=stop_time,
@@ -179,20 +184,23 @@ class AudioGroundTruth(BaseFeature[AudioFileInterface]):
 
 
 def create_transcription_and_audio_ground_truth_features(
-    color: BaseFeature[ColorImageInterface], *, csv_path: Path
+    color: BaseFeature[ColorImageInterface], *, csv_path: Path, chunk_dir_path: Path
 ):
     """
     Create features for transcription and audio ablation.
 
     Arguments:
     `color` -- feature which return color frames, used for frame count
-    `csv_path` -- path to WTD asrOoutput csv file
+    `csv_path` -- path to the WTD annotation utterances.csv file.
+    `chunk_dir_path` -- path to the WTD annotation chunks directory
 
     Returns:
     transcription -- transcription feature which returns TranscriptionInterface
     audio -- audio feature which returns AudioFileInterface
     """
-    ta = _TranscriptionAndAudioGroundTruth(color, csv_path=csv_path)
+    ta = _TranscriptionAndAudioGroundTruth(
+        color, csv_path=csv_path, chunk_dir_path=chunk_dir_path
+    )
     transcription = TranscriptionGroundTruth(ta)
     audio = AudioGroundTruth(ta)
 

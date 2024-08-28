@@ -9,7 +9,7 @@ from mmdemo.interfaces import (
     ObjectInterface3D,
 )
 from mmdemo.interfaces.data import GamrTarget, ObjectInfo2D, ObjectInfo3D
-from mmdemo.utils.coordinates import pixel_to_camera_3d
+from mmdemo.utils.coordinates import CoordinateConversionError, pixel_to_camera_3d
 
 
 @final
@@ -26,7 +26,7 @@ class ObjectGroundTruth(BaseFeature[ObjectInterface3D]):
     recording as the annotations.
 
     Keyword arguments:
-    `csv_path` -- path to the WTD annotation objectOutput csv file
+    `csv_path` -- path to the WTD annotation objects.csv file
     """
 
     def __init__(
@@ -60,15 +60,20 @@ class ObjectGroundTruth(BaseFeature[ObjectInterface3D]):
 
             self.current_frame += 1
 
-        # if we didn't find any data, return none
+        # if we didn't find any data, return no objects
         if last_frame_with_data is None:
-            return None
+            return ObjectInterface3D(objects=[])
 
         objects: list[ObjectInfo3D] = []
         for o in self.data[last_frame_with_data]:
             # calculate 3d center using calibration and depth info
-            center = [(o.p1[0] + o.p2[0]) // 2, (o.p1[1] + o.p2[1]) // 2]
-            center = pixel_to_camera_3d(center, depth, calibration)
+            center_2d = [(o.p1[0] + o.p2[0]) // 2, (o.p1[1] + o.p2[1]) // 2]
+            try:
+                print(center_2d)
+                center = pixel_to_camera_3d(center_2d, depth, calibration)
+            except CoordinateConversionError:
+                print("skipping object")
+                continue
 
             objects.append(
                 ObjectInfo3D(

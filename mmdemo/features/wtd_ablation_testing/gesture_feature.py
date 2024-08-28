@@ -9,7 +9,7 @@ from mmdemo.interfaces.data import GamrTarget, ObjectInfo2D
 
 
 @final
-class GestureGroundTruth(BaseFeature[SelectedObjectsInterface]):
+class GestureSelectedObjectsGroundTruth(BaseFeature[SelectedObjectsInterface]):
     """
     Ground truth for which objects are being selected by gesture. Given
     an input frame count, this feature will return the most recent
@@ -23,7 +23,7 @@ class GestureGroundTruth(BaseFeature[SelectedObjectsInterface]):
     object locations.
 
     Keyword arguments:
-    `csv_path` -- path to the WTD annotation gestureOutput csv file
+    `csv_path` -- path to the WTD annotation gestures.csv file
     """
 
     def __init__(
@@ -33,7 +33,7 @@ class GestureGroundTruth(BaseFeature[SelectedObjectsInterface]):
         self.csv_path = csv_path
 
     def initialize(self):
-        self.data = GestureGroundTruth.read_csv_as_dict(self.csv_path)
+        self.data = GestureSelectedObjectsGroundTruth.read_csv_as_dict(self.csv_path)
         self.current_frame = 0
 
     def get_output(self, color: ColorImageInterface) -> SelectedObjectsInterface | None:
@@ -51,9 +51,9 @@ class GestureGroundTruth(BaseFeature[SelectedObjectsInterface]):
 
             self.current_frame += 1
 
-        # if we didn't find any data, return none
+        # if we didn't find any data, return no objects
         if last_frame_with_data is None:
-            return None
+            return SelectedObjectsInterface(objects=[])
 
         objects: list[tuple[ObjectInfo2D, bool]] = []
         for i in self.data[last_frame_with_data]:
@@ -80,8 +80,8 @@ class GestureGroundTruth(BaseFeature[SelectedObjectsInterface]):
             for row in reader:
                 data = {i: j for i, j in zip(keys, row)}
                 targets: list[GamrTarget] = []
-                for t in json.dumps(data["blocks"]):
-                    targets.append(GestureGroundTruth.str_to_target(t))
+                for t in json.loads(data["blocks"]):
+                    targets.append(GestureSelectedObjectsGroundTruth.str_to_target(t))
                 data_by_frame[int(data["frame"])] = targets
 
         return data_by_frame

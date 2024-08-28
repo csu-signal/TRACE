@@ -262,6 +262,11 @@ class FeatureGraph:
 
         # draw and show graph
         nx.draw_networkx(
-            G, pos, node_color=color_map, labels=labels_dict, node_size=500, font_size=6
+            G,
+            pos,
+            node_color=color_map,
+            labels=labels_dict,
+            node_size=1000,
+            font_size=6,
         )
         plt.show()

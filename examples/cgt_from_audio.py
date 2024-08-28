@@ -17,7 +17,6 @@ if __name__ == "__main__":
     moves = Move(transcription, utterances)
     cgt = CommonGroundTracking(moves, props)
 
-    demo = Demo(targets=[Log(mic, utterances, transcription, stdout=True)])
+    demo = Demo(targets=[Log(transcription, props, moves, cgt, stdout=True)])
     demo.show_dependency_graph()
     demo.run()
-    demo.print_time_benchmarks()

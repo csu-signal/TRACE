@@ -68,9 +68,9 @@ def create_utterance_input(utterancePath, audio_file, outputFile, output_chunk_d
             for i, j in subs:
                 text = re.sub(i, j, text, flags=re.IGNORECASE)
 
-            chunk_path = str(output_chunk_dir / f"chunk{count:04}.wav")
+            chunk_name = f"chunk{count:04}.wav"
             with wave.open(str(tmp_audio_file), "rb") as wf:
-                with wave.open(chunk_path, "wb") as wf2:
+                with wave.open(str(output_chunk_dir / chunk_name), "wb") as wf2:
                     wf.readframes(int(wf.getframerate() * startTime))
                     chunk = wf.readframes(
                         int(wf.getframerate() * (endTime - startTime))
@@ -80,7 +80,7 @@ def create_utterance_input(utterancePath, audio_file, outputFile, output_chunk_d
                     wf2.writeframes(chunk)
 
             writer.writerow(
-                [count, endFrame, "Group", text, startFrame, endFrame, chunk_path]
+                [count, endFrame, "Group", text, startFrame, endFrame, chunk_name]
             )
             count += 1
 

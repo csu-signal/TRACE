@@ -26,19 +26,25 @@ class DisplayFrame(BaseFeature[EmptyInterface]):
 
     def initialize(self):
         self.window_name = str(random.random())
+        self.window_should_be_up = False
 
     def get_output(
         self,
         color: ColorImageInterface,
     ):
         if not color.is_new():
+            self.window_should_be_up = False
             return None
 
         bgr = cv.cvtColor(color.frame, cv.COLOR_RGB2BGR)
         cv.imshow(self.window_name, bgr)
         cv.waitKey(1)
+        self.window_should_be_up = True
 
         return EmptyInterface()
 
     def is_done(self):
-        return cv.getWindowProperty(self.window_name, cv.WND_PROP_VISIBLE) < 1
+        return (
+            self.window_should_be_up
+            and cv.getWindowProperty(self.window_name, cv.WND_PROP_VISIBLE) < 1
+        )

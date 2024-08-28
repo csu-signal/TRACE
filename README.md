@@ -10,9 +10,29 @@ If a feature A needs input interface X, it can set another feature B with output
 
 This repository contains a python package called "mmdemo" that provides a "Demo" class to run a demo according to its dependency graph structure. This package also contains premade features used in our common ground tracking demo and a framework to easily create new features. Another package in this repository is "mmdemo-azure-kinect", which provides features for interacting with Azure Kinect cameras and recordings (only availible on Windows). Finally, we have comprehensive tests to make sure all of the premade features and demo logic works as expected.
 
-## Usage
+## Example Usage
 
-TODO: example usage here
+Any number of "target" features can be given to the Demo constructor. These targets and their dependencies will be evaluated such that all dependencies of a feature are done evaluating before the feature itself evaluates. The following script will perform common ground tracking using microphone input.
+```python
+from mmdemo.demo import Demo
+from mmdemo.features import ( CommonGroundTracking, Log,
+    MicAudio, Move, Proposition, VADUtteranceBuilder, 
+    WhisperTranscription )
+
+if __name__ == "__main__":
+    mic = MicAudio(device_id=6)
+    utterances = VADUtteranceBuilder(mic)
+    transcription = WhisperTranscription(utterances)
+    props = Proposition(transcription)
+    moves = Move(transcription, utterances)
+    cgt = CommonGroundTracking(moves, props)
+
+    demo = Demo(targets=[Log(transcription, props, moves, cgt, stdout=True)])
+    demo.run()
+```
+
+Dependency graph visualizations can also be generated automatically by calling `demo.run()`. In the example above, this would create the following image.
+![dependency graph](images/dependency_graph.png)
 
 ## Setup Instructions
 
@@ -35,10 +55,33 @@ See [mmdemo-azure-kinect/README.md](mmdemo-azure-kinect/README.md).
 
 ## Development
 
-Every feature must inherit from `BaseFeature[T]`, where `T` is an output interface which inherits from `BaseInterface`. See `mmdemo/features/` for many examples of how to create new features.
+### Creating new features
+Every feature must inherit from `BaseFeature[T]`, where `T` is an output interface which inherits from `BaseInterface`. The required methods are documented in [mmdemo/base_feature.py](mmdemo/base_feature.py) For example, if we wanted to create a feature which takes a color image as input and outputs a predicted depth image, we would do something along the lines of the following:
+```python
+@final
+class DepthPredictor(BaseFeature[DepthImageInterface]):
+    def __init__(self, color: BaseFeature[ColorImageInterface]):
+        super().__init__(color)
+
+    def initialize(self):
+        # Initialize model
+        pass
+
+    def get_output(self, color: ColorImageInterface) -> DepthImageInterface | None:
+        if not color.is_new():
+            return None
+        # evaluate model on color.frame
+        pred = ...
+        return DepthImageInterface(frame=pred, frame_count=color.frame_count)
+```
+This feature could now seamlessly be used as a dependency to any feature that requires a depth image as input. See `mmdemo/features/` for examples of how existing features are implemented. Also note that a feature should never directly modifify any of its input interfaces or dependent features. This breaks the modularity of the program and could cause other features to break in unexpected ways.
+
+### Testing
 
 Pytest is used for all of the tests in this project. Tests which require our own machine learning models are marked as "model_dependent" and can be executed with `pytest -m "model_dependent"`. These will likely not all pass. Other tests can be executed with `pytest -m "not model_dependent"`, and these should all pass if there are no bugs. To execute all tests at once, just run `pytest`.
 
-The source code is formatted using `black` and `isort`. This can be set up to run automatically on commit by running `pre-commit install`.
+### Contributing
 
-Feel free to reach out to Hannah VanderHoeven with any questions: Hannah.VanderHoeven@colostate.edu
+The source code should be formatted using `black` and `isort`. This can be set up to run automatically on commit by running `pre-commit install`. See TODO for instructions on how to create and merge PRs.
+
+Feel free to reach out to Hannah VanderHoeven (Hannah.VanderHoeven@colostate.edu) or Brady Bhalla (bbhalla@caltech.edu) with any questions.

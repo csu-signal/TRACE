@@ -49,19 +49,23 @@ class Log(BaseFeature[EmptyInterface]):
                 self.files.append(f"{name}{counters[name]}.csv")
                 counters[name] += 1
 
-        if output_dir is not None:
-            self.output_dir = Path(output_dir)
-        else:
-            self.output_dir = Path(
-                "logging-output-"
-                + datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S")
-            )
+        self._out_dir = output_dir
 
         super().__init__(*args)
 
     def initialize(self):
         if self.csv:
+            # create output directory
+            if self._out_dir is not None:
+                self.output_dir = Path(self._out_dir)
+            else:
+                self.output_dir = Path(
+                    "logging-output-"
+                    + datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S")
+                )
             os.makedirs(self.output_dir, exist_ok=True)
+
+            # create output files
             for f in self.files:
                 file = self.output_dir / f
                 assert (

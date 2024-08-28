@@ -6,6 +6,9 @@ from mmdemo.interfaces import SelectedObjectsInterface, TranscriptionInterface
 from mmdemo.utils.frame_time_converter import FrameTimeConverter
 
 
+# TODO: this feature is not the most efficient because it's memory can grow very large.
+# Some sort of binning or clearing old memory could be implemented, but this is very
+# prone to errors so write good tests if this is done.
 @final
 class AccumulatedSelectedObjects(BaseFeature[SelectedObjectsInterface]):
     """
@@ -36,22 +39,22 @@ class AccumulatedSelectedObjects(BaseFeature[SelectedObjectsInterface]):
     ):
         if selected_objects.is_new():
             self.frame_time_converter.add_data(self.internal_frame_count, time.time())
-            self.saved_object_data[
-                self.get_frame_bin(self.internal_frame_count)
-            ] = selected_objects
+            self.saved_object_data[self.internal_frame_count] = selected_objects
             self.internal_frame_count += 1
 
         if not transcription.is_new():
             return None
+
+        # if there are no objects seen yet, return an empty interface
+        if len(self.frame_time_converter.data) == 0:
+            return SelectedObjectsInterface(objects=[])
 
         objects_seen = set()
         objects = []
 
         start_frame = self.frame_time_converter.get_frame(transcription.start_time)
         end_frame = self.frame_time_converter.get_frame(transcription.end_time)
-        for i in range(
-            self.get_frame_bin(start_frame), self.get_frame_bin(end_frame) + 1
-        ):
+        for i in range(start_frame, end_frame + 1):
             if i not in self.saved_object_data:
                 continue
 
@@ -65,6 +68,3 @@ class AccumulatedSelectedObjects(BaseFeature[SelectedObjectsInterface]):
                     objects_seen.add(info.object_class)
 
         return SelectedObjectsInterface(objects=objects)
-
-    def get_frame_bin(self, frame) -> int:
-        return frame // 10
