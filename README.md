@@ -31,7 +31,7 @@ if __name__ == "__main__":
     demo.run()
 ```
 
-Dependency graph visualizations can also be generated automatically by calling `demo.run()`. In the example above, this would create the following image.
+Dependency graph visualizations can also be generated automatically by calling `demo.show_dependency_graph()`, which can be useful for making sure the demo is structured correctly. In the example above, this would create the following image.
 ![dependency graph](images/dependency_graph.png)
 
 ## Setup Instructions
