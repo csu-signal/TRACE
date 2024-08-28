@@ -10,8 +10,7 @@ build/
 
 test_set.csv
 logging-output*/
-chunks/
 
 tmp_*/
 *.mp4
-*.wav
+# *.wav
