@@ -2,7 +2,7 @@ import pytest
 
 from mmdemo.features.move.move_feature import Move
 from mmdemo.interfaces import AudioFileInterface, MoveInterface, TranscriptionInterface
-from tests.utils.fake_feature import FakeFeature
+from tests.utils.features import FakeFeature
 
 
 @pytest.fixture(scope="module")

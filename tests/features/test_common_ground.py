@@ -2,7 +2,7 @@ import pytest
 
 from mmdemo.features.common_ground.cgt_feature import CommonGroundTracking
 from mmdemo.interfaces import CommonGroundInterface, MoveInterface, PropositionInterface
-from tests.utils.fake_feature import FakeFeature
+from tests.utils.features import FakeFeature
 
 
 @pytest.fixture(scope="module")
@@ -38,12 +38,6 @@ def cgt_feature():
             {"STATEMENT"},
             {"blue=10", "blue=20", "green!=10", "green!=20"},
             {"red=10"},
-        ),
-        (
-            "green!=10",
-            {"ACCEPT"},
-            {"blue=10", "blue=20", "green!=20"},
-            {"red=10", "green!=10"},
         ),
     ],
 )

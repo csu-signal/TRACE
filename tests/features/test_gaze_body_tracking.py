@@ -6,7 +6,7 @@ from mmdemo.interfaces import BodyTrackingInterface, GazeConesInterface
 from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import world_3d_to_camera_3d
 from mmdemo.utils.joints import Joint
-from tests.utils.fake_feature import FakeFeature
+from tests.utils.features import FakeFeature
 
 
 # fixtures are data that we want to use in the test.

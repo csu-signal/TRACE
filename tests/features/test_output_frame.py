@@ -11,7 +11,7 @@ from mmdemo.interfaces import (
     SelectedObjectsInterface,
 )
 from mmdemo.interfaces.data import Cone, GamrTarget, Handedness, ObjectInfo3D
-from tests.utils.fake_feature import FakeFeature
+from tests.utils.features import FakeFeature
 
 
 @pytest.fixture(scope="module")

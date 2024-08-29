@@ -3,7 +3,7 @@ import pytest
 from mmdemo.features.gesture.gesture_feature import Gesture
 from mmdemo.interfaces import GestureConesInterface
 from mmdemo.interfaces.data import Handedness
-from tests.utils.fake_feature import FakeFeature
+from tests.utils.features import FakeFeature
 
 
 @pytest.fixture(scope="module")

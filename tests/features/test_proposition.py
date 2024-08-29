@@ -2,7 +2,7 @@ import pytest
 
 from mmdemo.features.proposition.prop_feature import Proposition
 from mmdemo.interfaces import PropositionInterface, TranscriptionInterface
-from tests.utils.fake_feature import FakeFeature
+from tests.utils.features import FakeFeature
 
 
 @pytest.fixture(scope="module")

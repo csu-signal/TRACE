@@ -8,7 +8,7 @@ from mmdemo.features.transcription.whisper_transcription_feature import (
 )
 from mmdemo.interfaces import AudioFileInterface, TranscriptionInterface
 from tests.utils.audio import get_length
-from tests.utils.fake_feature import FakeFeature
+from tests.utils.features import FakeFeature
 from tests.utils.text import levenshtein
 
 

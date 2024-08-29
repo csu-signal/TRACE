@@ -2,7 +2,7 @@ import pytest
 
 from mmdemo.features.pose.pose_feature import Pose
 from mmdemo.interfaces import PoseInterface
-from tests.utils.fake_feature import FakeFeature
+from tests.utils.features import FakeFeature
 
 
 @pytest.fixture(scope="module")

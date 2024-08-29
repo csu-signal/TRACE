@@ -5,7 +5,7 @@ from mmdemo.features.transcription.dense_paraphrasing_feature import (
 )
 from mmdemo.interfaces import SelectedObjectsInterface, TranscriptionInterface
 from mmdemo.interfaces.data import GamrTarget, ObjectInfo2D
-from tests.utils.fake_feature import FakeFeature
+from tests.utils.features import FakeFeature
 
 
 @pytest.fixture(scope="module")
