@@ -46,7 +46,7 @@ class AccumulatedSelectedObjects(BaseFeature[SelectedObjectsInterface]):
             return None
 
         # if there are no objects seen yet, return an empty interface
-        if len(self.frame_time_converter.data) == 0:
+        if self.frame_time_converter.get_num_datapoints() == 0:
             return SelectedObjectsInterface(objects=[])
 
         objects_seen = set()

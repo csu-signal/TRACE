@@ -25,16 +25,12 @@ def referenced_objects(monkeypatch):
         def get_time(self, frame):
             return frame + 5
 
+        def get_num_datapoints(self):
+            return 2
+
     # override the frame time converter such that frames
     # and times are equal
     monkeypatch.setattr(ref, "frame_time_converter", FakeFrameTimeConverter())
-
-    # override the frame bins such that a new frame
-    # bin is created every frame
-    def override_frame_bin(frame):
-        return frame
-
-    monkeypatch.setattr(ref, "get_frame_bin", override_frame_bin)
 
     yield ref
     ref.finalize()

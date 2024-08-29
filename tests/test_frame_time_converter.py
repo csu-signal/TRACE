@@ -28,3 +28,5 @@ def test_frame_time_converter(data, ft_expected, tf_expected):
 
     for t, f in tf_expected:
         assert converter.get_frame(t) == f
+
+    assert converter.get_num_datapoints() == len(data)

@@ -33,6 +33,12 @@ class FrameTimeConverter:
         """
         return self._binary_search(1, time)[0]
 
+    def get_num_datapoints(self):
+        """
+        Returns how many datapoints have been added
+        """
+        return len(self.data)
+
     def _binary_search(self, index, val):
         assert len(self.data) > 0
         if self.data[-1][index] < val:
