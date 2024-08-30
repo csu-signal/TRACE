@@ -178,6 +178,7 @@ if __name__ == "__main__":
     output_frame_path = Path(f"output_frames_group{group}.mp4")
     final_video_path = Path(f"final_group{group}.mp4")
 
+    # create demo with ground truth inputs
     demo = create_demo(
         group,
         ground_truth_objects=True,
@@ -189,8 +190,13 @@ if __name__ == "__main__":
     demo.show_dependency_graph()
 
     demo.run()
+
+    # add audio to output frames
+    converted_audio_path = Path(f"audio_converted_group{group}.wav")
+    backup_audio_path = Path(f"wtd_inputs/group{group}/chunks/full_recording.wav")
+    audio_to_add = converted_audio_path if converted_audio_path.is_file() else backup_audio_path
     add_audio_to_video(
-        final_video_path, Path(f"audio_converted_group{group}.wav"), final_video_path
+        output_frame_path, audio_to_add, final_video_path
     )
 
     demo.print_time_benchmarks()

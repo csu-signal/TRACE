@@ -35,7 +35,9 @@ class Gesture(BaseFeature[GestureConesInterface]):
 
     BASE_RADIUS = 40
     VERTEX_RADIUS = 70
-    CONE_LENGTH = 100
+
+    # the number of finger lengths of the output cone
+    CONE_FINGER_LENGTHS = 5
 
     HAND_BOUNDING_BOX_WIDTH = 192
     HAND_BOUNDING_BOX_HEIGHT = 192
@@ -115,13 +117,12 @@ class Gesture(BaseFeature[GestureConesInterface]):
                     base3D = pixel_to_camera_3d(base, depth, calibration)
                     tip3D = pixel_to_camera_3d(tip, depth, calibration)
 
-                    finger_dir = tip3D - base3D
-                    finger_dir /= np.linalg.norm(finger_dir)
+                    finger_length = tip3D - base3D
 
                     cones_output.append(
                         Cone(
                             base3D,
-                            base3D + finger_dir * self.CONE_LENGTH,
+                            base3D + finger_length * self.CONE_FINGER_LENGTHS,
                             self.BASE_RADIUS,
                             self.VERTEX_RADIUS,
                         )

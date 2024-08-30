@@ -35,6 +35,9 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
         self,
         *args: BaseFeature[AudioFileListInterface],
         delete_input_files=False,
+        # TODO: max utterance time is set to 5 by default, but this
+        # should probably be investigated to determine the best
+        # value
         max_utterance_time: float | None = 5,
     ):
         super().__init__(*args)

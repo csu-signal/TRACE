@@ -85,6 +85,11 @@ class MicAudio(BaseFeature[AudioFileListInterface]):
         queue,
         done,
         output_dir,
+        # TODO: the performace seems very sensitive to chunk lengths
+        # but the behavior is different based on how long people wait
+        # between utterances. Some exploration may be needed to find
+        # the optimal value, or a smarter utterance segmentation could
+        # be implemented.
         chunk_length_seconds=1,
         rate=16000,
     ):
@@ -184,6 +189,10 @@ class RecordedAudio(BaseFeature[AudioFileListInterface]):
     READ_FRAME_COUNT = 512
 
     # the length of output audio files
+    # TODO: (copied from above) the performace seems very sensitive to chunk
+    # lengths but the behavior is different based on how long people wait
+    # between utterances. Some exploration may be needed to find the optimal
+    # value, or a smarter utterance segmentation could be implemented.
     SAVE_INTERVAL_SECONDS = 1
 
     def __init__(
