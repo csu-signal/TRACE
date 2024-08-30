@@ -83,6 +83,25 @@ This feature could now seamlessly be used as a dependency to any feature that re
 
 Pytest is used for all of the tests in this project. Tests which require our own machine learning models are marked as "model_dependent" and can be executed with `pytest -m "model_dependent"`. These will likely not all pass. Other tests can be executed with `pytest -m "not model_dependent"`, and these should all pass if there are no bugs. To execute all tests at once, just run `pytest`.
 
+### Directory structure
+
+- `examples` -- example demonstrations using different combinations of features. This includes our EMNLP submission demonstration in both live and prerecorded/ablation testing forms.
+- `mmdemo` -- the core package in this repo which provides demo logic and premade features.
+    - `features` -- a collection of premade features we have used so far.
+    - `interfaces` -- interface specifications for features to use as inputs / outputs.
+    - `utils` -- helper functions and classes used across multiple features
+- `mmdemo-azure-kinect` -- a python wrapper library around the C++ code which interacts with Azure Kinect cameras and playback devices. This provides features which can be used alongside features in the mmdemo package.
+    - `_azure_kinect-stubs` -- typing information for the wrapper library
+    - `mmdemo_azure_kinect` -- the main module of the wrapper library which provides the features
+    - `src` -- the C++ source code of the library
+- `scripts` -- scripts for performing auxiliary tasks to the demo
+    - `wtd_annotations` -- scripts for processing WTD annotation files into a format which can be used as ground truth information during ablation testing
+- `tests` -- all of our tests to make sure the demo and features function correctly
+    - `data` -- example data used in our tests
+    - `features` -- tests for each premade feature
+    - `utils` -- helper functions and classes to make writing tests easier
+    - `wtd_ablation` -- tests which make sure the ground truth features work correctly
+
 ### Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
