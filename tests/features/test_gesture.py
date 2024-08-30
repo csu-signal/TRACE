@@ -17,6 +17,15 @@ def gesture_detector():
     g.finalize()
 
 
+def test_default_model(gesture_detector):
+    assert hasattr(
+        gesture_detector, "DEFAULT_MODEL_PATH"
+    ), "gesture should specify a default model path"
+    assert (
+        gesture_detector.DEFAULT_MODEL_PATH.is_file()
+    ), "gesture model path should be an existing file"
+
+
 @pytest.mark.model_dependent
 def test_output(gesture_detector: Gesture, azure_kinect_frame, azure_kinect_frame_file):
     color, depth, body_tracking, calibration = azure_kinect_frame

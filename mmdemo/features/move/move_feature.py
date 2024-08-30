@@ -41,21 +41,31 @@ class Move(BaseFeature[MoveInterface]):
 
     Input interfaces are `TranscriptionInterface`, `AudioFileInterface`
     Output interface is `MoveInterface`
+
+    Keyword arguments:
+    `model_path` -- the path to the model (or None to use the default)
     """
+
+    DEFAULT_MODEL_PATH = Path(__file__).parent / "production_move_classifier.pt"
 
     def __init__(
         self,
         transcription: BaseFeature[TranscriptionInterface],
         audio: BaseFeature[AudioFileInterface],
+        *,
+        model_path: Path | None = None
     ) -> None:
         super().__init__(transcription, audio)
+        if model_path is None:
+            self.model_path = self.DEFAULT_MODEL_PATH
+        else:
+            self.model_path = model_path
 
     def initialize(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        model_path = Path(__file__).parent / "production_move_classifier.pt"
         self.model = torch.load(
-            str(model_path), pickle_module=custom_pickle, map_location=self.device
+            str(self.model_path), pickle_module=custom_pickle, map_location=self.device
         )
         self.model.eval()
 

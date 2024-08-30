@@ -16,6 +16,15 @@ def pose_detector():
     p.finalize()
 
 
+def test_default_model(pose_detector):
+    assert hasattr(
+        pose_detector, "DEFAULT_MODEL_PATH"
+    ), "pose should specify a default model path"
+    assert (
+        pose_detector.DEFAULT_MODEL_PATH.is_dir()
+    ), "pose model path should be an existing directory"
+
+
 @pytest.mark.model_dependent
 def test_output(pose_detector: Pose, azure_kinect_frame):
     _, _, body_tracking, _ = azure_kinect_frame

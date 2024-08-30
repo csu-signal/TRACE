@@ -13,6 +13,15 @@ def proposition_feature():
     prop.finalize()
 
 
+def test_default_model(proposition_feature):
+    assert hasattr(
+        proposition_feature, "DEFAULT_MODEL_PATH"
+    ), "prop should specify a default model path"
+    assert (
+        proposition_feature.DEFAULT_MODEL_PATH.is_dir()
+    ), "prop model path should be an existing directory"
+
+
 @pytest.mark.model_dependent
 @pytest.mark.parametrize(
     "text,expected",

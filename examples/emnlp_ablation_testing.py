@@ -1,10 +1,8 @@
-import csv
 import os
 from pathlib import Path
 
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 
-from mmdemo.base_feature import BaseFeature
 from mmdemo.demo import Demo
 from mmdemo.features import (
     AccumulatedSelectedObjects,
@@ -29,11 +27,6 @@ from mmdemo.features.wtd_ablation_testing import (
     ObjectGroundTruth,
     create_transcription_and_audio_ground_truth_features,
 )
-from mmdemo.interfaces import (
-    EmptyInterface,
-    SelectedObjectsInterface,
-    TranscriptionInterface,
-)
 
 # mkv path for WTD group
 WTD_MKV_PATH = (
@@ -43,14 +36,13 @@ WTD_MKV_PATH = (
 # audio path for WTD group
 WTD_AUDIO_PATH = "F:/Weights_Task/Data/Group_{0:02}-audio.wav"
 
-
 # ground truth path for WTD group. These can be generated with
 # scripts/wtd_annotations/create_all_wtd_inputs.py
 WTD_GROUND_TRUTH_DIR = "wtd_inputs/group{0}"
 
-# # TODO: custom model paths are not yet supported
-# WTD_PROP_MODEL_PATH = "F:/brady_wtd_eval_models/steroid_model_g{0}"
-# WTD_MOVE_MODEL_PATH = "F:/brady_wtd_eval_models/move_classifier_{0:02}.pt"
+# paths to models not trained on the current group
+WTD_PROP_MODEL_PATH = "F:/brady_wtd_eval_models/steroid_model_g{0}"
+WTD_MOVE_MODEL_PATH = "F:/brady_wtd_eval_models/move_classifier_{0:02}.pt"
 
 # The number of seconds of the recording to process
 WTD_END_TIMES = {
@@ -78,6 +70,7 @@ def create_demo(
     ground_truth_objects=False,
     ground_truth_gestures=False,
     ground_truth_utterances=False,
+    output_video_name=None,
 ):
     ground_truth_dir = Path(WTD_GROUND_TRUTH_DIR.format(group))
 
@@ -133,8 +126,15 @@ def create_demo(
         transcriptions, referenced_objects
     )
 
-    props = Proposition(dense_paraphrased_transcriptions)
-    moves = Move(dense_paraphrased_transcriptions, utterances)
+    props = Proposition(
+        dense_paraphrased_transcriptions,
+        model_path=Path(WTD_PROP_MODEL_PATH.format(group)),
+    )
+    moves = Move(
+        dense_paraphrased_transcriptions,
+        utterances,
+        model_path=Path(WTD_MOVE_MODEL_PATH.format(group)),
+    )
 
     cgt = CommonGroundTracking(moves, props)
 
@@ -143,39 +143,15 @@ def create_demo(
     return Demo(
         targets=[
             DisplayFrame(output_frame),
-            # SaveVideo(output_frame, frame_rate=PLAYBACK_FRAME_RATE),
-            # Log(dense_paraphrased_transcriptions, props, moves, csv=True),
-            CustomOut(
-                transcriptions,
-                dense_paraphrased_transcriptions,
-                selected_objects,
-                referenced_objects,
+            SaveVideo(
+                output_frame,
+                frame_rate=PLAYBACK_FRAME_RATE,
+                video_name=output_video_name,
             ),
+            Log(dense_paraphrased_transcriptions, props, moves, csv=True),
+            Log(transcriptions, stdout=True),
         ]
     )
-
-
-class CustomOut(BaseFeature):
-    def get_output(
-        self,
-        t: TranscriptionInterface,
-        d: TranscriptionInterface,
-        s: SelectedObjectsInterface,
-        r: SelectedObjectsInterface,
-    ):
-        if s.is_new():
-            if len(s.objects) > 0:
-                print("sel objects:", [str(i[0].object_class.value) for i in s.objects])
-
-        if t.is_new() and r.is_new() and d.is_new():
-            print(
-                "ref objects:",
-                [str(i[0].object_class.value) for i in r.objects if i[1]],
-            )
-            print("normal text:", t.text)
-            print("paraphrased text:", d.text)
-            print("\n")
-        return EmptyInterface()
 
 
 def convert_audio(input_path: Path, output_path: Path):
@@ -199,27 +175,22 @@ def add_audio_to_video(video, audio, output):
 
 if __name__ == "__main__":
     group = 1
-    demo_no_gt = create_demo(group)
-    demo_gt_objects = create_demo(group, ground_truth_objects=True)
-    demo_gt_gestures = create_demo(group, ground_truth_gestures=True)
-    demo_gt_utterances = create_demo(group, ground_truth_utterances=True)
-    demo_all_gt = create_demo(
+    output_frame_path = Path(f"output_frames_group{group}.mp4")
+    final_video_path = Path(f"final_group{group}.mp4")
+
+    demo = create_demo(
         group,
         ground_truth_objects=True,
         ground_truth_gestures=True,
         ground_truth_utterances=True,
+        output_video_name=output_frame_path,
     )
 
-    for demo in (
-        # demo_no_gt,
-        demo_gt_objects,
-        # demo_gt_gestures,
-        # demo_gt_utterances,
-        # demo_all_gt,
-    ):
-        demo.show_dependency_graph()
+    demo.show_dependency_graph()
 
-        demo.run()
-        # add_audio_to_video(OUTPUT_FRAMES, converted_audio_file, FINAL_OUTPUT)
-        #
-        # demo.print_time_benchmarks()
+    demo.run()
+    add_audio_to_video(
+        final_video_path, Path(f"audio_converted_group{group}.wav"), final_video_path
+    )
+
+    demo.print_time_benchmarks()

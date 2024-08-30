@@ -10,7 +10,7 @@ If a feature A needs input interface X, it can set another feature B with output
 
 This repository contains a python package called "mmdemo" that provides a "Demo" class to run a demo according to its dependency graph structure. This package also contains premade features used in our common ground tracking demo and a framework to easily create new features. Another package in this repository is "mmdemo-azure-kinect", which provides features for interacting with Azure Kinect cameras and recordings (only availible on Windows). Finally, we have comprehensive tests to make sure all of the premade features and demo logic works as expected.
 
-## Example Usage
+# Example Usage
 
 Any number of "target" features can be given to the Demo constructor. These targets and their dependencies will be evaluated such that all dependencies of a feature are done evaluating before the feature itself evaluates. The following script will perform common ground tracking using microphone input.
 
@@ -35,9 +35,9 @@ if __name__ == "__main__":
 Dependency graph visualizations can also be generated automatically by calling `demo.show_dependency_graph()`, which can be useful for making sure the demo is structured correctly. In the example above, this would create the following image.
 ![dependency graph](images/dependency_graph.png)
 
-## Setup Instructions
+# Setup Instructions
 
-### Main package
+## Main package
 Python 3.10 or higher is required if using conda because of [this unresolved issue](https://github.com/conda/conda/issues/10897). The conda environment can be created with `conda env create --file multimodalDemo.yaml`.
 
 Install the package with `pip install -e .` from the root directory of the repo.
@@ -48,17 +48,37 @@ Download the following models from [here](https://colostate-my.sharepoint.com/:f
 - `steroid_model/` ==> `mmdemo/features/proposition/data/prop_extraction_model/`
 - `production_move_classifier.pt` ==> `mmdemo/features/move/production_move_classifier.pt`
 
-### Azure Kinect features (optional, only for Windows)
+## Azure Kinect features (optional, only for Windows)
 
 See [mmdemo-azure-kinect/README.md](mmdemo-azure-kinect/README.md).
 
-## Development
 
-### Environment
+# Directory structure
+
+- `examples` -- example demonstrations using different combinations of features. This includes our EMNLP submission demonstration in both live and prerecorded/ablation testing forms.
+- `mmdemo` -- the core package in this repo which provides demo logic and premade features.
+    - `features` -- a collection of premade features we have used so far.
+    - `interfaces` -- interface specifications for features to use as inputs / outputs.
+    - `utils` -- helper functions and classes used across multiple features
+- `mmdemo-azure-kinect` -- a python wrapper library around the C++ code which interacts with Azure Kinect cameras and playback devices. This provides features which can be used alongside features in the mmdemo package.
+    - `_azure_kinect-stubs` -- typing information for the wrapper library
+    - `mmdemo_azure_kinect` -- the main module of the wrapper library which provides the features
+    - `src` -- the C++ source code of the library
+- `scripts` -- scripts for performing auxiliary tasks to the demo
+    - `wtd_annotations` -- scripts for processing WTD annotation files into a format which can be used as ground truth information during ablation testing
+- `tests` -- all of our tests to make sure the demo and features function correctly
+    - `data` -- example data used in our tests
+    - `features` -- tests for each premade feature
+    - `utils` -- helper functions and classes to make writing tests easier
+    - `wtd_ablation` -- tests which make sure the ground truth features work correctly
+
+# Development
+
+## Environment
 
 After setting up the environment by following the instructions above, run `pre-commit install` to set up formatters to run automatically on commit. If the conda environment file changes, update the environment by running `conda env update --file multimodalDemo.yaml --prune`.
 
-### Creating new features
+## Creating new features
 Every feature must inherit from `BaseFeature[T]`, where `T` is an output interface which inherits from `BaseInterface`. The required methods are documented in [mmdemo/base_feature.py](mmdemo/base_feature.py). For example, if we wanted to create a feature which takes a color image as input and outputs a predicted depth image, we would do something along the lines of the following:
 ```python
 @final
@@ -79,30 +99,11 @@ class DepthPredictor(BaseFeature[DepthImageInterface]):
 ```
 This feature could now seamlessly be used as a dependency to any feature that requires a depth image as input. See `mmdemo/features/` for examples of how existing features are implemented. Also note that a feature should never directly modify any of its input interfaces or dependent features. This breaks the modularity of the program and could cause other features to break in unexpected ways.
 
-### Testing
+## Testing
 
 Pytest is used for all of the tests in this project. Tests which require our own machine learning models are marked as "model_dependent" and can be executed with `pytest -m "model_dependent"`. These will likely not all pass. Other tests can be executed with `pytest -m "not model_dependent"`, and these should all pass if there are no bugs. To execute all tests at once, just run `pytest`.
 
-### Directory structure
-
-- `examples` -- example demonstrations using different combinations of features. This includes our EMNLP submission demonstration in both live and prerecorded/ablation testing forms.
-- `mmdemo` -- the core package in this repo which provides demo logic and premade features.
-    - `features` -- a collection of premade features we have used so far.
-    - `interfaces` -- interface specifications for features to use as inputs / outputs.
-    - `utils` -- helper functions and classes used across multiple features
-- `mmdemo-azure-kinect` -- a python wrapper library around the C++ code which interacts with Azure Kinect cameras and playback devices. This provides features which can be used alongside features in the mmdemo package.
-    - `_azure_kinect-stubs` -- typing information for the wrapper library
-    - `mmdemo_azure_kinect` -- the main module of the wrapper library which provides the features
-    - `src` -- the C++ source code of the library
-- `scripts` -- scripts for performing auxiliary tasks to the demo
-    - `wtd_annotations` -- scripts for processing WTD annotation files into a format which can be used as ground truth information during ablation testing
-- `tests` -- all of our tests to make sure the demo and features function correctly
-    - `data` -- example data used in our tests
-    - `features` -- tests for each premade feature
-    - `utils` -- helper functions and classes to make writing tests easier
-    - `wtd_ablation` -- tests which make sure the ground truth features work correctly
-
-### Contributing
+## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 

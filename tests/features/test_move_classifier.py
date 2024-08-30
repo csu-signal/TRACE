@@ -18,6 +18,15 @@ def move_feature():
     move.finalize()
 
 
+def test_default_model(move_feature):
+    assert hasattr(
+        move_feature, "DEFAULT_MODEL_PATH"
+    ), "move should specify a default model path"
+    assert (
+        move_feature.DEFAULT_MODEL_PATH.is_file()
+    ), "move model path should be an existing file"
+
+
 # TODO: record actual inputs to have audio files which correspond
 # to the transcriptions
 @pytest.mark.model_dependent

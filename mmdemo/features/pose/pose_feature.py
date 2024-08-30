@@ -7,9 +7,6 @@ import torch.nn as nn
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import BodyTrackingInterface, PoseInterface
 
-# import helpers
-# from mmdemo.features.proposition.helpers import ...
-
 
 class SkeletonPoseClassifier(nn.Module):
     """
@@ -40,18 +37,30 @@ class Pose(BaseFeature[PoseInterface]):
     Input interface is `BodyTrackingInterface`
 
     Output interface is `PoseInterface`
+
+    Keyword arguments:
+    `left_position` -- divider between P1 and P2
+    `middle_position` -- divider between P2 and P3
+    `model_path` -- the path to the model (or None to use the default)
     """
+
+    DEFAULT_MODEL_PATH = Path(__file__).parent / "poseModels"
 
     def __init__(
         self,
         bt: BaseFeature[BodyTrackingInterface],
         *,
         left_position=-400,
-        middle_position=400
+        middle_position=400,
+        model_path: Path | None = None
     ):
         super().__init__(bt)
         self.left_position = left_position
         self.middle_position = middle_position
+        if model_path is None:
+            self.model_path = self.DEFAULT_MODEL_PATH
+        else:
+            self.model_path = model_path
 
     def initialize(self):
         #  required arguments
@@ -59,14 +68,12 @@ class Pose(BaseFeature[PoseInterface]):
         hidden_size = 300
         output_size = 1
 
-        model_dir = Path(__file__).parent / "poseModels"
-
-        # initialize a model
+        # initialize the models
         self.leftModel = SkeletonPoseClassifier(
             input_size=input_size, hidden_size=hidden_size, output_size=output_size
         )
         self.leftModel.load_state_dict(
-            torch.load(str(model_dir / "skeleton_pose_classifier_left.pt"))
+            torch.load(str(self.model_path / "skeleton_pose_classifier_left.pt"))
         )
         self.leftModel.eval()
 
@@ -74,7 +81,7 @@ class Pose(BaseFeature[PoseInterface]):
             input_size=input_size, hidden_size=hidden_size, output_size=output_size
         )
         self.middleModel.load_state_dict(
-            torch.load(str(model_dir / "skeleton_pose_classifier_middle.pt"))
+            torch.load(str(self.model_path / "skeleton_pose_classifier_middle.pt"))
         )
         self.middleModel.eval()
 
@@ -82,7 +89,7 @@ class Pose(BaseFeature[PoseInterface]):
             input_size=input_size, hidden_size=hidden_size, output_size=output_size
         )
         self.rightModel.load_state_dict(
-            torch.load(str(model_dir / "skeleton_pose_classifier_right.pt"))
+            torch.load(str(self.model_path / "skeleton_pose_classifier_right.pt"))
         )
         self.rightModel.eval()
 

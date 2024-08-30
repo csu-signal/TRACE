@@ -28,6 +28,9 @@ class Gesture(BaseFeature[GestureConesInterface]):
     `BodyTrackingInterface`, `CameraCalibrationInterface`
 
     Output interface is `GestureConesInterface`
+
+    Keyword arguments:
+    `model_path` -- the path to the model (or None to use the default)
     """
 
     BASE_RADIUS = 40
@@ -37,18 +40,25 @@ class Gesture(BaseFeature[GestureConesInterface]):
     HAND_BOUNDING_BOX_WIDTH = 192
     HAND_BOUNDING_BOX_HEIGHT = 192
 
+    DEFAULT_MODEL_PATH = Path(__file__).parent / "bestModel-pointing.pkl"
+
     def __init__(
         self,
         color: BaseFeature[ColorImageInterface],
         depth: BaseFeature[DepthImageInterface],
         bt: BaseFeature[BodyTrackingInterface],
         calibration: BaseFeature[CameraCalibrationInterface],
+        *,
+        model_path: Path | None = None
     ):
         super().__init__(color, depth, bt, calibration)
+        if model_path is None:
+            self.model_path = self.DEFAULT_MODEL_PATH
+        else:
+            self.model_path = model_path
 
     def initialize(self):
-        model_path = Path(__file__).parent / "bestModel-pointing.pkl"
-        self.loaded_model = joblib.load(str(model_path))
+        self.loaded_model = joblib.load(str(self.model_path))
 
         self.hands = mp.solutions.hands.Hands(
             max_num_hands=1,

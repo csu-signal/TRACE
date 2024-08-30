@@ -17,6 +17,15 @@ def object_detector():
     o.finalize()
 
 
+def test_default_model(object_detector):
+    assert hasattr(
+        object_detector, "DEFAULT_MODEL_PATH"
+    ), "object should specify a default model path"
+    assert (
+        object_detector.DEFAULT_MODEL_PATH.is_file()
+    ), "object model path should be an existing file"
+
+
 @pytest.mark.model_dependent
 def test_output(object_detector: Object, azure_kinect_frame):
     color, depth, _, calibration = azure_kinect_frame

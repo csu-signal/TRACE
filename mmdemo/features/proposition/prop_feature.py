@@ -21,14 +21,27 @@ class Proposition(BaseFeature[PropositionInterface]):
     Input interface is `TranscriptionInterface`
 
     Output interface is `PropositionInterface`
+
+    Keyword arguments:
+    `model_path` -- the path to the model (or None to use the default)
     """
 
-    def __init__(self, transcription: BaseFeature[TranscriptionInterface]):
+    DEFAULT_MODEL_PATH = Path(__file__).parent / "data/prop_extraction_model"
+
+    def __init__(
+        self,
+        transcription: BaseFeature[TranscriptionInterface],
+        *,
+        model_path: Path | None = None
+    ):
         super().__init__(transcription)
+        if model_path is None:
+            self.model_path = self.DEFAULT_MODEL_PATH
+        else:
+            self.model_path = model_path
 
     def initialize(self):
-        model_dir = str(Path(__file__).parent / "data/prop_extraction_model")
-        self.model, self.tokenizer = load_model(model_dir)
+        self.model, self.tokenizer = load_model(str(self.model_path))
         self.bert = SentenceTransformer(
             "sentence-transformers/multi-qa-distilbert-cos-v1"
         )

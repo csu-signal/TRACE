@@ -31,18 +31,32 @@ class Object(BaseFeature[ObjectInterface3D]):
 
     Input interfaces are `ColorImageInterface, DepthImageInterface, CameraCalibrationInterface'.
 
-    Output inteface is `ObjectInterface3D`.
+    Output interface is `ObjectInterface3D`.
+
+    Keyword arguments:
+    `detection_threshold` -- confidence threshold for the object detector model
+    `model_path` -- the path to the model (or None to use the default)
     """
+
+    DEFAULT_MODEL_PATH = (
+        Path(__file__).parent / "objectDetectionModels" / "best_model-objects.pth"
+    )
 
     def __init__(
         self,
         color: BaseFeature[ColorImageInterface],
         depth: BaseFeature[DepthImageInterface],
         calibration: BaseFeature[CameraCalibrationInterface],
+        *,
         detection_threshold=0.6,
+        model_path: Path | None = None
     ) -> None:
         super().__init__(color, depth, calibration)
         self.detectionThreshold = detection_threshold
+        if model_path is None:
+            self.model_path = self.DEFAULT_MODEL_PATH
+        else:
+            self.model_path = model_path
 
     def initialize(self):
         # print("Torch Device " + str(DEVICE))
@@ -52,10 +66,7 @@ class Object(BaseFeature[ObjectInterface3D]):
         self.device = DEVICE
         self.objectModel = create_model(num_classes=NUM_CLASSES)
 
-        model_path = (
-            Path(__file__).parent / "objectDetectionModels" / "best_model-objects.pth"
-        )
-        checkpoint = torch.load(str(model_path), map_location=DEVICE)
+        checkpoint = torch.load(str(self.model_path), map_location=DEVICE)
 
         self.objectModel.load_state_dict(checkpoint["model_state_dict"], strict=False)
         self.objectModel.to(DEVICE).eval()
