@@ -104,5 +104,5 @@ class SelectedObjects(BaseFeature[SelectedObjectsInterface]):
         # distance to the projection. Both of these could have weird cases but I'm
         # not sure what the best distance to sort by is. I think absolute distance
         # might make the most sense, but change if needed. If this is changed,
-        # also change the test.
+        # also change the corresponding test.
         return np.linalg.norm(cone.base - np.array(point_3d))

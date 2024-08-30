@@ -69,10 +69,8 @@ class ObjectGroundTruth(BaseFeature[ObjectInterface3D]):
             # calculate 3d center using calibration and depth info
             center_2d = [(o.p1[0] + o.p2[0]) // 2, (o.p1[1] + o.p2[1]) // 2]
             try:
-                print(center_2d)
                 center = pixel_to_camera_3d(center_2d, depth, calibration)
             except CoordinateConversionError:
-                print("skipping object")
                 continue
 
             objects.append(

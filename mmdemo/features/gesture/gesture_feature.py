@@ -32,6 +32,7 @@ class Gesture(BaseFeature[GestureConesInterface]):
 
     BASE_RADIUS = 40
     VERTEX_RADIUS = 70
+    CONE_LENGTH = 100
 
     HAND_BOUNDING_BOX_WIDTH = 192
     HAND_BOUNDING_BOX_HEIGHT = 192
@@ -82,14 +83,12 @@ class Gesture(BaseFeature[GestureConesInterface]):
                     / 2
                 )
                 box = np.array([avg - offset, avg + offset], dtype=np.int64)
-                # TODO: make sure this works
                 if (
                     box[0][0] < 0
                     or box[0][1] < 0
                     or box[1][0] >= color.frame.shape[1]
                     or box[1][1] >= color.frame.shape[0]
                 ):
-                    print("gesture on the edge")
                     return None
 
                 # see if the hand is pointing
@@ -106,14 +105,13 @@ class Gesture(BaseFeature[GestureConesInterface]):
                     base3D = pixel_to_camera_3d(base, depth, calibration)
                     tip3D = pixel_to_camera_3d(tip, depth, calibration)
 
-                    finger_length = tip3D - base3D
+                    finger_dir = tip3D - base3D
+                    finger_dir /= np.linalg.norm(finger_dir)
 
-                    # cone vertex is at 5 finger lengths from the base
-                    # TODO: brady make the cone length a class attribute
                     cones_output.append(
                         Cone(
                             base3D,
-                            base3D + 5 * finger_length,
+                            base3D + finger_dir * self.CONE_LENGTH,
                             self.BASE_RADIUS,
                             self.VERTEX_RADIUS,
                         )

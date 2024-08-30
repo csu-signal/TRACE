@@ -18,7 +18,8 @@ def move_feature():
     move.finalize()
 
 
-# TODO: record actual inputs to have audio files
+# TODO: record actual inputs to have audio files which correspond
+# to the transcriptions
 @pytest.mark.model_dependent
 @pytest.mark.parametrize(
     "text,audio_file,expected",

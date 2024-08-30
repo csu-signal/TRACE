@@ -29,7 +29,16 @@ class Handedness(Enum):
 
 @dataclass
 class Cone:
-    # TODO: docstring
+    """
+    A cone in 3d space. The shape is actually not quite a cone
+    because it has a nonzero radius at its vertex.
+
+    base -- the center of the base of the cone
+    vertex -- the center of the vertex of the cone
+    base_radius -- the radius of the cone at its base
+    vertex_radius -- the radius of the cone at its vertex
+    """
+
     base: np.ndarray
     vertex: np.ndarray
     base_radius: float
@@ -39,15 +48,13 @@ class Cone:
 @dataclass
 class ObjectInfo2D:
     """
-    p1 -- top left?
-    p2 -- bottom right?
+    p1 -- top left point (x,y)
+    p2 -- bottom right point (x,y)
     object_class -- GamrTarget representing the object
     """
 
-    # TODO: what are p1 and p2?
     p1: tuple[float, float]
     p2: tuple[float, float]
-
     object_class: GamrTarget
 
 

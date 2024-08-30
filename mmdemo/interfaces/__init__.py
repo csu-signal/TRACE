@@ -60,13 +60,13 @@ class BodyTrackingInterface(BaseInterface):
 
 @dataclass
 class CameraCalibrationInterface(BaseInterface):
-    # TODO: brady add docstring
     """
-    rotation: np.ndarray
-    translation: np.ndarray
-    camera_matrix: np.ndarray
-    distortion: np.ndarray
+    rotation: rotation matrix with shape (3,3)
+    translation: translation vector with shape (3,)
+    camera_matrix: camera matrix with shape (3,3)
+    distortion: distortion values with shape (8,)
     """
+
     rotation: np.ndarray
     translation: np.ndarray
     camera_matrix: np.ndarray
@@ -84,19 +84,31 @@ class PoseInterface(BaseInterface):
 
 @dataclass
 class ConesInterface(BaseInterface):
-    # TODO: docstring
+    """
+    cones -- the list of cones found
+    """
+
     cones: list[Cone]
 
 
 @dataclass
 class GazeConesInterface(ConesInterface):
-    # TODO: docstring
+    """
+    `cones` -- the list of cones found
+    `body_ids` -- `body_ids[i]` is the body id of `cones[i]`
+    """
+
     body_ids: list[int]
 
 
 @dataclass
 class GestureConesInterface(ConesInterface):
-    # TODO: docstring
+    """
+    `cones` -- the list of cones found
+    `body_ids` -- `body_ids[i]` is the body id of `cones[i]`
+    `handedness` -- `handedness[i]` is the hand used to create `cones[i]`
+    """
+
     body_ids: list[int]
     handedness: list[Handedness]
 
@@ -165,12 +177,11 @@ class AudioFileListInterface(BaseInterface):
 
 @dataclass
 class TranscriptionInterface(BaseInterface):
-    # TODO: brady figure out how to get frames
     """
-    Transcribed utterances
-
-    info -- identifying data for the utterance
-    text -- text of the utterance
+    speaker_id -- unique identifier for the speaker
+    start_time -- start time of the utterance
+    end_time -- end time of the utterance
+    text -- transcription of the utterance
     """
 
     speaker_id: str
@@ -181,10 +192,11 @@ class TranscriptionInterface(BaseInterface):
 
 @dataclass
 class PropositionInterface(BaseInterface):
-    # TODO: brady docstring
     """
-    prop -- proposition as a string
+    speaker_id -- unique identifier for the speaker
+    prop -- proposition expressed by the speaker
     """
+
     speaker_id: str
     prop: str
 
@@ -192,7 +204,7 @@ class PropositionInterface(BaseInterface):
 @dataclass
 class MoveInterface(BaseInterface):
     """
-    speaker_id -- the speaker who created the move
+    speaker_id -- unique identifier for the speaker
     move -- iterable containing some subset of
             {"STATEMENT", "ACCEPT", "DOUBT"}
     """

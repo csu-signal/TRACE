@@ -134,5 +134,5 @@ def test_emnlp_frame(
         np.linalg.norm(color_frame_copy - color.frame) == 0
     ), "Do not modify the color frame itself. This could break other features."
 
-    # cv.imshow("Output", output.frame)
+    # cv.imshow("Output", cv.cvtColor(output.frame, cv.COLOR_RGB2BGR))
     # cv.waitKey(1000)

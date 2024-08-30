@@ -1,89 +1,83 @@
-import time
-from pathlib import Path
-
 import numpy as np
 import pytest
 
-from mmdemo.base_feature import BaseFeature
-from mmdemo.demo import Demo
-from mmdemo.features.wtd_ablation_testing.transcription_feature import (
-    create_transcription_and_audio_ground_truth_features,
+from mmdemo.features.wtd_ablation_testing.gesture_feature import (
+    GestureSelectedObjectsGroundTruth,
 )
-from mmdemo.interfaces import (
-    AudioFileInterface,
-    ColorImageInterface,
-    EmptyInterface,
-    TranscriptionInterface,
-)
-from tests.utils.features import ColorFrameCount
+from mmdemo.interfaces import ColorImageInterface, SelectedObjectsInterface
+from mmdemo.interfaces.data import GamrTarget
+from tests.utils.features import FakeFeature
+
+
+@pytest.fixture
+def selected_gt(test_data_dir):
+    sel_gt = GestureSelectedObjectsGroundTruth(
+        FakeFeature(),
+        csv_path=test_data_dir / "example_ground_truth_wtd" / "gestures.csv",
+    )
+    sel_gt.initialize()
+    yield sel_gt
+    sel_gt.finalize()
+
+
+gt = GamrTarget
 
 
 @pytest.mark.parametrize(
-    "frame_counts,expected_text",
+    "frame_counts,expected_selections",
     [
         (
-            [0, 11, 21, 31, 41, 51],
-            [None, "test one", None, "test two", "test three", "test four"],
-        ),
-        (
-            [0, 11, 12, 13, 14, 21, 31, 32, 41, 51, 52, 53],
+            [1, 11, 21, 31, 41],
             [
-                None,
-                "test one",
-                None,
-                None,
-                None,
-                None,
-                "test two",
-                None,
-                "test three",
-                "test four",
-                None,
-                None,
+                [gt.RED_BLOCK],
+                [gt.PURPLE_BLOCK],
+                [gt.RED_BLOCK, gt.BLUE_BLOCK],
+                [gt.RED_BLOCK, gt.BLUE_BLOCK, gt.PURPLE_BLOCK],
+                [gt.YELLOW_BLOCK],
             ],
         ),
         (
-            [51, 52, 53, 54, 55, 56, 57],
-            ["test one", "test two", "test three", "test four", None, None, None],
+            [1, 2, 3, 15, 16, 21, 31, 41, 42],
+            [
+                [gt.RED_BLOCK],
+                [],
+                [],
+                [gt.PURPLE_BLOCK],
+                [],
+                [gt.RED_BLOCK, gt.BLUE_BLOCK],
+                [gt.RED_BLOCK, gt.BLUE_BLOCK, gt.PURPLE_BLOCK],
+                [gt.YELLOW_BLOCK],
+                [],
+            ],
+        ),
+        (
+            [50, 50, 50, 50],
+            [[gt.YELLOW_BLOCK], [], [], []],
         ),
     ],
 )
-def test_ground_truth_utterances(frame_counts, expected_text, test_data_dir):
+def test_ground_truth_gestures(
+    selected_gt: GestureSelectedObjectsGroundTruth, frame_counts, expected_selections
+):
     """
-    Make sure that reading ground truth utterances from a file
-    works correctly. The features need to be run from a demo
-    because there is a hidden feature which helps sync the returned
-    ones.
+    Make sure that reading ground truth gestures from a file
+    works correctly. These are really the ground truth objects
+    which have been selected by gesture.
 
     Arguments:
     `frame_counts` -- image frame counts to evaluate on
-    `expected_text` -- either the expected transcription or None
-                        if there is no expected transcription
+    `expected_selections` -- lists of expected GamrTargets
     """
-    output: list[tuple[TranscriptionInterface | None, AudioFileInterface | None]] = []
 
-    color_frames = ColorFrameCount(frames=frame_counts)
-    transcriptions, audio = create_transcription_and_audio_ground_truth_features(
-        color_frames,
-        csv_path=test_data_dir / "example_ground_truth_wtd" / "utterances.csv",
-        chunk_dir_path=test_data_dir,
-    )
-    output_feature = CollectOutputDelay(transcriptions, audio, output_list=output)
-
-    Demo(targets=[output_feature]).run()
-
-    for (trans, audio_file), expected in zip(output, expected_text):
-        if expected is not None:
-            # if there is expected to be text, check that the correct
-            # output is returned and that the transcription and audio
-            # interfaces have identical info
-            assert isinstance(trans, TranscriptionInterface)
-            assert isinstance(audio_file, AudioFileInterface)
-            assert trans.start_time == audio_file.start_time
-            assert trans.end_time == audio_file.end_time
-            assert trans.speaker_id == audio_file.speaker_id
-            assert audio_file.path == test_data_dir / "activity.wav"
-            assert trans.text == expected
-        else:
-            assert trans is None
-            assert audio_file is None
+    for frame_count, expected in zip(frame_counts, expected_selections):
+        color_interface = ColorImageInterface(
+            frame=np.zeros((5, 5, 3)), frame_count=frame_count
+        )
+        output = selected_gt.get_output(color_interface)
+        assert isinstance(output, SelectedObjectsInterface)
+        assert len(output.objects) == len(
+            expected
+        ), "The wrong number of selected objects was returned"
+        assert set(i[0].object_class for i in output.objects) == set(
+            expected
+        ), "The wrong objects were selected"

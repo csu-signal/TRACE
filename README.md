@@ -13,6 +13,7 @@ This repository contains a python package called "mmdemo" that provides a "Demo"
 ## Example Usage
 
 Any number of "target" features can be given to the Demo constructor. These targets and their dependencies will be evaluated such that all dependencies of a feature are done evaluating before the feature itself evaluates. The following script will perform common ground tracking using microphone input.
+
 ```python
 from mmdemo.demo import Demo
 from mmdemo.features import ( CommonGroundTracking, Log,
@@ -39,8 +40,6 @@ Dependency graph visualizations can also be generated automatically by calling `
 ### Main package
 Python 3.10 or higher is required if using conda because of [this unresolved issue](https://github.com/conda/conda/issues/10897). The conda environment can be created with `conda env create --file multimodalDemo.yaml`.
 
-To update the enviroment using the most current yaml file, activate it and run `conda env update --file multimodalDemo.yaml --prune`
-
 Install the package with `pip install -e .` from the root directory of the repo.
 
 Download the following models from [here](https://colostate-my.sharepoint.com/:f:/g/personal/nkrishna_colostate_edu/EhYic6HBX7hFta6GjQIcb9gBxV_K0yYFhtHagiVyClr7gQ?e=W6Pm6I) and save at the given locations:
@@ -54,6 +53,10 @@ Download the following models from [here](https://colostate-my.sharepoint.com/:f
 See [mmdemo-azure-kinect/README.md](mmdemo-azure-kinect/README.md).
 
 ## Development
+
+### Environment
+
+After setting up the environment by following the instructions above, run `pre-commit install` to set up formatters to run automatically on commit. If the conda environment file changes, update the environment by running `conda env update --file multimodalDemo.yaml --prune`.
 
 ### Creating new features
 Every feature must inherit from `BaseFeature[T]`, where `T` is an output interface which inherits from `BaseInterface`. The required methods are documented in [mmdemo/base_feature.py](mmdemo/base_feature.py). For example, if we wanted to create a feature which takes a color image as input and outputs a predicted depth image, we would do something along the lines of the following:
@@ -82,6 +85,6 @@ Pytest is used for all of the tests in this project. Tests which require our own
 
 ### Contributing
 
-The source code should be formatted using `black` and `isort`. This can be set up to run automatically on commit by running `pre-commit install`. See TODO for instructions on how to create and merge PRs.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
-Feel free to reach out to Hannah VanderHoeven (Hannah.VanderHoeven@colostate.edu) or Brady Bhalla (bbhalla@caltech.edu) with any questions.
+Feel free to reach out to Hannah VanderHoeven (Hannah.VanderHoeven@colostate.edu) with any questions.
