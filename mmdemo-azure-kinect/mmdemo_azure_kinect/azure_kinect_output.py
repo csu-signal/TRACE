@@ -148,4 +148,9 @@ class _AzureKinectDevice(BaseFeature):
             # exit demo if a playback file is past the given end time
             return True
 
+        # TODO: exit if a certain number of consecutive frames have failed,
+        # when happens when a recording ends. Right now the demo might not
+        # stop running unless `playback_end_seconds` is specified or the window
+        # is manually closed
+
         return False

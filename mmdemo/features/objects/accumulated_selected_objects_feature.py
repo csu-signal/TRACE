@@ -8,7 +8,7 @@ from mmdemo.utils.frame_time_converter import FrameTimeConverter
 
 # TODO: this feature is not the most efficient because it's memory can grow very large.
 # Some sort of binning or clearing old memory could be implemented, but this is very
-# prone to errors so write good tests if this is done.
+# prone to unexpected results when running the demo so write good tests if this is done.
 @final
 class AccumulatedSelectedObjects(BaseFeature[SelectedObjectsInterface]):
     """

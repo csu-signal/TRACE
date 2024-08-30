@@ -9,6 +9,12 @@ using namespace nlohmann;
 namespace py = pybind11;
 
 void Device::open() {
+  // TODO: if this fails, an error will be thrown from C++, which causes
+  // pytest to crash for some reason (this is why some azure kinect tests
+  // are skipped). This could be rewritten to set a variable that could be
+  // checked from python instead of erroring, but would probably be annoying
+  // to do because it would have to use the C SDK function and then create a 
+  // C++ class using the result of that.
   open_device();
 
   calibration_transform = k4a::transformation(calibration);
