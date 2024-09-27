@@ -1,6 +1,13 @@
 [build-system]
 requires = [
     "setuptools>=42",
-    "pybind11>=2.10.0",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+markers = [
+    "model_dependent: marks tests as requiring a good ML model to pass (deselect with '-m \"not model_dependant\"')",
+]
+pythonpath = [
+  "."
+]

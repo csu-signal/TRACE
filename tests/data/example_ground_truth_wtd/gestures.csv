@@ -1,0 +1,6 @@
+frame,blocks,body_id,handedness
+0,"[""red""]",3,right
+10,"[""purple""]",3,right
+20,"[""red"", ""blue""]",1,right
+30,"[""red"", ""blue"", ""purple""]",2,right
+40,"[""yellow""]",3,left

@@ -1,0 +1,5 @@
+utterance_id,frame_received,speaker_id,text,start_frame,stop_frame,audio_file
+1,10,Group,test one,0,10,activity.wav
+2,30,Group,test two,10,20,activity.wav
+3,40,Group,test three,29,40,activity.wav
+4,50,Group,test four,45,50,activity.wav
