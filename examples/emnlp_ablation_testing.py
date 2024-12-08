@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import pandas as pd
 
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 
@@ -21,6 +22,7 @@ from mmdemo.features import (
     SelectedObjects,
     VADUtteranceBuilder,
     WhisperTranscription,
+    Planner,
 )
 from mmdemo.features.wtd_ablation_testing import (
     GestureSelectedObjectsGroundTruth,
@@ -28,21 +30,26 @@ from mmdemo.features.wtd_ablation_testing import (
     create_transcription_and_audio_ground_truth_features,
 )
 
+import warnings
+
+# Suppress all warnings
+warnings.filterwarnings("ignore")
+
 # mkv path for WTD group
 WTD_MKV_PATH = (
-    "F:/Weights_Task/Data/Fib_weights_original_videos/Group_{0:02}-master.mkv"
+    "D:/Weights_Task/Data/Fib_weights_original_videos/Group_{0:02}-master.mkv"
 )
 
 # audio path for WTD group
-WTD_AUDIO_PATH = "F:/Weights_Task/Data/Group_{0:02}-audio.wav"
+WTD_AUDIO_PATH = "D:/Weights_Task/Data/Group_{0:02}-audio.wav"
 
 # ground truth path for WTD group. These can be generated with
 # scripts/wtd_annotations/create_all_wtd_inputs.py
 WTD_GROUND_TRUTH_DIR = "wtd_inputs/group{0}"
 
 # paths to models not trained on the current group
-WTD_PROP_MODEL_PATH = "F:/brady_wtd_eval_models/steroid_model_g{0}"
-WTD_MOVE_MODEL_PATH = "F:/brady_wtd_eval_models/move_classifier_{0:02}.pt"
+WTD_MOVE_MODEL_PATH = "D:/brady_wtd_eval_models/move_classifier_{0:02}.pt"
+WTD_PROP_MODEL_PATH = "D:/brady_wtd_eval_models/steroid_model_g{0}"
 
 # The number of seconds of the recording to process
 WTD_END_TIMES = {
@@ -56,6 +63,7 @@ WTD_END_TIMES = {
     8: 6 * 60 + 28,
     9: 3 * 60 + 46,
     10: 6 * 60 + 51,
+    11: 2 * 60 + 19,
 }
 
 # Number of frames to evaluate per second. This must
@@ -100,7 +108,7 @@ def create_demo(
             convert_audio(Path(WTD_AUDIO_PATH.format(group)), converted_audio_file)
 
         audio = RecordedAudio(color, path=converted_audio_file)
-        utterances = VADUtteranceBuilder(audio)
+        utterances = VADUtteranceBuilder(audio, max_utterance_time=2.9)
         transcriptions = WhisperTranscription(utterances)
 
     gaze = GazeBodyTracking(body_tracking, calibration)
@@ -130,15 +138,25 @@ def create_demo(
         dense_paraphrased_transcriptions,
         model_path=Path(WTD_PROP_MODEL_PATH.format(group)),
     )
+
+    gesture_move = gesture
+    # gesture_move = None
+    objects_move = selected_objects
+    # objects_move = None
+
     moves = Move(
         dense_paraphrased_transcriptions,
         utterances,
+        gesture=gesture_move,
+        objects=objects_move,
         model_path=Path(WTD_MOVE_MODEL_PATH.format(group)),
     )
 
     cgt = CommonGroundTracking(moves, props)
 
-    output_frame = EMNLPFrame(color, gaze, gesture, selected_objects, cgt, calibration)
+    plan = Planner(cgt)
+
+    output_frame = EMNLPFrame(color, gaze, gesture, selected_objects, cgt, calibration, plan)
 
     return Demo(
         targets=[
@@ -148,7 +166,7 @@ def create_demo(
                 frame_rate=PLAYBACK_FRAME_RATE,
                 video_name=output_video_name,
             ),
-            Log(dense_paraphrased_transcriptions, props, moves, csv=True),
+            Log(dense_paraphrased_transcriptions, props, moves, cgt, csv=True),
             Log(transcriptions, stdout=True),
         ]
     )
@@ -174,6 +192,7 @@ def add_audio_to_video(video, audio, output):
 
 
 if __name__ == "__main__":
+
     group = 1
     output_frame_path = Path(f"output_frames_group{group}.mp4")
     final_video_path = Path(f"final_group{group}.mp4")
@@ -181,13 +200,13 @@ if __name__ == "__main__":
     # create demo with ground truth inputs
     demo = create_demo(
         group,
-        ground_truth_objects=True,
-        ground_truth_gestures=True,
-        ground_truth_utterances=True,
+        ground_truth_objects=False,
+        ground_truth_gestures=False,
+        ground_truth_utterances=False,
         output_video_name=output_frame_path,
     )
 
-    demo.show_dependency_graph()
+    # demo.show_dependency_graph()
 
     demo.run()
 

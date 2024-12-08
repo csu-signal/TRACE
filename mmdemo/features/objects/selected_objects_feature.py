@@ -36,7 +36,7 @@ class SelectedObjects(BaseFeature[SelectedObjectsInterface]):
         # track minimum distance from all cones
         # which select an object for sorting
         best_selected_dist = {}
-
+        
         for cones in cones_list:
             if not cones.is_new():
                 continue
@@ -47,6 +47,7 @@ class SelectedObjects(BaseFeature[SelectedObjectsInterface]):
                         dist = self.get_sorting_dist(cone, obj.objects[i].center)
                         if i not in best_selected_dist or best_selected_dist[i] > dist:
                             best_selected_dist[i] = dist
+
 
         # [(object, selected?, closest dist to a selecting cone)]
         selected = zip(

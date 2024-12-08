@@ -2,7 +2,7 @@
 A script to generate all inputs for evaluating this demo on
 the Weights Task Dataset. Needs to be run on rosch.
 
-Usage: `python create_all_wtd_inputs.py <output_dir>`
+Usage: `python create_all_wtd_inputs.py <dir>`
 """
 
 import os
@@ -13,13 +13,13 @@ from gesture_helper import create_gesture_input
 from object_helper import create_object_input
 from utterance_helper import create_utterance_input
 
-UTTERANCE_PATH = "F:\\Weights_Task\\Data\\GAMR\\Utterances\\Group_{0:02}.csv"
-AUDIO_PATH = "F:\\Weights_Task\\Data\\Group_{0:02}-audio.wav"
+UTTERANCE_PATH = "D:\\Weights_Task\\Data\\GAMR\\Utterances\\Group_{0:02}.csv"
+AUDIO_PATH = "D:\\Weights_Task\\Data\\Group_{0:02}-audio.wav"
 OBJECT_PATH = (
-    "F:\\Weights_Task\\Data\\6DPose\\Group{0}\\Group_{0:02}-objects_interpolated.json"
+    "D:\\Weights_Task\\Data\\6DPose\\Group{0}\\Group_{0:02}-objects_interpolated.json"
 )
-GAMR_PATH = "F:\\Weights_Task\\Data\\GAMR\\CSV\\Group_{0:02}_merge_CM.csv"
-ANNOTATIONS_FILE = "F:\\Weights_Task\\Data\\Pointing\\GroundTruthFrames\\Group{0}.csv"
+GAMR_PATH = "D:\\Weights_Task\\Data\\GAMR\\CSV\\Group_{0:02}_merge_CM.csv"
+ANNOTATIONS_FILE = "D:\\Weights_Task\\Data\\Pointing\\GroundTruthFrames\\Group{0}.csv"
 
 
 def create_all_inputs(parent_dir):

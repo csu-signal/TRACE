@@ -18,6 +18,7 @@ from mmdemo.features import (
     SelectedObjects,
     VADUtteranceBuilder,
     WhisperTranscription,
+    Planner,
 )
 
 if __name__ == "__main__":
@@ -48,10 +49,12 @@ if __name__ == "__main__":
 
     # prop extraction and move classifier
     props = Proposition(dense_paraphrased_transcriptions)
-    moves = Move(dense_paraphrased_transcriptions, utterance_audio)
+    moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects)
 
     # common ground tracking
     cgt = CommonGroundTracking(moves, props)
+
+    # plan = Planner(cgt)
 
     # create output frame for video
     output_frame = EMNLPFrame(color, gaze, gesture, selected_objects, cgt, calibration)

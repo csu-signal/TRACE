@@ -18,5 +18,6 @@ if __name__ == "__main__":
     cgt = CommonGroundTracking(moves, props)
 
     demo = Demo(targets=[Log(transcription, props, moves, cgt, stdout=True)])
+
     demo.show_dependency_graph()
     demo.run()

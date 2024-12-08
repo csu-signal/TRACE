@@ -24,8 +24,15 @@ def pixel_to_camera_3d(
     """
     2d pixel coords to 3d camera coords
     """
+    try:
+        z = depth.frame[int(pixel[1]), int(pixel[0])]
+    except:
+        z = depth.frame[int(pixel[1])-1, int(pixel[0])-1]
 
-    z = depth.frame[int(pixel[1]), int(pixel[0])]
+        print("*******************************")
+        print(depth.frame.shape)
+        print(int(pixel[1]), int(pixel[0]))
+    # z = depth.frame[int(pixel[1]), int(pixel[0])]
 
     if z == 0:
         # print("Invalid Depth, Z returned 0")

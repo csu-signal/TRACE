@@ -127,18 +127,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "--gamrPath",
         nargs="?",
-        default="F:\\Weights_Task\\Data\\GAMR\\CSV\\Group_05_merge_CM.csv",
+        default="E:\\Weights_Task\\Data\\GAMR\\CSV\\Group_05_merge_CM.csv",
     )
-    # parser.add_argument('--annotationsFile', nargs='?', default="F:\\Weights_Task\\Data\\Pointing\\KeyFrameSelectionOutput\\Group_1-master\\point\\combined.csv")
+    # parser.add_argument('--annotationsFile', nargs='?', default="E:\\Weights_Task\\Data\\Pointing\\KeyFrameSelectionOutput\\Group_1-master\\point\\combined.csv")
     parser.add_argument(
         "--annotationsFile",
         nargs="?",
-        default="F:\\Weights_Task\\Data\\Pointing\\GroundTruthFrames\\Group5.csv",
+        default="E:\\Weights_Task\\Data\\Pointing\\GroundTruthFrames\\Group5.csv",
     )
     parser.add_argument(
         "--outputFile",
         nargs="?",
-        default="F:\\Weights_Task\\Data\\FactPostProcessing\\Gesture\\Group5.csv",
+        default="E:\\Weights_Task\\Data\\FactPostProcessing\\Gesture\\Group5.csv",
     )
     args = parser.parse_args()
 

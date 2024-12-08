@@ -1,5 +1,6 @@
 import os
 from typing import final
+import re
 
 import faster_whisper
 
@@ -35,6 +36,9 @@ class WhisperTranscription(BaseFeature[TranscriptionInterface]):
         transcription = " ".join(
             segment.text for segment in segments if segment.no_speech_prob < 0.5
         )  # Join segments into a single string
+
+        # transcription = transcription.encode('utf-8', 'ignore').decode('utf-8')
+        transcription = re.sub(r'[^\x00-\x7F]+', '', transcription)
 
         return TranscriptionInterface(
             speaker_id=audio.speaker_id,
