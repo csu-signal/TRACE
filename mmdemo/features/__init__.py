@@ -24,3 +24,4 @@ from mmdemo.features.transcription.whisper_transcription_feature import (
 )
 from mmdemo.features.utterance.audio_input_features import MicAudio, RecordedAudio
 from mmdemo.features.utterance.vad_builder_feature import VADUtteranceBuilder
+from mmdemo.features.planner.planner_feature import Planner

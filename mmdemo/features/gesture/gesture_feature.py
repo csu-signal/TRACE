@@ -7,7 +7,7 @@ import mediapipe as mp
 import numpy as np
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.features.gesture.helpers import get_average_hand_pixel, normalize_landmarks
+from mmdemo.features.gesture.helpers import get_average_hand_pixel, normalize_landmarks, fix_body_id
 from mmdemo.interfaces import (
     BodyTrackingInterface,
     CameraCalibrationInterface,
@@ -58,6 +58,8 @@ class Gesture(BaseFeature[GestureConesInterface]):
             self.model_path = self.DEFAULT_MODEL_PATH
         else:
             self.model_path = model_path
+        self.body_idx = []
+        self.bt = None
 
     def initialize(self):
         self.loaded_model = joblib.load(str(self.model_path))
@@ -82,6 +84,7 @@ class Gesture(BaseFeature[GestureConesInterface]):
         cones_output = []
         body_ids_output = []
         handedness_output = []
+        bt = fix_body_id(bt)
         for _, body in enumerate(bt.bodies):
             for handedness in (Handedness.Left, Handedness.Right):
                 # loop through both hands of all bodies

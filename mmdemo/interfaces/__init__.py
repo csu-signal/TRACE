@@ -113,6 +113,7 @@ class GestureConesInterface(ConesInterface):
     handedness: list[Handedness]
 
 
+
 @dataclass
 class ObjectInterface2D(BaseInterface):
     """
@@ -223,3 +224,13 @@ class CommonGroundInterface(BaseInterface):
     qbank: set[str]
     fbank: set[str]
     ebank: set[str]
+
+
+@dataclass
+class PlannerInterface(BaseInterface):
+    """
+    solv -- boolean variable to indicate if the problem is solvable
+    """
+
+    solv: bool
+    plan: str

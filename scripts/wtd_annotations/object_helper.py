@@ -38,12 +38,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--objectPath",
         nargs="?",
-        default="F:\\Weights_Task\\Data\\6DPose\\Group5\\Group_05-objects_interpolated.json",
+        default="E:\\Weights_Task\\Data\\6DPose\\Group5\\Group_05-objects_interpolated.json",
     )
     parser.add_argument(
         "--outputFile",
         nargs="?",
-        default="F:\\Weights_Task\\Data\\FactPostProcessing\\Objects\\Group5.csv",
+        default="E:\\Weights_Task\\Data\\FactPostProcessing\\Objects\\Group5.csv",
     )
     args = parser.parse_args()
 

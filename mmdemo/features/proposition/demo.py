@@ -139,7 +139,8 @@ def process_sentence(sentence, model, tokenizer, bert, embeddings, verbose=False
     if (
         not filtered_common_grounds
     ):  # If no match found, try individual color-number pairs
-        print("We are in level 2")
+        # print("We are in level 2")
+        # print(filtered_common_grounds)
         filtered_common_grounds = [
             cg for cg in common_grounds if is_valid_common_ground_2(cg, elements)
         ]  # If there is no match where only the mentioned colors and weights are present, get the individual combincations
@@ -150,17 +151,18 @@ def process_sentence(sentence, model, tokenizer, bert, embeddings, verbose=False
         filtered_common_grounds = [
             cg for cg in common_grounds if is_valid_individual_match(cg, elements)
         ]
+        # print(filtered_common_grounds)
 
     if verbose:
         print("length of filtered common grounds:", len(filtered_common_grounds))
 
-    if len(filtered_common_grounds) > 100:
-        print(
-            f"WARNING: {len(filtered_common_grounds)} common grounds, processing will likely take a long time"
-        )
+    # if len(filtered_common_grounds) > 100:
+    #     print(
+    #         f"WARNING: {len(filtered_common_grounds)} common grounds, processing will likely take a long time"
+    #     )
 
     if len(filtered_common_grounds) > 137:
-        print("Using cosine similarity")
+        # print("Using cosine similarity")
         return get_simple_cosine(
             sentence, filtered_common_grounds, bert, embeddings, device
         )

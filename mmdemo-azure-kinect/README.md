@@ -23,7 +23,6 @@ Once the installation is complete, open `azure_kinect_config.py`. Ensure that `K
 ## Install package
 
 From the root directory of this repository, run `pip install -e .\mmdemo-azure-kinect` to build and install the package.
-If the install errors and wheels cannot be built, install [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 
 # Modules
 

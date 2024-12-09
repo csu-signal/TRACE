@@ -65,3 +65,18 @@ def normalize_landmarks(hand_landmarks, image_width, image_height):
 def createBoundingBox(center, w, h):
     offset = np.array([w, h]) / 2
     return np.array([center - offset, center + offset], dtype=np.int64)
+
+
+def fix_body_id(bt):
+    
+    # sort by head position
+    bt.bodies.sort(key=lambda body: body["joint_positions"][3][0])
+    # change body id according to head position relative to other participants
+    for id, body in enumerate(bt.bodies):
+        body["body_id"] = id
+    
+    return bt
+
+
+
+    

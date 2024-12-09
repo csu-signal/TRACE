@@ -69,5 +69,5 @@ class Proposition(BaseFeature[PropositionInterface]):
             )
         else:
             prop, num_filtered_props = "no prop", 0
-
+        print(f"prop is : {prop}")
         return PropositionInterface(speaker_id=tran.speaker_id, prop=prop)

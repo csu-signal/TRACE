@@ -60,6 +60,7 @@ class DenseParaphrasedTranscription(BaseFeature[TranscriptionInterface]):
             obj.object_class.value for obj, sel in selected_objects.objects if sel
         ]
 
+
         if len(targets) > 0:
             text = re.sub(
                 self.plural_demo_regex,

@@ -2,9 +2,11 @@ import pickle
 from pathlib import Path
 from typing import final
 
+
 import opensmile
 import torch
 from transformers import BertModel, BertTokenizer, PreTrainedModel
+from joblib import load
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.features.move.move_classifier import (
@@ -12,11 +14,12 @@ from mmdemo.features.move.move_classifier import (
     modalities,
     rec_common_ground,
 )
-from mmdemo.interfaces import AudioFileInterface, MoveInterface, TranscriptionInterface
+from mmdemo.interfaces import AudioFileInterface, MoveInterface, TranscriptionInterface, GestureConesInterface, SelectedObjectsInterface
 
 UTTERANCE_HISTORY_LEN = 4
 BERT_EMBEDDING_DIM = 768
 SMILE_EMBEDDING_DIM = 88
+GAMR_EMBEDDING_DIM = 128
 
 
 class custom_pickle:
@@ -52,10 +55,18 @@ class Move(BaseFeature[MoveInterface]):
         self,
         transcription: BaseFeature[TranscriptionInterface],
         audio: BaseFeature[AudioFileInterface],
+        gesture: BaseFeature[GestureConesInterface]|None,
+        objects: BaseFeature[SelectedObjectsInterface]|None,
         *,
         model_path: Path | None = None
     ) -> None:
-        super().__init__(transcription, audio)
+        if gesture is None and objects is None:
+            super().__init__(transcription, audio)
+        if gesture is not None and objects is not None:
+            super().__init__(transcription, audio, gesture, objects)
+        if gesture is not None and objects is None:
+            super().__init__(transcription, audio, gesture)
+
         if model_path is None:
             self.model_path = self.DEFAULT_MODEL_PATH
         else:
@@ -85,6 +96,9 @@ class Move(BaseFeature[MoveInterface]):
         self.opensmile_embedding_history = torch.zeros(
             (UTTERANCE_HISTORY_LEN, SMILE_EMBEDDING_DIM), device=self.device
         )
+        self.gamr_embedding_history = torch.zeros(
+            (UTTERANCE_HISTORY_LEN, GAMR_EMBEDDING_DIM), device=self.device
+        )
 
         self.class_names = ["STATEMENT", "ACCEPT", "DOUBT"]
 
@@ -92,6 +106,8 @@ class Move(BaseFeature[MoveInterface]):
         self,
         transcription: TranscriptionInterface,
         audio: AudioFileInterface,
+        gesture: GestureConesInterface | None = GestureConesInterface(body_ids=[], handedness=[], cones=[]),
+        objects: SelectedObjectsInterface | None = None,
     ):
         if not transcription.is_new() or not audio.is_new():
             return None
@@ -143,3 +159,4 @@ class Move(BaseFeature[MoveInterface]):
         self.opensmile_embedding_history = torch.cat(
             [self.opensmile_embedding_history[1:], embedding]
         )
+

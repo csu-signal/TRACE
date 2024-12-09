@@ -52,14 +52,6 @@ Download the following models from [here](https://colostate-my.sharepoint.com/:f
 
 See [mmdemo-azure-kinect/README.md](mmdemo-azure-kinect/README.md).
 
-## Rosch Set Up for Ablation Testing (Optional)(Lab Usage)
-
-Create a folder named wtd_inputs in the TRACE folder `<your file path>\TRACE\wtd_inputs`
-
-Then run `python ./scripts/wtd_annotations/create_all_wtd_inputs.py` with `<your file path>\TRACE\wtd_inputs` passed as an input.
-
-Usage: `python ./scripts/wtd_annotations/create_all_wtd_inputs.py <your file path>\TRACE\wtd_inputs`
-
 
 # Directory structure
 

@@ -12,6 +12,7 @@ from mmdemo.interfaces import (
     GazeConesInterface,
     GestureConesInterface,
     SelectedObjectsInterface,
+    PlannerInterface,
 )
 from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import camera_3d_to_pixel
@@ -55,11 +56,17 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         sel_objects: BaseFeature[SelectedObjectsInterface],
         common_ground: BaseFeature[CommonGroundInterface],
         calibration: BaseFeature[CameraCalibrationInterface],
+        plan: BaseFeature[PlannerInterface] | None = None,
     ):
-        super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration)
+        if plan is None:
+            super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration)
+        else:
+            super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration, plan)
 
     def initialize(self):
         self.has_cgt_data = False
+        self.last_plan = {"text": "", "color": (255, 255, 255)}
+        
 
     def get_output(
         self,
@@ -69,6 +76,7 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         objects: SelectedObjectsInterface,
         common: CommonGroundInterface,
         calibration: CameraCalibrationInterface,
+        plan: PlannerInterface = None,
     ):
         if (
             not color.is_new()
@@ -114,6 +122,11 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         else:
             EMNLPFrame.renderBanks(output_frame, 130, 260, "FBank", set())
             EMNLPFrame.renderBanks(output_frame, 130, 130, "EBank", set())
+
+        # render plan
+        if plan:
+            EMNLPFrame.renderPlan(output_frame, plan, self.last_plan)
+        
 
         # draw frame count
         cv.putText(
@@ -280,6 +293,31 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
                         (0, 0, 0),
                         fontThickness[numberLabels - 1],
                     )
+
+    @staticmethod
+    def renderPlan(frame, plan, last_plan):
+        """
+        Renders the plan text on the frame. 
+        If the plan is None, it renders the last known state.
+        """
+        if plan and plan.is_new():
+            # Update the last solvable state
+            solv = plan.solv
+            text = "Solvable" * solv + "Unsolvable" * (not solv)
+            last_plan["text"] = text
+            last_plan["color"] = (0, 255, 0) if solv else (0, 0, 255)
+        elif not last_plan.get("text"):
+            # Default state if there's no valid last_plan
+            last_plan["text"] = "No Plan yet"
+            last_plan["color"] = (255, 255, 255)
+
+        # Render the last known plan state
+        position = (50, 1000)  # x=10, y=30 (bottom-left corner, with some padding)
+        font = cv.FONT_HERSHEY_SIMPLEX
+        font_scale = 1
+        thickness = 2
+        cv.putText(frame, last_plan["text"], position, font, font_scale, last_plan["color"], thickness)
+
 
     @staticmethod
     def conePointsBase(cone):

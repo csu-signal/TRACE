@@ -44,7 +44,9 @@ class ObjectGroundTruth(BaseFeature[ObjectInterface3D]):
         self.current_frame = 0
 
     def get_output(
-        self, depth: DepthImageInterface, calibration: CameraCalibrationInterface
+        self, 
+        depth: DepthImageInterface, 
+        calibration: CameraCalibrationInterface
     ) -> ObjectInterface3D | None:
         if not depth.is_new():
             return None
