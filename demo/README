@@ -1,0 +1,25 @@
+This work was done with the previous repository TRACE-emnlp-demo.
+
+Collecting Weights Task dataset for Groups 1 – 10 as input to estimating depth ML model:
+1)	__main__.py
+2)	GazeBodyTrackingFeature.py
+3)	base_profile.py
+
+Modules 1 – 3 were used to either read in from a pre-recorded .mkv file or a master-skeleton.json file. The output from this initial pass is a .csv file of just a subset of the data available from the pre-recorded video or the json file. Specifically, the first item in the .csv file row has the pixel locations for the nose, left eye, right eye, left ear, right ear, and then a variable number of locations for the gazeline. These are used as inputs for the ML model, but eventually the gazeline was dropped as an input as it was the actual end prediction that was desired. The second item in the .csv row has the five target depth locations of the nose, left eye, right eye, left ear, right ear. Camera parameters rotation, translation, cameraMatrix, and distortion were set to the default. These modules were used in the environment outlined in TRACE-emnlp-demo/README.md.
+
+Estimating depth ML model:
+4)	depth_est_bignet_ablation2.py
+5)	depth_est_bignet_ablation2_test_Group10.py
+
+Module 4 partitions Groups 1 – 10 into both training and testing data, while module 5 uses              Groups 1 – 9 for training and Group 10 for test. A bounding box of zeros has five points set to 1 representing the pixel locations of the nose, left and right eyes, left and right ears. The CNN/fully connected model uses this input to try to match the target depths retrieved from the .csv file (the second parameter in the row).
+
+Analysis tools: 
+6)	cosine_similarity_after_predictions2.py
+7)	depth_est_bignet_ablation2_test_Group10_cosine_similarity.py
+8)	zscore_depth.py
+9)	moving_averages_predictions_targets2.py
+
+Using the depth predicted by the model and the separate known depth, create gaze vectors based on the model predictions and the known 3D data. Calculate the angle between these vectors (cosine similarity) to see how close the model is to the known gaze direction. Module 6 was developed as the depth ML model takes a long time to train, so it’s output was saved to a file, allowing debug of the cosine_similarity function without having to go through the long training time.
+
+An effort to remove outliers from the data is made in Module 8, where zscores of 3, 2, and 1.28 (80% of a normal curve) were used on the depth prediction data. The output is the mean and standard deviation for each zscore, as well as a file that has only the values that fall within that range. With this output file, the predicted gaze vector can calculated with expected lower deviation from the known gaze direction. Module 8 can also be used with the predicted gaze vectors directly, which is what was done in conjunction with Module 9 to see if calculating the moving average would smooth out the gaze direction differences.
+ 
