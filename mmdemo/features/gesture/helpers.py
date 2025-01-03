@@ -67,15 +67,27 @@ def createBoundingBox(center, w, h):
     return np.array([center - offset, center + offset], dtype=np.int64)
 
 
-def fix_body_id(bt):
+def fix_body_id(bt): #TODO fix this? this method converts from azure to the 1,2,3 ordering
     
     # sort by head position
     bt.bodies.sort(key=lambda body: body["joint_positions"][3][0])
     # change body id according to head position relative to other participants
     for id, body in enumerate(bt.bodies):
-        body["body_id"] = id
+        body["wtd_body_id"] = id + 1
     
     return bt
+
+
+def get_joint(joint, body, cc):
+    """
+    `joint` -- the joint to be retrieved
+    `body` -- the body whose joint is being retrieved
+    `cc` -- instance of `CameraCalibrationInterface`
+
+    Returns camera coordinates of requested joint
+    """
+    r_w = np.array(body["joint_positions"][joint.value])
+    return world_3d_to_camera_3d(r_w, cc)
 
 
 

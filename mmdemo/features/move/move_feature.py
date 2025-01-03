@@ -106,7 +106,7 @@ class Move(BaseFeature[MoveInterface]):
         self,
         transcription: TranscriptionInterface,
         audio: AudioFileInterface,
-        gesture: GestureConesInterface | None = GestureConesInterface(body_ids=[], handedness=[], cones=[]),
+        gesture: GestureConesInterface | None = GestureConesInterface(wtd_body_ids=[], azure_body_ids=[], handedness=[], cones=[]),
         objects: SelectedObjectsInterface | None = None,
     ):
         if not transcription.is_new() or not audio.is_new():

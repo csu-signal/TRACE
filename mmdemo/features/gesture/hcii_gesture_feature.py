@@ -7,34 +7,35 @@ import mediapipe as mp
 import numpy as np
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.features.gesture.helpers import get_average_hand_pixel, normalize_landmarks, fix_body_id
+from mmdemo.features.gesture.helpers import get_average_hand_pixel, get_joint, normalize_landmarks, fix_body_id
 from mmdemo.interfaces import (
     BodyTrackingInterface,
     CameraCalibrationInterface,
     ColorImageInterface,
     DepthImageInterface,
-    GestureConesInterface,
+    HciiGestureConesInterface,
 )
 from mmdemo.interfaces.data import Cone, Handedness
 from mmdemo.utils.coordinates import CoordinateConversionError, pixel_to_camera_3d
+from mmdemo.utils.joints import Joint
 
 
 @final
-class Gesture(BaseFeature[GestureConesInterface]):
+class HciiGesture(BaseFeature[HciiGestureConesInterface]):
     """
     Detect when and where participants are pointing.
 
     Input interfaces are `ColorImageInterface`, `DepthImageInterface`,
     `BodyTrackingInterface`, `CameraCalibrationInterface`
 
-    Output interface is `GestureConesInterface`
+    Output interface is `HciiGestureConesInterface`
 
     Keyword arguments:
     `model_path` -- the path to the model (or None to use the default)
     """
 
     BASE_RADIUS = 40
-    VERTEX_RADIUS = 80
+    VERTEX_RADIUS = 70
 
     # the number of finger lengths of the output cone
     CONE_FINGER_LENGTHS = 5
@@ -84,6 +85,7 @@ class Gesture(BaseFeature[GestureConesInterface]):
         cones_output = []
         azure_body_ids_output = []
         wtd_body_ids_output = []
+        nose_position_output = []
         handedness_output = []
         bt = fix_body_id(bt)
         for _, body in enumerate(bt.bodies):
@@ -134,12 +136,17 @@ class Gesture(BaseFeature[GestureConesInterface]):
                     wtd_body_ids_output.append(body["wtd_body_id"])
                     azure_body_ids_output.append(body["body_id"])
                     handedness_output.append(handedness)
+                    nose_position_output.append(get_joint(Joint.NOSE, body, calibration))
 
                 except CoordinateConversionError:
                     pass
 
-        return GestureConesInterface(
-            wtd_body_ids=wtd_body_ids_output, azure_body_ids=azure_body_ids_output, handedness=handedness_output, cones=cones_output
+        return HciiGestureConesInterface(
+            wtd_body_ids=wtd_body_ids_output, 
+            azure_body_ids=azure_body_ids_output, 
+            handedness=handedness_output, 
+            cones=cones_output,
+            nose_positions=nose_position_output
         )
 
     def find_pointing_hands(

@@ -66,7 +66,7 @@ class GazeBodyTracking(BaseFeature[GazeConesInterface]):
             cones.append(cone)
             body_ids.append(body["body_id"])
 
-        return GazeConesInterface(body_ids=body_ids, cones=cones)
+        return GazeConesInterface(azure_body_ids=body_ids, wtd_body_ids=[], cones=cones)
 
     @final
     def get_joint(self, joint, body, cc):
