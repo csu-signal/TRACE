@@ -327,10 +327,10 @@ class SelectedObjectsInterface(BaseInterface):
     """
     Which objects are selected by participants
 
-    objects -- [(object info, selected?), ...]
+    objects -- [(object info, selected?, participant id), ...]
     """
 
-    objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D, bool]]
+    objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D, bool, int]]
 
 
 @dataclass

@@ -3,11 +3,13 @@
 from mmdemo.features.gaze.gaze_body_tracking_feature import GazeBodyTracking
 from mmdemo.features.gesture.gesture_feature import Gesture
 from mmdemo.features.gesture.hcii_gesture_feature import HciiGesture
+from mmdemo.features.objects.object_feature import Object
 from mmdemo.features.outputs.display_frame_feature import DisplayFrame
 from mmdemo.features.outputs.hcii_it_frame_feature import HCII_IT_Frame
 from mmdemo.features.outputs.hcii_logging_feature import HciiLog
 from mmdemo.features.outputs.logging_feature import Log
 from mmdemo.features.outputs.save_video_feature import SaveVideo
+from mmdemo.features.objects.hcii_selected_objects_feature import HciiSelectedObjects
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 from pathlib import Path
 from mmdemo.demo import Demo
@@ -15,6 +17,10 @@ from mmdemo.demo import Demo
 # mkv path for WTD group
 WTD_MKV_PATH = (
     "G:/Weights_Task/Data/Fib_weights_original_videos/Group_{0:02}-master.mkv"
+)
+
+OUTPUT_NAME = (
+    "IndividualTracking_Group{0:02}"
 )
 
 # Number of frames to evaluate per second. This must
@@ -40,7 +46,7 @@ WTD_END_TIMES = {
 if __name__ == "__main__":
 
      # load azure kinect features from file
-    group = 1
+    group = 5
     color, depth, body_tracking, calibration = create_azure_kinect_features(
         DeviceType.PLAYBACK,
         mkv_path=Path(WTD_MKV_PATH.format(group)),
@@ -52,15 +58,19 @@ if __name__ == "__main__":
     gaze = GazeBodyTracking(body_tracking, calibration)
     gesture = HciiGesture(color, depth, body_tracking, calibration)
 
+    # which objects are selected by gesture
+    objects = Object(color, depth, calibration)
+    selected_objects = HciiSelectedObjects(objects, gesture)  # pyright: ignore 
+
     # create output frame for video
-    output_frame = HCII_IT_Frame(color, gaze, gesture, calibration)
+    output_frame = HCII_IT_Frame(color, gaze, gesture, selected_objects, calibration)
 
      # run demo and show output
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
             #SaveVideo(output_frame),
-            HciiLog(gesture, fileName="IndividualTracking_Group1.csv", csv=True)
+            HciiLog(gesture, selected_objects, fileName=OUTPUT_NAME.format(group), csv=True)
             #Log(body_tracking, csv=True), #TODO log individual tracking values
         ]
     )

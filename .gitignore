@@ -18,3 +18,4 @@ tmp_*/
 /mmdemo/features/objects/objectDetectionModels/best_model-object.pth
 /mmdemo/features/friction/wandb/
 *.pddl
+/demo/featureModules/objects/objectDetectionModels/best_model-objects.pth

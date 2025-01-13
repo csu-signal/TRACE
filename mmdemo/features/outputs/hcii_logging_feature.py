@@ -8,8 +8,9 @@ from typing import final
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.base_interface import BaseInterface
-from mmdemo.interfaces import EmptyInterface, GazeConesInterface, GestureConesInterface, HciiGestureConesInterface
+from mmdemo.interfaces import EmptyInterface, GazeConesInterface, GestureConesInterface, HciiGestureConesInterface, SelectedObjectsInterface
 from mmdemo.features.gesture.gesture_feature import Gesture
+from mmdemo.interfaces.data import SelectedObjectInfo
 
 @final
 class HciiLog(BaseFeature[EmptyInterface]):
@@ -32,14 +33,14 @@ class HciiLog(BaseFeature[EmptyInterface]):
     """
 
     def __init__(
-        self, gesture, stdout=False, csv=False, fileName=None, output_dir=None
+        self, gesture, selectedObjects, stdout=False, csv=False, fileName=None, output_dir=None
     ) -> None:
         self.stdout = stdout
         self.csv = csv
         self.fileName = f"{fileName}.csv"
         self._out_dir = output_dir
 
-        super().__init__(gesture)
+        super().__init__(gesture, selectedObjects)
 
     def initialize(self):
         if self.csv:
@@ -65,16 +66,17 @@ class HciiLog(BaseFeature[EmptyInterface]):
 
     def get_output(self, *args):
         logged_something = False
-        if(len(args) == 1):
+        if(len(args) == 2):
             gesture = args[0]
-            if gesture.is_new():
-                self.log(gesture)
+            objects = args[1]
+            if gesture.is_new() or objects.is_new():
+                self.log(gesture, objects)
                 logged_something = True
 
         self.frame += 1
         return EmptyInterface() if logged_something else None
 
-    def log(self, gesture: HciiGestureConesInterface):
+    def log(self, gesture: HciiGestureConesInterface, objects: SelectedObjectsInterface):
         if self.stdout:
             print(f"(frame {self.frame:05})", gesture)
 
@@ -89,6 +91,12 @@ class HciiLog(BaseFeature[EmptyInterface]):
                     output_row.append(gesture.wtd_body_ids)
                     header_row.append("nose_positions")
                     output_row.append(gesture.nose_positions)
+                    header_row.append("selected_object")
+                    selectedObjs = []
+                    for o in objects.objects:
+                        if o[1]:
+                            selectedObjs.append(SelectedObjectInfo(str(o[0].object_class), o[0].wtd_id))
+                    output_row.append(selectedObjs)
 
                     if self.needs_header:
                         writer.writerow(header_row)

@@ -8,12 +8,11 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
     CameraCalibrationInterface,
     ColorImageInterface,
-    CommonGroundInterface,
     GazeConesInterface,
     GestureConesInterface,
-    SelectedObjectsInterface,
-    PlannerInterface,
+    SelectedObjectsInterface
 )
+from mmdemo.features.objects.hcii_selected_objects_feature import HciiSelectedObjects
 from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import camera_3d_to_pixel
 
@@ -52,9 +51,10 @@ class HCII_IT_Frame(BaseFeature[ColorImageInterface]):
         color: BaseFeature[ColorImageInterface],
         gaze: BaseFeature[GazeConesInterface],
         gesture: BaseFeature[GestureConesInterface],
+        sel_objects: BaseFeature[HciiSelectedObjects],
         calibration: BaseFeature[CameraCalibrationInterface]
     ):
-        super().__init__(color, gaze, gesture, calibration)
+        super().__init__(color, gaze, gesture, sel_objects, calibration)
 
     def initialize(self):
         self.has_cgt_data = False
@@ -65,12 +65,14 @@ class HCII_IT_Frame(BaseFeature[ColorImageInterface]):
         color: ColorImageInterface,
         gaze: GazeConesInterface,
         gesture: GestureConesInterface,
-        calibration: CameraCalibrationInterface,
+        objects: SelectedObjectsInterface,
+        calibration: CameraCalibrationInterface
     ):
         if (
             not color.is_new()
             or not gaze.is_new()
             or not gesture.is_new()
+            or not objects.is_new()
         ):
             return None
 
@@ -91,16 +93,16 @@ class HCII_IT_Frame(BaseFeature[ColorImageInterface]):
             )
 
         # render objects
-        # for obj in objects.objects:
-        #     c = (0, 255, 0) if obj[1] == True else (0, 0, 255)
-        #     block = obj[0]
-        #     cv.rectangle(
-        #         output_frame,
-        #         (int(block.p1[0]), int(block.p1[1])),
-        #         (int(block.p2[0]), int(block.p2[1])),
-        #         color=c,
-        #         thickness=5,
-        #     )
+        for obj in objects.objects:
+            c = (0, 255, 0) if obj[1] == True else (0, 0, 255)
+            block = obj[0]
+            cv.rectangle(
+                output_frame,
+                (int(block.p1[0]), int(block.p1[1])),
+                (int(block.p2[0]), int(block.p2[1])),
+                color=c,
+                thickness=5,
+            )
 
         # draw frame count
         cv.putText(
