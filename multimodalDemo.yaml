@@ -1,4 +1,4 @@
-name: multimodalDemo_
+name: multimodalDemo
 channels:
   - pytorch
   - nvidia
@@ -148,8 +148,6 @@ dependencies:
       - matplotlib==3.9.3
       - mediapipe==0.10.14
       - ml-dtypes==0.5.0
-      - mmdemo==0.0.0
-      - mmdemo-azure-kinect==0.0.0
       - more-itertools==10.5.0
       - nltk==3.9.1
       - nodeenv==1.9.1

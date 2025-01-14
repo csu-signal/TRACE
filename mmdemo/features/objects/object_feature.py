@@ -66,7 +66,7 @@ class Object(BaseFeature[ObjectInterface3D]):
         self.device = DEVICE
         self.objectModel = create_model(num_classes=NUM_CLASSES)
 
-        checkpoint = torch.load(str(self.model_path), map_location=DEVICE)
+        checkpoint = torch.load(str(self.model_path), map_location=DEVICE, weights_only=True)
 
         self.objectModel.load_state_dict(checkpoint["model_state_dict"], strict=False)
         self.objectModel.to(DEVICE).eval()
