@@ -101,7 +101,7 @@ def load_model(model_dir, verbose=False):
 
     # model weights
     model.linear.load_state_dict(
-        torch.load(model_dir + "/linear.chkpt", map_location=device)
+        torch.load(model_dir + "/linear.chkpt", map_location=device, weights_only=True)
     )
     model.model = AutoModel.from_pretrained(model_dir + "/bert")
     # model = torch.nn.DataParallel(model)
