@@ -52,6 +52,20 @@ Download the following models from [here](https://colostate-my.sharepoint.com/:f
 
 See [mmdemo-azure-kinect/README.md](mmdemo-azure-kinect/README.md).
 
+## Common Setup Issues
+### Solution for .dll File Errors
+If you are experiencing errors related to .dll files (specially CUDA dlls i.e cublasLt64_12.dll), you can try the following steps:
+1. Uninstall or Update CUDA:
+    - CUDA version 12 or later is required by the demo, the latest version of CUDA can be found [here](https://developer.nvidia.com/cuda-downloads)
+    - If you expect that your CUDA version should work and is up to date, begin by uninstalling CUDA from your system. Make sure to remove all associated components.
+3. Reinstall/Update CUDA:
+    - Install CUDA to the directory C:/Program Files/NVIDIA GPU Computing Toolkit/ (which should be the default, verify that this path exists after installing)
+    - This path is recommended to avoid potential conflicts with system variables.
+4. Update Environment Variables:
+    - After reinstalling CUDA, restart your machine and verify that the installation path `C:/Program Files/NVIDIA GPU Computing Toolkit/` has been added to your system's environment variables (see `PATH` `CUDA_PATH` and `CUDA_PATH_V12_6`)
+5. If updating/reinstalling CUDA doesn't work, try to reinstall Miniconda/Anaconda:
+    - Finally, reinstall Miniconda or Anaconda. A fresh installation can resolve conflicts that might arise from previous installations, especially those that affect .dll files.
+
 
 # Directory structure
 
