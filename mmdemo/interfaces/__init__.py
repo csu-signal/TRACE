@@ -113,6 +113,14 @@ class GestureConesInterface(ConesInterface):
     handedness: list[Handedness]
 
 
+@dataclass
+class FrictionOutputInterface(BaseInterface):
+    """
+    `output` -- the output from the model
+    """
+
+    output: str
+
 
 @dataclass
 class ObjectInterface2D(BaseInterface):
