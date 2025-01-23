@@ -195,4 +195,3 @@ dependencies:
       - up-fast-downward==0.4.1
       - virtualenv==20.28.0
       - zipp==3.21.0
-prefix: C:\Users\benkh\AppData\Local\anaconda3\envs\multimodalDemo_
