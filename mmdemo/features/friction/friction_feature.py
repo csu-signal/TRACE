@@ -21,6 +21,83 @@ from mmdemo.utils.coordinates import CoordinateConversionError, pixel_to_camera_
 from huggingface_hub import InferenceClient
 
 # - huggingface_hub-0.27.1 #TODO update official yaml
+ 
+
+@dataclass
+class FrictionOutputInterface:
+    """
+    Interface for friction generation output in collaborative weight estimation task.
+    
+    Attributes:
+        friction_statement (str): 
+            Main friction statement to be displayed/spoken.
+            Example: "Are we sure about comparing these blocks without considering their volume?"
+            
+        task_state (str): 
+            Current state of the weight estimation task.
+            Hidden from UI but useful for debugging.
+            Example: "Red (10g) and Blue blocks compared, Yellow block pending"
+            
+        belief_state (str): 
+            Participants' current beliefs about weights.
+            Helps explain friction but may not need display.
+            Example: "P1 believes yellow is heaviest, P2 uncertain about blue"
+            
+        rationale (str): 
+            Reasoning behind the friction intervention.
+            Could be shown as tooltip/explanation.
+            Example: "Participants are making assumptions without evidence"
+            
+        metrics (Optional[FrictionMetrics]): 
+            Model's generation metrics including confidence.
+            Useful for debugging and demo insights.
+    """
+    
+    friction_statement: str
+    task_state: str
+    belief_state: str
+    rationale: str
+    metrics: Optional[FrictionMetrics] = None
+    
+    def get_perplexity(self) -> float:
+        """Returns model's surprise in generated friction (0-1)."""
+        return self.metrics.perplexity if self.metrics else 0.0
+    
+    def to_display_dict(self) -> dict:
+        """Returns dict of attributes relevant for UI display."""
+        return {
+            "friction": self.friction_statement,
+            "explanation": self.rationale,
+            "perplexity": f"{self.get_perplexity():.2%}"
+        }
+     
+    def to_debug_dict(self) -> dict:
+        """Returns full dict including hidden attributes for debugging."""
+        return {
+            "friction": self.friction_statement,
+            "task_state": self.task_state,
+            "beliefs": self.belief_state,
+            "rationale": self.rationale,
+            "perplexity": self.get_perplexity(),
+            "metrics": vars(self.metrics) if self.metrics else None
+        }
+
+# Example usage:
+"""
+output = FrictionOutputInterface(
+    friction_statement="Should we verify the weight comparison?",
+    task_state="The resolved weights include the red block (10g) and blue block (10g).",
+    belief_state="P1 and P2 assume blocks are equal",
+    rationale="Team making assumptions without evidence",
+    metrics=FrictionMetrics(
+        nll=2.3,
+        predictive_entropy=0.3,
+        mutual_information=0.5,
+        perplexity=4.2
+    )
+)
+
+"""
 
 
 @final
