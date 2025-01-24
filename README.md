@@ -48,6 +48,13 @@ Download the following models from [here](https://colostate-my.sharepoint.com/:f
 - `steroid_model/` ==> `mmdemo/features/proposition/data/prop_extraction_model/`
 - `production_move_classifier.pt` ==> `mmdemo/features/move/production_move_classifier.pt`
 
+## CUDA Installation and Pathing (For Windows)(Linux has not been tested)
+
+WINDOWS OS: Ensure that you have CUDA Toolkit 12.4 or greater installed within Program Files for your architecture: https://developer.nvidia.com/cuda-downloads
+
+- After installing, add the file path, `C:Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8` to your system environment variables under `Path`. Additionally, check that the paths for `CUDA_PATH` and `CUDA_PATH_V12_6`match the newly added file path.
+- If issues with CUDA arise, please check the "Solution for .dll File Errors' sub-section within the 'Common Setup Issues' section of this README file.
+
 ## Azure Kinect features (optional, only for Windows)
 
 See [mmdemo-azure-kinect/README.md](mmdemo-azure-kinect/README.md).
