@@ -22,6 +22,10 @@ Once the installation is complete, open `azure_kinect_config.py`. Ensure that `K
 
 ## Install package
 
+If you have Microsoft Visual C++ 14.0 or greater, skip the indentented steps below
+    Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/ 
+    Once the client is downloaded and installed, use it to install C++ Development Package for Desktop.
+
 From the root directory of this repository, run `pip install -e .\mmdemo-azure-kinect` to build and install the package.
 
 # Modules
