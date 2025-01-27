@@ -9,6 +9,7 @@ from mmdemo.interfaces import (
     CameraCalibrationInterface,
     ColorImageInterface,
     CommonGroundInterface,
+    FrictionOutputInterface,
     GazeConesInterface,
     GestureConesInterface,
     SelectedObjectsInterface,
@@ -56,12 +57,13 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         sel_objects: BaseFeature[SelectedObjectsInterface],
         common_ground: BaseFeature[CommonGroundInterface],
         calibration: BaseFeature[CameraCalibrationInterface],
+        friction: BaseFeature[FrictionOutputInterface],
         plan: BaseFeature[PlannerInterface] | None = None,
     ):
         if plan is None:
-            super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration)
+            super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration, friction)
         else:
-            super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration, plan)
+            super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration, friction, plan)
 
     def initialize(self):
         self.has_cgt_data = False
@@ -76,6 +78,7 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         objects: SelectedObjectsInterface,
         common: CommonGroundInterface,
         calibration: CameraCalibrationInterface,
+        friction: FrictionOutputInterface,
         plan: PlannerInterface = None,
     ):
         if (

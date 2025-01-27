@@ -15,6 +15,7 @@ from mmdemo.interfaces import (
     DepthImageInterface,
     FrictionOutputInterface,
     GestureConesInterface,
+    TranscriptionInterface,
 )
 from mmdemo.interfaces.data import Cone, Handedness
 from mmdemo.utils.coordinates import CoordinateConversionError, pixel_to_camera_3d
@@ -22,90 +23,87 @@ from huggingface_hub import InferenceClient
 
 # - huggingface_hub-0.27.1 #TODO update official yaml
  
-
-@dataclass
-class FrictionOutputInterface:
-    """
-    Interface for friction generation output in collaborative weight estimation task.
+# class FrictionOutputInterface:
+#     """
+#     Interface for friction generation output in collaborative weight estimation task.
     
-    Attributes:
-        friction_statement (str): 
-            Main friction statement to be displayed/spoken.
-            Example: "Are we sure about comparing these blocks without considering their volume?"
+#     Attributes:
+#         friction_statement (str): 
+#             Main friction statement to be displayed/spoken.
+#             Example: "Are we sure about comparing these blocks without considering their volume?"
             
-        task_state (str): 
-            Current state of the weight estimation task.
-            Hidden from UI but useful for debugging.
-            Example: "Red (10g) and Blue blocks compared, Yellow block pending"
+#         task_state (str): 
+#             Current state of the weight estimation task.
+#             Hidden from UI but useful for debugging.
+#             Example: "Red (10g) and Blue blocks compared, Yellow block pending"
             
-        belief_state (str): 
-            Participants' current beliefs about weights.
-            Helps explain friction but may not need display.
-            Example: "P1 believes yellow is heaviest, P2 uncertain about blue"
+#         belief_state (str): 
+#             Participants' current beliefs about weights.
+#             Helps explain friction but may not need display.
+#             Example: "P1 believes yellow is heaviest, P2 uncertain about blue"
             
-        rationale (str): 
-            Reasoning behind the friction intervention.
-            Could be shown as tooltip/explanation.
-            Example: "Participants are making assumptions without evidence"
+#         rationale (str): 
+#             Reasoning behind the friction intervention.
+#             Could be shown as tooltip/explanation.
+#             Example: "Participants are making assumptions without evidence"
             
-        metrics (Optional[FrictionMetrics]): 
-            Model's generation metrics including confidence.
-            Useful for debugging and demo insights.
-    """
+#         metrics (Optional[FrictionMetrics]): 
+#             Model's generation metrics including confidence.
+#             Useful for debugging and demo insights.
+#     """
     
-    friction_statement: str
-    task_state: str
-    belief_state: str
-    rationale: str
-    metrics: Optional[FrictionMetrics] = None
+    #friction_statement: str
+    #task_state: str
+    #belief_state: str
+    #rationale: str
+    #metrics: Optional[FrictionMetrics] = None
     
-    def get_perplexity(self) -> float:
-        """Returns model's surprise in generated friction (0-1)."""
-        return self.metrics.perplexity if self.metrics else 0.0
+    # def get_perplexity(self) -> float:
+    #     """Returns model's surprise in generated friction (0-1)."""
+    #     return self.metrics.perplexity if self.metrics else 0.0
     
-    def to_display_dict(self) -> dict:
-        """Returns dict of attributes relevant for UI display."""
-        return {
-            "friction": self.friction_statement,
-            "explanation": self.rationale,
-            "perplexity": f"{self.get_perplexity():.2%}"
-        }
+    # def to_display_dict(self) -> dict:
+    #     """Returns dict of attributes relevant for UI display."""
+    #     return {
+    #         "friction": self.friction_statement,
+    #         "explanation": self.rationale,
+    #         "perplexity": f"{self.get_perplexity():.2%}"
+    #     }
      
-    def to_debug_dict(self) -> dict:
-        """Returns full dict including hidden attributes for debugging."""
-        return {
-            "friction": self.friction_statement,
-            "task_state": self.task_state,
-            "beliefs": self.belief_state,
-            "rationale": self.rationale,
-            "perplexity": self.get_perplexity(),
-            "metrics": vars(self.metrics) if self.metrics else None
-        }
+    # def to_debug_dict(self) -> dict:
+    #     """Returns full dict including hidden attributes for debugging."""
+    #     return {
+    #         "friction": self.friction_statement,
+    #         "task_state": self.task_state,
+    #         "beliefs": self.belief_state,
+    #         "rationale": self.rationale,
+    #         "perplexity": self.get_perplexity(),
+    #         "metrics": vars(self.metrics) if self.metrics else None
+    #     }
 
 # Example usage:
-"""
-output = FrictionOutputInterface(
-    friction_statement="Should we verify the weight comparison?",
-    task_state="The resolved weights include the red block (10g) and blue block (10g).",
-    belief_state="P1 and P2 assume blocks are equal",
-    rationale="Team making assumptions without evidence",
-    metrics=FrictionMetrics(
-        nll=2.3,
-        predictive_entropy=0.3,
-        mutual_information=0.5,
-        perplexity=4.2
-    )
-)
+# """
+# output = FrictionOutputInterface(
+#     friction_statement="Should we verify the weight comparison?",
+#     task_state="The resolved weights include the red block (10g) and blue block (10g).",
+#     belief_state="P1 and P2 assume blocks are equal",
+#     rationale="Team making assumptions without evidence",
+#     metrics=FrictionMetrics(
+#         nll=2.3,
+#         predictive_entropy=0.3,
+#         mutual_information=0.5,
+#         perplexity=4.2
+#     )
+# )
 
-"""
-
+# """
 
 @final
 class Friction(BaseFeature[FrictionOutputInterface]):
     """
     Detect friction in group work (client side).
 
-    Input interfaces are TODO add inputs
+    Input interfaces are `TranscriptionInterface`, ...
 
     Output interface is `FrictionOutputInterface`
 
@@ -116,62 +114,63 @@ class Friction(BaseFeature[FrictionOutputInterface]):
 
     def __init__(
         self,
-        #TODO add inputs
+        transcription: BaseFeature[TranscriptionInterface],
         *,
         model_path: Path | None = None
     ):
-        super().__init__() #pass inputs into the base constructor
+        super().__init__(transcription) #pass inputs into the base constructor
         if model_path is None:
             self.model_path = self.DEFAULT_MODEL_PATH
         else:
             self.model_path = model_path
+        self.transcriptionHistory = ''
 
         # these are init features to control friction generation quality, context-length etc
-        self.generation_config = {
-            "max_new_tokens": max_new_tokens,
-            "temperature": temperature,
-            "do_sample": True,
-            "top_k": top_k,
-            "top_p": top_p,
-            "num_return_sequences": 1
-        }
-        self.tags_to_parse = ["friction", "rationale", "t", "b"]
-        self.model = None
-        self.tokenizer = None
-        self.device = None
-        self.initialize() # initializes the model and tokenizer loaded from huggingface with additional features
+        # self.generation_config = {
+        #     "max_new_tokens": max_new_tokens,
+        #     "temperature": temperature,
+        #     "do_sample": True,
+        #     "top_k": top_k,
+        #     "top_p": top_p,
+        #     "num_return_sequences": 1
+        # }
+        # self.tags_to_parse = ["friction", "rationale", "t", "b"]
+        # self.model = None
+        # self.tokenizer = None
+        # self.device = None
+        # self.initialize() # initializes the model and tokenizer loaded from huggingface with additional features
  
 
     def initialize(self):
         #hugging face setup here
         self.client = InferenceClient()
 
-    def initialize(self):
-        """Initialize model and tokenizer"""
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # def initialize(self):
+    #     """Initialize model and tokenizer"""
+    #     self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
-        # Load base model or LoRA model based on path
-        if "checkpoint" in self.model_path:
-            self.model = AutoPeftModelForCausalLM.from_pretrained(
-                self.model_path,
-                device_map="auto",
-                torch_dtype=torch.bfloat16,
-                trust_remote_code=True
-            )
-            self.model = self.model.merge_and_unload()
-        else:
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_path,
-                trust_remote_code=True,
-                attn_implementation="flash_attention_2",
-                torch_dtype=torch.bfloat16,
-                device_map="auto"
-            )
+    #     # Load base model or LoRA model based on path
+    #     if "checkpoint" in self.model_path:
+    #         self.model = AutoPeftModelForCausalLM.from_pretrained(
+    #             self.model_path,
+    #             device_map="auto",
+    #             torch_dtype=torch.bfloat16,
+    #             trust_remote_code=True
+    #         )
+    #         self.model = self.model.merge_and_unload()
+    #     else:
+    #         self.model = AutoModelForCausalLM.from_pretrained(
+    #             self.model_path,
+    #             trust_remote_code=True,
+    #             attn_implementation="flash_attention_2",
+    #             torch_dtype=torch.bfloat16,
+    #             device_map="auto"
+    #         )
         
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
-        self.tokenizer.pad_token = "<|reserved_special_token_0|>"
-        self.tokenizer.pad_token_id = self.tokenizer.convert_tokens_to_ids(self.tokenizer.pad_token)
-        self.tokenizer.padding_side = 'right'
+    #     self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
+    #     self.tokenizer.pad_token = "<|reserved_special_token_0|>"
+    #     self.tokenizer.pad_token_id = self.tokenizer.convert_tokens_to_ids(self.tokenizer.pad_token)
+    #     self.tokenizer.padding_side = 'right'
 
     def format_prompt(self, dialogue_history: str) -> str:
         """Format the input prompt for friction generation.
@@ -208,8 +207,6 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         P1: Ok so we literally know nothing about the second block. This sounds like a bayesian probability question, right?
         """
 
-
-
         system_prompt = (
             "You are an expert in collaborative task analysis and personality-driven communication. Think step by step. "
             "Your task is to analyze the dialogue history involving three participants and the game details "
@@ -242,86 +239,84 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             f"### Assistant:"
         )
 
-    def compute_metrics(self, output_ids: torch.Tensor, scores: List[torch.Tensor], prompt_length: int) -> FrictionMetrics:
-        """Compute generation metrics"""
-        with torch.no_grad():
-            logits = torch.stack(scores, dim=0)
-            log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
-            probs = torch.exp(log_probs)
+    # def compute_metrics(self, output_ids: torch.Tensor, scores: List[torch.Tensor], prompt_length: int) -> FrictionMetrics:
+    #     """Compute generation metrics"""
+    #     with torch.no_grad():
+    #         logits = torch.stack(scores, dim=0)
+    #         log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
+    #         probs = torch.exp(log_probs)
             
-            # Get generated token probabilities
-            token_ids = output_ids[prompt_length:].cpu()
-            probs = probs[:, 0, :].cpu()  # Take first sequence
-            token_probs = probs[torch.arange(len(token_ids)), token_ids]
+    #         # Get generated token probabilities
+    #         token_ids = output_ids[prompt_length:].cpu()
+    #         probs = probs[:, 0, :].cpu()  # Take first sequence
+    #         token_probs = probs[torch.arange(len(token_ids)), token_ids]
             
-            # Calculate metrics
-            nll = -torch.sum(torch.log(token_probs)) / len(token_ids)
-            predictive_entropy = -torch.sum(probs * log_probs, dim=-1).mean()
-            conditional_entropy = -torch.mean(torch.log(token_probs))
-            mutual_information = max(predictive_entropy - conditional_entropy, 0.0)
-            perplexity = torch.exp(nll)
+    #         # Calculate metrics
+    #         nll = -torch.sum(torch.log(token_probs)) / len(token_ids)
+    #         predictive_entropy = -torch.sum(probs * log_probs, dim=-1).mean()
+    #         conditional_entropy = -torch.mean(torch.log(token_probs))
+    #         mutual_information = max(predictive_entropy - conditional_entropy, 0.0)
+    #         perplexity = torch.exp(nll)
 
-            return FrictionMetrics(
-                nll=nll.item(),
-                predictive_entropy=predictive_entropy.item(),
-                mutual_information=mutual_information.item(),
-                perplexity=perplexity.item(),
-                conditional_entropy=conditional_entropy.item()
-            )
+    #         return FrictionMetrics(
+    #             nll=nll.item(),
+    #             predictive_entropy=predictive_entropy.item(),
+    #             mutual_information=mutual_information.item(),
+    #             perplexity=perplexity.item(),
+    #             conditional_entropy=conditional_entropy.item()
+    #         )
 
     def get_output(
         self,
-        #inputs to send to model go in this method,
+        transcription: TranscriptionInterface
     ):
         #TODO check if any of the input features have been updated
-        #if not color.is_new() or not depth.is_new() or not bt.is_new():
-            #return None
+        if not transcription.is_new():
+            return None
 
         #TODO send data to valid hugging face location, await response
-        response = self.client.post(json={"inputs": "An astronaut riding a horse on the moon."}, model="stabilityai/stable-diffusion-2-1")
+        self.transcriptionHistory += transcription.speaker_id + ":" + transcription.text + "\n"
+        prompt = self.format_prompt(self.transcriptionHistory)
+        print(prompt)
+        #response = self.client.post(json={"inputs": "An astronaut riding a horse on the moon."}, model="stabilityai/stable-diffusion-2-1")
         #response.content
 
         #TODO return model real reponse
-
-
+        return FrictionOutputInterface(prompt)
+    
         # first, the only external (demo-side) information that the frition agent needs in the dialouge history at that point where friction needs to be inserted
         # second, the decision to insert friction is made by the planner (I think) but not the f agent
         #third, the format_prompt method will format the input for the friction agent
             #here, along with the dialogue history, a system_prompt and a game_definition is added to properly scaffold the agent. NOTE:system_prompt and game_definition remain constant at any point
-
         #fourth, now that input is formatted, we'd call the model.generate
 
 
-    def get_output(self, dialogue_history: str) -> FrictionOutputInterface:
-        """Generate friction statement and compute metrics"""
-        prompt = self.format_prompt(dialogue_history)
-        inputs = self.tokenizer(prompt, return_tensors="pt", padding=True).to(self.device)
+    # def get_output(self, dialogue_history: str) -> FrictionOutputInterface:
+    #     """Generate friction statement and compute metrics"""
+    #     prompt = self.format_prompt(dialogue_history)
+    #     inputs = self.tokenizer(prompt, return_tensors="pt", padding=True).to(self.device)
         
-        # we are calling model generate for more freedom on our side to further process the friction agent output (like get metrics etc)
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs,
-                **self.generation_config,
-                return_dict_in_generate=True,
-                output_scores=True
-            )
+    #     # we are calling model generate for more freedom on our side to further process the friction agent output (like get metrics etc)
+    #     with torch.no_grad():
+    #         outputs = self.model.generate(
+    #             **inputs,
+    #             **self.generation_config,
+    #             return_dict_in_generate=True,
+    #             output_scores=True
+    #         )
             
-        generated_ids = outputs.sequences[0]
-        generated_text = self.tokenizer.decode(generated_ids[inputs['input_ids'].shape[1]:], skip_special_tokens=True)
+    #     generated_ids = outputs.sequences[0]
+    #     generated_text = self.tokenizer.decode(generated_ids[inputs['input_ids'].shape[1]:], skip_special_tokens=True)
         
-        # Parse components and compute metrics
-        parsed = self.parse_generation(generated_text)
-        metrics = self.compute_metrics(generated_ids, outputs.scores, inputs['input_ids'].shape[1]) # probably not needed
+    #     # Parse components and compute metrics
+    #     parsed = self.parse_generation(generated_text)
+    #     metrics = self.compute_metrics(generated_ids, outputs.scores, inputs['input_ids'].shape[1]) # probably not needed
         
-        return FrictionOutputInterface(
-            friction_statement=parsed.get("friction", ""), #main friction statement
-            task_state=parsed.get("t", ""), #state of the task; not important to display 
-            belief_state=parsed.get("b", ""), # observed beliefs of participants (about weights) at that point
-            rationale=parsed.get("rationale", ""), # this might help make the friction intervention more interpretable
-            metrics=metrics, #these will probably not be needed to be exposed in the video but could be effective to have during demo; esp, say confidence of agent
- 
-        )
-
-
-        return FrictionOutputInterface(response.content)
+    #     return FrictionOutputInterface(
+    #         friction_statement=parsed.get("friction", ""), #main friction statement
+    #         task_state=parsed.get("t", ""), #state of the task; not important to display 
+    #         belief_state=parsed.get("b", ""), # observed beliefs of participants (about weights) at that point
+    #         rationale=parsed.get("rationale", ""), # this might help make the friction intervention more interpretable
+    #         metrics=metrics, #these will probably not be needed to be exposed in the video but could be effective to have during demo; esp, say confidence of agent
+    #     )
 
