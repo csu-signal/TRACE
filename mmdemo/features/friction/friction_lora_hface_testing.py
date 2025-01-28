@@ -1,10 +1,113 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import AutoPeftModelForCausalLM
 import torch
+from peft import PeftModel
+import os
+import pandas as pd
+from collections import defaultdict
+from collections.abc import Mapping
+import wandb
+# wandb.init(project="friction_agent_inference", name="log_friction_interventions") 
+from safetensors import safe_open
+from datasets import Dataset,load_dataset, DatasetDict
+from datasets import load_from_disk
+import re
+import matplotlib.pyplot as plt
+import torch
+import random
+import numpy as np
+from typing import Dict, List
 
+from tqdm import tqdm
+from datasets import load_metric
+from rouge_score import rouge_scorer
+from sentence_transformers import SentenceTransformer, util
+import sys
+import pickle
+from dataclasses import dataclass, field, asdict
+
+from typing import Optional
+import pickle
+import pandas as pd
+from datasets import Dataset, DatasetDict
+from itertools import combinations
+import torch
+from accelerate import Accelerator
+from datasets import load_dataset, load_from_disk
+from peft import AutoPeftModelForCausalLM, LoraConfig
+from tqdm import tqdm
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    HfArgumentParser,
+    set_seed,
+)
+
+
+@dataclass
+ 
+class FrictionMetrics:
+    """Metrics for generated friction statements"""
+    nll: float
+    predictive_entropy: float
+    mutual_information: float
+    perplexity: float
+    conditional_entropy: float
+
+@dataclass
+class FrictionOutputInterface:
+    """
+    Interface for friction generation output in collaborative weight estimation task.
+    
+    Attributes:
+        friction_statement (str): 
+            Main friction statement to be displayed/spoken.
+            Example: "Are we sure about comparing these blocks without considering their volume?"
+            
+        task_state (str): 
+            Current state of the weight estimation task.
+            Hidden from UI but useful for debugging.
+            Example: "Red (10g) and Blue blocks compared, Yellow block pending"
+            
+        belief_state (str): 
+            Participants' current beliefs about weights.
+            Helps explain friction but may not need display.
+            Example: "P1 believes yellow is heaviest, P2 uncertain about blue"
+            
+        rationale (str): 
+            Reasoning behind the friction intervention.
+            Could be shown as tooltip/explanation.
+            Example: "Participants are making assumptions without evidence"
+            
+        metrics (Optional[FrictionMetrics]): 
+            Model's generation metrics including confidence.
+            Useful for debugging and demo insights.
+    """
+    
+    friction_statement: str
+    task_state: str
+    belief_state: str
+    rationale: str
+    raw_generation: str
+
+    metrics: Optional[FrictionMetrics] = None
+
+    def to_dict(self):
+        return asdict(self)  # Converts the object into a dictionary
+    
 class FrictionInference:
     def __init__(self, model_path: str):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        # self.generation_config = {
+        #     "max_new_tokens": max_new_tokens,
+        #     "temperature": temperature,
+        #     "do_sample": True,
+        #     "top_k": top_k,
+        #     "top_p": top_p,
+        #     "num_return_sequences": 1
+        # }
+        self.tags_to_parse = ["friction", "rationale", "t", "b"]
         
         # Load model using PEFT AutoModel
         print("Loading base model...")
@@ -16,18 +119,100 @@ class FrictionInference:
         )
         
         # Merge and unload adapter weights
-        print("Merging and unloading adapter weights...")
-        self.model = self.model.merge_and_unload()
-        
+        print("Merging and unloading adapter weights...",  self.model)
+        self.model = self.model.merge_and_unload() 
+        self.model = self.model.to(self.device)  # Move the model to the GPU device
+        print("showing merged lora model",  self.model)
+ 
         # Load tokenizer
         print("Loading tokenizer...")
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
         self.tokenizer.pad_token = "<|reserved_special_token_0|>"
         self.tokenizer.padding_side = 'right'
-        
-    def generate_friction(self, dialogue_history: str) -> dict:
-        # Format prompt
 
+    def parse_generation(self, text: str) -> Dict[str, str]:
+        """Parse generated text to extract components"""
+        parsed = {tag: [] for tag in self.tags_to_parse}
+        
+        for tag in self.tags_to_parse:
+            pattern = f"<{tag}>(.*?)</{tag}>"
+            matches = re.findall(pattern, text, re.DOTALL)
+            parsed[tag].extend(matches)
+            
+        # Handle friction tag specially
+        if not parsed["friction"]:
+            parsed["friction"] = [self._extract_friction(text)]
+            
+        return {k: " ".join(v).strip() for k, v in parsed.items()}
+
+    def _extract_friction(self, text: str) -> str:
+        """Extract friction statement when tags are missing"""
+        sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text.strip())
+        if len(sentences) >= 3:
+            return f"{sentences[0]} {sentences[-2]} {sentences[-1]}"
+        return " ".join(sentences)
+
+    
+    # def compute_metrics(self, output_ids: torch.Tensor, scores: List[torch.Tensor], prompt_length: int) -> FrictionMetrics:
+    #     """Compute generation metrics"""
+    #     with torch.no_grad():
+    #         logits = torch.stack(scores, dim=0)
+    #         log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
+    #         probs = torch.exp(log_probs)
+            
+    #         # Get generated token probabilities
+    #         token_ids = output_ids[prompt_length:].cpu()
+    #         probs = probs[:, 0, :].cpu()  # Take first sequence
+    #         token_probs = probs[torch.arange(len(token_ids)), token_ids]
+            
+    #         # Calculate metrics
+    #         nll = -torch.sum(torch.log(token_probs)) / len(token_ids)
+    #         predictive_entropy = -torch.sum(probs * log_probs, dim=-1).mean()
+    #         conditional_entropy = -torch.mean(torch.log(token_probs))
+    #         mutual_information = max(predictive_entropy - conditional_entropy, 0.0)
+    #         perplexity = torch.exp(nll)
+        
+    #         return FrictionMetrics(
+    #             nll=nll.item(),
+    #             predictive_entropy=predictive_entropy.item(),
+    #             mutual_information=mutual_information.item(),
+    #             perplexity=perplexity.item(),
+    #             conditional_entropy=conditional_entropy.item()
+    #         )
+
+    def compute_metrics(self, output_ids: torch.Tensor, scores: List[torch.Tensor], prompt_length: int) -> FrictionMetrics:
+        """Compute generation metrics (fixed device handling)"""
+        with torch.no_grad():
+            # Ensure all tensors are on the same device
+            logits = torch.stack(scores, dim=0).to(self.device)
+            output_ids = output_ids.to(self.device)
+            
+            log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
+            probs = torch.exp(log_probs)
+            
+            # Get generated token probabilities
+            token_ids = output_ids[prompt_length:]
+            probs = probs[:, 0, :]  # Take first sequence
+            token_probs = probs[torch.arange(len(token_ids), device=self.device), token_ids]
+            
+            # Calculate metrics
+            nll = -torch.sum(torch.log(token_probs)) / len(token_ids)
+            predictive_entropy = -torch.sum(probs * log_probs, dim=-1).mean()
+            conditional_entropy = -torch.mean(torch.log(token_probs))
+            mutual_information = max(predictive_entropy - conditional_entropy, 0.0)
+            perplexity = torch.exp(nll)
+        
+            return FrictionMetrics(
+                nll=nll.item(),
+                predictive_entropy=predictive_entropy.item(),
+                mutual_information=mutual_information.item(),
+                perplexity=perplexity.item(),
+                conditional_entropy=conditional_entropy.item()
+            )
+
+    def generate_friction(self, dialogue_history: str, seed: int = 42) -> dict:
+        # Format prompt
+        torch.manual_seed(seed)
         system_prompt_rm = (
         "You are an expert in collaborative task analysis and personality-driven communication. Think step by step. "
         "Your task is to analyze the dialogue history involving three participants and the game details "
@@ -51,14 +236,20 @@ class FrictionInference:
         "They must deduce the weights of other blocks. "
         "The dialogue history is provided below:"
         )
+ 
+
+# Final formatted prompt for the LLM
         prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-You are an expert in analyzing group dynamics in the Weights game. Generate a friction statement to encourage reevaluation of beliefs.
+            {system_prompt_rm} 
 
-<|eot_id|><|start_header_id|>user<|end_header_id|>
-{dialogue_history}
+            {friction_definition_game_definition_prompt_rm}
 
-<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-### Assistant:"""
+            <|eot_id|><|start_header_id|>user<|end_header_id|>
+            {dialogue_history}
+
+            <|eot_id|><|start_header_id|>assistant<|end_header_id|>
+            ### Assistant:"""
+ 
 
         # Generate response
         try:
@@ -73,27 +264,40 @@ You are an expert in analyzing group dynamics in the Weights game. Generate a fr
                 return_dict_in_generate=True,
                 output_scores=True
             )
-            
+            generated_ids = outputs.sequences[0]
+            generated_ids = generated_ids.to(self.device)
             generated_text = self.tokenizer.decode(
                 outputs.sequences[0][inputs.input_ids.shape[1]:], 
                 skip_special_tokens=True
             )
-            
+            scores = outputs.scores  # Already on correct device, don't move to list
+
+            metrics = self.compute_metrics(generated_ids, scores, inputs['input_ids'].shape[1]) # probably not needed
+            parsed = self.parse_generation(generated_text)
             print("\nGenerated text:", generated_text)  # Debug print
+            print("metrics", metrics)
             
             # Parse components
             task_state = self._extract_tag(generated_text, "t")
             belief_state = self._extract_tag(generated_text, "b")
             rationale = self._extract_tag(generated_text, "rationale")
             friction = self._extract_tag(generated_text, "friction")
-            
-            return {
-                "friction_statement": friction,
-                "task_state": task_state,
-                "belief_state": belief_state,
-                "rationale": rationale,
-                "raw_output": generated_text
-            }
+
+            return FrictionOutputInterface(
+            friction_statement=parsed.get("friction", ""),
+            task_state=parsed.get("t", ""),
+            belief_state=parsed.get("b", ""),
+            rationale=parsed.get("rationale", ""),
+            metrics=metrics,
+            raw_generation=generated_text
+        ) 
+            # return {
+            #     "friction_statement": friction,
+            #     "task_state": task_state,
+            #     "belief_state": belief_state,
+            #     "rationale": rationale,
+            #     "raw_output": generated_text
+            # }
             
         except Exception as e:
             print(f"Error during generation: {str(e)}")
@@ -166,13 +370,21 @@ if __name__ == "__main__":
  
     
     print("Initializing friction detector...")
-    friction_detector = FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct")
+    friction_detector = FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct") #this is the lora model id on huggingface (SFT model)
     
     print("\nGenerating friction for dialogue...")
     result = friction_detector.generate_friction(dialogue1)
     
-    if result:
-        print("\nFriction Statement:", result["friction_statement"])
-        print("Task State:", result["task_state"])
-        print("Belief State:", result["belief_state"])
-        print("Rationale:", result["rationale"])
+    if result: 
+        print("\nFriction Statement:", result.friction_statement)
+        print("Task State:", result.task_state)
+        print("Belief State:", result.belief_state)
+        print("Rationale:", result.rationale)
+
+        # Print metrics
+        print("\nMetrics:")
+        print(f"NLL: {result.metrics.nll}")
+        print(f"Predictive Entropy: {result.metrics.predictive_entropy}")
+        print(f"Mutual Information: {result.metrics.mutual_information}")
+        print(f"Perplexity: {result.metrics.perplexity}")
+        print(f"Conditional Entropy: {result.metrics.conditional_entropy}")
