@@ -15,3 +15,6 @@ wtd_inputs/
 tmp_*/
 *.mp4
 *.wav
+
+camera_indices.py
+fpstest.py

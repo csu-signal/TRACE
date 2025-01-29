@@ -55,26 +55,26 @@ class Log(BaseFeature[EmptyInterface]):
 
     def initialize(self):
         if self.csv:
-            # create output directory
+            # Create the 'Logs' directory inside the root or the specified output directory
             if self._out_dir is not None:
-                self.output_dir = Path(self._out_dir)
+                self.output_dir = Path(self._out_dir) / "Logs"
             else:
-                self.output_dir = Path(
-                    "logging-output-"
-                    + datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S")
+                self.output_dir = Path.cwd() / "Logs" / (
+                    "logging-output-" + datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S")
                 )
+
+            # Ensure the directory exists
             os.makedirs(self.output_dir, exist_ok=True)
 
-            # create output files
+            # Create output files
             for f in self.files:
                 file = self.output_dir / f
-                assert (
-                    not file.is_file()
-                ), f"A logging file already exists and cannot be overwritten ({file})"
+                assert not file.is_file(), f"A logging file already exists and cannot be overwritten ({file})"
                 file.touch()
             self.needs_header = [True for _ in self.files]
 
         self.frame = 0
+
 
     def get_output(self, *args):
         logged_something = False
