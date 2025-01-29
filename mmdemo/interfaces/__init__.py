@@ -5,6 +5,8 @@ Premade output interfaces
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Sequence
+from typing import Dict, List, Optional
+from dataclasses import dataclass, asdict
 
 import numpy as np
 
@@ -114,12 +116,55 @@ class GestureConesInterface(ConesInterface):
 
 
 @dataclass
+class FrictionMetrics:
+    """Metrics for generated friction statements"""
+    nll: float
+    predictive_entropy: float
+    mutual_information: float
+    perplexity: float
+    conditional_entropy: float
+
+
+@dataclass
 class FrictionOutputInterface(BaseInterface):
     """
-    `output` -- the output from the model
+    Interface for friction generation output in collaborative weight estimation task.
+    
+    Attributes:
+        friction_statement (str): 
+            Main friction statement to be displayed/spoken.
+            Example: "Are we sure about comparing these blocks without considering their volume?"
+            
+        task_state (str): 
+            Current state of the weight estimation task.
+            Hidden from UI but useful for debugging.
+            Example: "Red (10g) and Blue blocks compared, Yellow block pending"
+            
+        belief_state (str): 
+            Participants' current beliefs about weights.
+            Helps explain friction but may not need display.
+            Example: "P1 believes yellow is heaviest, P2 uncertain about blue"
+            
+        rationale (str): 
+            Reasoning behind the friction intervention.
+            Could be shown as tooltip/explanation.
+            Example: "Participants are making assumptions without evidence"
+            
+        metrics (Optional[FrictionMetrics]): 
+            Model's generation metrics including confidence.
+            Useful for debugging and demo insights.
     """
+    
+    friction_statement: str
+    task_state: str
+    belief_state: str
+    rationale: str
+    raw_generation: str
 
-    output: str
+    metrics: Optional[FrictionMetrics] = None
+
+    def to_dict(self):
+        return asdict(self)  # Converts the object into a dictionary
 
 
 @dataclass

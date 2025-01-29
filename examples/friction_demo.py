@@ -146,8 +146,6 @@ if __name__ == "__main__":
         transcriptions, referenced_objects
     )
 
-    # TODO create frictive freature
-    # TODO pass in relevant inputs
     friction = Friction(dense_paraphrased_transcriptions)
 
     gesture_move = gesture

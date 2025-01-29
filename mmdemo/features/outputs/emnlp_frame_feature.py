@@ -86,6 +86,7 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
             or not gaze.is_new()
             or not gesture.is_new()
             or not objects.is_new()
+            or not friction.is_new()
         ):
             return None
 
@@ -129,6 +130,20 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         # render plan
         if plan:
             EMNLPFrame.renderPlan(output_frame, plan, self.last_plan)
+
+        if friction and friction.friction_statement != '':
+            # print friction statement
+            x, y = (50, 75)
+            text = friction.friction_statement
+            font = cv.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.75
+            font_thickness = 1
+            text_color_bg = (255,255,255)
+            text_color =(0,0,0)
+            text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
+            text_w, text_h = text_size
+            cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
+            cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
         
 
         # draw frame count

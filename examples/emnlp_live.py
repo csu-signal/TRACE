@@ -1,3 +1,4 @@
+from mmdemo.features.friction.friction_feature import Friction
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 
 from mmdemo.demo import Demo
@@ -47,6 +48,9 @@ if __name__ == "__main__":
         transcriptions, referenced_objects
     )
 
+    # friction 
+    friction = Friction(dense_paraphrased_transcriptions)
+
     # prop extraction and move classifier
     props = Proposition(dense_paraphrased_transcriptions)
     moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects)
@@ -57,7 +61,7 @@ if __name__ == "__main__":
     # plan = Planner(cgt)
 
     # create output frame for video
-    output_frame = EMNLPFrame(color, gaze, gesture, selected_objects, cgt, calibration)
+    output_frame = EMNLPFrame(color, gaze, gesture, selected_objects, cgt, calibration, friction)
 
     # run demo and show output
     demo = Demo(
