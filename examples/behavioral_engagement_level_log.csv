@@ -1,0 +1,7 @@
+time,frame,active events,action,level
+15.0,150,1 positive events2 negative events,none,2
+30.0,300,3 positive events5 negative events,none,2
+40.2,402,5 positive events11 negative events,1 posture positive events are no more active,2
+40.2,402,5 positive events9 negative events,2 posture negative events are no more active,2
+45.0,450,6 positive events10 negative events,behavioral engagemental level -1,1
+60.0,600,2 positive events5 negative events,none,1

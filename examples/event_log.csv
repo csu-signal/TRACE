@@ -1,0 +1,27 @@
+time,frame,event
+10.2,102,P3 negative posture event
+10.2,102,P2 negative posture event
+10.2,102,P1 positive posture event
+15.2,152,group negative gaze event
+20.2,202,P3 positive posture event
+20.2,202,P2 negative posture event
+20.2,202,P1 positive posture event
+26.4,264,P3 negative posture event
+30.2,302,P2 positive posture event
+30.2,302,P1 positive posture event
+30.2,302,P3 individual negative gaze event
+30.2,302,P1 individual negative gaze event
+30.2,302,group negative gaze event
+30.6,306,P2 negative posture event
+32.4,324,P1 negative posture event
+36.4,364,P3 positive posture event
+37.4,374,P3 negative posture event
+40.6,406,P2 positive posture event
+42.4,424,P1 negative posture event
+45.2,452,group negative gaze event
+47.4,474,P3 positive posture event
+48.8,488,P2 negative posture event
+49.4,494,P3 negative posture event
+52.4,524,P1 negative posture event
+58.8,588,P2 positive posture event
+59.4,594,P3 negative posture event

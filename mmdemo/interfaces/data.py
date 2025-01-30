@@ -55,6 +55,16 @@ class HciiSelectedObjectInfo:
     wtd_id: []
 
 @dataclass
+class ParticipantInfo:
+    """
+    nosePoint -- nose point
+    participantId -- the participant id
+    """
+    nosePoint: tuple[float, float]
+    participantId: str
+
+
+@dataclass
 class ObjectInfo2D:
     """
     p1 -- top left point (x,y)
