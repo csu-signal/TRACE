@@ -16,11 +16,15 @@ In the example above, `color`, `depth`, and `body_tracking` are features which c
 
 ## Azure Kinect SDK
 
-Both the [Azure Kinect SDK](https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/docs/usage.md#installation) and [Body Tracking SDK](https://learn.microsoft.com/en-us/azure/kinect-dk/body-sdk-download) are required and can be downloaded/installed for Windows from the linked websites. Use version 1.4.2 of the Azure Kinect SDK and version 1.1.2 of the body tracking SDK if possible.
+Both the [Azure Kinect SDK](https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/docs/usage.md#installation) and [Body Tracking SDK](https://www.microsoft.com/en-us/download/details.aspx?id=104221) are required and can be downloaded/installed for Windows from the linked websites. Use version 1.4.2 of the Azure Kinect SDK and version 1.1.2 of the body tracking SDK if possible.
 
 Once the installation is complete, open `azure_kinect_config.py`. Ensure that `K4A_DIR` is set to the correct Azure Kinect SDK path, `K4ABT_DIR` is set to the correct Azure Kinect Body Tracking SDK path, and `K4A_DLL_DIR` is set to the directory containing DLL files for Azure Kinect.
 
 ## Install package
+
+If you have Microsoft Visual C++ 14.0 or greater, skip the indentented steps below
+    Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/ 
+    Once the client is downloaded and installed, use it to install C++ Development Package for Desktop.
 
 From the root directory of this repository, run `pip install -e .\mmdemo-azure-kinect` to build and install the package.
 
