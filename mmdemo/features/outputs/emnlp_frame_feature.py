@@ -1,6 +1,6 @@
 import re
 from typing import final
-
+import time
 import cv2 as cv
 import numpy as np
 
@@ -57,16 +57,37 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         common_ground: BaseFeature[CommonGroundInterface],
         calibration: BaseFeature[CameraCalibrationInterface],
         plan: BaseFeature[PlannerInterface] | None = None,
+        
     ):
         if plan is None:
             super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration)
         else:
             super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration, plan)
 
+        self.frame_times = []
+        self.start_time = time.time()
+
     def initialize(self):
         self.has_cgt_data = False
         self.last_plan = {"text": "", "color": (255, 255, 255)}
         
+    def update_fps(self):
+    # Current time
+        current_time = time.time()
+        
+        # Update frame times and remove the oldest time if more than 60 entries
+        self.frame_times.append(current_time - self.start_time)
+        if len(self.frame_times) > 60:
+            self.frame_times.pop(0)
+        
+        self.start_time = current_time
+        
+        # Calculate FPS
+        if len(self.frame_times) > 1:
+            avg_frame_time = sum(self.frame_times) / len(self.frame_times)
+            fps = 1.0 / avg_frame_time if avg_frame_time > 0 else 0
+            return fps
+        return 0
 
     def get_output(
         self,
@@ -127,12 +148,18 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         if plan:
             EMNLPFrame.renderPlan(output_frame, plan, self.last_plan)
         
+        fps = self.update_fps()
+
+        # Render FPS on the frame
+        cv.putText(output_frame, f"FPS: {fps:.2f}", (10, 30),
+                cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv.LINE_AA)
+
 
         # draw frame count
         cv.putText(
             output_frame,
             "FRAME:" + str(color.frame_count),
-            (50, 50),
+            (10, 70),
             cv.FONT_HERSHEY_SIMPLEX,
             1,
             (0, 0, 255),

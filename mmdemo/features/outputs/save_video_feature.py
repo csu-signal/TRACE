@@ -33,13 +33,16 @@ class SaveVideo(BaseFeature[EmptyInterface]):
         video_name: Path | None = None,
     ):
         super().__init__(color)
-
         self.frame_rate = frame_rate
 
+        # Ensure the output directory exists
+        self.output_dir = Path.cwd() / "Videos"
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Set video name
         if video_name is None:
-            self.video_name = Path(
-                "output-video-"
-                + datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S" + ".mp4")
+            self.video_name = self.output_dir / (
+                "output-video-" + datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S") + ".mp4"
             )
         else:
             self.video_name = Path(video_name)

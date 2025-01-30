@@ -15,4 +15,6 @@ wtd_inputs/
 tmp_*/
 *.mp4
 *.wav
-/mmdemo/features/objects/objectDetectionModels/best_model-object.pth
+
+camera_indices.py
+fpstest.py
