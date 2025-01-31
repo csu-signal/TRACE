@@ -59,6 +59,18 @@ WINDOWS OS: Ensure that you have CUDA Toolkit 12.4 or greater installed within P
 
 See [mmdemo-azure-kinect/README.md](mmdemo-azure-kinect/README.md).
 
+## Hugging Face Setup
+Hugging face is required to run the friction model, in order to connect to the hugging face endpoint an account is required and a token must be added to the environment. 
+
+The base model for the friction model this llama version, and end license agreement must be accepted on the account used to setup the token: https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct 
+
+After setting up an account and accepting the license agreement login with the token to the multimodalDemo on the device, authenication instructions can be found [here](https://huggingface.co/docs/huggingface_hub/en/quick-start#authentication)
+
+```powershell
+#Log in using a token from huggingface.co/settings/tokens 
+huggingface-cli login 
+```
+
 ## Common Setup Issues
 ### Solution for .dll File Errors
 If you are experiencing errors related to .dll files (specially CUDA dlls i.e cublasLt64_12.dll), you can try the following steps:

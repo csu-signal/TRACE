@@ -44,5 +44,4 @@ def create_all_inputs(parent_dir):
 
 
 if __name__ == "__main__":
-    create_all_inputs("G:/Weights_Task/Data/wtd_inputs")
-    #create_all_inputs(sys.argv[1])
+    create_all_inputs(sys.argv[1])
