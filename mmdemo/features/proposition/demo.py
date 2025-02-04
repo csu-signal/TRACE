@@ -1,5 +1,6 @@
 import logging
 import string
+import re
 
 import pandas as pd
 import torch
@@ -30,7 +31,27 @@ loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
 for logger in loggers:
     if "transformers" in logger.name.lower():
         logger.setLevel(logging.ERROR)
+relation_map = {
+            ">": {"heavier", "more", "heavy", "bigger", "greater", "above"},
+            "<": {"lighter", "less", "small", "below", "under"},
+            "=": {"equals", "equal", "are", "same"},
+            "!=": {"different", "unequal", "isn't", "aren't"}
+            
+        }
 
+
+invert_map = {
+    ">": "<",
+    "<": ">",
+    "=": "!=",
+    "!=": "="
+}
+
+def get_relation_symbol(token):
+        for symbol, synonyms in relation_map.items():
+            if token in synonyms:
+                return symbol
+        return None
 
 def remove_stop_words(utterance):
     # default stopwords
@@ -229,3 +250,83 @@ def process_sentence(sentence, model, tokenizer, bert, embeddings, verbose=False
 # sentence = 'I think Blue is greater than 20'
 # model, tokenizer = load_model('/s/babbage/b/nobackup/nblancha/public-datasets/ilideep/XE/googleSandbox/XE_models/model') #changed for testing
 # print(process_sentence(sentence,model,tokenizer))
+
+        # """
+        # Left-to-right proposition extractor.
+        # - Single-word relations in relation_map
+        # - 'not' inverts the *next* recognized relation
+        # - 'is' is treated as a stop word here, so 'is greater' won't give two relations
+        # """
+
+
+        # blocks = {"red", "blue", "green", "purple", "yellow"}
+        # weights = {"10", "20", "30", "40", "50"}
+
+        # stop_words = {
+        #     "oh", "i", "think", "than", "a", "an", "the", "that", "this", "it",
+        #     "to", "of", "and", "or", "on", "in", "at", "with", "for", "but", "so",
+        #     "when", "we", "look", "its", "is"  
+        # }
+        # # if additional_stopwords:
+        # #     stop_words.update(additional_stopwords)
+
+
+        # sentence = sentence.translate(str.maketrans('', '', string.punctuation))
+        # raw_tokens = sentence.lower().split()
+        # tokens = [w for w in raw_tokens if w not in stop_words]
+
+
+        
+
+        # recognized_tokens = []
+        # pending_not = False
+
+        # for w in tokens:
+        #     if w == "not":
+            
+        #         pending_not = True
+        #     else:
+        
+        #         rel = get_relation_symbol(w)
+        #         if rel is not None:
+                    
+        #             if pending_not:
+        #                 rel = invert_map.get(rel, rel)  
+        #                 pending_not = False
+        #             recognized_tokens.append(rel)
+        #         else:
+                    
+        #             recognized_tokens.append(w)
+
+
+        # propositions = []
+        # encountered_entities = []  
+        # last_relation = None       
+
+        # for i, w in enumerate(recognized_tokens):
+            
+        #     if w in blocks or w in weights:
+        #         if last_relation is None:
+        #             encountered_entities.append((w, i))
+        #         else:
+                
+        #             for (ent, ent_idx) in encountered_entities:
+        #                 propositions.append({
+        #                     "proposition": f"{ent} {last_relation[0]} {w}",
+        #                     "indices": {
+        #                         ent: ent_idx,
+        #                         last_relation[0]: last_relation[1],
+        #                         w: i
+        #                     }
+        #                 })
+                
+        #             encountered_entities = [(w, i)]
+        #             last_relation = None
+        
+        #     elif w in relation_map:
+        #         last_relation = (w, i)
+        # if(not propositions):
+        #     prop = 'no prop'
+        # else:
+        #     prop = propositions[0].get('proposition')
+        # return prop, 0

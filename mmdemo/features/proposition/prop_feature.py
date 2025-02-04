@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import final
-
+import re
+import string
 import nltk
 from sentence_transformers import SentenceTransformer
 
@@ -8,6 +9,7 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.features.proposition.demo import load_model, process_sentence
 from mmdemo.features.proposition.demo_helpers import get_pickle
 from mmdemo.interfaces import PropositionInterface, TranscriptionInterface
+
 
 COLORS = ["red", "blue", "green", "purple", "yellow"]
 NUMBERS = ["10", "20", "30", "40", "50"]
@@ -49,10 +51,7 @@ class Proposition(BaseFeature[PropositionInterface]):
         nltk.download("stopwords")
         nltk.download("punkt_tab")
 
-    def get_output(
-        self,
-        tran: TranscriptionInterface,
-    ):
+    def get_output(self, tran: TranscriptionInterface):
         if not tran.is_new():
             return None
 
