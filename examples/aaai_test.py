@@ -27,10 +27,10 @@ if __name__ == "__main__":
 
     gazeselection = GazeSelection(body_tracking, calibration, gaze, left_position = config["left_position"], middle_position = config["middle_position"])
 
-    gazeevent = GazeEvent(gazeselection, config["playback_frame_rate"] if not config["running_alive"] else config["device_frame_rate"], config["gaze_window"], config["individual_gaze_event"], config["group_gaze_event"], config["gaze_beginning_buffer"], config["gaze_lookaway_buffer"], config["smooth_frame"], config["speaker"])
-    poseevent = PoseEvent(pose, config["playback_frame_rate"] if not config["running_alive"] else config["device_frame_rate"], config["pose_window"], config["pose_positive_event"], config["pose_negative_event"], config["leanout_time"], config["smooth_frame"])
+    gazeevent = GazeEvent(gazeselection, config["running_alive"], config["playback_frame_rate"], config["gaze_window"], config["individual_gaze_event"], config["group_gaze_event"], config["gaze_beginning_buffer"], config["gaze_lookaway_buffer"], config["smooth_frame"], config["speaker"])
+    poseevent = PoseEvent(pose, config["running_alive"], config["playback_frame_rate"], config["pose_window"], config["pose_positive_event"], config["pose_negative_event"], config["leanout_time"], config["smooth_frame"])
 
-    engagmentlevel = EngagementLevel(poseevent, gazeevent, config["update_check_interval"], config["playback_frame_rate"] if not config["running_alive"] else config["device_frame_rate"], config["gaze_positive_count_time"], config["gaze_negative_count_time"], config["posture_positive_count_time"], config["posture_negative_count_time"])
+    engagmentlevel = EngagementLevel(poseevent, gazeevent, config["running_alive"], config["update_check_interval"], config["playback_frame_rate"], config["gaze_positive_count_time"], config["gaze_negative_count_time"], config["posture_positive_count_time"], config["posture_negative_count_time"])
     aaaioutputframe = AAAIFrame(color, gaze, calibration, engagmentlevel, config["draw_gaze_cone"])
 
     # run demo and show output

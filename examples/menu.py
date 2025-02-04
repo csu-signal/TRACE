@@ -16,7 +16,7 @@ class Menu(QWidget):
             yaml.safe_dump(self.config, file)
     
     def save(self):
-        self.config["device_frame_rate"] = int(self.textboox1.text())
+        #self.config["device_frame_rate"] = int(self.textboox1.text())
         self.config["mkv_file_path"] = str(self.textboox2.text())
         self.config["mkv_frame_rate"] = int(self.textboox3.text())
         self.config["playback_frame_rate"] = int(self.textboox4.text())
@@ -29,7 +29,7 @@ class Menu(QWidget):
         self.config["group_gaze_event"] = float(self.textboox11.text())
         self.config["gaze_beginning_buffer"] = float(self.textboox12.text())
         self.config["gaze_lookaway_buffer"] = float(self.textboox13.text())
-        self.config["smooth_frame"] = int(self.textboox14.text())
+        self.config["smooth_frame"] = float(self.textboox14.text())
         self.config["pose_window"] = float(self.textboox15.text())
         self.config["pose_positive_event"] = float(self.textboox16.text())
         self.config["pose_negative_event"] = float(self.textboox17.text())
@@ -50,8 +50,8 @@ class Menu(QWidget):
         self.setGeometry(200, 200, 800, 600)
         self.setWindowTitle("Experimental Setup")
 
-        label1 = QLabel("Azure device frame rate (unit: frame/second)", self)
-        self.textboox1 = QLineEdit(str(self.config["device_frame_rate"]), self)
+        #label1 = QLabel("Azure device frame rate (unit: frame/second)", self)
+        #self.textboox1 = QLineEdit(str(self.config["device_frame_rate"]), self)
 
         label2 = QLabel("MKV file path", self)
         self.textboox2 = QLineEdit(self.config["mkv_file_path"], self)
@@ -89,7 +89,7 @@ class Menu(QWidget):
         label13 = QLabel("Buffer used when one participant switches from gaze to no gaze (unit: second)", self)
         self.textboox13 = QLineEdit(str(self.config["gaze_lookaway_buffer"]), self)
 
-        label14 = QLabel("How many frames one received feature can override the following None\nUsed to smooth features and reduce no information frame(unit: frame)", self)
+        label14 = QLabel("How long one received feature can override the following None information frame\nUsed to smooth features and reduce no information frame(unit: second)", self)
         self.textboox14 = QLineEdit(str(self.config["smooth_frame"]), self)
 
         label15 = QLabel("How long posture history stored for each participant (unit: second)", self)
@@ -132,7 +132,7 @@ class Menu(QWidget):
         run_button.clicked.connect(self.run_analysis)
 
         formlayout = QFormLayout()
-        formlayout.addRow(label1, self.textboox1)
+        #formlayout.addRow(label1, self.textboox1)
         formlayout.addRow(label2, self.textboox2)
         formlayout.addRow(label3, self.textboox3)
         formlayout.addRow(label4, self.textboox4)

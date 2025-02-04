@@ -6,7 +6,7 @@ gaze_negative_count_time: 30.0
 gaze_positive_count_time: 30.0
 gaze_window: 30.0
 group_gaze_event: 15.0
-individual_gaze_event: 30.0
+individual_gaze_event: 20.0
 leanout_time: 1.0
 left_position: -400.0
 middle_position: 400.0
@@ -20,6 +20,6 @@ pose_window: 30.0
 posture_negative_count_time: 30.0
 posture_positive_count_time: 30.0
 running_alive: false
-smooth_frame: 1
+smooth_frame: 0.2
 speaker: P2
 update_check_interval: 15.0
