@@ -18,7 +18,7 @@ from mmdemo.utils.coordinates import world_3d_to_camera_3d
 class GazeSelection(BaseFeature[GazeSelectionInterface]):
     """
     Determine which individuals are selected by checking if their
-    centers are contained within cones.
+    centers are contained within cones of other participants
 
     Input interfaces are `BodyTrackingInterface`, `CameraCalibrationInterface` and `GazeConesInterface`.
 
@@ -30,17 +30,15 @@ class GazeSelection(BaseFeature[GazeSelectionInterface]):
         bt: BaseFeature[BodyTrackingInterface],
         cal: BaseFeature[CameraCalibrationInterface],
         gz: BaseFeature[GazeConesInterface],
-        #added to unify participant ids
+        #divider to separate different participants
         left_position = -400,
         middle_position = 400
     ) -> None:
         super().__init__(bt, cal, gz)
         self.left_position = left_position
         self.middle_position = middle_position
-        self.count = 0
 
     def get_output(self, bt: BodyTrackingInterface, cc: CameraCalibrationInterface, gz: GazeConesInterface):
-        self.count += 1
         if not bt.is_new() or not gz.is_new():
             return None
 
@@ -61,16 +59,22 @@ class GazeSelection(BaseFeature[GazeSelectionInterface]):
             part = ParticipantInfo(nosePoint = nose, participantId = body_id)
             parts.append(part)
 
+        #a list contains gaze selection information [(participant id, selected participant)...]
         gaze_selection = []
+        #a dict stores the distance from each selected participant to the start of gaze cone
         selected_dist = {}
 
         for body, cone in zip(gz.body_ids, gz.cones):
+            #if one participant is selected by the gaze cone, put its informtion into the dict
             for i in range(len(parts)):
                 if self.cone_contains_point(cone, parts[i].nosePoint) and body != parts[i].participantId:
                     dist = self.get_sorting_dist(cone, parts[i].nosePoint)
                     selected_dist[parts[i].participantId] = dist
+            
+            #if no participant is select, return 'other'
             if selected_dist == {}:
                 gaze_selection.append((body, "other"))
+            #record the selected partcipant closest to the gaze cone
             else:
                 gaze_selection.append((body, sorted(selected_dist.items(), key = lambda x:x[1])[0][0]))
             selected_dist = {}

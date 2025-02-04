@@ -140,7 +140,7 @@ class Pose(BaseFeature[PoseInterface]):
             # prediction = int(torch.argmax(output))
             prediction = output.detach().numpy()[0][0] > 0.5
 
-            engagement = "leaning out" if prediction == 0 else "leaning in"
+            engagement = "leaning out" if prediction == 1 else "leaning in"
             if position == "left":
                 poses.append(["P1", engagement])
             elif position == "middle":
