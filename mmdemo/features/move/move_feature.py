@@ -5,6 +5,7 @@ from typing import final
 
 import opensmile
 import torch
+import gc
 from transformers import BertModel, BertTokenizer, PreTrainedModel
 from joblib import load
 
@@ -139,6 +140,12 @@ class Move(BaseFeature[MoveInterface]):
             for idx, class_present in enumerate(present_class_indices)
             if class_present
         ]
+
+        torch.cuda.empty_cache()
+
+        # Run Python's garbage collector
+        gc.collect()
+
 
         return MoveInterface(speaker_id=transcription.speaker_id, move=move)
 
