@@ -122,7 +122,7 @@ class Menu(QWidget):
         self.checkbox1 = QCheckBox("Draw gaze cones on frame (after setting, please save)", self)
         self.checkbox1.setChecked(self.config["draw_gaze_cone"])
 
-        self.checkbox2 = QCheckBox("If selected, run alive; If not selected, run play back video (after setting, please save)", self)
+        self.checkbox2 = QCheckBox("If selected, run live analysis; If not selected, run play back video (after setting, please save)", self)
         self.checkbox2.setChecked(self.config["running_alive"])
 
         save_button = QPushButton("save", self)
