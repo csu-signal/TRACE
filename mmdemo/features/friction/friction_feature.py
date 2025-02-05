@@ -69,26 +69,54 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.tags_to_parse = ["friction", "rationale", "t", "b"]    
 
-    def initialize(self):
+    def initialize(self): ###----> new model initialize function that forces model loading to not use meta parameters in the base model (since lora weights do not contain meta parameters)
+    ## assign=True: Ensures that parameters are properly assigned to the correct device, avoiding meta vs. non-meta conflicts.
+    ## is_meta=False: Ensures that all parameters are initialized with actual values.
         print("Loading base model...")
+        # Add assign=True and is_meta=False to handle meta parameter issues
         self.model = AutoPeftModelForCausalLM.from_pretrained(
             self.model_path,
             device_map="auto",
             torch_dtype=torch.bfloat16,
+            trust_remote_code=True,
+            assign=True,   
+            is_meta=False   
+        )
+        
+        print("Merging and unloading adapter weights...", self.model)
+        # When merging, also use assign=True
+        self.model = self.model.merge_and_unload(assign=True)
+        self.model = self.model.to(self.device)
+        print("showing merged lora model", self.model)
+
+        print("Loading tokenizer...")
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            self.model_path,
             trust_remote_code=True
         )
-
-        # Merge and unload adapter weights
-        print("Merging and unloading adapter weights...",  self.model)
-        self.model = self.model.merge_and_unload() 
-        self.model = self.model.to(self.device)  # Move the model to the GPU device
-        print("showing merged lora model",  self.model)
- 
-        # Load tokenizer
-        print("Loading tokenizer...")
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
         self.tokenizer.pad_token = "<|reserved_special_token_0|>"
         self.tokenizer.padding_side = 'right'
+
+    # def initialize(self):
+    #     print("Loading base model...")
+    #     self.model = AutoPeftModelForCausalLM.from_pretrained(
+    #         self.model_path,
+    #         device_map="auto",
+    #         torch_dtype=torch.bfloat16,
+    #         trust_remote_code=True
+    #     )
+
+    #     # Merge and unload adapter weights
+    #     print("Merging and unloading adapter weights...",  self.model)
+    #     self.model = self.model.merge_and_unload() 
+    #     self.model = self.model.to(self.device)  # Move the model to the GPU device
+    #     print("showing merged lora model",  self.model)
+ 
+    #     # Load tokenizer
+    #     print("Loading tokenizer...")
+    #     self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
+    #     self.tokenizer.pad_token = "<|reserved_special_token_0|>"
+    #     self.tokenizer.padding_side = 'right'
 
     def parse_generation(self, text: str) -> Dict[str, str]:
         """Parse generated text to extract components"""
