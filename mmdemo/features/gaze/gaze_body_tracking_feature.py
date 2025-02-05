@@ -66,7 +66,7 @@ class GazeBodyTracking(BaseFeature[GazeConesInterface]):
             origin = (eye_left + eye_right + nose) / 3
 
             origin_point = origin
-            end_point = origin + 1000 * dir
+            end_point = origin + 2000 * dir
 
             cone = Cone(origin_point, end_point, self.BASE_RADIUS, self.VERTEX_RADIUS)
             cones.append(cone)
