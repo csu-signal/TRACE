@@ -52,7 +52,8 @@ class Friction(BaseFeature[FrictionOutputInterface]):
     Keyword arguments:
     `model_path` -- the path to the model on hugging face (or None to use the default)
     """
-    DEFAULT_MODEL_PATH = "Abhijnan/friction_sft_allsamples_weights_instruct"
+    # DEFAULT_MODEL_PATH = "Abhijnan/friction_sft_allsamples_weights_instruct"
+    DEFAULT_MODEL_PATH = "Abhijnan/friction_agent_sft_merged" 
 
     def __init__(
         self,
@@ -72,20 +73,32 @@ class Friction(BaseFeature[FrictionOutputInterface]):
     def initialize(self): ###----> new model initialize function that forces model loading to not use meta parameters in the base model (since lora weights do not contain meta parameters)
     ## assign=True: Ensures that parameters are properly assigned to the correct device, avoiding meta vs. non-meta conflicts.
     ## is_meta=False: Ensures that all parameters are initialized with actual values.
-        print("Loading base model...")
+    
+        # print("Loading base model...")
         # Add assign=True and is_meta=False to handle meta parameter issues
-        self.model = AutoPeftModelForCausalLM.from_pretrained(
+
+        # self.model = AutoPeftModelForCausalLM.from_pretrained(
+        #     self.model_path,
+        #     device_map="auto",
+        #     torch_dtype=torch.bfloat16,
+        #     trust_remote_code=True,
+        #     assign=True,   
+        #     is_meta=False   
+        # )
+
+        self.model = AutoModelForCausalLM.from_pretrained(
             self.model_path,
+        
             device_map="auto",
-            torch_dtype=torch.bfloat16,
             trust_remote_code=True,
-            assign=True,   
-            is_meta=False   
+            torch_dtype=torch.bfloat16, # 16 bit precision __
+            use_auth_token=True,
+            
         )
         
-        print("Merging and unloading adapter weights...", self.model)
+        # print("Merging and unloading adapter weights...", self.model)
         # When merging, also use assign=True
-        self.model = self.model.merge_and_unload(assign=True)
+        # self.model = self.model.merge_and_unload(assign=True)
         self.model = self.model.to(self.device)
         print("showing merged lora model", self.model)
 
