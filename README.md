@@ -85,6 +85,11 @@ If you are experiencing errors related to .dll files (specially CUDA dlls i.e cu
 5. If updating/reinstalling CUDA doesn't work, try to reinstall Miniconda/Anaconda:
     - Finally, reinstall Miniconda or Anaconda. A fresh installation can resolve conflicts that might arise from previous installations, especially those that affect .dll files.
 
+### Solution for NotImplementedError concerning torchvision
+
+Uninstall Torch and Torchvision: `pip uninstall torch torchvision`
+
+Got to [here](https://pytorch.org/) to install the proper versions. CUDA 12.4.
 
 # Directory structure
 
