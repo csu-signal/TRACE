@@ -37,6 +37,12 @@ class GazeSelection(BaseFeature[GazeSelectionInterface]):
         super().__init__(bt, cal, gz)
         self.left_position = left_position
         self.middle_position = middle_position
+    
+    def initialize(self) -> None:
+        """
+        Decide which joint points to check
+        """
+        self.joint_points = [Joint.NOSE, Joint.EAR_LEFT, Joint.EAR_RIGHT, Joint.NECK, Joint.SHOULDER_LEFT, Joint.SHOULDER_RIGHT, Joint.SPINE_CHEST]
 
     def get_output(self, bt: BodyTrackingInterface, cc: CameraCalibrationInterface, gz: GazeConesInterface):
         if not bt.is_new() or not gz.is_new():
@@ -46,8 +52,8 @@ class GazeSelection(BaseFeature[GazeSelectionInterface]):
         parts = []
 
         for _, body in enumerate(bt.bodies):
-            #get nose coordinate
-            nose = self.get_joint(Joint.NOSE, body, cc)
+            #get all body joint points coordinates
+            points = [self.get_joint(i, body, cc) for i in self.joint_points]
             #unify participant ids
             x = body["joint_positions"][1][0]
             if x < self.left_position:
@@ -56,7 +62,7 @@ class GazeSelection(BaseFeature[GazeSelectionInterface]):
                 body_id = "P2"
             else:
                 body_id = "P3"
-            part = ParticipantInfo(nosePoint = nose, participantId = body_id)
+            part = ParticipantInfo(jointPoint = points, participantId = body_id)
             parts.append(part)
 
         #a list contains gaze selection information [(participant id, selected participant)...]
@@ -67,9 +73,15 @@ class GazeSelection(BaseFeature[GazeSelectionInterface]):
         for body, cone in zip(gz.body_ids, gz.cones):
             #if one participant is selected by the gaze cone, put its informtion into the dict
             for i in range(len(parts)):
-                if self.cone_contains_point(cone, parts[i].nosePoint) and body != parts[i].participantId:
-                    dist = self.get_sorting_dist(cone, parts[i].nosePoint)
-                    selected_dist[parts[i].participantId] = dist
+                if body != parts[i].participantId:
+                    for point in parts[i].jointPoint:
+                        if self.cone_contains_point(cone, point):
+                            dist = self.get_sorting_dist(cone, point)
+                            if parts[i].participantId not in selected_dist:
+                                selected_dist[parts[i].participantId] = dist
+                            else:
+                                if dist < selected_dist[parts[i].participantId]:
+                                    selected_dist[parts[i].participantId] = dist
             
             #if no participant is select, return 'other'
             if selected_dist == {}:

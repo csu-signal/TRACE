@@ -1,27 +1,32 @@
 time,event
 10.19999999999998,P3 positive posture event
-10.19999999999998,P1 negative posture event
 10.19999999999998,P2 positive posture event
+10.19999999999998,P1 positive posture event
+10.699999999999978,P1 negative posture event
 15.399999999999961,group negative gaze event
 20.200000000000017,P3 positive posture event
-20.200000000000017,P1 positive posture event
 20.200000000000017,P2 positive posture event
 20.30000000000002,P3 individual negative gaze event
 20.30000000000002,P1 individual negative gaze event
-21.400000000000034,P3 negative posture event
-26.200000000000102,P1 negative posture event
-29.200000000000145,P2 negative posture event
+20.700000000000024,P1 positive posture event
+20.800000000000026,P3 negative posture event
+21.400000000000034,P1 negative posture event
+29.400000000000148,P2 negative posture event
 30.400000000000162,group negative gaze event
-31.400000000000176,P3 positive posture event
-36.200000000000244,P1 negative posture event
-38.20000000000027,P3 negative posture event
-39.20000000000029,P2 negative posture event
+30.800000000000168,P3 positive posture event
+31.400000000000176,P3 negative posture event
+31.400000000000176,P1 positive posture event
+35.40000000000023,P1 negative posture event
+39.40000000000029,P2 positive posture event
 40.3000000000003,P3 individual negative gaze event
 40.3000000000003,P1 individual negative gaze event
+41.40000000000032,P3 positive posture event
+43.80000000000035,P2 negative posture event
+45.400000000000375,P3 negative posture event
+45.400000000000375,P1 positive posture event
 45.400000000000375,group negative gaze event
-46.20000000000039,P1 positive posture event
-48.200000000000415,P3 negative posture event
-49.20000000000043,P2 positive posture event
-51.000000000000455,P1 negative posture event
-52.80000000000048,P2 negative posture event
-58.20000000000056,P3 positive posture event
+47.80000000000041,P1 negative posture event
+53.800000000000495,P2 positive posture event
+55.40000000000052,P3 positive posture event
+57.80000000000055,P1 positive posture event
+58.800000000000566,P2 negative posture event

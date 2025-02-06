@@ -57,10 +57,10 @@ class HciiSelectedObjectInfo:
 @dataclass
 class ParticipantInfo:
     """
-    nosePoint -- nose point
+    jointPoint -- body points coordinates
     participantId -- the participant id
     """
-    nosePoint: tuple[float, float]
+    jointPoint: list[tuple[float, float]]
     participantId: str
 
 
