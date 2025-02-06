@@ -1,7 +1,7 @@
 time,active events,action,level
-14.999999999999963,2 positive events1 negative events,none,2
-30.000000000000156,5 positive events7 negative events,none,2
-40.2000000000003,4 positive events11 negative events,2 posture positive events are no more active,2
-40.2000000000003,4 positive events10 negative events,1 posture negative events are no more active,2
-45.00000000000037,4 positive events12 negative events,behavioral engagemental level -1,1
-60.00000000000058,3 positive events4 negative events,none,1
+14.999999999999963,3 positive events1 negative events,none,2
+30.000000000000156,6 positive events7 negative events,none,2
+40.2000000000003,6 positive events10 negative events,3 posture positive events are no more active,2
+40.70000000000031,6 positive events11 negative events,1 posture negative events are no more active,2
+45.00000000000037,7 positive events12 negative events,behavioral engagemental level -1,1
+60.00000000000058,4 positive events4 negative events,none,1
