@@ -89,7 +89,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_path,
         
-            device_map="auto",
+            device_map=None,
             trust_remote_code=True,
             torch_dtype=torch.bfloat16, # 16 bit precision __
             use_auth_token=True,
@@ -99,7 +99,8 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         # print("Merging and unloading adapter weights...", self.model)
         # When merging, also use assign=True
         # self.model = self.model.merge_and_unload(assign=True)
-        self.model = self.model.to(self.device)
+        # self.model = self.model.to(self.device)
+        self.model.to(self.device)
         print("showing merged lora model", self.model)
 
         print("Loading tokenizer...")
@@ -225,15 +226,17 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         # Generate response
         try:
             inputs = self.tokenizer(prompt, return_tensors="pt", padding=True).to(self.device)  
+            print("Starting Generation")
             outputs = self.model.generate(
                 **inputs,
-                max_new_tokens=200,
+                max_new_tokens=26,
                 temperature=0.7,
                 do_sample=True,
                 top_p=0.9,
                 return_dict_in_generate=True,
                 output_scores=True
             )
+            print(outputs)
             generated_ids = outputs.sequences[0]
             generated_ids = generated_ids.to(self.device)
             generated_text = self.tokenizer.decode(
