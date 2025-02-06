@@ -37,9 +37,9 @@ if __name__ == "__main__":
     selected_objects = SelectedObjects(objects, gesture)  # pyright: ignore
 
     # transcriptions from microphone
-    audio1 = MicAudio(device_id=10, speaker_id="Participant 1")
-    audio2 = MicAudio(device_id=12, speaker_id="Participant 2")
-    audio3 = MicAudio(device_id=13, speaker_id="Participant 3")
+    audio1 = MicAudio(device_id=9, speaker_id="P1")
+    audio2 = MicAudio(device_id=12, speaker_id="P2")
+    audio3 = MicAudio(device_id=13, speaker_id="P3")
     utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=True)
     transcriptions = WhisperTranscription(utterance_audio)
 
