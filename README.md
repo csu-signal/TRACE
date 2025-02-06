@@ -70,6 +70,7 @@ After setting up an account and accepting the license agreement login with the t
 #Log in using a token from huggingface.co/settings/tokens 
 huggingface-cli login 
 ```
+If you run into issues with the above command not recognizing/accepting your token, us this command instead: `huggingface-cli login --token <TOKEN>`
 
 ## Common Setup Issues
 ### Solution for .dll File Errors
