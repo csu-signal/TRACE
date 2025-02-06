@@ -156,10 +156,10 @@ class FrictionOutputInterface(BaseInterface):
     """
     
     friction_statement: str
-    task_state: str
-    belief_state: str
-    rationale: str
-    raw_generation: str
+    # task_state: str
+    # belief_state: str
+    # rationale: str
+    # raw_generation: str
 
     metrics: Optional[FrictionMetrics] = None
 
