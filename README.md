@@ -72,7 +72,21 @@ huggingface-cli login
 ```
 If you run into issues with the above command not recognizing/accepting your token, us this command instead: `huggingface-cli login --token <TOKEN>`
 
+
+## Tarski SSH Setup Commands (Access to LLM)
+Install GlobalConnect using your organizational login information.
+
+The server needs to start before the demo.
+
+`ssh traceteam@tarski.cs.colostate.edu`
+`cd fact_server`
+`conda activate frictionEnv`
+`/home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/friction_server.py`
+
+In another local terminal, run the demo in the proper environemnt.
+
 ## Common Setup Issues
+
 ### Solution for .dll File Errors
 If you are experiencing errors related to .dll files (specially CUDA dlls i.e cublasLt64_12.dll), you can try the following steps:
 1. Uninstall or Update CUDA:
