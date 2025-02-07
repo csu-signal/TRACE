@@ -44,7 +44,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
     ):
         super().__init__(transcription) 
         self.transcriptionHistory = ''
-        self.friction = 'No Friction'
+        self.friction = ''
         self.t = threading.Thread(target=self.worker)
 
         if host:
@@ -83,8 +83,10 @@ class Friction(BaseFeature[FrictionOutputInterface]):
                 print("Send Data Length:" + str(len(sendData)))
                 s.sendall(sendData)
                 data = s.recv(2048)
-            self.friction = data.decode("utf-8")
-            print(f"Received from Server:{self.friction}")
+            received = data.decode("utf-8")
+            if received != "No Friction":
+                self.friction = received
+                print(f"Received from Server:{received}")
         except Exception as e:
             self.friction = ''
             print(f"FRICTION FEATURE: An error occurred: {e}")
