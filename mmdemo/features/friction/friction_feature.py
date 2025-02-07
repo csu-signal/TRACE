@@ -56,17 +56,25 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             return None
 
         print("\nGetting Friction")
-        #self.transcriptionHistory += transcription.speaker_id + ": " + transcription.text + "\n"
-        self.transcriptionHistory += "P1: " + transcription.text + "\n"
+        friction = ''
+
+        #if the transcription text is empty don't add it to the history
+        if transcription.text != '':
+            #self.transcriptionHistory += transcription.speaker_id + ": " + transcription.text + "\n"
+            self.transcriptionHistory += "P1: " + transcription.text + "\n"
         print("Transcription History:\n" + self.transcriptionHistory)
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((self.HOST, self.PORT))
-            s.sendall(str.encode(self.transcriptionHistory))
-            data = s.recv(1024)
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.connect((self.HOST, self.PORT))
+                    s.sendall(str.encode(self.transcriptionHistory))
+                    data = s.recv(1024)
+            friction = data.decode("utf-8")
+            print(f"Received from Server:\n{friction}")
+        except Exception as e:
+            friction = ''
+            print(f"An error occurred: {e}")
 
-        friction = data.decode("utf-8")
-        print(f"Received from Server:\n{friction}")
         return FrictionOutputInterface(
                 friction_statement=friction)
 

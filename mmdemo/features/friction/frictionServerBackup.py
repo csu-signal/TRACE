@@ -2,7 +2,6 @@
 # cd fact_server
 # conda activate frictionEnv
 # /home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/friction_server.py
-# run demo 
 
 import os
 import sys
@@ -258,17 +257,27 @@ def start_server(friction_detector: FrictionInference):
             with conn:
                 print(f"Connected by {addr}")
                 while True:
-                    data = conn.recv(1024)
-                    if not data:
+                    try:
+                        data = conn.recv(1024)
+                        if not data:
+                            break
+                        transcriptions = data.decode()
+                        print(f"Transcriptions:\n{transcriptions}")
+                        print("\nGenerating friction for dialogue...")
+                        result = friction_detector.generate_friction(transcriptions)
+                        if result is not None:
+                            if result.friction_statement != '':
+                                conn.sendall(str.encode(result.friction_statement)) 
+                            else:
+                                conn.sendall(str.encode("No Friction")) 
+                        else:
+                            conn.sendall(str.encode("No Friction"))
+                    except ConnectionResetError as e:
+                        print(f"Connection with {addr} was reset: {e}")
                         break
-                    transcriptions = data.decode()
-                    print(f"Transcriptions:\n{transcriptions}")
-                    print("\nGenerating friction for dialogue...")
-                    result = friction_detector.generate_friction(transcriptions)
-                    if result.friction_statement != '':
-                        conn.sendall(str.encode(result.friction_statement)) 
-                    else:
-                        conn.sendall(str.encode("No Friction")) 
+                    except Exception as e:
+                        print(f"An error occurred: {e}")
+                        break
 
 if __name__ == "__main__":
     print("Initializing friction detector...")
