@@ -36,11 +36,20 @@ if __name__ == "__main__":
     objects = Object(color, depth, calibration)
     selected_objects = SelectedObjects(objects, gesture)  # pyright: ignore
 
-    # transcriptions from microphone
+    # transcriptions from microphone 
+
+    # laptop microphones
     audio1 = MicAudio(device_id=9, speaker_id="P1")
     audio2 = MicAudio(device_id=12, speaker_id="P2")
     audio3 = MicAudio(device_id=13, speaker_id="P3")
     utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=True)
+    #######################################################################################
+
+    # rosch mircophone - Index: 39, Name: Microphone (USB audio CODEC)
+    # audio1 = MicAudio(device_id=39, speaker_id="P1")
+    # utterance_audio = VADUtteranceBuilder(audio1, delete_input_files=True)
+    #######################################################################################
+
     transcriptions = WhisperTranscription(utterance_audio)
 
     # which objects are referenced (by gesture) during a transcription
