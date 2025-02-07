@@ -258,9 +258,10 @@ def start_server(friction_detector: FrictionInference):
                 print(f"Connected by {addr}")
                 while True:
                     try:
-                        data = conn.recv(1024)
+                        data = conn.recv(2048)
                         if not data:
                             break
+                        print("Received Data Length:" + str(len(data)))
                         transcriptions = data.decode()
                         print(f"Transcriptions:\n{transcriptions}")
                         print("\nGenerating friction for dialogue...")

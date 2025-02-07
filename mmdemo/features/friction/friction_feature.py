@@ -66,14 +66,16 @@ class Friction(BaseFeature[FrictionOutputInterface]):
 
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.connect((self.HOST, self.PORT))
-                    s.sendall(str.encode(self.transcriptionHistory))
-                    data = s.recv(1024)
+                s.connect((self.HOST, self.PORT))
+                sendData = str.encode(self.transcriptionHistory)
+                print("Send Data Length:" + str(len(sendData)))
+                s.sendall(sendData)
+                data = s.recv(2048)
             friction = data.decode("utf-8")
-            print(f"Received from Server:\n{friction}")
+            print(f"Received from Server:{friction}")
         except Exception as e:
             friction = ''
-            print(f"An error occurred: {e}")
+            print(f"FRICTION FEATURE: An error occurred: {e}")
 
         return FrictionOutputInterface(
                 friction_statement=friction)

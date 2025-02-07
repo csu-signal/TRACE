@@ -8,6 +8,7 @@ from collections import deque
 from ctypes import c_bool
 from pathlib import Path
 from typing import final
+import sys
 
 import pyaudio
 
@@ -112,17 +113,21 @@ class MicAudio(BaseFeature[AudioFileListInterface]):
         format = pyaudio.paInt16
         frames_per_read = 512
 
-        # create recorder
-        p = pyaudio.PyAudio()
-        stream = p.open(
-            format=pyaudio.paInt16,
-            channels=1,
-            rate=rate,
-            input=True,
-            frames_per_buffer=frames_per_read,
-            input_device_index=device_index,
-        )
-        counter = 0
+        try:
+            # create recorder
+            p = pyaudio.PyAudio()
+            stream = p.open(
+                format=pyaudio.paInt16,
+                channels=1,
+                rate=rate,
+                input=True,
+                frames_per_buffer=frames_per_read,
+                input_device_index=device_index,
+            )
+            counter = 0
+        except Exception as e:
+            print(f"AUDIO INPUT FEATURE: An error occurred initalizing audio device {device_index}: {e} ")
+            return
 
         while not done.value:
             # read chunk
