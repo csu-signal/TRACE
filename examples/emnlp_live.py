@@ -78,9 +78,9 @@ if __name__ == "__main__":
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
-            # SaveVideo(output_frame, frame_rate=10),
-            # Log(dense_paraphrased_transcriptions, props, moves, csv=True),
-            # Log(transcriptions, stdout=True),
+            SaveVideo(output_frame, frame_rate=10),
+            Log(dense_paraphrased_transcriptions, props, moves, csv=True),
+            Log(transcriptions, stdout=True),
         ]
     )
     demo.show_dependency_graph()
