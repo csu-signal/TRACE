@@ -39,15 +39,15 @@ if __name__ == "__main__":
     # transcriptions from microphone 
 
     # laptop microphones
-    audio1 = MicAudio(device_id=9, speaker_id="P1")
-    audio2 = MicAudio(device_id=12, speaker_id="P2")
-    audio3 = MicAudio(device_id=13, speaker_id="P3")
-    utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=True)
+    # audio1 = MicAudio(device_id=9, speaker_id="P1")
+    # audio2 = MicAudio(device_id=12, speaker_id="P2")
+    # audio3 = MicAudio(device_id=13, speaker_id="P3")
+    # utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=True)
     #######################################################################################
 
-    # rosch mircophone - Index: 39, Name: Microphone (USB audio CODEC)
-    # audio1 = MicAudio(device_id=39, speaker_id="P1")
-    # utterance_audio = VADUtteranceBuilder(audio1, delete_input_files=True)
+    # rosch microphone - Index: 39, Name: Microphone (USB audio CODEC)
+    audio1 = MicAudio(device_id=9, speaker_id="P1")
+    utterance_audio = VADUtteranceBuilder(audio1, delete_input_files=True)
     #######################################################################################
 
     transcriptions = WhisperTranscription(utterance_audio)
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         transcriptions, referenced_objects
     )
 
-    # friction 
+    # friction
     friction = Friction(dense_paraphrased_transcriptions)
 
     # prop extraction and move classifier
@@ -78,9 +78,9 @@ if __name__ == "__main__":
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
-            SaveVideo(output_frame, frame_rate=10),
-            Log(dense_paraphrased_transcriptions, props, moves, csv=True),
-            Log(transcriptions, stdout=True),
+            # SaveVideo(output_frame, frame_rate=10),
+            # Log(dense_paraphrased_transcriptions, props, moves, csv=True),
+            # Log(transcriptions, stdout=True),
         ]
     )
     demo.show_dependency_graph()
