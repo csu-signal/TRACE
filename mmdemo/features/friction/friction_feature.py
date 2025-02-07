@@ -9,6 +9,7 @@ import numpy as np
 import torch
 import re
 from typing import Dict, List, Optional
+import threading
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.features.gesture.helpers import get_average_hand_pixel, normalize_landmarks, fix_body_id
@@ -43,7 +44,9 @@ class Friction(BaseFeature[FrictionOutputInterface]):
     ):
         super().__init__(transcription) 
         self.transcriptionHistory = ''
-        self.friction = ''
+        self.friction = 'No Friction'
+        self.t = threading.Thread(target=self.worker)
+
         if host:
             self.HOST = host
         if port != 0:
@@ -56,15 +59,23 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         if not transcription.is_new():
             return FrictionOutputInterface(friction_statement=self.friction)
 
-        print("\nGetting Friction")
-        self.friction = ''
-
         #if the transcription text is empty don't add it to the history
         if transcription.text != '':
             self.transcriptionHistory += transcription.speaker_id + ": " + transcription.text + "\n"
             # self.transcriptionHistory += "P1: " + transcription.text + "\n"
         print("Transcription History:\n" + self.transcriptionHistory)
 
+        if not self.t.is_alive():
+            self.t = threading.Thread(target=self.worker)
+            self.t.start()
+        else:
+            print("Friction thread is already running...waiting for the next frame")
+
+        return FrictionOutputInterface(
+                friction_statement=self.friction)
+    
+    def worker(self):
+        print("Friction Thread Started")
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((self.HOST, self.PORT))
@@ -77,7 +88,4 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         except Exception as e:
             self.friction = ''
             print(f"FRICTION FEATURE: An error occurred: {e}")
-
-        return FrictionOutputInterface(
-                friction_statement=self.friction)
 
