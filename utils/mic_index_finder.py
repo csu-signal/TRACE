@@ -1,5 +1,6 @@
-# Stand alone file to display intput device index.
-# The number associated with the input device needed should be passed to MicAudio in the emnlp_live file.
+# Stand alone file to display input device index.
+# The number associated with the input device that is needed should be passed to MicAudio in the emnlp_live file.
+# Always use the lowest valued index ID associated with the wanted device.
 
 import pyaudio
 
