@@ -27,6 +27,7 @@ class Planner(BaseFeature[PlannerInterface]):
         super().__init__(common_ground)
         self.planner_path = planner_path
         self.lock = threading.Lock()
+        self.solution_result = None
     
     def initialize(self):
 
@@ -62,7 +63,7 @@ class Planner(BaseFeature[PlannerInterface]):
 
         check_thread = threading.Thread(target=self.run_check_solution)
         check_thread.start()
-        check_thread.join()
+        # check_thread.join()
 
         with self.lock:
             if self.solution_result:
