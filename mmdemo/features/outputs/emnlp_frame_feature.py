@@ -52,7 +52,7 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
     def __init__(
         self,
         color: BaseFeature[ColorImageInterface],
-        gaze: BaseFeature[GazeConesInterface],
+        #gaze: BaseFeature[GazeConesInterface],
         gesture: BaseFeature[GestureConesInterface],
         sel_objects: BaseFeature[SelectedObjectsInterface],
         common_ground: BaseFeature[CommonGroundInterface],
@@ -61,9 +61,9 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         plan: BaseFeature[PlannerInterface] | None = None,
     ):
         if plan is None:
-            super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration, friction)
+            super().__init__(color, gesture, sel_objects, common_ground, calibration, friction) # removed gaze
         else:
-            super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration, friction, plan)
+            super().__init__(color, gesture, sel_objects, common_ground, calibration, friction, plan) # removed gaze
 
     def initialize(self):
         self.has_cgt_data = False
@@ -73,7 +73,7 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
     def get_output(
         self,
         color: ColorImageInterface,
-        gaze: GazeConesInterface,
+        # gaze: GazeConesInterface,
         gesture: GestureConesInterface,
         objects: SelectedObjectsInterface,
         common: CommonGroundInterface,
@@ -83,7 +83,7 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
     ):
         if (
             not color.is_new()
-            or not gaze.is_new()
+           # or not gaze.is_new()
             or not gesture.is_new()
             or not objects.is_new()
             or not friction.is_new()
@@ -95,10 +95,10 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         output_frame = cv.cvtColor(output_frame, cv.COLOR_RGB2BGR)
 
         # render gaze vectors
-        for cone in gaze.cones:
-            EMNLPFrame.projectVectorLines(
-                cone, output_frame, calibration, False, False, True
-            )
+        # for cone in gaze.cones:
+        #     EMNLPFrame.projectVectorLines(
+        #         cone, output_frame, calibration, False, False, True
+        #     )
 
         # render gesture vectors
         for cone in gesture.cones:
