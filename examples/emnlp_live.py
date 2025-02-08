@@ -1,3 +1,4 @@
+from mmdemo.features.friction.friction_feature import Friction
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 
 from mmdemo.demo import Demo
@@ -28,16 +29,27 @@ if __name__ == "__main__":
     )
 
     # gaze and gesture
-    gaze = GazeBodyTracking(body_tracking, calibration)
+    # gaze = GazeBodyTracking(body_tracking, calibration)
     gesture = Gesture(color, depth, body_tracking, calibration)
 
     # which objects are selected by gesture
     objects = Object(color, depth, calibration)
     selected_objects = SelectedObjects(objects, gesture)  # pyright: ignore
 
-    # transcriptions from microphone
-    audio = MicAudio(device_id=6, speaker_id="group")
-    utterance_audio = VADUtteranceBuilder(audio, delete_input_files=True)
+    # transcriptions from microphone 
+
+    # laptop microphones
+    audio1 = MicAudio(device_id=7, speaker_id="P1")
+    audio2 = MicAudio(device_id=9, speaker_id="P2")
+    audio3 = MicAudio(device_id=11, speaker_id="P3")
+    utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=True)
+    #######################################################################################
+
+    # rosch microphone - Index: 39, Name: Microphone (USB audio CODEC)
+    # audio1 = MicAudio(device_id=9, speaker_id="P1")
+    # utterance_audio = VADUtteranceBuilder(audio1, delete_input_files=True)
+    #######################################################################################
+
     transcriptions = WhisperTranscription(utterance_audio)
 
     # which objects are referenced (by gesture) during a transcription
@@ -47,6 +59,9 @@ if __name__ == "__main__":
         transcriptions, referenced_objects
     )
 
+    # friction
+    friction = Friction(dense_paraphrased_transcriptions)
+
     # prop extraction and move classifier
     props = Proposition(dense_paraphrased_transcriptions)
     moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects)
@@ -54,18 +69,18 @@ if __name__ == "__main__":
     # common ground tracking
     cgt = CommonGroundTracking(moves, props)
 
-    # plan = Planner(cgt)
+    #plan = Planner(cgt)
 
     # create output frame for video
-    output_frame = EMNLPFrame(color, gaze, gesture, selected_objects, cgt, calibration)
+    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction) #removed gaze
 
     # run demo and show output
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
-            SaveVideo(output_frame, frame_rate=10),
-            Log(dense_paraphrased_transcriptions, props, moves, csv=True),
-            Log(transcriptions, stdout=True),
+            # SaveVideo(output_frame, frame_rate=10),
+            # Log(dense_paraphrased_transcriptions, props, moves, csv=True),
+            # Log(transcriptions, stdout=True),
         ]
     )
     demo.show_dependency_graph()

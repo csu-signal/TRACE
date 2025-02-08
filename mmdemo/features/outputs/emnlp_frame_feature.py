@@ -9,6 +9,7 @@ from mmdemo.interfaces import (
     CameraCalibrationInterface,
     ColorImageInterface,
     CommonGroundInterface,
+    FrictionOutputInterface,
     GazeConesInterface,
     GestureConesInterface,
     SelectedObjectsInterface,
@@ -51,17 +52,18 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
     def __init__(
         self,
         color: BaseFeature[ColorImageInterface],
-        gaze: BaseFeature[GazeConesInterface],
+        #gaze: BaseFeature[GazeConesInterface],
         gesture: BaseFeature[GestureConesInterface],
         sel_objects: BaseFeature[SelectedObjectsInterface],
         common_ground: BaseFeature[CommonGroundInterface],
         calibration: BaseFeature[CameraCalibrationInterface],
+        friction: BaseFeature[FrictionOutputInterface],
         plan: BaseFeature[PlannerInterface] | None = None,
     ):
         if plan is None:
-            super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration)
+            super().__init__(color, gesture, sel_objects, common_ground, calibration, friction) # removed gaze
         else:
-            super().__init__(color, gaze, gesture, sel_objects, common_ground, calibration, plan)
+            super().__init__(color, gesture, sel_objects, common_ground, calibration, friction, plan) # removed gaze
 
     def initialize(self):
         self.has_cgt_data = False
@@ -71,18 +73,20 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
     def get_output(
         self,
         color: ColorImageInterface,
-        gaze: GazeConesInterface,
+        # gaze: GazeConesInterface,
         gesture: GestureConesInterface,
         objects: SelectedObjectsInterface,
         common: CommonGroundInterface,
         calibration: CameraCalibrationInterface,
+        friction: FrictionOutputInterface,
         plan: PlannerInterface = None,
     ):
         if (
             not color.is_new()
-            or not gaze.is_new()
+           # or not gaze.is_new()
             or not gesture.is_new()
             or not objects.is_new()
+            or not friction.is_new()
         ):
             return None
 
@@ -91,10 +95,10 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         output_frame = cv.cvtColor(output_frame, cv.COLOR_RGB2BGR)
 
         # render gaze vectors
-        for cone in gaze.cones:
-            EMNLPFrame.projectVectorLines(
-                cone, output_frame, calibration, False, False, True
-            )
+        # for cone in gaze.cones:
+        #     EMNLPFrame.projectVectorLines(
+        #         cone, output_frame, calibration, False, False, True
+        #     )
 
         # render gesture vectors
         for cone in gesture.cones:
@@ -126,6 +130,20 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         # render plan
         if plan:
             EMNLPFrame.renderPlan(output_frame, plan, self.last_plan)
+
+        if friction and friction.friction_statement != '':
+            # print friction statement
+            x, y = (50, 75)
+            text = friction.friction_statement
+            font = cv.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.75
+            font_thickness = 1
+            text_color_bg = (255,255,255)
+            text_color =(0,0,0)
+            text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
+            text_w, text_h = text_size
+            cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
+            cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
         
 
         # draw frame count

@@ -16,3 +16,4 @@ tmp_*/
 *.mp4
 *.wav
 /mmdemo/features/objects/objectDetectionModels/best_model-object.pth
+/mmdemo/features/friction/wandb/

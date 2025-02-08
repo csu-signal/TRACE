@@ -59,7 +59,34 @@ WINDOWS OS: Ensure that you have CUDA Toolkit 12.4 or greater installed within P
 
 See [mmdemo-azure-kinect/README.md](mmdemo-azure-kinect/README.md).
 
+## Hugging Face Setup
+Hugging face is required to run the friction model, in order to connect to the hugging face endpoint an account is required and a token must be added to the environment. 
+
+The base model for the friction model this llama version, and end license agreement must be accepted on the account used to setup the token: https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct 
+
+After setting up an account and accepting the license agreement login with the token to the multimodalDemo on the device, authenication instructions can be found [here](https://huggingface.co/docs/huggingface_hub/en/quick-start#authentication)
+
+```powershell
+#Log in using a token from huggingface.co/settings/tokens 
+huggingface-cli login 
+```
+If you run into issues with the above command not recognizing/accepting your token, us this command instead: `huggingface-cli login --token <TOKEN>`
+
+
+## Tarski SSH Setup Commands (Access to LLM)
+Install GlobalConnect using your organizational login information.
+
+The server needs to start before the demo.
+
+`ssh traceteam@tarski.cs.colostate.edu`
+`cd fact_server`
+`conda activate frictionEnv`
+`/home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/friction_server.py`
+
+In another local terminal, run the demo in the proper environemnt.
+
 ## Common Setup Issues
+
 ### Solution for .dll File Errors
 If you are experiencing errors related to .dll files (specially CUDA dlls i.e cublasLt64_12.dll), you can try the following steps:
 1. Uninstall or Update CUDA:
@@ -73,6 +100,11 @@ If you are experiencing errors related to .dll files (specially CUDA dlls i.e cu
 5. If updating/reinstalling CUDA doesn't work, try to reinstall Miniconda/Anaconda:
     - Finally, reinstall Miniconda or Anaconda. A fresh installation can resolve conflicts that might arise from previous installations, especially those that affect .dll files.
 
+### Solution for NotImplementedError concerning torchvision
+
+Uninstall Torch and Torchvision: `pip uninstall torch torchvision`
+
+Got to [here](https://pytorch.org/) to install the proper versions. CUDA 12.4.
 
 # Directory structure
 
