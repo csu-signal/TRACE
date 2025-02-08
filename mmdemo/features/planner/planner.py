@@ -1,5 +1,6 @@
 from unified_planning.shortcuts import *
 from unified_planning.engines import PlanGenerationResultStatus
+import time
 up.shortcuts.get_environment().credits_stream = None
 
 
@@ -308,8 +309,10 @@ def update_block_weight(self, block_name, weight_name):
 
 
 def check_solution(problem, planner):
-
+    start = time.time()
     result = planner.solve(problem)
+    end = time.time()
+    print("Checking solution with planner takes :", end - start)
     if result.status == PlanGenerationResultStatus.SOLVED_SATISFICING:
         return True, result.plan
     else:
