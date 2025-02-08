@@ -69,10 +69,10 @@ if __name__ == "__main__":
     # common ground tracking
     cgt = CommonGroundTracking(moves, props)
 
-    plan = Planner(cgt)
+    #plan = Planner(cgt)
 
     # create output frame for video
-    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction, plan) #removed gaze
+    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction) #removed gaze
 
     # run demo and show output
     demo = Demo(
