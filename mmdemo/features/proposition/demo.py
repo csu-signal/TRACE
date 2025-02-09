@@ -7,7 +7,7 @@ from nltk import word_tokenize
 from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer, util
 from transformers import AutoModel, AutoTokenizer
-
+from parseProps import extract_propositions_ltr_v2
 from mmdemo.features.proposition.demo_helpers import (
     NORMALIZED_PROP_LIST,
     add_special_tokens,
@@ -122,7 +122,9 @@ def process_sentence(sentence, model, tokenizer, bert, embeddings, verbose=False
     common_grounds_dataSet = pd.read_csv(NORMALIZED_PROP_LIST)
     # common_grounds_dataSet = pd.read_csv('data/NormalizedList.csv')
     common_grounds = list(common_grounds_dataSet["Propositions"])
-
+    parsedProp = extract_propositions_ltr_v2(sentence)
+    if(parsedProp in common_grounds):
+        return parsedProp
     elements = extract_colors_and_numbers(
         sentence.lower()
     )  # The list of colors / weights in the transcript
