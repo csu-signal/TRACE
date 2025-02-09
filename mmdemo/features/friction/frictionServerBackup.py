@@ -266,11 +266,16 @@ def start_server(friction_detector: FrictionInference):
                         print(f"Transcriptions:\n{transcriptions}")
                         print("\nGenerating friction for dialogue...")
                         result = friction_detector.generate_friction(transcriptions)
+                        returnString = ''
                         if result is not None:
                             if result.friction_statement != '':
-                                conn.sendall(str.encode(result.friction_statement)) 
+                                returnString += "Friction: " + result.friction_statement
+                                if result.rationale != '':  
+                                    returnString += "r*Rationale" + result.rationale 
                             else:
                                 conn.sendall(str.encode("No Friction")) 
+                                break
+                            conn.sendall(str.encode(returnString)) 
                         else:
                             conn.sendall(str.encode("No Friction"))
                     except ConnectionResetError as e:
