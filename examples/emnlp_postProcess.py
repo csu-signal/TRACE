@@ -169,7 +169,7 @@ if __name__ == "__main__":
     # plan = Planner(cgt)
 
     # TODO create output frame for this demo
-    output_frame = EMNLPFrame(color, gaze, gesture, selected_objects, cgt, calibration, friction)
+    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction)
 
     # run demo and show output
     demo = Demo(
