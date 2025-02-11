@@ -31,7 +31,6 @@ class Planner(BaseFeature[PlannerInterface]):
     
     def initialize(self):
 
-        # Call the function to execute the planning
         start = time.time()
         self.problem, self.planner, self.actual_weight, self.believed_weight, self.blocks, self.participants, self.weights = create_planner()
         end = time.time()
@@ -39,7 +38,7 @@ class Planner(BaseFeature[PlannerInterface]):
 
     def run_check_solution(self):
         """Runs check_solution in a separate thread and stores the result."""
-        solv, plan = check_solution(self.problem, self.planner)
+        solv, plan = check_solution()
         with self.lock:
             self.solution_result = (solv, plan)
 
@@ -52,7 +51,6 @@ class Planner(BaseFeature[PlannerInterface]):
         if not cg.is_new():
             return None
         start = time.time()
-        # possibly need to reinitialize the planner every time in case a prop is removed
         ebank, fbank = cg.ebank, cg.fbank
         for prop in ebank.union(fbank):
             prop_list = [p.strip() for p in prop.split(',')]
@@ -63,14 +61,13 @@ class Planner(BaseFeature[PlannerInterface]):
 
         check_thread = threading.Thread(target=self.run_check_solution)
         check_thread.start()
-        # check_thread.join()
 
         with self.lock:
             if self.solution_result:
                 solv, plan = self.solution_result
                 end = time.time()
                 print("getting output from planner took ", end - start)
-                self.solution_result = None  # Reset for next call
+                self.solution_result = None
                 return PlannerInterface(solv, plan)
 
         return None

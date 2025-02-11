@@ -1,6 +1,7 @@
+from unified_planning.io import PDDLWriter
 from unified_planning.shortcuts import *
-from unified_planning.engines import PlanGenerationResultStatus
-import time
+# from unified_planning.engines import PlanGenerationResultStatus
+import subprocess
 up.shortcuts.get_environment().credits_stream = None
 
 
@@ -286,6 +287,15 @@ def create_planner():
 
     problem, actual_weight, believed_weight, blocks, participants, weights = create_problem()
     planner = OneshotPlanner(name="fast-downward")
+
+    pddl_writer = PDDLWriter(problem)
+    domain_file = "mmdemo/features/planner/benchmarks/domain.pddl"
+    problem_file = "mmdemo/features/planner/benchmarks/problem.pddl"
+    
+    with open(domain_file, "w") as f:
+        f.write(pddl_writer.get_domain())
+    with open(problem_file, "w") as f:
+        f.write(pddl_writer.get_problem())
     
     return problem, planner, actual_weight, believed_weight, blocks, participants, weights
     
@@ -305,15 +315,26 @@ def update_block_weight(self, block_name, weight_name):
         self.problem.set_initial_value(self.actual_weight(block, weight), True)
         for participant in self.participants:
             self.problem.set_initial_value(self.believed_weight(block, weight, participant), True)
+    
+    pddl_writer = PDDLWriter(self.problem)
+    domain_file = "/mmdemo/features/planner/benchmarks/domain.pddl"
+    problem_file = "/mmdemo/features/planner/benchmarks/problem.pddl"
+    
+    with open(domain_file, "w") as f:
+        f.write(pddl_writer.get_domain())
+    with open(problem_file, "w") as f:
+        f.write(pddl_writer.get_problem())
 
 
+def check_solution():
 
-def check_solution(problem, planner):
-    start = time.time()
-    result = planner.solve(problem)
-    end = time.time()
-    print("Checking solution with planner takes :", end - start)
-    if result.status == PlanGenerationResultStatus.SOLVED_SATISFICING:
-        return True, result.plan
+    docker_command = [
+    "docker", "run", "--rm",
+    "-v", "C:\\Users\\benkh\\Downloads\\TRACE-frictive_agent_feature\\mmdemo\\features\\planner\\benchmarks:/benchmarks",
+    "aibasel/downward", "--alias", "lama-first", "/benchmarks/problem.pddl"
+    ]
+    result = subprocess.run(docker_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if "Solution found." in result.stdout:
+        return True, result.stdout
     else:
         return False, ""
