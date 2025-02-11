@@ -61,7 +61,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
     
     def get_output(self, transcription: TranscriptionInterface):
         if not transcription.is_new():
-            return FrictionOutputInterface(friction_statement=self.friction)
+            return FrictionOutputInterface(friction_statement=self.friction, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
 
         #if the transcription text is empty don't add it to the history
         if transcription.text != '':
@@ -73,7 +73,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             # do this process on the main thread so the socket thread doesn't miss any values
             # if there are less values in the friction subset the min utterance value pad the list with values from the history
             if(len(self.frictionSubset) < self.minUtteranceValue):
-                print(f'\nA minimum of {self.minUtteranceValue} utterances are needed to send to the friction LLM. There have been {len(self.frictionSubset)} utterance(s) since the last friction request. Attempting to add values from transciption history.')
+                print(f'\nA minimum of {self.minUtteranceValue} utterances are needed to send to the friction LLM. There have been {len(self.frictionSubset)} utterance(s) since the last friction request. Attempting to add values from transcription history.')
                 if(len(self.transcriptionHistory) > self.minUtteranceValue):
                     self.frictionSubset = self.transcriptionHistory[-self.minUtteranceValue:]
                 else:
@@ -93,7 +93,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             print("Friction request in progress...waiting for the thread to complete")
 
         return FrictionOutputInterface(
-                friction_statement=self.friction)
+                friction_statement=self.friction, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
     
     def worker(self):
         print("New Friction Request Thread Started")
@@ -105,7 +105,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
                 s.sendall(sendData)
                 print("Waiting for friction server response")
                 data = s.recv(2048)
-            received = data.decode("utf-8")
+            received = data.decode()
             if received != "No Friction":
                 self.friction = received
                 print(f"Received from Server:{received}")
