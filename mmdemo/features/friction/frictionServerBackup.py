@@ -15,6 +15,7 @@ from collections import defaultdict
 from itertools import combinations
 from typing import Dict, List, Optional
 from dataclasses import dataclass, asdict
+import pandas as pd
 
 # Hugging Face Libraries
 from transformers import (
@@ -246,7 +247,7 @@ class FrictionInference:
 def start_server(friction_detector: FrictionInference):
     HOST = '129.82.138.15'  # Standard loopback interface address (localhost)
     PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
-
+    friction_list = []
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
         s.listen()
@@ -266,6 +267,7 @@ def start_server(friction_detector: FrictionInference):
                         print(f"Transcriptions:\n{transcriptions}")
                         print("\nGenerating friction for dialogue...")
                         result = friction_detector.generate_friction(transcriptions)
+                        friction_list.append((transcriptions, result))
                         returnString = ''
                         if result is not None:
                             if result.friction_statement != '':
@@ -275,15 +277,21 @@ def start_server(friction_detector: FrictionInference):
                             else:
                                 conn.sendall(str.encode("No Friction")) 
                                 break
-                            conn.sendall(str.encode(returnString)) 
+                            conn.sendall(str.encode(returnString))
+                            friction_list_df = pd.Dataframe(friction_list)
+                            friction_list_df.to_csv("friction_list_df_sample.csv")
                         else:
                             conn.sendall(str.encode("No Friction"))
+                        
                     except ConnectionResetError as e:
                         print(f"Connection with {addr} was reset: {e}")
                         break
                     except Exception as e:
                         print(f"An error occurred: {e}")
                         break
+    friction_list_df = pd.Dataframe(friction_list)
+    friction_list_df.to_csv("friction_list_df.csv")
+
 
 if __name__ == "__main__":
     print("Initializing friction detector...")
