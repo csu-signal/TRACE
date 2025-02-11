@@ -317,8 +317,8 @@ def update_block_weight(self, block_name, weight_name):
             self.problem.set_initial_value(self.believed_weight(block, weight, participant), True)
     
     pddl_writer = PDDLWriter(self.problem)
-    domain_file = "/mmdemo/features/planner/benchmarks/domain.pddl"
-    problem_file = "/mmdemo/features/planner/benchmarks/problem.pddl"
+    domain_file = "mmdemo/features/planner/benchmarks/domain.pddl"
+    problem_file = "mmdemo/features/planner/benchmarks/problem.pddl"
     
     with open(domain_file, "w") as f:
         f.write(pddl_writer.get_domain())
