@@ -124,7 +124,7 @@ def process_sentence(sentence, model, tokenizer, bert, embeddings, verbose=False
     common_grounds = list(common_grounds_dataSet["Propositions"])
     parsedProp = extract_propositions_ltr_v2(sentence)
     if(parsedProp in common_grounds):
-        return parsedProp
+        return parsedProp, 0
     elements = extract_colors_and_numbers(
         sentence.lower()
     )  # The list of colors / weights in the transcript
