@@ -89,7 +89,7 @@ In another local terminal, run the demo in the proper environemnt.
 
 Install Docker for windows from [here](https://docs.docker.com/desktop/setup/install/windows-install/). Make sure to run it before running the demo.
 
-In mmdemo/features/planner/planner.py, change the path in check solution from `C:\\Users\\benkh\\Documents\\GitHub\\TRACE\\mmdemo\\features\\planner\\benchmarks` to the path of the benchmarks folder on your machine.
+In `mmdemo/features/planner/planner.py`, change the path in check solution from `C:\\Users\\benkh\\Documents\\GitHub\\TRACE\\mmdemo\\features\\planner\\benchmarks` to the path of the benchmarks folder on your machine.
 
 ## Common Setup Issues
 
