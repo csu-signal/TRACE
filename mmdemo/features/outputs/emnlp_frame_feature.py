@@ -337,13 +337,15 @@ class EMNLPFrame(BaseFeature[ColorImageInterface]):
         Renders the plan text on the frame. 
         If the plan is None, it renders the last known state.
         """
-        if plan and plan.is_new():
+        # if plan and plan.is_new():
+        try:
             # Update the last solvable state
             solv = plan.solv
             text = "Solvable" * solv + "Unsolvable" * (not solv)
             last_plan["text"] = text
             last_plan["color"] = (0, 255, 0) if solv else (0, 0, 255)
-        elif not last_plan.get("text"):
+        # elif not last_plan.get("text"):
+        except:
             # Default state if there's no valid last_plan
             last_plan["text"] = "No Plan yet"
             last_plan["color"] = (255, 255, 255)

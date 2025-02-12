@@ -27,14 +27,14 @@ class Planner(BaseFeature[PlannerInterface]):
         super().__init__(common_ground)
         self.planner_path = planner_path
         self.lock = threading.Lock()
-        self.solution_result = None
+        self.solution_result = False, ""
     
     def initialize(self):
 
-        start = time.time()
+        # start = time.time()
         self.problem, self.planner, self.actual_weight, self.believed_weight, self.blocks, self.participants, self.weights = create_planner()
-        end = time.time()
-        print("initializing planner took ", end-start)
+        # end = time.time()
+        # print("initializing planner took ", end-start)
 
     def run_check_solution(self):
         """Runs check_solution in a separate thread and stores the result."""
@@ -48,26 +48,25 @@ class Planner(BaseFeature[PlannerInterface]):
             cg: CommonGroundInterface
     ):
         
-        if not cg.is_new():
-            return None
-        start = time.time()
-        ebank, fbank = cg.ebank, cg.fbank
-        for prop in ebank.union(fbank):
-            prop_list = [p.strip() for p in prop.split(',')]
-            for p in prop_list:
-                block, weight = re.split(r'(?<!=)=(?!=)|<|>|!=', p)
-                block, weight = block.strip(), weight.strip()
-                update_block_weight(self, block, weight)
+        if cg.is_new():
+            # start = time.time()
+            ebank, fbank = cg.ebank, cg.fbank
+            for prop in ebank.union(fbank):
+                prop_list = [p.strip() for p in prop.split(',')]
+                for p in prop_list:
+                    block, weight = re.split(r'(?<!=)=(?!=)|<|>|!=', p)
+                    block, weight = block.strip(), weight.strip()
+                    update_block_weight(self, block, weight)
 
-        check_thread = threading.Thread(target=self.run_check_solution)
-        check_thread.start()
+            check_thread = threading.Thread(target=self.run_check_solution)
+            check_thread.start()
 
-        with self.lock:
-            if self.solution_result:
-                solv, plan = self.solution_result
-                end = time.time()
-                print("getting output from planner took ", end - start)
-                self.solution_result = None
-                return PlannerInterface(solv, plan)
+            with self.lock:
+                if self.solution_result is not None:
+                    solv, plan = self.solution_result
+                    print(f"*************************{solv}")
+                    # end = time.time()
+                    # print("getting output from planner took ", end - start)
+                    return PlannerInterface(solv, plan)
 
         return None

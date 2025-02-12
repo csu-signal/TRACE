@@ -15,6 +15,7 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.features.gesture.helpers import get_average_hand_pixel, normalize_landmarks, fix_body_id
 from mmdemo.interfaces import (
     FrictionOutputInterface,
+    PlannerInterface,
     TranscriptionInterface,
 )
 
@@ -38,12 +39,13 @@ class Friction(BaseFeature[FrictionOutputInterface]):
     def __init__(
         self,
         transcription: BaseFeature[TranscriptionInterface],
+        plan: BaseFeature[PlannerInterface],
         *,
         host: str | None = None,
         port: int | None = 0,
-        minUtteranceValue: int | None = 10
+        minUtteranceValue: int | None = 10,
     ):
-        super().__init__(transcription) 
+        super().__init__(transcription, plan) 
         self.transcriptionHistory = []
         self.frictionSubset = []
         self.friction = ''
@@ -59,41 +61,42 @@ class Friction(BaseFeature[FrictionOutputInterface]):
     def initialize(self):
         print("Friction Init HOST: " + str(self.HOST) + " PORT: " + str(self.PORT))
     
-    def get_output(self, transcription: TranscriptionInterface):
+    def get_output(self, transcription: TranscriptionInterface, plan:PlannerInterface):
         if not transcription.is_new():
             return FrictionOutputInterface(friction_statement=self.friction, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
 
-        #if the transcription text is empty don't add it to the history
-        if transcription.text != '':
-            self.transcriptionHistory.append(transcription.speaker_id + ": " + transcription.text)
-            self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
-            # self.transcriptionHistory += "P1: " + transcription.text + "\n"
+        if not plan.solv:
+            #if the transcription text is empty don't add it to the history
+            if transcription.text != '':
+                self.transcriptionHistory.append(transcription.speaker_id + ": " + transcription.text)
+                self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
+                # self.transcriptionHistory += "P1: " + transcription.text + "\n"
 
-        if not self.t.is_alive():
-            # do this process on the main thread so the socket thread doesn't miss any values
-            # if there are less values in the friction subset the min utterance value pad the list with values from the history
-            if(len(self.frictionSubset) < self.minUtteranceValue):
-                print(f'\nA minimum of {self.minUtteranceValue} utterances are needed to send to the friction LLM. There have been {len(self.frictionSubset)} utterance(s) since the last friction request. Attempting to add values from transcription history.')
-                if(len(self.transcriptionHistory) > self.minUtteranceValue):
-                    self.frictionSubset = self.transcriptionHistory[-self.minUtteranceValue:]
-                else:
-                    # if there are less values in the history then the min utterance value, use the full history
-                    self.frictionSubset = self.transcriptionHistory
+            if not self.t.is_alive():
+                # do this process on the main thread so the socket thread doesn't miss any values
+                # if there are less values in the friction subset the min utterance value pad the list with values from the history
+                if(len(self.frictionSubset) < self.minUtteranceValue):
+                    print(f'\nA minimum of {self.minUtteranceValue} utterances are needed to send to the friction LLM. There have been {len(self.frictionSubset)} utterance(s) since the last friction request. Attempting to add values from transcription history.')
+                    if(len(self.transcriptionHistory) > self.minUtteranceValue):
+                        self.frictionSubset = self.transcriptionHistory[-self.minUtteranceValue:]
+                    else:
+                        # if there are less values in the history then the min utterance value, use the full history
+                        self.frictionSubset = self.transcriptionHistory
 
-            # format the transcriptions as a string to send over the socket
-            self.subsetTranscriptions = ''
-            for utter in self.frictionSubset:
-                self.subsetTranscriptions += utter + "\n"
+                # format the transcriptions as a string to send over the socket
+                self.subsetTranscriptions = ''
+                for utter in self.frictionSubset:
+                    self.subsetTranscriptions += utter + "\n"
 
-            print("\nSubset of Transcriptions:\n" + self.subsetTranscriptions)
-            self.t = threading.Thread(target=self.worker)
-            self.t.start()
-            self.frictionSubset = []
-        else:
-            print("Friction request in progress...waiting for the thread to complete")
+                print("\nSubset of Transcriptions:\n" + self.subsetTranscriptions)
+                self.t = threading.Thread(target=self.worker)
+                self.t.start()
+                self.frictionSubset = []
+            else:
+                print("Friction request in progress...waiting for the thread to complete")
 
-        return FrictionOutputInterface(
-                friction_statement=self.friction, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
+            return FrictionOutputInterface(
+                    friction_statement=self.friction, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
     
     def worker(self):
         print("New Friction Request Thread Started")
