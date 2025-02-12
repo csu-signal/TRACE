@@ -176,7 +176,7 @@ if __name__ == "__main__":
         targets=[
             DisplayFrame(output_frame),
             #SaveVideo(output_frame, frame_rate=10),
-            #Log(dense_paraphrased_transcriptions, props, moves, csv=True),
+            Log(friction, csv=True),
             #Log(transcriptions, stdout=True),
         ]
     )

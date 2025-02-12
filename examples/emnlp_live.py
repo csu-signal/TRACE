@@ -59,8 +59,6 @@ if __name__ == "__main__":
         transcriptions, referenced_objects
     )
 
-    # friction
-    friction = Friction(dense_paraphrased_transcriptions)
 
     # prop extraction and move classifier
     props = Proposition(dense_paraphrased_transcriptions)
@@ -69,10 +67,12 @@ if __name__ == "__main__":
     # common ground tracking
     cgt = CommonGroundTracking(moves, props)
 
-    # plan = Planner(cgt)
+    plan = Planner(cgt)
 
+    # friction
+    friction = Friction(dense_paraphrased_transcriptions, plan)
     # create output frame for video
-    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction) #removed gaze
+    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction, plan) #removed gaze
 
     # run demo and show output
     demo = Demo(
@@ -83,6 +83,6 @@ if __name__ == "__main__":
             # Log(transcriptions, stdout=True),
         ]
     )
-    demo.show_dependency_graph()
+    # demo.show_dependency_graph()
     demo.run()
     demo.print_time_benchmarks()

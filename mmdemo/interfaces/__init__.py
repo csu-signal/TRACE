@@ -134,6 +134,9 @@ class FrictionOutputInterface(BaseInterface):
         friction_statement (str): 
             Main friction statement to be displayed/spoken.
             Example: "Are we sure about comparing these blocks without considering their volume?"
+
+        transciption_subset (str):
+            The transcription subset
             
         task_state (str): 
             Current state of the weight estimation task.
@@ -156,12 +159,13 @@ class FrictionOutputInterface(BaseInterface):
     """
     
     friction_statement: str
+    transciption_subset: str
     # task_state: str
     # belief_state: str
     # rationale: str
     # raw_generation: str
 
-    metrics: Optional[FrictionMetrics] = None
+    #metrics: Optional[FrictionMetrics] = None
 
     def to_dict(self):
         return asdict(self)  # Converts the object into a dictionary

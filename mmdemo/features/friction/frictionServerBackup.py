@@ -1,14 +1,14 @@
 # ssh traceteam@tarski.cs.colostate.edu
 # cd fact_server
 # conda activate frictionEnv
-# /home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/friction_server.py
+# /home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/friction_server.pys
 
 import os
 import sys
 import socket
 import re
 import random
-import numpy as np
+import numpy as nps
 import torch
 import pickle
 from collections import defaultdict
@@ -267,7 +267,6 @@ def start_server(friction_detector: FrictionInference):
                         print(f"Transcriptions:\n{transcriptions}")
                         print("\nGenerating friction for dialogue...")
                         result = friction_detector.generate_friction(transcriptions)
-                        friction_list.append((transcriptions, result))
                         returnString = ''
                         if result is not None:
                             if result.friction_statement != '':
@@ -275,14 +274,12 @@ def start_server(friction_detector: FrictionInference):
                                 if result.rationale != '':  
                                     returnString += "r*Rationale" + result.rationale 
                             else:
-                                conn.sendall(str.encode("No Friction")) 
+                                conn.sendall(str.encode("No Friction", 'utf-8')) 
                                 break
-                            conn.sendall(str.encode(returnString))
-                            friction_list_df = pd.Dataframe(friction_list)
-                            friction_list_df.to_csv("friction_list_df_sample.csv")
+                            returnString = returnString.replace("’","'")
+                            conn.sendall(str.encode(returnString, 'utf-8')) 
                         else:
-                            conn.sendall(str.encode("No Friction"))
-                        
+                            conn.sendall(str.encode("No Friction", 'utf-8'))
                     except ConnectionResetError as e:
                         print(f"Connection with {addr} was reset: {e}")
                         break

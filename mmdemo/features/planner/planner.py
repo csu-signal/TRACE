@@ -1,6 +1,8 @@
+import os
+from unified_planning.io import PDDLWriter
 from unified_planning.shortcuts import *
-from unified_planning.engines import PlanGenerationResultStatus
-import time
+# from unified_planning.engines import PlanGenerationResultStatus
+import subprocess
 up.shortcuts.get_environment().credits_stream = None
 
 
@@ -19,7 +21,7 @@ def create_problem():
     participants = [Object('participant1', Participant), Object('participant2', Participant), Object('participant3', Participant)]
 
     # CHANGED: added weights as objects to avoid numerical planning
-    weights_list = [10, 20, 30, 40, 50, 60, 70, 80]
+    weights_list = [10, 20, 30, 40, 50]
     weights = [Object(str(weight) + 'g', Weight) for weight in weights_list]
 
     # assert that the numbers in weights_list are multiples of ten and increase by ten
@@ -251,8 +253,8 @@ def create_problem():
     block3 = Object('green block', Block)
     block4 = Object('purple block', Block)
     block5 = Object('yellow block', Block)
-    block6 = Object('brown block', Block)
-    blocks = [block1, block2, block3, block4, block5, block6]
+    # block6 = Object('brown block', Block)
+    blocks = [block1, block2, block3, block4, block5]
 
     problem.add_fluents([actual_weight])
     problem.add_fluent(believed_weight, default_initial_value=False)
@@ -286,6 +288,25 @@ def create_planner():
 
     problem, actual_weight, believed_weight, blocks, participants, weights = create_problem()
     planner = OneshotPlanner(name="fast-downward")
+    try:
+        os.remove("mmdemo/features/planner/benchmarks/domain.pddl")
+    except:
+        print("didn't remove domain pddl with init")
+        print(os.listdir("mmdemo/features/planner/benchmarks"))
+
+    try:
+        os.remove("mmdemo/features/planner/benchmarks/problem.pddl")
+    except:
+        print("didn't remove problem pddl with init")
+
+    pddl_writer = PDDLWriter(problem)
+    domain_file = "mmdemo/features/planner/benchmarks/domain.pddl"
+    problem_file = "mmdemo/features/planner/benchmarks/problem.pddl"
+    
+    with open(domain_file, "w") as f:
+        f.write(pddl_writer.get_domain())
+    with open(problem_file, "w") as f:
+        f.write(pddl_writer.get_problem())
     
     return problem, planner, actual_weight, believed_weight, blocks, participants, weights
     
@@ -305,15 +326,43 @@ def update_block_weight(self, block_name, weight_name):
         self.problem.set_initial_value(self.actual_weight(block, weight), True)
         for participant in self.participants:
             self.problem.set_initial_value(self.believed_weight(block, weight, participant), True)
+    try:
+        os.remove("mmdemo/features/planner/benchmarks/domain.pddl")
+    except:
+        print("didn't remove domain pddl with update")
+    try:
+        os.remove("mmdemo/features/planner/benchmarks/problem.pddl")
+    except:
+        print("didn't remove problem pddl with update")
+
+    pddl_writer = PDDLWriter(self.problem)
+    domain_file = "mmdemo/features/planner/benchmarks/domain.pddl"
+    problem_file = "mmdemo/features/planner/benchmarks/problem.pddl"
+    
+    with open(domain_file, "w") as f:
+        f.write(pddl_writer.get_domain())
+    with open(problem_file, "w") as f:
+        f.write(pddl_writer.get_problem())
 
 
+def check_solution():
 
-def check_solution(problem, planner):
-    start = time.time()
-    result = planner.solve(problem)
-    end = time.time()
-    print("Checking solution with planner takes :", end - start)
-    if result.status == PlanGenerationResultStatus.SOLVED_SATISFICING:
-        return True, result.plan
+    docker_command = [
+    "docker", "run", "--rm",
+    "-v", "C:\\Users\\benkh\\Documents\\GitHub\\TRACE\\mmdemo\\features\\planner\\benchmarks:/benchmarks",
+    "aibasel/downward", "--alias", "lama-first", "/benchmarks/problem.pddl"
+    ]
+    result = subprocess.run(docker_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if "Solution found" in result.stdout:
+        return True, result.stdout
     else:
-        return False, ""
+        return False, result.stdout
+    
+problem, planner, actual_weight, believed_weight, blocks, participants, weights = create_planner()
+
+# solv, output = check_solution()
+# if solv:
+#     print("Found a solution")
+#     print(output)
+# else:
+#     print("No solution found!")
