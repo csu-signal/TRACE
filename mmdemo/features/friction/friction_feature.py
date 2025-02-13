@@ -65,7 +65,21 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         if not transcription.is_new():
             return FrictionOutputInterface(friction_statement=self.friction, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
 
-        if not plan.solv:
+        with open("mmdemo/features/planner/benchmarks/problem.pddl", "r") as file:
+            content = file.read()
+        match = re.search(r"\(:init\s*(.*?)\)\s*(?=\(:goal|\(:)", content, re.DOTALL)
+        if match:
+            init_section = match.group(1).strip()
+
+        planner_output = plan.plan
+        run_friction = True
+        planner_step = [line for line in planner_output.split("\n") if "compare" in line][0]
+        compare_blocks = re.findall(r"\b\w*block\w*\b", planner_step)
+        for block in compare_blocks:
+            if block not in init_section:
+                run_friction = False
+                    
+        if not plan.solv or run_friction:
             #if the transcription text is empty don't add it to the history
             if transcription.text != '':
                 self.transcriptionHistory.append(transcription.speaker_id + ": " + transcription.text)
