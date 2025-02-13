@@ -48,7 +48,7 @@ class Planner(BaseFeature[PlannerInterface]):
             cg: CommonGroundInterface
     ):
         
-        if cg.is_new() or not cg == CommonGroundInterface(qbank=set(), ebank=set(), fbank=set()):
+        if cg.is_new() or not cg == None:
             # start = time.time()
             ebank, fbank = cg.ebank, cg.fbank
             for prop in ebank.union(fbank):
