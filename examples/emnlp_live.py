@@ -41,7 +41,7 @@ if __name__ == "__main__":
     # laptop microphones
     audio1 = MicAudio(device_id=7, speaker_id="P1")
     audio2 = MicAudio(device_id=9, speaker_id="P2")
-    audio3 = MicAudio(device_id=10, speaker_id="P3")
+    audio3 = MicAudio(device_id=11, speaker_id="P3")
     utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=True)
     #######################################################################################
 
@@ -83,6 +83,6 @@ if __name__ == "__main__":
             # Log(transcriptions, stdout=True),
         ]
     )
-    # demo.show_dependency_graph()
+    demo.show_dependency_graph()
     demo.run()
     demo.print_time_benchmarks()
