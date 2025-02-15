@@ -39,13 +39,14 @@ class MicAudio(BaseFeature[AudioFileListInterface]):
     `speaker_id` -- a unique identifier for the speaker of this audio
     """
 
-    def __init__(self, *, device_id: int, speaker_id: str | None = None) -> None:
+    def __init__(self, *, device_id: int, delete_output_audio=True, speaker_id: str | None = None) -> None:
         super().__init__()
         self.device_id = device_id
+        self.delete_output_audio = delete_output_audio
         self.speaker_id = speaker_id if speaker_id is not None else f"mic{device_id:03}"
 
     def initialize(self):
-        self.output_dir = create_tmp_dir()
+        self.output_dir = create_tmp_dir("micAudio")
 
         self.queue = mp.Queue()
         self.done = mp.Value(c_bool, False)
@@ -67,7 +68,8 @@ class MicAudio(BaseFeature[AudioFileListInterface]):
         self.done.value = True
         self.process.join()
 
-        shutil.rmtree(self.output_dir)
+        if self.delete_output_audio:
+            shutil.rmtree(self.output_dir)
 
     def get_output(self) -> AudioFileListInterface | None:
         if self.queue.empty():
@@ -205,12 +207,14 @@ class RecordedAudio(BaseFeature[AudioFileListInterface]):
         color_image: BaseFeature[ColorImageInterface],
         *,
         path: Path,
+        delete_output_audio=True,
         speaker_id: str | None = None,
         video_frame_rate: int = 30,
     ):
         super().__init__(color_image)
         self.path = path
         self.video_frame_rate = video_frame_rate
+        self.delete_output_audio = delete_output_audio
 
         if speaker_id is not None:
             self.speaker_id = speaker_id
@@ -226,7 +230,7 @@ class RecordedAudio(BaseFeature[AudioFileListInterface]):
     def initialize(self):
         # create output directory, open input file, and initialize
         # params
-        self.output_dir = create_tmp_dir()
+        self.output_dir = create_tmp_dir("recordedAudio")
         self.reader = wave.open(str(self.path), "rb")
         self.num_frames_read = 0
         self.last_save_time = 0

@@ -39,10 +39,10 @@ if __name__ == "__main__":
     # transcriptions from microphone 
 
     # laptop microphones
-    audio1 = MicAudio(device_id=7, speaker_id="P1")
-    audio2 = MicAudio(device_id=9, speaker_id="P2")
-    audio3 = MicAudio(device_id=11, speaker_id="P3")
-    utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=True)
+    audio1 = MicAudio(device_id=7, speaker_id="P1", delete_output_audio=False)
+    audio2 = MicAudio(device_id=9, speaker_id="P2", delete_output_audio=False)
+    audio3 = MicAudio(device_id=11, speaker_id="P3", delete_output_audio=False)
+    utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=True, delete_output_audio=False)
     #######################################################################################
 
     # rosch microphone - Index: 39, Name: Microphone (USB audio CODEC)
