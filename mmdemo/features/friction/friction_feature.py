@@ -73,22 +73,19 @@ class Friction(BaseFeature[FrictionOutputInterface]):
 
         planner_output = plan.plan
         run_friction = True
-        try:
-            planner_step = [line for line in planner_output.split("\n") if "compare" in line][0]
-            compare_blocks = re.findall(r"\b\w*block\w*\b", planner_step)
-            for block in compare_blocks:
-                if block not in init_section:
-                    run_friction = False
-        except:
-            run_friction = False
+        planner_step = [line for line in planner_output.split("\n") if "compare" in line][0]
+        compare_blocks = re.findall(r"\b\w*block\w*\b", planner_step)
+        for block in compare_blocks:
+            if block not in init_section:
+                run_friction = False
 
+        #if the transcription text is empty don't add it to the history
         if transcription.text != '':
             self.transcriptionHistory.append(transcription.speaker_id + ": " + transcription.text)
             self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
-            #if the transcription text is empty don't add it to the history
-                # self.transcriptionHistory += "P1: " + transcription.text + "\n"
+            # self.transcriptionHistory += "P1: " + transcription.text + "\n"
+                    
         if not plan.solv or run_friction:
-
             if not self.t.is_alive():
                 # do this process on the main thread so the socket thread doesn't miss any values
                 # if there are less values in the friction subset the min utterance value pad the list with values from the history
