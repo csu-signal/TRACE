@@ -34,7 +34,7 @@ class Gesture(BaseFeature[GestureConesInterface]):
     """
 
     BASE_RADIUS = 40
-    VERTEX_RADIUS = 70
+    VERTEX_RADIUS = 80
 
     # the number of finger lengths of the output cone
     CONE_FINGER_LENGTHS = 5

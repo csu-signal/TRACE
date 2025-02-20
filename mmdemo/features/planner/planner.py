@@ -349,7 +349,7 @@ def check_solution():
 
     docker_command = [
     "docker", "run", "--rm",
-    "-v", "C:\\Users\\benkh\\Documents\\GitHub\\TRACE\\mmdemo\\features\\planner\\benchmarks:/benchmarks",
+    "-v", "C:\\Users\\Multimodal_Demo\\TRACE\\mmdemo\\features\\planner\\benchmarks:/benchmarks",
     "aibasel/downward", "--alias", "lama-first", "/benchmarks/problem.pddl"
     ]
     result = subprocess.run(docker_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -358,7 +358,7 @@ def check_solution():
     else:
         return False, result.stdout
     
-problem, planner, actual_weight, believed_weight, blocks, participants, weights = create_planner()
+# problem, planner, actual_weight, believed_weight, blocks, participants, weights = create_planner()
 
 # solv, output = check_solution()
 # if solv:
@@ -366,3 +366,4 @@ problem, planner, actual_weight, believed_weight, blocks, participants, weights 
 #     print(output)
 # else:
 #     print("No solution found!")
+#     print(output)

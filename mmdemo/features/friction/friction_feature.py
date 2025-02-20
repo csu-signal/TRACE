@@ -73,18 +73,21 @@ class Friction(BaseFeature[FrictionOutputInterface]):
 
         planner_output = plan.plan
         run_friction = True
-        planner_step = [line for line in planner_output.split("\n") if "compare" in line][0]
-        compare_blocks = re.findall(r"\b\w*block\w*\b", planner_step)
-        for block in compare_blocks:
-            if block not in init_section:
-                run_friction = False
-                    
-        if not plan.solv or run_friction:
+        try:
+            planner_step = [line for line in planner_output.split("\n") if "compare" in line][0]
+            compare_blocks = re.findall(r"\b\w*block\w*\b", planner_step)
+            for block in compare_blocks:
+                if block not in init_section:
+                    run_friction = False
+        except:
+            run_friction = False
+
+        if transcription.text != '':
+            self.transcriptionHistory.append(transcription.speaker_id + ": " + transcription.text)
+            self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
             #if the transcription text is empty don't add it to the history
-            if transcription.text != '':
-                self.transcriptionHistory.append(transcription.speaker_id + ": " + transcription.text)
-                self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
                 # self.transcriptionHistory += "P1: " + transcription.text + "\n"
+        if not plan.solv or run_friction:
 
             if not self.t.is_alive():
                 # do this process on the main thread so the socket thread doesn't miss any values
@@ -126,6 +129,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             if received != "No Friction":
                 self.friction = received
                 print(f"Received from Server:{received}")
+                print(self.transcriptionHistory[-1])
         except Exception as e:
             self.friction = ''
             print(f"FRICTION FEATURE THREAD: An error occurred: {e}")

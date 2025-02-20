@@ -7,7 +7,7 @@ import threading
 from mmdemo.features.planner.planner import create_planner, update_block_weight, check_solution
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import PlannerInterface, CommonGroundInterface
+from mmdemo.interfaces import PlannerInterface, CommonGroundInterface, EmptyInterface
 
 @final
 class Planner(BaseFeature[PlannerInterface]):
@@ -48,8 +48,8 @@ class Planner(BaseFeature[PlannerInterface]):
             cg: CommonGroundInterface
     ):
         
-        if cg.is_new() or not cg == None:
-            # start = time.time()
+        if cg.is_new() and not cg == EmptyInterface():
+            start = time.time()
             ebank, fbank = cg.ebank, cg.fbank
             for prop in ebank.union(fbank):
                 prop_list = [p.strip() for p in prop.split(',')]
@@ -60,13 +60,11 @@ class Planner(BaseFeature[PlannerInterface]):
 
             check_thread = threading.Thread(target=self.run_check_solution)
             check_thread.start()
-
+            end = time.time()
+            # print("planner output took ", end-start)
             with self.lock:
                 if self.solution_result is not None:
                     solv, plan = self.solution_result
-                    print(f"*************************{solv}")
-                    # end = time.time()
-                    # print("getting output from planner took ", end - start)
                     return PlannerInterface(solv, plan)
 
         return None
