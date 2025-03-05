@@ -18,7 +18,7 @@ from mmdemo.interfaces import (
     AudioFileListInterface,
     ColorImageInterface,
 )
-from mmdemo.utils.files import create_tmp_dir
+from mmdemo.utils.files import create_tmp_dir_with_featureName
 
 
 @final
@@ -46,7 +46,7 @@ class MicAudio(BaseFeature[AudioFileListInterface]):
         self.speaker_id = speaker_id if speaker_id is not None else f"mic{device_id:03}"
 
     def initialize(self):
-        self.output_dir = create_tmp_dir("micAudio")
+        self.output_dir = create_tmp_dir_with_featureName("micAudio")
 
         self.queue = mp.Queue()
         self.done = mp.Value(c_bool, False)
@@ -230,7 +230,7 @@ class RecordedAudio(BaseFeature[AudioFileListInterface]):
     def initialize(self):
         # create output directory, open input file, and initialize
         # params
-        self.output_dir = create_tmp_dir("recordedAudio")
+        self.output_dir = create_tmp_dir_with_featureName("recordedAudio")
         self.reader = wave.open(str(self.path), "rb")
         self.num_frames_read = 0
         self.last_save_time = 0

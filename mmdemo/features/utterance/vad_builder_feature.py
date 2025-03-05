@@ -8,7 +8,7 @@ from silero_vad import get_speech_timestamps, load_silero_vad, read_audio
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import AudioFileInterface, AudioFileListInterface
-from mmdemo.utils.files import create_tmp_dir
+from mmdemo.utils.files import create_tmp_dir_with_featureName
 
 
 @final
@@ -57,7 +57,7 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
         self.starts = defaultdict(float)
         self.total_time = defaultdict(float)
 
-        self.output_dir = create_tmp_dir("vad")
+        self.output_dir = create_tmp_dir_with_featureName("vad")
 
         self.outputs = deque()
 

@@ -17,7 +17,7 @@ def create_tmp_dir() -> Path:
         except FileExistsError:
             pass
 
-def create_tmp_dir(featureName) -> Path:
+def create_tmp_dir_with_featureName(featureName) -> Path:
     """
     Create a temporary directory and return
     a Path object to it. This is guaranteed
