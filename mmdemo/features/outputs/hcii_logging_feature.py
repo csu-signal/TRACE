@@ -8,9 +8,9 @@ from typing import final
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.base_interface import BaseInterface
-from mmdemo.interfaces import EmptyInterface, GazeConesInterface, GestureConesInterface, HciiGestureConesInterface, SelectedObjectsInterface
+from mmdemo.interfaces import EmptyInterface, GazeConesInterface, GestureConesInterface, HciiGestureConesInterface, HciiSelectedObjectsInterface
 from mmdemo.features.gesture.gesture_feature import Gesture
-from mmdemo.interfaces.data import SelectedObjectInfo
+from mmdemo.interfaces.data import HciiSelectedObjectInfo
 
 @final
 class HciiLog(BaseFeature[EmptyInterface]):
@@ -76,7 +76,7 @@ class HciiLog(BaseFeature[EmptyInterface]):
         self.frame += 1
         return EmptyInterface() if logged_something else None
 
-    def log(self, gesture: HciiGestureConesInterface, objects: SelectedObjectsInterface):
+    def log(self, gesture: HciiGestureConesInterface, objects: HciiSelectedObjectsInterface):
         if self.stdout:
             print(f"(frame {self.frame:05})", gesture)
 
@@ -95,7 +95,7 @@ class HciiLog(BaseFeature[EmptyInterface]):
                     selectedObjs = []
                     for o in objects.objects:
                         if o[1]:
-                            selectedObjs.append(SelectedObjectInfo(str(o[0].object_class), o[0].wtd_id))
+                            selectedObjs.append(HciiSelectedObjectInfo(str(o[0].object_class), o[0].wtd_id))
                     output_row.append(selectedObjs)
 
                     if self.needs_header:

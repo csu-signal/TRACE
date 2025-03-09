@@ -10,7 +10,7 @@ from mmdemo.interfaces import (
     ColorImageInterface,
     GazeConesInterface,
     GestureConesInterface,
-    SelectedObjectsInterface
+    HciiSelectedObjectsInterface
 )
 from mmdemo.features.objects.hcii_selected_objects_feature import HciiSelectedObjects
 from mmdemo.interfaces.data import Cone
@@ -65,7 +65,7 @@ class HCII_IT_Frame(BaseFeature[ColorImageInterface]):
         color: ColorImageInterface,
         gaze: GazeConesInterface,
         gesture: GestureConesInterface,
-        objects: SelectedObjectsInterface,
+        objects: HciiSelectedObjectsInterface,
         calibration: CameraCalibrationInterface
     ):
         if (

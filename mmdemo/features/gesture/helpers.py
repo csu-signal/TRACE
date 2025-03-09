@@ -67,7 +67,7 @@ def createBoundingBox(center, w, h):
     return np.array([center - offset, center + offset], dtype=np.int64)
 
 
-def fix_body_id(bt): #TODO fix this? this method converts from azure to the 1,2,3 ordering
+def fix_body_id(bt):
     
     # sort by head position
     bt.bodies.sort(key=lambda body: body["joint_positions"][3][0])

@@ -11,7 +11,7 @@ from dataclasses import dataclass, asdict
 import numpy as np
 
 from mmdemo.base_interface import BaseInterface
-from mmdemo.interfaces.data import Cone, Handedness, ObjectInfo2D, ObjectInfo3D
+from mmdemo.interfaces.data import Cone, Handedness, HciiObjectInfo2D, ObjectInfo2D, ObjectInfo3D
 
 
 @dataclass
@@ -174,61 +174,6 @@ class FrictionOutputInterface(BaseInterface):
     def to_dict(self):
         return asdict(self)  # Converts the object into a dictionary
 
-@dataclass
-class HciiGestureConesInterface(ConesInterface):
-    """
-    `cones` -- the list of cones found
-    `wtd_body_ids` -- `body_ids[i]` is the body id in weight task dataset format for each `cones[i]`
-    `azure_body_ids` -- `body_ids[i]` is the body id in azure kinect format for each `cones[i]`
-    `handedness` -- `handedness[i]` is the hand used to create `cones[i]`  
-    `nose_position` -- the nose position
-    """
-
-    wtd_body_ids: list[int]
-    azure_body_ids: list[int]
-    handedness: list[Handedness]
-    nose_positions: list[float]
-
-@dataclass
-class FrictionOutputInterface(BaseInterface):
-    """
-    Interface for friction generation output in collaborative weight estimation task.
-    
-    Attributes:
-        friction_statement (str): 
-            Main friction statement to be displayed/spoken.
-            Example: "Are we sure about comparing these blocks without considering their volume?"
-            
-        task_state (str): 
-            Current state of the weight estimation task.
-            Hidden from UI but useful for debugging.
-            Example: "Red (10g) and Blue blocks compared, Yellow block pending"
-            
-        belief_state (str): 
-            Participants' current beliefs about weights.
-            Helps explain friction but may not need display.
-            Example: "P1 believes yellow is heaviest, P2 uncertain about blue"
-            
-        rationale (str): 
-            Reasoning behind the friction intervention.
-            Could be shown as tooltip/explanation.
-            Example: "Participants are making assumptions without evidence"
-            
-        metrics (Optional[FrictionMetrics]): 
-            Model's generation metrics including confidence.
-            Useful for debugging and demo insights.
-    """
-    
-    friction_statement: str
-    # task_state: str
-    # belief_state: str
-    # rationale: str
-    # raw_generation: str
-
-    metrics: Optional[FrictionMetrics] = None
-
-    def to_dict(self):
-        return asdict(self)  # Converts the object into a dictionary
 
 @dataclass
 class HciiGestureConesInterface(ConesInterface):
@@ -244,62 +189,8 @@ class HciiGestureConesInterface(ConesInterface):
     azure_body_ids: list[int]
     handedness: list[Handedness]
     nose_positions: list[float]
-@dataclass
-class FrictionOutputInterface(BaseInterface):
-    """
-    Interface for friction generation output in collaborative weight estimation task.
-    
-    Attributes:
-        friction_statement (str): 
-            Main friction statement to be displayed/spoken.
-            Example: "Are we sure about comparing these blocks without considering their volume?"
-            
-        task_state (str): 
-            Current state of the weight estimation task.
-            Hidden from UI but useful for debugging.
-            Example: "Red (10g) and Blue blocks compared, Yellow block pending"
-            
-        belief_state (str): 
-            Participants' current beliefs about weights.
-            Helps explain friction but may not need display.
-            Example: "P1 believes yellow is heaviest, P2 uncertain about blue"
-            
-        rationale (str): 
-            Reasoning behind the friction intervention.
-            Could be shown as tooltip/explanation.
-            Example: "Participants are making assumptions without evidence"
-            
-        metrics (Optional[FrictionMetrics]): 
-            Model's generation metrics including confidence.
-            Useful for debugging and demo insights.
-    """
-    
-    friction_statement: str
-    # task_state: str
-    # belief_state: str
-    # rationale: str
-    # raw_generation: str
-
-    metrics: Optional[FrictionMetrics] = None
-
-    def to_dict(self):
-        return asdict(self)  # Converts the object into a dictionary
 
 
-@dataclass
-class HciiGestureConesInterface(ConesInterface):
-    """
-    `cones` -- the list of cones found
-    `wtd_body_ids` -- `body_ids[i]` is the body id in weight task dataset format for each `cones[i]`
-    `azure_body_ids` -- `body_ids[i]` is the body id in azure kinect format for each `cones[i]`
-    `handedness` -- `handedness[i]` is the hand used to create `cones[i]`  
-    `nose_position` -- the nose position
-    """
-
-    wtd_body_ids: list[int]
-    azure_body_ids: list[int]
-    handedness: list[Handedness]
-    nose_positions: list[float]
 @dataclass
 class ObjectInterface2D(BaseInterface):
     """
@@ -327,10 +218,20 @@ class SelectedObjectsInterface(BaseInterface):
     """
     Which objects are selected by participants
 
+    objects -- [(object info, selected?), ...]
+    """
+
+    objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D, bool]]
+
+@dataclass
+class HciiSelectedObjectsInterface(BaseInterface):
+    """
+    Which objects are selected by participants
+
     objects -- [(object info, selected?, participant id), ...]
     """
 
-    objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D, bool, int]]
+    objects: Sequence[tuple[HciiObjectInfo2D, bool, int]]
 
 
 @dataclass

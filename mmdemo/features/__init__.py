@@ -26,6 +26,4 @@ from mmdemo.features.transcription.whisper_transcription_feature import (
 )
 from mmdemo.features.utterance.audio_input_features import MicAudio, RecordedAudio
 from mmdemo.features.utterance.vad_builder_feature import VADUtteranceBuilder
-
-#TODO figure out why I'm missing planner packages?
-#from mmdemo.features.planner.planner_feature import Planner
+from mmdemo.features.planner.planner_feature import Planner

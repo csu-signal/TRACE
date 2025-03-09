@@ -8,20 +8,20 @@ from mmdemo.interfaces import (
     ConesInterface,
     HciiGestureConesInterface,
     ObjectInterface3D,
-    SelectedObjectsInterface,
+    HciiSelectedObjectsInterface,
 )
 from mmdemo.interfaces.data import Cone
 
 
 @final
-class HciiSelectedObjects(BaseFeature[SelectedObjectsInterface]):
+class HciiSelectedObjects(BaseFeature[HciiSelectedObjectsInterface]):
     """
     Determine which objects are selected by checking if their
     centers are contained within cones.
 
     Input interfaces are `ObjectInterface3D` and any number of `HciiGestureConesInterface`
 
-    Output interface is `SelectedObjectsInterface`.
+    Output interface is `HciiSelectedObjectsInterface`.
     """
 
     def __init__(
@@ -66,7 +66,7 @@ class HciiSelectedObjects(BaseFeature[SelectedObjectsInterface]):
         selected = list(selected)
         selected.sort(key=lambda x: x[2])
 
-        return SelectedObjectsInterface(objects=[(i[0], i[1]) for index, i in enumerate(selected)])
+        return HciiSelectedObjectsInterface(objects=[(i[0], i[1]) for index, i in enumerate(selected)])
 
     @staticmethod
     def cone_contains_point(cone: Cone, point_3d):
