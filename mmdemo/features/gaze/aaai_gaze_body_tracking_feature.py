@@ -14,7 +14,7 @@ from mmdemo.utils.joints import Joint
 
 
 @final
-class GazeBodyTracking(BaseFeature[GazeConesInterface]):
+class AaaiGazeBodyTracking(BaseFeature[GazeConesInterface]):
     """
     A feature to get and track the points of participants' gaze vectors using
     Azure Kinect body tracking data.
@@ -31,14 +31,20 @@ class GazeBodyTracking(BaseFeature[GazeConesInterface]):
         self,
         bt: BaseFeature[BodyTrackingInterface],
         cal: BaseFeature[CameraCalibrationInterface],
+        #added to unify participant ids
+        left_position = -400,
+        middle_position = 400
     ) -> None:
         super().__init__(bt, cal)
+        self.left_position = left_position
+        self.middle_position = middle_position
 
     def get_output(
         self,
         bt: BodyTrackingInterface,
         cc: CameraCalibrationInterface,
     ) -> GazeConesInterface | None:
+        # no new body movement, return nothing
         if not bt.is_new():
             return None
         cones = []
@@ -60,13 +66,22 @@ class GazeBodyTracking(BaseFeature[GazeConesInterface]):
             origin = (eye_left + eye_right + nose) / 3
 
             origin_point = origin
-            end_point = origin + 1000 * dir
+            end_point = origin + 2000 * dir
 
             cone = Cone(origin_point, end_point, self.BASE_RADIUS, self.VERTEX_RADIUS)
             cones.append(cone)
-            body_ids.append(body["body_id"])
+            #body_ids.append(body["body_id"])
 
-        return GazeConesInterface(azure_body_ids=body_ids, wtd_body_ids=[], cones=cones)
+            #unify participant ids
+            x = body["joint_positions"][1][0]
+            if x < self.left_position:
+                body_ids.append("P1")
+            elif x > self.left_position and x < self.middle_position:
+                body_ids.append("P2")
+            else:
+                body_ids.append("P3")
+
+        return GazeConesInterface(body_ids=body_ids, cones=cones)
 
     @final
     def get_joint(self, joint, body, cc):

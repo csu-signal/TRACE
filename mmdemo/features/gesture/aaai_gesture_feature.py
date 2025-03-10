@@ -7,7 +7,7 @@ import mediapipe as mp
 import numpy as np
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.features.gesture.helpers import get_average_hand_pixel, normalize_landmarks, fix_body_id
+from mmdemo.features.gesture.helpers import get_average_hand_pixel, normalize_landmarks
 from mmdemo.interfaces import (
     BodyTrackingInterface,
     CameraCalibrationInterface,
@@ -20,7 +20,7 @@ from mmdemo.utils.coordinates import CoordinateConversionError, pixel_to_camera_
 
 
 @final
-class Gesture(BaseFeature[GestureConesInterface]):
+class AaaiGesture(BaseFeature[GestureConesInterface]):
     """
     Detect when and where participants are pointing.
 
@@ -34,7 +34,7 @@ class Gesture(BaseFeature[GestureConesInterface]):
     """
 
     BASE_RADIUS = 40
-    VERTEX_RADIUS = 80
+    VERTEX_RADIUS = 70
 
     # the number of finger lengths of the output cone
     CONE_FINGER_LENGTHS = 5
@@ -51,7 +51,10 @@ class Gesture(BaseFeature[GestureConesInterface]):
         bt: BaseFeature[BodyTrackingInterface],
         calibration: BaseFeature[CameraCalibrationInterface],
         *,
-        model_path: Path | None = None
+        #added to unify participant ids
+        left_position=-400,
+        middle_position=400,
+        model_path: Path | None = None,
     ):
         super().__init__(color, depth, bt, calibration)
         if model_path is None:
@@ -60,6 +63,8 @@ class Gesture(BaseFeature[GestureConesInterface]):
             self.model_path = model_path
         self.body_idx = []
         self.bt = None
+        self.left_position = left_position
+        self.middle_position = middle_position
 
     def initialize(self):
         self.loaded_model = joblib.load(str(self.model_path))
@@ -82,10 +87,9 @@ class Gesture(BaseFeature[GestureConesInterface]):
             return None
 
         cones_output = []
-        azure_body_ids_output = []
-        wtd_body_ids_output = []
+        body_ids_output = []
         handedness_output = []
-        bt = fix_body_id(bt)
+        #bt = fix_body_id(bt)
         for _, body in enumerate(bt.bodies):
             for handedness in (Handedness.Left, Handedness.Right):
                 # loop through both hands of all bodies
@@ -131,15 +135,23 @@ class Gesture(BaseFeature[GestureConesInterface]):
                             self.VERTEX_RADIUS,
                         )
                     )
-                    wtd_body_ids_output.append(body["wtd_body_id"])
-                    azure_body_ids_output.append(body["body_id"])
+                    #unify participant ids
+                    x = body["joint_positions"][1][0]
+                    if x < self.left_position:
+                        body_ids_output.append("P1")
+                    elif x > self.left_position and x < self.middle_position:
+                        body_ids_output.append("P2")
+                    else:
+                        body_ids_output.append("P3")
+
+                    #body_ids_output.append(body["body_id"])
                     handedness_output.append(handedness)
 
                 except CoordinateConversionError:
                     pass
 
         return GestureConesInterface(
-            wtd_body_ids=wtd_body_ids_output, azure_body_ids=azure_body_ids_output, handedness=handedness_output, cones=cones_output
+            body_ids=body_ids_output, handedness=handedness_output, cones=cones_output
         )
 
     def find_pointing_hands(

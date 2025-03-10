@@ -2,7 +2,7 @@ import yaml
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 from mmdemo.demo import Demo
 from mmdemo.features import (
-    GazeBodyTracking,
+    AaaiGazeBodyTracking,
     GazeSelection,
     Pose,
     GazeEvent,
@@ -22,7 +22,7 @@ if __name__ == "__main__":
         playback_frame_rate = config["playback_frame_rate"], playback_end_seconds = config["playback_time"]) if not config["running_alive"] else \
         create_azure_kinect_features(DeviceType.CAMERA, camera_index = 0)
 
-    gaze = GazeBodyTracking(body_tracking, calibration, left_position = config["left_position"], middle_position = config["middle_position"])
+    gaze = AaaiGazeBodyTracking(body_tracking, calibration, left_position = config["left_position"], middle_position = config["middle_position"])
     pose = Pose(body_tracking, left_position = config["left_position"], middle_position = config["middle_position"])
 
     gazeselection = GazeSelection(body_tracking, calibration, gaze, left_position = config["left_position"], middle_position = config["middle_position"])

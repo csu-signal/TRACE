@@ -8,11 +8,11 @@ class Menu(QWidget):
         self.initUI()
     
     def read_file(self):
-        with open(f'D:/multimodality/Trace/examples/config.yaml', 'r', encoding = 'utf-8') as file:
+        with open(f'D:/multimodality/Trace/mmdemo/userInterfaces/config.yaml', 'r', encoding = 'utf-8') as file:
             self.config = yaml.safe_load(file)
     
     def write_file(self):
-        with open(f'D:/multimodality/Trace/examples/config.yaml', 'w', encoding = 'utf-8') as file:
+        with open(f'D:/multimodality/Trace/mmdemo/userInterfaces/config.yaml', 'w', encoding = 'utf-8') as file:
             yaml.safe_dump(self.config, file)
     
     def save(self):

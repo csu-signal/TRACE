@@ -4,7 +4,9 @@ Premade features
 
 from mmdemo.features.common_ground.cgt_feature import CommonGroundTracking
 from mmdemo.features.gaze.gaze_body_tracking_feature import GazeBodyTracking
+from mmdemo.features.gaze.aaai_gaze_body_tracking_feature import AaaiGazeBodyTracking
 from mmdemo.features.gesture.gesture_feature import Gesture
+from mmdemo.features.gesture.aaai_gesture_feature import AaaiGesture
 from mmdemo.features.move.move_feature import Move
 from mmdemo.features.objects.accumulated_selected_objects_feature import (
     AccumulatedSelectedObjects,
@@ -38,4 +40,4 @@ from mmdemo.features.gaze_selection.gaze_selection_feature import GazeSelection
 from mmdemo.features.pose_event.pose_event_decision_feature import PoseEvent
 from mmdemo.features.gesture_event.gesture_event_decision_feature import GestureEvent
 from mmdemo.features.engagement_level.engagement_level_feature import EngagementLevel
-from mmdemo.features.aaai_output.aaai_frame_feature import AAAIFrame
+from mmdemo.features.outputs.aaai_frame_feature import AAAIFrame
