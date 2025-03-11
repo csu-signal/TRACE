@@ -5,22 +5,24 @@ import numpy as np
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
+    CameraCalibrationInterface,
     ColorImageInterface,
     EngagementLevelInterface,
     GazeConesInterface,
-    CameraCalibrationInterface
+    GestureConesInterface,
+    SelectedObjectsInterface,
 )
-
 from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import camera_3d_to_pixel
 
-#the rgb number of each color
+# the rgb number of each color
 lime = (0, 255, 0)
 orange = (255, 140, 0)
 red = (255, 0, 0)
 black = (0, 0, 0)
 white = (255, 255, 255)
 gray = (128, 128, 128)
+
 
 @final
 class AAAIFrame(BaseFeature[ColorImageInterface]):
@@ -31,42 +33,88 @@ class AAAIFrame(BaseFeature[ColorImageInterface]):
 
     Output frame is `ColorImageInterface`
     """
+
     def __init__(
         self,
         color: BaseFeature[ColorImageInterface],
         gaze: BaseFeature[GazeConesInterface],
+        gesture: BaseFeature[GestureConesInterface],
+        sel_objects: BaseFeature[SelectedObjectsInterface],
         calibration: BaseFeature[CameraCalibrationInterface],
         engagement_level: BaseFeature[EngagementLevelInterface],
-        draw_cone: bool
+        draw_cone: bool,
     ):
-        super().__init__(color, gaze, calibration, engagement_level)
+        super().__init__(
+            color, gaze, gesture, sel_objects, calibration, engagement_level
+        )
         self.draw_cone = draw_cone
 
     def get_output(
         self,
         color: ColorImageInterface,
         gaze: GazeConesInterface,
+        gesture: GestureConesInterface,
+        objects: SelectedObjectsInterface,
         calibration: CameraCalibrationInterface,
-        el: EngagementLevelInterface
+        el: EngagementLevelInterface,
     ):
         if not color.is_new():
             return None
 
-        #copy the frame, do not draw on the original frame
+        # copy the frame, do not draw on the original frame
         output_frame = np.copy(color.frame)
 
-        #the default image shape is 1080 * 1920 * 3
+        # the default image shape is 1080 * 1920 * 3
 
-        #draw white rectangle with black border
+        # draw white rectangle with black border
         cv.rectangle(output_frame, (30, 260), (205, 500), white, -1, cv.LINE_8)
         cv.rectangle(output_frame, (30, 260), (205, 500), black, 1, cv.LINE_8)
 
-        #print "Behavioral Engagement Level" on the frame
-        cv.putText(output_frame, "Behavioral", (55, 290), cv.FONT_HERSHEY_SIMPLEX, 0.8, black, 1, cv.LINE_AA)
-        cv.putText(output_frame, "Engagement", (40, 320), cv.FONT_HERSHEY_SIMPLEX, 0.8, black, 1, cv.LINE_AA)
-        cv.putText(output_frame, "Level", (86, 350), cv.FONT_HERSHEY_SIMPLEX, 0.8, black, 1, cv.LINE_AA)
+        # print "Behavioral Engagement Level" on the frame
+        cv.putText(
+            output_frame,
+            "Behavioral",
+            (55, 290),
+            cv.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            black,
+            1,
+            cv.LINE_AA,
+        )
+        cv.putText(
+            output_frame,
+            "Engagement",
+            (40, 320),
+            cv.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            black,
+            1,
+            cv.LINE_AA,
+        )
+        cv.putText(
+            output_frame,
+            "Level",
+            (86, 350),
+            cv.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            black,
+            1,
+            cv.LINE_AA,
+        )
 
-        #draw engagement level meter
+        # render objects
+        for obj in objects.objects:
+            c = (0, 255, 0) if obj[1] == True else (0, 0, 255)
+            block = obj[0]
+            cv.rectangle(
+                output_frame,
+                (int(block.p1[0]), int(block.p1[1])),
+                (int(block.p2[0]), int(block.p2[1])),
+                color=c,
+                thickness=5,
+            )
+
+        # draw engagement level meter
         cv.rectangle(output_frame, (70, 380), (165, 470), gray, -1, cv.LINE_8)
         if el.engagement_level == 3:
             cv.rectangle(output_frame, (70, 380), (165, 410), lime, -1, cv.LINE_8)
@@ -75,23 +123,23 @@ class AAAIFrame(BaseFeature[ColorImageInterface]):
         else:
             cv.rectangle(output_frame, (70, 440), (165, 470), red, -1, cv.LINE_8)
 
-        #draw border of engagement level meter
+        # draw border of engagement level meter
         cv.rectangle(output_frame, (70, 380), (165, 410), black, 1, cv.LINE_8)
         cv.rectangle(output_frame, (70, 410), (165, 440), black, 1, cv.LINE_8)
         cv.rectangle(output_frame, (70, 440), (165, 470), black, 1, cv.LINE_8)
 
-        #draw gaze cones
+        # draw gaze cones
         if self.draw_cone:
             for cone in gaze.cones:
                 AAAIFrame.projectVectorLines(
                     cone, output_frame, calibration, False, False, True
                 )
 
-        #reshape the frame
+        # reshape the frame
         output_frame = cv.resize(output_frame, (1280, 720))
 
         return ColorImageInterface(frame=output_frame, frame_count=color.frame_count)
-    
+
     @staticmethod
     def projectVectorLines(cone: Cone, frame, calibration, includeY, includeZ, gaze):
         """
@@ -161,7 +209,7 @@ class AAAIFrame(BaseFeature[ColorImageInterface]):
             [cone.base[0], cone.base[1], cone.base[2] + cone.base_radius],
             [cone.base[0], cone.base[1], cone.base[2] - cone.base_radius],
         )
-    
+
     @staticmethod
     def conePointsVertex(cone):
         return (

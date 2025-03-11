@@ -4,14 +4,14 @@ import numpy as np
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
+    BodyTrackingInterface,
+    CameraCalibrationInterface,
     GazeConesInterface,
     GazeSelectionInterface,
-    BodyTrackingInterface,
-    CameraCalibrationInterface
 )
 from mmdemo.interfaces.data import Cone, ParticipantInfo
-from mmdemo.utils.joints import Joint
 from mmdemo.utils.coordinates import world_3d_to_camera_3d
+from mmdemo.utils.joints import Joint
 
 
 @final
@@ -30,31 +30,47 @@ class GazeSelection(BaseFeature[GazeSelectionInterface]):
         bt: BaseFeature[BodyTrackingInterface],
         cal: BaseFeature[CameraCalibrationInterface],
         gz: BaseFeature[GazeConesInterface],
-        #divider to separate different participants
-        left_position = -400,
-        middle_position = 400
+        # divider to separate different participants
+        left_position=-400,
+        middle_position=400,
     ) -> None:
         super().__init__(bt, cal, gz)
         self.left_position = left_position
         self.middle_position = middle_position
-    
+
     def initialize(self) -> None:
         """
         Decide which joint points to check
         """
-        self.joint_points = [Joint.NOSE, Joint.EAR_LEFT, Joint.EAR_RIGHT, Joint.NECK, Joint.SHOULDER_LEFT, Joint.SHOULDER_RIGHT, Joint.SPINE_CHEST]
+        self.joint_points = [
+            Joint.NOSE,
+            Joint.EAR_LEFT,
+            Joint.EAR_RIGHT,
+            Joint.NECK,
+            Joint.SHOULDER_LEFT,
+            Joint.SHOULDER_RIGHT,
+            Joint.SPINE_CHEST,
+            Joint.EYE_RIGHT,
+            Joint.EYE_LEFT,
+            Joint.HEAD,
+        ]
 
-    def get_output(self, bt: BodyTrackingInterface, cc: CameraCalibrationInterface, gz: GazeConesInterface):
+    def get_output(
+        self,
+        bt: BodyTrackingInterface,
+        cc: CameraCalibrationInterface,
+        gz: GazeConesInterface,
+    ):
         if not bt.is_new() or not gz.is_new():
             return None
 
-        #a list containing information of different participants: the coordinate of nose and participant id
+        # a list containing information of different participants: the coordinate of nose and participant id
         parts = []
 
         for _, body in enumerate(bt.bodies):
-            #get all body joint points coordinates
+            # get all body joint points coordinates
             points = [self.get_joint(i, body, cc) for i in self.joint_points]
-            #unify participant ids
+            # unify participant ids
             x = body["joint_positions"][1][0]
             if x < self.left_position:
                 body_id = "P1"
@@ -62,16 +78,16 @@ class GazeSelection(BaseFeature[GazeSelectionInterface]):
                 body_id = "P2"
             else:
                 body_id = "P3"
-            part = ParticipantInfo(jointPoint = points, participantId = body_id)
+            part = ParticipantInfo(jointPoint=points, participantId=body_id)
             parts.append(part)
 
-        #a list contains gaze selection information [(participant id, selected participant)...]
+        # a list contains gaze selection information [(participant id, selected participant)...]
         gaze_selection = []
-        #a dict stores the distance from each selected participant to the start of gaze cone
+        # a dict stores the distance from each selected participant to the start of gaze cone
         selected_dist = {}
 
         for body, cone in zip(gz.body_ids, gz.cones):
-            #if one participant is selected by the gaze cone, put its informtion into the dict
+            # if one participant is selected by the gaze cone, put its informtion into the dict
             for i in range(len(parts)):
                 if body != parts[i].participantId:
                     for point in parts[i].jointPoint:
@@ -82,16 +98,18 @@ class GazeSelection(BaseFeature[GazeSelectionInterface]):
                             else:
                                 if dist < selected_dist[parts[i].participantId]:
                                     selected_dist[parts[i].participantId] = dist
-            
-            #if no participant is select, return 'other'
+
+            # if no participant is select, return 'other'
             if selected_dist == {}:
                 gaze_selection.append((body, "other"))
-            #record the selected partcipant closest to the gaze cone
+            # record the selected partcipant closest to the gaze cone
             else:
-                gaze_selection.append((body, sorted(selected_dist.items(), key = lambda x:x[1])[0][0]))
+                gaze_selection.append(
+                    (body, sorted(selected_dist.items(), key=lambda x: x[1])[0][0])
+                )
             selected_dist = {}
 
-        return GazeSelectionInterface(selection = gaze_selection)
+        return GazeSelectionInterface(selection=gaze_selection)
 
     @staticmethod
     def cone_contains_point(cone: Cone, point_3d):
@@ -138,7 +156,7 @@ class GazeSelection(BaseFeature[GazeSelectionInterface]):
         # might make the most sense, but change if needed. If this is changed,
         # also change the corresponding test.
         return np.linalg.norm(cone.base - np.array(point_3d))
-    
+
     @final
     def get_joint(self, joint, body, cc):
         """
