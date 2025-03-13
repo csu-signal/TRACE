@@ -19,3 +19,10 @@ tmp_*/
 /mmdemo/features/friction/wandb/
 *.pddl
 /demo/featureModules/objects/objectDetectionModels/best_model-objects.pth
+/.vs/ProjectSettings.json
+/.vs/slnx.sqlite
+/.vs/TRACE/FileContentIndex/22a6cd23-4a08-440f-a181-cf9d7f937e3f.vsidx
+/.vs/TRACE/v17/Browse.VC.db
+/.vs/TRACE/v17/Browse.VC.db-shm
+/.vs/TRACE/v17/Browse.VC.db-wal
+/.vs/TRACE/v17/Browse.VC.opendb
