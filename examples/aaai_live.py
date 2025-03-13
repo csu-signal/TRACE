@@ -1,15 +1,16 @@
 import yaml
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
+import os
 
 from mmdemo.demo import Demo
 from mmdemo.features import (
     AAAIFrame,
     DisplayFrame,
     EngagementLevel,
-    GazeBodyTracking,
+    AaaiGazeBodyTracking,
     GazeEvent,
     GazeSelection,
-    Gesture,
+    AaaiGesture,
     Object,
     Pose,
     PoseEvent,
@@ -35,7 +36,7 @@ if __name__ == "__main__":
         else create_azure_kinect_features(DeviceType.CAMERA, camera_index=0)
     )
 
-    gaze = GazeBodyTracking(
+    gaze = AaaiGazeBodyTracking(
         body_tracking,
         calibration,
         left_position=config["left_position"],
@@ -78,7 +79,7 @@ if __name__ == "__main__":
         config["smooth_frame"],
     )
 
-    gesture = Gesture(color, depth, body_tracking, calibration)
+    gesture = AaaiGesture(color, depth, body_tracking, calibration)
     # which objects are selected by gesture
     objects = Object(color, depth, calibration)
     selected_objects = SelectedObjects(objects, gesture)  # pyright: ignore
