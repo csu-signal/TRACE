@@ -39,10 +39,14 @@ if __name__ == "__main__":
     # transcriptions from microphone 
 
     # laptop microphones
-    audio1 = MicAudio(device_id=7, speaker_id="P1")
-    audio2 = MicAudio(device_id=9, speaker_id="P2")
-    audio3 = MicAudio(device_id=11, speaker_id="P3")
-    utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=True)
+    # audio1 = MicAudio(device_id=7, speaker_id="P1")
+    # audio2 = MicAudio(device_id=9, speaker_id="P2")
+    # audio3 = MicAudio(device_id=11, speaker_id="P3")
+    # utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=False)
+
+    audio = MicAudio(device_id=7, speaker_id="P1")
+    utterance_audio = VADUtteranceBuilder(audio, delete_input_files=False)
+
     #######################################################################################
 
     # rosch microphone - Index: 39, Name: Microphone (USB audio CODEC)
@@ -59,8 +63,6 @@ if __name__ == "__main__":
         transcriptions, referenced_objects
     )
 
-    # friction
-    friction = Friction(dense_paraphrased_transcriptions)
 
     # prop extraction and move classifier
     props = Proposition(dense_paraphrased_transcriptions)
@@ -69,17 +71,19 @@ if __name__ == "__main__":
     # common ground tracking
     cgt = CommonGroundTracking(moves, props)
 
-    #plan = Planner(cgt)
+    plan = Planner(cgt)
 
+    # friction
+    friction = Friction(dense_paraphrased_transcriptions, plan)
     # create output frame for video
-    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction) #removed gaze
+    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction, plan) #removed gaze
 
     # run demo and show output
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
-            # SaveVideo(output_frame, frame_rate=10),
-            # Log(dense_paraphrased_transcriptions, props, moves, csv=True),
+            SaveVideo(output_frame, frame_rate=2.2),
+            Log(dense_paraphrased_transcriptions, props, moves, friction, csv=True),
             # Log(transcriptions, stdout=True),
         ]
     )

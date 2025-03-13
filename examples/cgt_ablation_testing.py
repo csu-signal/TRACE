@@ -156,7 +156,7 @@ def create_demo(
 
     plan = Planner(cgt)
 
-    output_frame = EMNLPFrame(color, gaze, gesture, selected_objects, cgt, calibration, plan)
+    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, plan)
 
     return Demo(
         targets=[

@@ -8,7 +8,7 @@ from silero_vad import get_speech_timestamps, load_silero_vad, read_audio
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import AudioFileInterface, AudioFileListInterface
-from mmdemo.utils.files import create_tmp_dir
+from mmdemo.utils.files import create_tmp_dir_with_featureName
 
 
 @final
@@ -35,13 +35,15 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
         self,
         *args: BaseFeature[AudioFileListInterface],
         delete_input_files=False,
+        delete_output_audio=True,
         # TODO: max utterance time is set to 5 by default, but this
         # should probably be investigated to determine the best
         # value
-        max_utterance_time: float | None = 5,
+        max_utterance_time: float | None = 5
     ):
         super().__init__(*args)
         self.delete_input_files = delete_input_files
+        self.delete_output_audio = delete_output_audio
         self.max_utterance_time = max_utterance_time
 
     def initialize(self):
@@ -55,12 +57,13 @@ class VADUtteranceBuilder(BaseFeature[AudioFileInterface]):
         self.starts = defaultdict(float)
         self.total_time = defaultdict(float)
 
-        self.output_dir = create_tmp_dir()
+        self.output_dir = create_tmp_dir_with_featureName("vad")
 
         self.outputs = deque()
 
     def finalize(self):
-        shutil.rmtree(self.output_dir)
+        if self.delete_output_audio:
+            shutil.rmtree(self.output_dir)
 
     def get_output(self, *args: AudioFileListInterface) -> AudioFileInterface | None:
         for audio_input_list in args:

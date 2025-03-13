@@ -169,14 +169,14 @@ if __name__ == "__main__":
     # plan = Planner(cgt)
 
     # TODO create output frame for this demo
-    output_frame = EMNLPFrame(color, gaze, gesture, selected_objects, cgt, calibration, friction)
+    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction)
 
     # run demo and show output
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
-            #SaveVideo(output_frame, frame_rate=10),
-            #Log(dense_paraphrased_transcriptions, props, moves, csv=True),
+            SaveVideo(output_frame, frame_rate=10),
+            Log(friction, csv=True),
             #Log(transcriptions, stdout=True),
         ]
     )
