@@ -381,3 +381,10 @@ class GazeSelectionInterface(BaseInterface):
     """
     
     selection: list[tuple[str, str | None]]
+
+@dataclass
+class SpeechOutputInterface(BaseInterface):
+    """
+    speech_output -- indicates if speech was output
+    """
+    speech_output: bool
