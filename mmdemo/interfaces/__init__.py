@@ -321,3 +321,10 @@ class PlannerInterface(BaseInterface):
 
     solv: bool
     plan: str
+
+@dataclass
+class SpeechOutputInterface(BaseInterface):
+    """
+    speech_output -- indicates if speech was output
+    """
+    speech_output: bool
