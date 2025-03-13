@@ -82,7 +82,8 @@ class Gesture(BaseFeature[GestureConesInterface]):
             return None
 
         cones_output = []
-        body_ids_output = []
+        azure_body_ids_output = []
+        wtd_body_ids_output = []
         handedness_output = []
         bt = fix_body_id(bt)
         for _, body in enumerate(bt.bodies):
@@ -130,14 +131,15 @@ class Gesture(BaseFeature[GestureConesInterface]):
                             self.VERTEX_RADIUS,
                         )
                     )
-                    body_ids_output.append(body["body_id"])
+                    wtd_body_ids_output.append(body["wtd_body_id"])
+                    azure_body_ids_output.append(body["body_id"])
                     handedness_output.append(handedness)
 
                 except CoordinateConversionError:
                     pass
 
         return GestureConesInterface(
-            body_ids=body_ids_output, handedness=handedness_output, cones=cones_output
+            wtd_body_ids=wtd_body_ids_output, azure_body_ids=azure_body_ids_output, handedness=handedness_output, cones=cones_output
         )
 
     def find_pointing_hands(

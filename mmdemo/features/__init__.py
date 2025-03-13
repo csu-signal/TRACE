@@ -11,8 +11,10 @@ from mmdemo.features.objects.accumulated_selected_objects_feature import (
 )
 from mmdemo.features.objects.object_feature import Object
 from mmdemo.features.objects.selected_objects_feature import SelectedObjects
+
 from mmdemo.features.outputs.display_frame_feature import DisplayFrame
 from mmdemo.features.outputs.emnlp_frame_feature import EMNLPFrame
+from mmdemo.features.outputs.hcii_it_frame_feature import HCII_IT_Frame
 from mmdemo.features.outputs.logging_feature import Log
 from mmdemo.features.outputs.save_video_feature import SaveVideo
 from mmdemo.features.proposition.prop_feature import Proposition

@@ -11,7 +11,7 @@ from dataclasses import dataclass, asdict
 import numpy as np
 
 from mmdemo.base_interface import BaseInterface
-from mmdemo.interfaces.data import Cone, Handedness, ObjectInfo2D, ObjectInfo3D
+from mmdemo.interfaces.data import Cone, Handedness, HciiObjectInfo2D, ObjectInfo2D, ObjectInfo3D
 
 
 @dataclass
@@ -97,23 +97,27 @@ class ConesInterface(BaseInterface):
 class GazeConesInterface(ConesInterface):
     """
     `cones` -- the list of cones found
-    `body_ids` -- `body_ids[i]` is the body id of `cones[i]`
+    `wtd_body_ids` -- `body_ids[i]` is the body id in weight task dataset format for each `cones[i]`
+    `azure_body_ids` -- `body_ids[i]` is the body id in azure kinect format for each `cones[i]`
     """
 
-    body_ids: list[int]
+    wtd_body_ids: list[int]
+    azure_body_ids: list[int]
 
 
 @dataclass
 class GestureConesInterface(ConesInterface):
     """
     `cones` -- the list of cones found
-    `body_ids` -- `body_ids[i]` is the body id of `cones[i]`
+    `wtd_body_ids` -- `body_ids[i]` is the body id in weight task dataset format for each `cones[i]`
+    `azure_body_ids` -- `body_ids[i]` is the body id in azure kinect format for each `cones[i]`
     `handedness` -- `handedness[i]` is the hand used to create `cones[i]`
     """
 
-    body_ids: list[int]
+    wtd_body_ids: list[int]
+    azure_body_ids: list[int]
     handedness: list[Handedness]
-
+    
 
 @dataclass
 class FrictionMetrics:
@@ -172,6 +176,22 @@ class FrictionOutputInterface(BaseInterface):
 
 
 @dataclass
+class HciiGestureConesInterface(ConesInterface):
+    """
+    `cones` -- the list of cones found
+    `wtd_body_ids` -- `body_ids[i]` is the body id in weight task dataset format for each `cones[i]`
+    `azure_body_ids` -- `body_ids[i]` is the body id in azure kinect format for each `cones[i]`
+    `handedness` -- `handedness[i]` is the hand used to create `cones[i]`  
+    `nose_position` -- the nose position
+    """
+
+    wtd_body_ids: list[int]
+    azure_body_ids: list[int]
+    handedness: list[Handedness]
+    nose_positions: list[float]
+
+
+@dataclass
 class ObjectInterface2D(BaseInterface):
     """
     Object detector outputs
@@ -202,6 +222,16 @@ class SelectedObjectsInterface(BaseInterface):
     """
 
     objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D, bool]]
+
+@dataclass
+class HciiSelectedObjectsInterface(BaseInterface):
+    """
+    Which objects are selected by participants
+
+    objects -- [(object info, selected?, participant id), ...]
+    """
+
+    objects: Sequence[tuple[HciiObjectInfo2D, bool, int]]
 
 
 @dataclass

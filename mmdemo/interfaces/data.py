@@ -44,6 +44,15 @@ class Cone:
     base_radius: float
     vertex_radius: float
 
+@dataclass
+class HciiSelectedObjectInfo:
+    """
+    blockName -- the block name
+    wtd_id -- the WTD ids
+    """
+
+    blockName: str
+    wtd_id: []
 
 @dataclass
 class ObjectInfo2D:
@@ -56,6 +65,20 @@ class ObjectInfo2D:
     p1: tuple[float, float]
     p2: tuple[float, float]
     object_class: GamrTarget
+
+@dataclass
+class HciiObjectInfo2D:
+    """
+    p1 -- top left point (x,y)
+    p2 -- bottom right point (x,y)
+    object_class -- GamrTarget representing the object
+    wtd_id -- the WTD ids
+    """
+
+    p1: tuple[float, float]
+    p2: tuple[float, float]
+    object_class: GamrTarget
+    wtd_id: []
 
 
 @dataclass
