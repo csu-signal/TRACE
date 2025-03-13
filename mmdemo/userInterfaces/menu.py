@@ -250,7 +250,7 @@ class Menu(QWidget):
             QMessageBox.No,
         )
         if reply == QMessageBox.Yes:
-            exec(open(os.path.join(os.path.dirname(__file__), f"aaai_test.py")).read())
+            exec(open("examples/aaai_live.py").read())
 
 
 if __name__ == "__main__":

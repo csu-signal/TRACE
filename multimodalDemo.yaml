@@ -26,7 +26,7 @@ dependencies:
   - cuda-profiler-api=12.4.127=haa95532_1
   - cuda-runtime=11.8.0=0
   - cuda-version=12.4=hbda6634_3
-  - cudnn=8.9.2.26=cuda12_0
+  - cudnn=8.9.7
   - ffmpeg=4.2.2=he774522_0
   - filelock=3.13.1=py310haa95532_0
   - freetype=2.12.1=hdaf720e_2

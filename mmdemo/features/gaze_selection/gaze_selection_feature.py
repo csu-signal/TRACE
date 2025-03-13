@@ -86,7 +86,7 @@ class GazeSelection(BaseFeature[GazeSelectionInterface]):
         # a dict stores the distance from each selected participant to the start of gaze cone
         selected_dist = {}
 
-        for body, cone in zip(gz.body_ids, gz.cones):
+        for body, cone in zip(gz.azure_body_ids, gz.cones):
             # if one participant is selected by the gaze cone, put its informtion into the dict
             for i in range(len(parts)):
                 if body != parts[i].participantId:

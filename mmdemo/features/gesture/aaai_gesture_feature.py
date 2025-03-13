@@ -151,7 +151,7 @@ class AaaiGesture(BaseFeature[GestureConesInterface]):
                     pass
 
         return GestureConesInterface(
-            body_ids=body_ids_output, handedness=handedness_output, cones=cones_output
+            azure_body_ids=body_ids_output, wtd_body_ids=[], handedness=handedness_output, cones=cones_output
         )
 
     def find_pointing_hands(

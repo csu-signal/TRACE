@@ -20,7 +20,7 @@ from mmdemo.features import (
 
 if __name__ == "__main__":
     with open(
-        os.path.join(os.path.dirname(__file__), f"config.yaml"), "r", encoding="utf-8"
+        "mmdemo/userInterfaces/config.yaml", "r", encoding="utf-8"
     ) as file:
         config = yaml.safe_load(file)
 
