@@ -39,7 +39,8 @@ class SpeechOutput(BaseFeature[SpeechOutputInterface]):
         ***Initialize the pipeline and load the voice
         """
         self.pipeline = KPipeline(lang_code='a')
-        self.voice_tensor = torch.load('am_michael.pt', weights_only=True)
+        self.voice_tensor = torch.load('C:/GitHub/TRACE/mmdemo/features/speech_output/am_michael.pt', weights_only=True)
+        self.last_friction = ''
 
     # def _register_dependencies(self, deps: "list[BaseFeature] | tuple"):
     #     """
@@ -56,7 +57,7 @@ class SpeechOutput(BaseFeature[SpeechOutputInterface]):
     #         self._deps.append(d)
     #         d._rev_deps.append(self)
 
-    def get_output(self,friction : FrictionOutputInterface):
+    def get_output(self,frictionout : FrictionOutputInterface):
         """
         Return output of the feature. The return type must be the output
         interface to provide new data and `None` if there is no new data.
@@ -73,13 +74,13 @@ class SpeechOutput(BaseFeature[SpeechOutputInterface]):
         ***Check for new friction
         ***Generate speech
         """
-        if friction == '':
-            return SpeechOutputInterface(speech_output=self.speechoutput)
-        if not friction.is_new():
+        friction = frictionout.friction_statement
+        friction = friction.split("Friction:")[-1].split("r*")[0]
+        if friction == '' or friction == self.last_friction:
             return SpeechOutputInterface(speech_output=self.speechoutput)
         #play a request for interruption
-        opening = random.choice(os.listdir("audio"))
-        audio, samplerate = sf.read(fr"audio\{opening}")
+        opening = random.choice(os.listdir("C:/GitHub/TRACE/mmdemo/features/speech_output/audio"))
+        audio, samplerate = sf.read(fr"C:/GitHub/TRACE/mmdemo/features/speech_output/audio/{opening}")
         sd.play(audio, samplerate)
         sd.wait()
         #generate speech, splits on newline
@@ -91,6 +92,7 @@ class SpeechOutput(BaseFeature[SpeechOutputInterface]):
         for i, (gs, ps, audio) in enumerate(generator):
             sd.play(audio, 24000)
             sd.wait()
+        self.last_friction = friction
         return SpeechOutputInterface(speech_output=True)
 
     # def finalize(self):

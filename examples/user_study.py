@@ -85,7 +85,7 @@ if __name__ == "__main__":
         targets=[
             DisplayFrame(output_frame),
             SaveVideo(output_frame, frame_rate=2.2),
-            Log(dense_paraphrased_transcriptions, props, moves, friction, csv=True),
+            Log(dense_paraphrased_transcriptions, props, moves, friction,speech_output, csv=True),
             # Log(transcriptions, stdout=True),
         ]
     )
