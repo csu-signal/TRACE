@@ -146,8 +146,6 @@ if __name__ == "__main__":
         transcriptions, referenced_objects
     )
 
-    friction = Friction(dense_paraphrased_transcriptions)
-
     gesture_move = gesture
     # gesture_move = None
     objects_move = selected_objects
@@ -166,10 +164,13 @@ if __name__ == "__main__":
 
     cgt = CommonGroundTracking(moves, props)
 
-    # plan = Planner(cgt)
+    plan = Planner(cgt)
+
+    # friction
+    friction = Friction(dense_paraphrased_transcriptions, plan)
 
     # TODO create output frame for this demo
-    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction)
+    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction, plan)
 
     # run demo and show output
     demo = Demo(
