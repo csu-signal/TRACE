@@ -349,7 +349,7 @@ def check_solution():
 
     docker_command = [
     "docker", "run", "--rm",
-    "-v", "C:\\Users\\Multimodal_Demo\\TRACE\\mmdemo\\features\\planner\\benchmarks:/benchmarks",
+    "-v", "C:/GitHub/TRACE/mmdemo/features/planner/benchmarks:/benchmarks",
     "aibasel/downward", "--alias", "lama-first", "/benchmarks/problem.pddl"
     ]
     result = subprocess.run(docker_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)

@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # audio3 = MicAudio(device_id=11, speaker_id="P3")
     # utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=False)
 
-    audio = MicAudio(device_id=7, speaker_id="P1")
+    audio = MicAudio(device_id=1, speaker_id="P1")
     utterance_audio = VADUtteranceBuilder(audio, delete_input_files=False)
 
     #######################################################################################
