@@ -55,6 +55,16 @@ class HciiSelectedObjectInfo:
     wtd_id: []
 
 @dataclass
+class ParticipantInfo:
+    """
+    jointPoint -- body points coordinates
+    participantId -- the participant id
+    """
+    jointPoint: list[tuple[float, float]]
+    participantId: str
+
+
+@dataclass
 class ObjectInfo2D:
     """
     p1 -- top left point (x,y)

@@ -11,7 +11,7 @@ from dataclasses import dataclass, asdict
 import numpy as np
 
 from mmdemo.base_interface import BaseInterface
-from mmdemo.interfaces.data import Cone, Handedness, HciiObjectInfo2D, ObjectInfo2D, ObjectInfo3D
+from mmdemo.interfaces.data import Cone, Handedness, HciiObjectInfo2D, ObjectInfo2D, ObjectInfo3D, ParticipantInfo
 
 
 @dataclass
@@ -235,6 +235,17 @@ class HciiSelectedObjectsInterface(BaseInterface):
 
 
 @dataclass
+class SelectedParticipantsInterface(BaseInterface):
+    """
+    Which participants are selected by participants (via gaze)
+
+    participants -- [(ParticipantInfo info, selected?), ...]
+    """
+
+    participants: Sequence[tuple[ParticipantInfo, bool]]
+
+
+@dataclass
 class AudioFileInterface(BaseInterface):
     """
     Audio chunks as a wav file
@@ -321,3 +332,52 @@ class PlannerInterface(BaseInterface):
 
     solv: bool
     plan: str
+
+
+#new interfaces created for AAAI demo
+@dataclass
+class PoseEventInterface(BaseInterface):
+    """
+    The interface of PoseEvent feature
+    Because different students behave in different ways
+    both positive and negative could happen here
+    """
+    positive_event: int
+    negative_event: int
+
+@dataclass
+class GazeEventInterface(BaseInterface):
+    """
+    The Interface of GazeEvent feature
+    There are more than one participant in the vedio
+    both positive and negetive event could happen here
+    This interface contains both positive and negative
+    """
+    positive_event: int
+    negative_event: int
+
+@dataclass
+class GestureEventInterface(BaseInterface):
+    """
+    The interface of GestureEvent feature
+    The model is used to detect who is pointing and what is pointed
+    What is pointed is not important in this task
+    We only want to who is pointing
+    Pointing is a positive signal, here only positive event included
+    """
+    positive_event: int
+
+@dataclass
+class EngagementLevelInterface(BaseInterface):
+
+    engagement_level: int
+
+@dataclass
+class GazeSelectionInterface(BaseInterface):
+    """
+    Whether the gaze of a participant selects other participants
+
+    selection -- [(gaze cone owner, gaze cone target or None)]
+    """
+    
+    selection: list[tuple[str, str | None]]

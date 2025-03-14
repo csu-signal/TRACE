@@ -14,7 +14,7 @@ from mmdemo.utils.joints import Joint
 
 
 @final
-class GazeBodyTracking(BaseFeature[GazeConesInterface]):
+class AaaiGazeBodyTracking(BaseFeature[GazeConesInterface]):
     """
     A feature to get and track the points of participants' gaze vectors using
     Azure Kinect body tracking data.
@@ -24,16 +24,16 @@ class GazeBodyTracking(BaseFeature[GazeConesInterface]):
     Output interface is `GazeConesInterface`.
     """
 
-    BASE_RADIUS = 160
+    BASE_RADIUS = 80
     VERTEX_RADIUS = 100
 
     def __init__(
         self,
         bt: BaseFeature[BodyTrackingInterface],
         cal: BaseFeature[CameraCalibrationInterface],
-        # added to unify participant ids
-        left_position=-400,
-        middle_position=400,
+        #added to unify participant ids
+        left_position = -400,
+        middle_position = 400
     ) -> None:
         super().__init__(bt, cal)
         self.left_position = left_position
@@ -70,9 +70,9 @@ class GazeBodyTracking(BaseFeature[GazeConesInterface]):
 
             cone = Cone(origin_point, end_point, self.BASE_RADIUS, self.VERTEX_RADIUS)
             cones.append(cone)
-            # body_ids.append(body["body_id"])
+            #body_ids.append(body["body_id"])
 
-            # unify participant ids
+            #unify participant ids
             x = body["joint_positions"][1][0]
             if x < self.left_position:
                 body_ids.append("P1")

@@ -55,7 +55,8 @@ def gaze():
                 vertex_radius=100,
             ),
         ],
-        body_ids=[3, 1, 2],
+        wtd_body_ids=[3, 1, 2],
+        azure_body_ids=[1,2,3]
     )
 
 

@@ -73,11 +73,14 @@ class Friction(BaseFeature[FrictionOutputInterface]):
 
         planner_output = plan.plan
         run_friction = True
-        planner_step = [line for line in planner_output.split("\n") if "compare" in line][0]
-        compare_blocks = re.findall(r"\b\w*block\w*\b", planner_step)
-        for block in compare_blocks:
-            if block not in init_section:
-                run_friction = False
+        try:
+            planner_step = [line for line in planner_output.split("\n") if "compare" in line][0]
+            compare_blocks = re.findall(r"\b\w*block\w*\b", planner_step)
+            for block in compare_blocks:
+                if block not in init_section:
+                    run_friction = False
+        except:
+            run_friction = False
 
         #if the transcription text is empty don't add it to the history
         if transcription.text != '':
