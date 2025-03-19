@@ -386,5 +386,13 @@ class GazeSelectionInterface(BaseInterface):
 class SpeechOutputInterface(BaseInterface):
     """
     speech_output -- indicates if speech was output
+    int -- indicates time to display "idea" joe
     """
     speech_output: bool
+    length: int
+
+@dataclass
+class UserInterface(BaseInterface):
+    """
+    returns nothing
+    """

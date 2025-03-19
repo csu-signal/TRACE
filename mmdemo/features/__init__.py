@@ -42,3 +42,4 @@ from mmdemo.features.gesture_event.gesture_event_decision_feature import Gesture
 from mmdemo.features.engagement_level.engagement_level_feature import EngagementLevel
 from mmdemo.features.outputs.aaai_frame_feature import AAAIFrame
 from mmdemo.features.speech_output.speechoutput_feature import SpeechOutput
+from mmdemo.features.outputs.user_study_frame_feature import UserFrame

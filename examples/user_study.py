@@ -19,7 +19,7 @@ from mmdemo.features import (
     SelectedObjects,
     VADUtteranceBuilder,
     WhisperTranscription,
-    Planner, SpeechOutput
+    Planner, SpeechOutput, UserFrame
 )
 
 if __name__ == "__main__":
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # audio3 = MicAudio(device_id=11, speaker_id="P3")
     # utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=False)
 
-    audio = MicAudio(device_id=1, speaker_id="P1")
+    audio = MicAudio(device_id=39, speaker_id="Group",delete_output_audio=False)
     utterance_audio = VADUtteranceBuilder(audio, delete_input_files=False)
 
     #######################################################################################
@@ -79,11 +79,12 @@ if __name__ == "__main__":
     speech_output = SpeechOutput(friction)
     # create output frame for video
     output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction, plan) #removed gaze
+    user_frame = UserFrame(speech_output,cgt,friction,plan)
 
     # run demo and show output
     demo = Demo(
         targets=[
-            DisplayFrame(output_frame),
+            DisplayFrame(user_frame),
             SaveVideo(output_frame, frame_rate=2.2),
             Log(dense_paraphrased_transcriptions, props, moves, friction,speech_output, csv=True),
             # Log(transcriptions, stdout=True),

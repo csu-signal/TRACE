@@ -27,6 +27,7 @@ class SpeechOutput(BaseFeature[SpeechOutputInterface]):
         # self._register_dependencies(args)
         super().__init__(friction)
         self.speechoutput = False
+        self.length = 0
 
     def initialize(self):
         """
@@ -77,7 +78,8 @@ class SpeechOutput(BaseFeature[SpeechOutputInterface]):
         friction = frictionout.friction_statement
         friction = friction.split("Friction:")[-1].split("r*")[0]
         if friction == '' or friction == self.last_friction:
-            return SpeechOutputInterface(speech_output=self.speechoutput)
+            self.length -= 1
+            return SpeechOutputInterface(speech_output=self.speechoutput,length=self.length)
         #play a request for interruption
         opening = random.choice(os.listdir("C:/GitHub/TRACE/mmdemo/features/speech_output/audio"))
         audio, samplerate = sf.read(fr"C:/GitHub/TRACE/mmdemo/features/speech_output/audio/{opening}")
@@ -92,8 +94,10 @@ class SpeechOutput(BaseFeature[SpeechOutputInterface]):
         for i, (gs, ps, audio) in enumerate(generator):
             sd.play(audio, 24000)
             sd.wait()
+            # self.length = audio.shape[0] #length of friction?
+            self.length = 150
         self.last_friction = friction
-        return SpeechOutputInterface(speech_output=True)
+        return SpeechOutputInterface(speech_output=True,length=self.length)
 
     # def finalize(self):
     #     """
