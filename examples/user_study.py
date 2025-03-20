@@ -39,13 +39,13 @@ if __name__ == "__main__":
     # transcriptions from microphone 
 
     # laptop microphones
-    # audio1 = MicAudio(device_id=7, speaker_id="P1")
-    # audio2 = MicAudio(device_id=9, speaker_id="P2")
-    # audio3 = MicAudio(device_id=11, speaker_id="P3")
-    # utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=False)
+    audio1 = MicAudio(device_id=8, speaker_id="P1")
+    audio2 = MicAudio(device_id=4, speaker_id="P2")
+    audio3 = MicAudio(device_id=13, speaker_id="P3")
+    utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=False)
 
-    audio = MicAudio(device_id=39, speaker_id="Group",delete_output_audio=False)
-    utterance_audio = VADUtteranceBuilder(audio, delete_input_files=False)
+    # audio = MicAudio(device_id=1, speaker_id="Group",delete_output_audio=False)
+    # utterance_audio = VADUtteranceBuilder(audio, delete_input_files=False)
 
     #######################################################################################
 

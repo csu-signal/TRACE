@@ -93,9 +93,9 @@ class SpeechOutput(BaseFeature[SpeechOutputInterface]):
         # play the speech
         for i, (gs, ps, audio) in enumerate(generator):
             sd.play(audio, 24000)
-            sd.wait()
+            # sd.wait()
             # self.length = audio.shape[0] #length of friction?
-            self.length = 150
+            self.length = 10
         self.last_friction = friction
         return SpeechOutputInterface(speech_output=True,length=self.length)
 

@@ -27,7 +27,7 @@ class Planner(BaseFeature[PlannerInterface]):
         super().__init__(common_ground)
         self.planner_path = planner_path
         self.lock = threading.Lock()
-        self.solution_result = False, ""
+        self.solution_result = True, ""
     
     def initialize(self):
 

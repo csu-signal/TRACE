@@ -126,8 +126,8 @@ class UserFrame(BaseFeature[ColorImageInterface]):
 
         if friction and friction.friction_statement != '':
             frictionStatements = friction.friction_statement.split("r*")
-            fstate = frictionStatements[0]
-            x, y = (50, 75)
+            fstate = frictionStatements[0].split(":")[-1]
+            x, y = (900, 300)
             text = fstate
             text = text.split()
             font = cv.FONT_HERSHEY_SIMPLEX
