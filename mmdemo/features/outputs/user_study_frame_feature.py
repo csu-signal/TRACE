@@ -73,11 +73,12 @@ class UserFrame(BaseFeature[ColorImageInterface]):
         friction: FrictionOutputInterface,
         plan: PlannerInterface = None,
     ):
-        if (
-            not speech.is_new()
-            or not friction.is_new()
-        ):
-            return None
+        # if (
+        #     not common.is_new()
+        #     or not speech.is_new()
+        #     or not friction.is_new()
+        # ):
+        #     return None
 
         # ensure we are not modifying the color frame itself
         # output_frame = np.copy(color.frame)

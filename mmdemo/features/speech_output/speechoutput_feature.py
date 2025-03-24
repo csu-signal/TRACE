@@ -95,7 +95,7 @@ class SpeechOutput(BaseFeature[SpeechOutputInterface]):
             sd.play(audio, 24000)
             # sd.wait()
             # self.length = audio.shape[0] #length of friction?
-            self.length = 10
+            self.length = 30
         self.last_friction = friction
         return SpeechOutputInterface(speech_output=True,length=self.length)
 

@@ -52,7 +52,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         self.subsetTranscriptions = ''
         self.t = threading.Thread(target=self.worker)
         self.minUtteranceValue = minUtteranceValue
-        self.solveability_history = [True, True, True]
+        self.solveability_history = [True, True, True, True, True]
 
         if host:
             self.HOST = host
@@ -73,16 +73,16 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             init_section = match.group(1).strip()
 
         planner_output = plan.plan
-        run_friction = True
-        try:
-            planner_step = [line for line in planner_output.split("\n") if "compare" in line][0]
-            compare_blocks = re.findall(r"\b\w*block\w*\b", planner_step)
-            for block in compare_blocks:
-                if block not in init_section:
-                    run_friction = False
-        except:
-            run_friction = False
-        self.solveability_history.append(not run_friction)
+        solvable = True
+        # try:
+        #     planner_step = [line for line in planner_output.split("\n") if "compare" in line][0]
+        #     compare_blocks = re.findall(r"\b\w*block\w*\b", planner_step)
+        #     for block in compare_blocks:
+        #         if block in init_section:
+        #             plan.solv = False
+        # except:
+        #     pass
+        self.solveability_history.append(plan.solv)
         self.solveability_history = self.solveability_history[1:]
 
         #if the transcription text is empty don't add it to the history
@@ -91,7 +91,8 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
             # self.transcriptionHistory += "P1: " + transcription.text + "\n"
                     
-        if not plan.solv or self.solveability_history == [False, False, False]:
+        if not plan.solv and (self.solveability_history == [False, False, False, False, False] or self.solveability_history == [True, True, True, True, False]):
+            self.solveability_history = [True, True, True, True, False]
             if not self.t.is_alive():
                 # do this process on the main thread so the socket thread doesn't miss any values
                 # if there are less values in the friction subset the min utterance value pad the list with values from the history
