@@ -18,6 +18,7 @@ from mmdemo.interfaces import (
     PlannerInterface,
     TranscriptionInterface,
 )
+from mmdemo.features.friction import friction_local
 
 @final
 class Friction(BaseFeature[FrictionOutputInterface]):
@@ -118,7 +119,9 @@ class Friction(BaseFeature[FrictionOutputInterface]):
                 self.t.start()
                 self.frictionSubset = []
             elif self.LOCAL:
-                print("TODO")
+                friction_detector = friction_local.FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct") #this is the lora model id on huggingface (SFT model)
+                # friction_detector = friction_local.FrictionInference("Abhijnan/dpo_friction_run_with_69ksamples") #this is the dpo model
+                friction_local.start_local(self.subsetTranscriptions,friction_detector)
             else:
                 print("Friction request in progress...waiting for the thread to complete")
 

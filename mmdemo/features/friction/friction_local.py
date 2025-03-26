@@ -18,7 +18,7 @@ from transformers import (
     HfArgumentParser,
     set_seed,
 )
-from peft import AutoPeftModelForCausalLM, LoraConfig, PeftModel
+# from peft import AutoPeftModelForCausalLM, LoraConfig, PeftModel
 
 @dataclass
 class FrictionMetrics:
@@ -75,7 +75,7 @@ class FrictionInference:
             self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
             self.tags_to_parse = ["friction", "rationale", "t", "b"]
             print("Loading base model...")
-            self.model = AutoPeftModelForCausalLM.from_pretrained(
+            self.model = AutoModelForCausalLM.from_pretrained(
                 model_path,
                 device_map="auto",
                 torch_dtype=torch.bfloat16,
@@ -83,8 +83,8 @@ class FrictionInference:
             )
 
             # Merge and unload adapter weights
-            print("Merging and unloading adapter weights...",  self.model)
-            self.model = self.model.merge_and_unload()
+            # print("Merging and unloading adapter weights...",  self.model)
+            # self.model = self.model.merge_and_unload()
             self.model = self.model.to(self.device)  # Move the model to the GPU device
             print("showing merged lora model",  self.model)
 
@@ -299,8 +299,8 @@ def start_local(transcriptions, friction_detector: FrictionInference):
         return("No Friction", 'utf-8')
 
 
-if __name__ == "__main__":
-    print("Initializing friction detector...")
-    friction_detector = FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct") #this is the lora model id on huggingface (SFT model)
+# if __name__ == "__main__":
+#     print("Initializing friction detector...")
+#     friction_detector = FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct") #this is the lora model id on huggingface (SFT model)
     # friction_detector = FrictionInference("Abhijnan/dpo_friction_run_with_69ksamples") #this is the dpo model
     # start_server(FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct")) #this is the lora model id on huggingface (SFT model)
