@@ -52,7 +52,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         self.subsetTranscriptions = ''
         self.t = threading.Thread(target=self.worker)
         self.minUtteranceValue = minUtteranceValue
-        self.solveability_history = [True, True, True, True, True]
+        self.solvability_history = [True, True, True, True, True]
 
         if host:
             self.HOST = host
@@ -66,14 +66,14 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         if not transcription.is_new():
             return FrictionOutputInterface(friction_statement=self.friction, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
 
-        with open("mmdemo/features/planner/benchmarks/problem.pddl", "r") as file:
-            content = file.read()
-        match = re.search(r"\(:init\s*(.*?)\)\s*(?=\(:goal|\(:)", content, re.DOTALL)
-        if match:
-            init_section = match.group(1).strip()
+        # with open("mmdemo/features/planner/benchmarks/problem.pddl", "r") as file:
+        #     content = file.read()
+        # match = re.search(r"\(:init\s*(.*?)\)\s*(?=\(:goal|\(:)", content, re.DOTALL)
+        # if match:
+        #     init_section = match.group(1).strip()
 
-        planner_output = plan.plan
-        solvable = True
+        # planner_output = plan.plan
+        # solvable = True
         # try:
         #     planner_step = [line for line in planner_output.split("\n") if "compare" in line][0]
         #     compare_blocks = re.findall(r"\b\w*block\w*\b", planner_step)
@@ -82,8 +82,10 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         #             plan.solv = False
         # except:
         #     pass
-        self.solveability_history.append(plan.solv)
-        self.solveability_history = self.solveability_history[1:]
+        self.solvability_history.append(plan.solv)
+        self.solvability_history = self.solvability_history[1:]
+
+        transcription.text += "\nWe believe that " + ", ".join(plan.fbank) +"."
 
         #if the transcription text is empty don't add it to the history
         if transcription.text != '':
@@ -91,8 +93,8 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
             # self.transcriptionHistory += "P1: " + transcription.text + "\n"
                     
-        if not plan.solv and (self.solveability_history == [False, False, False, False, False] or self.solveability_history == [True, True, True, True, False]):
-            self.solveability_history = [True, True, True, True, False]
+        if not plan.solv and (self.solvability_history == [False, False, False, False, False] or self.solvability_history == [True, True, True, True, False]):
+            self.solvability_history = [True, True, True, True, False]
             if not self.t.is_alive():
                 # do this process on the main thread so the socket thread doesn't miss any values
                 # if there are less values in the friction subset the min utterance value pad the list with values from the history

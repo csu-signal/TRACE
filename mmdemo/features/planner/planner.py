@@ -275,7 +275,7 @@ def create_problem():
             statements = []
             for b in blocks:
                 statement = believed_weight(b, w, participant)
-                statement = And(statement, *[Not(believed_weight(b, w1, participant)) for w1 in weights if w1 != w])
+                # statement = And(statement, *[Not(believed_weight(b, w1, participant)) for w1 in weights if w1 != w])
             statements.append(statement)
 
         g = XOr(*statements)

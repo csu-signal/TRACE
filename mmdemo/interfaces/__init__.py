@@ -332,6 +332,7 @@ class PlannerInterface(BaseInterface):
 
     solv: bool
     plan: str
+    fbank: set[str]
 
 
 #new interfaces created for AAAI demo

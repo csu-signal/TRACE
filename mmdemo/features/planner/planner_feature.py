@@ -50,8 +50,9 @@ class Planner(BaseFeature[PlannerInterface]):
         
         if cg.is_new() and not cg == EmptyInterface():
             start = time.time()
-            ebank, fbank = cg.ebank, cg.fbank
-            for prop in ebank.union(fbank):
+            # ebank, fbank = cg.ebank, cg.fbank
+            self.fbank = cg.fbank
+            for prop in self.fbank:
                 prop_list = [p.strip() for p in prop.split(',')]
                 for p in prop_list:
                     block, weight = re.split(r'(?<!=)=(?!=)|<|>|!=', p)
@@ -66,6 +67,6 @@ class Planner(BaseFeature[PlannerInterface]):
                 if self.solution_result is not None:
                     solv, plan = self.solution_result
                     print("Plan is: ", plan) #getting empty plan 
-                    return PlannerInterface(solv, plan)
+                    return PlannerInterface(solv, plan, cg.fbank)
 
         return None
