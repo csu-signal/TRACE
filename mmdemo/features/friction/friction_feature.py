@@ -59,7 +59,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             self.HOST = host
         if port != 0:
             self.PORT = port
-        self.LOCAL = True #Run local or remote
+        self.LOCAL = False #Run local or remote
 
     def initialize(self):
         print("Friction Init HOST: " + str(self.HOST) + " PORT: " + str(self.PORT))
@@ -75,15 +75,23 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         #     init_section = match.group(1).strip()
 
         # planner_output = plan.plan
-        # solvable = True
+        # compare_new_block = True
         # try:
         #     planner_step = [line for line in planner_output.split("\n") if "compare" in line][0]
         #     compare_blocks = re.findall(r"\b\w*block\w*\b", planner_step)
+        #     # check if we are comparing a new block
         #     for block in compare_blocks:
-        #         if block in init_section:
-        #             plan.solv = False
+        #         if block not in init_section:
+        #             #if we need to compare a new block, move on
+        #             compare_new_block = True
+        #             break
+        #         else:
+        #             #if we need to look at existing blocks, intervene
+        #             compare_new_block = False
         # except:
         #     pass
+        # if not plan.solv or not compare_new_block:
+        #     plan.solv = False
         self.solvability_history.append(plan.solv)
         self.solvability_history = self.solvability_history[1:]
 

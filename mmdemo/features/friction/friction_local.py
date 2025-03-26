@@ -18,7 +18,7 @@ from transformers import (
     HfArgumentParser,
     set_seed,
 )
-# from peft import AutoPeftModelForCausalLM, LoraConfig, PeftModel
+from peft import AutoPeftModelForCausalLM, LoraConfig, PeftModel
 
 @dataclass
 class FrictionMetrics:
@@ -75,7 +75,7 @@ class FrictionInference:
             self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
             self.tags_to_parse = ["friction", "rationale", "t", "b"]
             print("Loading base model...")
-            self.model = AutoModelForCausalLM.from_pretrained(
+            self.model = AutoPeftModelForCausalLM.from_pretrained(
                 model_path,
                 device_map="auto",
                 torch_dtype=torch.bfloat16,
