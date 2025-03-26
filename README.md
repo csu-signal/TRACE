@@ -112,6 +112,9 @@ Uninstall Torch and Torchvision: `pip uninstall torch torchvision`
 
 Got to [here](https://pytorch.org/) to install the proper versions. CUDA 12.4.
 
+### Solution for remote agent NotImplementedError: Cannot copy out of metadata tensor error
+If starting the agent yields this error, run nvidia-smi and make sure it isn't already running. If it is running, use kill -9 and the PID to end it.
+
 # Directory structure
 
 - `examples` -- example demonstrations using different combinations of features. This includes our EMNLP submission demonstration in both live and prerecorded/ablation testing forms.
