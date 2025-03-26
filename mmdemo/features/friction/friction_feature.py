@@ -58,6 +58,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             self.HOST = host
         if port != 0:
             self.PORT = port
+        self.LOCAL = True #Run local or remote
 
     def initialize(self):
         print("Friction Init HOST: " + str(self.HOST) + " PORT: " + str(self.PORT))
@@ -85,17 +86,18 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         self.solvability_history.append(plan.solv)
         self.solvability_history = self.solvability_history[1:]
 
-        transcription.text += "\nWe believe that " + ", ".join(plan.fbank) +"."
+        # transcription.text += "\nWe believe that " + ", ".join(plan.fbank) +"."
 
         #if the transcription text is empty don't add it to the history
         if transcription.text != '':
+            transcription.text += "\nWe believe that " + ", ".join(plan.fbank) +"."
             self.transcriptionHistory.append(transcription.speaker_id + ": " + transcription.text)
             self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
             # self.transcriptionHistory += "P1: " + transcription.text + "\n"
                     
         if not plan.solv and (self.solvability_history == [False, False, False, False, False] or self.solvability_history == [True, True, True, True, False]):
             self.solvability_history = [True, True, True, True, False]
-            if not self.t.is_alive():
+            if not self.t.is_alive() and not self.LOCAL:
                 # do this process on the main thread so the socket thread doesn't miss any values
                 # if there are less values in the friction subset the min utterance value pad the list with values from the history
                 if(len(self.frictionSubset) < self.minUtteranceValue):
@@ -115,6 +117,8 @@ class Friction(BaseFeature[FrictionOutputInterface]):
                 self.t = threading.Thread(target=self.worker)
                 self.t.start()
                 self.frictionSubset = []
+            elif self.LOCAL:
+                print("TODO")
             else:
                 print("Friction request in progress...waiting for the thread to complete")
 
