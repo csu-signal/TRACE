@@ -1,7 +1,7 @@
 """
 Base feature definition
 """
-from kokoro import KPipeline
+#from kokoro import KPipeline
 import soundfile as sf
 import sounddevice as sd
 import torch
