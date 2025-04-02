@@ -354,7 +354,6 @@ def check_solution():
     ]
     result = subprocess.run(docker_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if "Solution found" in result.stdout:
-        print("Docker Plan is: ", result.stdout) #getting empty plan 
         return True, result.stdout
     else:
         return False, result.stdout

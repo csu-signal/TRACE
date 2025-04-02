@@ -53,13 +53,13 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         self.subsetTranscriptions = ''
         self.t = threading.Thread(target=self.worker)
         self.minUtteranceValue = minUtteranceValue
-        self.solvability_history = [True, True, True, True, True]
+        self.solvability_history = 0
 
         if host:
             self.HOST = host
         if port != 0:
             self.PORT = port
-        self.LOCAL = False #Run local or remote
+        self.LOCAL = False #Run local or remote #TODO
 
     def initialize(self):
         print("Friction Init HOST: " + str(self.HOST) + " PORT: " + str(self.PORT))
@@ -92,8 +92,10 @@ class Friction(BaseFeature[FrictionOutputInterface]):
         #     pass
         # if not plan.solv or not compare_new_block:
         #     plan.solv = False
-        self.solvability_history.append(plan.solv)
-        self.solvability_history = self.solvability_history[1:]
+        if plan.solv:
+            self.solvability_history = 0
+        else:
+            self.solvability_history += 1
 
         # transcription.text += "\nWe believe that " + ", ".join(plan.fbank) +"."
 
@@ -104,8 +106,8 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
             # self.transcriptionHistory += "P1: " + transcription.text + "\n"
                     
-        if not plan.solv and (self.solvability_history == [False, False, False, False, False] or self.solvability_history == [True, True, True, True, False]):
-            self.solvability_history = [True, True, True, True, False]
+        if not plan.solv and (self.solvability_history == self.minUtteranceValue or self.solvability_history == 1):
+            self.solvability_history = 1
             if not self.t.is_alive() and not self.LOCAL:
                 # do this process on the main thread so the socket thread doesn't miss any values
                 # if there are less values in the friction subset the min utterance value pad the list with values from the history
@@ -127,6 +129,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
                 self.t.start()
                 self.frictionSubset = []
             elif self.LOCAL:
+                #TODO
                 friction_detector = friction_local.FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct") #this is the lora model id on huggingface (SFT model)
                 # friction_detector = friction_local.FrictionInference("Abhijnan/dpo_friction_run_with_69ksamples") #this is the dpo model
                 friction_local.start_local(self.subsetTranscriptions,friction_detector)

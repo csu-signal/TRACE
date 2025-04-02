@@ -115,11 +115,11 @@ class UserFrame(BaseFeature[ColorImageInterface]):
         # render common ground
         if self.has_cgt_data or common.is_new():
             self.has_cgt_data = True
-            UserFrame.renderBanks(output_frame, 130, 260, "FBank", common.fbank)
-            UserFrame.renderBanks(output_frame, 130, 130, "EBank", common.ebank)
-        else:
-            UserFrame.renderBanks(output_frame, 130, 260, "FBank", set())
-            UserFrame.renderBanks(output_frame, 130, 130, "EBank", set())
+            # UserFrame.renderBanks(output_frame, 130, 260, "FBank", common.fbank)
+            # UserFrame.renderBanks(output_frame, 130, 130, "EBank", common.ebank)
+        # else:
+            # UserFrame.renderBanks(output_frame, 130, 260, "FBank", set())
+            # UserFrame.renderBanks(output_frame, 130, 130, "EBank", set())
 
         # render plan
         if plan:

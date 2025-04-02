@@ -66,7 +66,6 @@ class Planner(BaseFeature[PlannerInterface]):
             with self.lock:
                 if self.solution_result is not None:
                     solv, plan = self.solution_result
-                    print("Plan is: ", plan) #getting empty plan 
                     return PlannerInterface(solv, plan, cg.fbank)
 
         return None
