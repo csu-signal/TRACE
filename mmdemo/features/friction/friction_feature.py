@@ -136,7 +136,7 @@ class Friction(BaseFeature[FrictionOutputInterface]):
                 # define the generation args 
                 custom_args_sft = {
                         "max_new_tokens": 200,
-                        "temperature": 0.9,
+                        "temperature": 0.7,
                         "do_sample": True,
                         "top_k": 50,
                         "top_p": 0.9
