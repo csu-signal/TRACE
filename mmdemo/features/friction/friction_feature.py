@@ -131,6 +131,28 @@ class Friction(BaseFeature[FrictionOutputInterface]):
             elif self.LOCAL:
                 #TODO
                 friction_detector = friction_local.FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct") #this is the lora model id on huggingface (SFT model)
+                #instead of calling FrictionInference as done above, add the generation arguments to specify parameters like max-length depending on what model you are calling
+                    #for FAAF use, 356 and for SFT use 200 as shown below
+                # define the generation args 
+                custom_args_sft = {
+                        "max_new_tokens": 200,
+                        "temperature": 0.9,
+                        "do_sample": True,
+                        "top_k": 50,
+                        "top_p": 0.9
+                    }
+
+                custom_args_faaf = {
+                        "max_new_tokens": 356,
+                        "temperature": 0.9,
+                        "do_sample": True,
+                        "top_k": 50,
+                        "top_p": 0.9
+                    }
+                # friction_detector = friction_local.FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct", generation_args = custom_args_sft) # instantiate only one of these friction_detector variable
+                friction_detector = friction_local.FrictionInference("Abhijnan/intervention_agent", generation_args = custom_args_faaf)
+
+
                 # friction_detector = friction_local.FrictionInference("Abhijnan/dpo_friction_run_with_69ksamples") #this is the dpo model
                 friction_local.start_local(self.subsetTranscriptions,friction_detector)
             else:

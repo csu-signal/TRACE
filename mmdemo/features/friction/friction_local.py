@@ -137,28 +137,41 @@ class FrictionOutputInterface:
         return asdict(self)  # Converts the object into a dictionary
 
 class FrictionInference:
-    def __init__(self, model_path: str):
-            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-            self.tags_to_parse = ["friction", "rationale", "t", "b"]
-            print("Loading base model...")
-            self.model = AutoPeftModelForCausalLM.from_pretrained(
-                model_path,
-                device_map="auto",
-                torch_dtype=torch.bfloat16,
-                trust_remote_code=True
-            )
+    def __init__(self, model_path: str, generation_args=None):
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.tags_to_parse = ["friction", "rationale", "t", "b"]
+        self.model_path = model_path
+        # Set default generation args if none provided
+        if generation_args is None:
+            self.generation_args = {
+                "max_new_tokens": 200,
+                "temperature": 0.7,
+                "do_sample": True,
+                "top_p": 0.9,
+                "return_dict_in_generate": True,
+                "output_scores": True
+            }
+        else:
+            self.generation_args = generation_args
+        print("Loading base model...")
+        self.model = AutoPeftModelForCausalLM.from_pretrained(
+            model_path,
+            device_map="auto",
+            torch_dtype=torch.bfloat16,
+            trust_remote_code=True
+        )
 
-            # Merge and unload adapter weights
-            # print("Merging and unloading adapter weights...",  self.model)
-            # self.model = self.model.merge_and_unload()
-            self.model = self.model.to(self.device)  # Move the model to the GPU device
-            print("showing merged lora model",  self.model)
+        # Merge and unload adapter weights
+        # print("Merging and unloading adapter weights...",  self.model)
+        # self.model = self.model.merge_and_unload()
+        self.model = self.model.to(self.device)  # Move the model to the GPU device
+        print("showing merged lora model",  self.model)
 
-            # Load tokenizer
-            print("Loading tokenizer...")
-            self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-            self.tokenizer.pad_token = "<|reserved_special_token_0|>"
-            self.tokenizer.padding_side = 'right'
+        # Load tokenizer
+        print("Loading tokenizer...")
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+        self.tokenizer.pad_token = "<|reserved_special_token_0|>"
+        self.tokenizer.padding_side = 'right'
 
     def parse_generation(self, text: str) -> Dict[str, str]:
         """Parse generated text to extract components"""
@@ -181,6 +194,161 @@ class FrictionInference:
         if len(sentences) >= 3:
             return f"{sentences[0]} {sentences[-2]} {sentences[-1]}"
         return " ".join(sentences)
+
+    def parse_tags_robust(self, text, tags=None):
+        """
+        Combined parsing function that handles both tagged friction (<friction>) and
+        other formats (*Friction, ### Friction, etc.) but returns results in the
+        parse_tags format.
+        
+        Args:
+            text (str): The text to parse.
+            tags (list): List of tags to parse. If None, defaults to standard tags.
+            
+        Returns:
+            dict: Dictionary with tag names as keys and lists of extracted content as values.
+        """
+        import re
+        if tags is None:
+            tags = ["friction", "rationale", "t", "b"]
+        
+        # Initialize result in the format of parse_tags_robust
+        result = {tag: [] for tag in tags}
+        
+        # First try parse_tags_robust to get standard tag format
+        for tag in tags:
+            open_tag = f"<{tag}>"
+            close_tag = f"</{tag}>"
+            matches = re.findall(f"{re.escape(open_tag)}(.*?){re.escape(close_tag)}", text, re.DOTALL)
+            if matches:
+                result[tag].extend(matches)
+        
+        # For any tags that weren't found, try the llm_response patterns
+        # Only apply this to tags that are empty and are in our supported list
+        # This makes sure we don't overwrite any successful tag extractions
+        supported_tags = {"friction", "rationale", "t", "b"}
+        
+        for tag in tags:
+            if not result[tag] and tag in supported_tags:
+                # Define patterns based on tag type
+                if tag == "friction":
+                    primary_patterns = [
+                        r'### Friction\n(.*?)(?=\n\n|\Z)',
+                        r'\*\*Friction:\*\*\n(.*?)(?=\n\n|\Z)', 
+                        r'\*\*Friction\*\*\n(.*?)(?=\n\n|\Z)',
+                        r'Friction:(.*?)(?=\n\n|\Z)'
+                    ]
+                    backup_patterns = [
+                        r'friction.*?:(.*?)(?=\n\n|\Z)',
+                        r'intervention.*?:(.*?)(?=\n\n|\Z)'
+                    ]
+                elif tag == "rationale":
+                    primary_patterns = [
+                        r'### Rationale\n(.*?)(?=\n\n|\Z)', 
+                        r'\*\*rationale\*\*\n(.*?)(?=\n\n|\Z)',
+                        r'\*\*Rationale\*\*\n(.*?)(?=\n\n|\Z)',
+                        r'Rationale:(.*?)(?=\n\n|\Z)'
+                    ]
+                    backup_patterns = [
+                        r'rational.*?:(.*?)(?=\n\n|\Z)',
+                        r'reasoning.*?:(.*?)(?=\n\n|\Z)',
+                        r'reason.*?:(.*?)(?=\n\n|\Z)'
+                    ]
+                elif tag == "t":  # Task State
+                    primary_patterns = [
+                        r'### Task[- ]?State\n(.*?)(?=\n\n|\Z)',
+                        r'\*\*Task[- ]?State\*\*\n(.*?)(?=\n\n|\Z)',
+                        r'Task[- ]?State:(.*?)(?=\n\n|\Z)'
+                    ]
+                    backup_patterns = [
+                        r'task.*?state.*?:(.*?)(?=\n\n|\Z)',
+                        r'current.*?task.*?:(.*?)(?=\n\n|\Z)'
+                    ]
+                elif tag == "b":  # Belief State
+                    primary_patterns = [
+                        r'### Belief[- ]?State\n(.*?)(?=\n\n|\Z)',
+                        r'\*\*Belief[- ]?State\*\*\n(.*?)(?=\n\n|\Z)',
+                        r'Belief[- ]?State:(.*?)(?=\n\n|\Z)'
+                    ]
+                    backup_patterns = [
+                        r'belief.*?state.*?:(.*?)(?=\n\n|\Z)',
+                        r'beliefs.*?:(.*?)(?=\n\n|\Z)',
+                        r'state.*?:(.*?)(?=\n\n|\Z)'
+                    ]
+                else:
+                    # Skip other tags
+                    continue
+                
+                # Try primary patterns first
+                content = None
+                for pattern in primary_patterns:
+                    match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+                    if match:
+                        content = match.group(1).strip()
+                        content = re.sub(r'^\s*\*\s*', '', content, flags=re.MULTILINE)
+                        break
+                
+                # Try backup patterns if primary fails
+                if not content:
+                    for pattern in backup_patterns:
+                        match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+                        if match:
+                            content = match.group(1).strip()
+                            content = re.sub(r'^\s*\*\s*', '', content, flags=re.MULTILINE)
+                            break
+                
+                # If we found content, add it to the result
+                if content:
+                    result[tag].append(content)
+        
+        # Check if we're still missing any tags and try chunk-based approach as last resort
+        missing_tags = [tag for tag in tags if not result[tag] and tag in supported_tags]
+        if missing_tags:
+            # Split text into chunks by double newlines
+            chunks = [chunk.strip() for chunk in text.split('\n\n') if chunk.strip()]
+            
+            if chunks:
+                # Get the last chunk for friction if it's missing
+                if "friction" in missing_tags and chunks:
+                    result["friction"].append(chunks[-1])
+                
+                # Get the first chunk for task state if it's missing
+                if "t" in missing_tags and len(chunks) > 0:
+                    result["t"].append(chunks[0])
+                
+                # Get the second chunk for belief state if it's missing
+                if "b" in missing_tags and len(chunks) > 1:
+                    result["b"].append(chunks[1])
+                
+                # Get a middle chunk for rationale if it's missing
+                if "rationale" in missing_tags and len(chunks) > 2:
+                    result["rationale"].append(chunks[len(chunks)//2])
+        
+        return result
+    
+    
+    def handle_friction_logic(self, text):
+        '''
+        This function processes a text string to extract or construct a "friction" snippet by:
+    
+        Returning the text following a <friction> tag if present, unless a closing </friction> tag is found.
+        If no <friction> tags exist, it constructs a snippet by extracting the first, second-to-last, 
+        and last sentences if there are at least three sentences; otherwise, it returns all available sentences.
+        
+        '''
+        if "<friction>" not in text and "</friction>" not in text:
+            sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text.strip())
+            if len(sentences) >= 3:
+                return f"{sentences[0]} {sentences[-2]} {sentences[-1]}"
+            elif sentences:
+                return " ".join(sentences)
+            else:
+                return ""
+        elif "<friction>" in text and "</friction>" not in text:
+            friction_start = text.find("<friction>") + len("<friction>")
+            return text[friction_start:].strip()
+        else:
+            return ""  # Friction is complete, no need to handle further
 
     def compute_metrics(self, output_ids: torch.Tensor, scores: List[torch.Tensor], prompt_length: int) -> FrictionMetrics:
         """Compute generation metrics (fixed device handling)"""
@@ -254,15 +422,23 @@ class FrictionInference:
         # Generate response
         try:
             inputs = self.tokenizer(prompt, return_tensors="pt", padding=True).to(self.device)
+            # outputs = self.model.generate(
+            #     **inputs,
+            #     max_new_tokens=200,
+            #     temperature=0.7,
+            #     do_sample=True,
+            #     top_p=0.9,
+            #     return_dict_in_generate=True,
+            #     output_scores=True
+            # )
             outputs = self.model.generate(
-                **inputs,
-                max_new_tokens=200,
-                temperature=0.7,
-                do_sample=True,
-                top_p=0.9,
-                return_dict_in_generate=True,
-                output_scores=True
-            )
+            **inputs,
+            **self.generation_args
+        )
+        
+
+
+
             generated_ids = outputs.sequences[0]
             generated_ids = generated_ids.to(self.device)
             generated_text = self.tokenizer.decode(
@@ -275,16 +451,33 @@ class FrictionInference:
             parsed = self.parse_generation(generated_text)
             #print("\nGenerated text:", generated_text)  # Debug print
 
-            # Parse components
-            task_state = self._extract_tag(generated_text, "t")
-            belief_state = self._extract_tag(generated_text, "b")
-            rationale = self._extract_tag(generated_text, "rationale")
-            friction = self._extract_tag(generated_text, "friction")
+            # Parse components: if not FAAF agent, carry on with previous parsing code; else, use more robust parsing for FAAF (FAAF does not like to generate <friction> tokens, so needs different parsing logic)
+            if self.model_path.split("/")[-1] != 'intervention_agent':
+                
+                task_state = self._extract_tag(generated_text, "t")
+                belief_state = self._extract_tag(generated_text, "b")
+                rationale = self._extract_tag(generated_text, "rationale")
+                friction = self._extract_tag(generated_text, "friction")
+         
+
+            else: # this will run if FAAF agent is being used since the last part after splitting is intervention_agent
+
+                tags_for_parsing = ["friction", "rationale", "t", "b"]  
+                parsed_frictive_states_and_friction = self.parse_tags_robust(generated_text, tags_for_parsing)
+                friction_intervention = ' '.join(parsed_frictive_states_and_friction.get('friction', []))
+                if not friction_intervention:
+                    friction_intervention = self.handle_friction_logic(generated_text)
+                friction = friction_intervention
+                rationale = ' '.join(parsed_frictive_states_and_friction.get('rationale', []))
+                belief_state = ' '.join(parsed_frictive_states_and_friction.get('b', []))  # Note: Using 'b' not 'belief_state'
+                task_state = ' '.join(parsed_frictive_states_and_friction.get('t', []))    # Note: Using 't' not 'task_state'
+
             print("task state:", task_state)
             print("belief state:", belief_state)
             print("rationale:", rationale)
             print("friction:", friction)
             print("metrics", metrics, "\n")
+
 
             return FrictionOutputInterface(
                 friction_statement=friction,
