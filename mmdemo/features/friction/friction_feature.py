@@ -101,7 +101,6 @@ class Friction(BaseFeature[FrictionOutputInterface]):
 
         #if the transcription text is empty don't add it to the history
         if transcription.text != '':
-            transcription.text += "\nWe believe that " + ", ".join(plan.fbank) +"."
             self.transcriptionHistory.append(transcription.speaker_id + ": " + transcription.text)
             self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
             # self.transcriptionHistory += "P1: " + transcription.text + "\n"
@@ -119,6 +118,8 @@ class Friction(BaseFeature[FrictionOutputInterface]):
                         # if there are less values in the history then the min utterance value, use the full history
                         self.frictionSubset = self.transcriptionHistory
 
+                #Add beliefs to 
+                self.frictionSubset.append("\nWe believe that " + ", ".join(plan.fbank) +".")
                 # format the transcriptions as a string to send over the socket
                 self.subsetTranscriptions = ''
                 for utter in self.frictionSubset:

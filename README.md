@@ -106,7 +106,7 @@ If you are experiencing errors related to .dll files (specially CUDA dlls i.e cu
 5. If updating/reinstalling CUDA doesn't work, try to reinstall Miniconda/Anaconda:
     - Finally, reinstall Miniconda or Anaconda. A fresh installation can resolve conflicts that might arise from previous installations, especially those that affect .dll files.
 
-### Solution for NotImplementedError concerning torchvision
+### Solution for NotImplementedError concerning torchvision or Userwarning: 1Torch was not compiled with flash attention
 
 Uninstall Torch and Torchvision: `pip uninstall torch torchvision`
 
