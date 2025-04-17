@@ -139,8 +139,20 @@ class UserFrame(BaseFeature[ColorImageInterface]):
             text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
             text_w, text_h = text_size
             # cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
-            for word in range(0,len(text),6):
-                text_row = " ".join(text[word:word+6])
+            # for word in range(0,len(text),6):
+            #     text_row = " ".join(text[word:word+6])
+            #     cv.putText(output_frame, str(text_row), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
+            #     y += 75
+
+            max_chars = 30
+            word = 0
+            while(word<len(text)):
+                text_row = ""
+                while(word<len(text)):
+                    if(len(text_row) + len(text[word])) < max_chars:
+                        text_row += " " + text[word]
+                        word += 1
+                    else: break
                 cv.putText(output_frame, str(text_row), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
                 y += 75
 
