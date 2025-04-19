@@ -7,10 +7,7 @@ from mmdemo.features import (
     CommonGroundTracking,
     DenseParaphrasedTranscription,
     DisplayFrame,
-    EMNLPFrame,
-    GazeBodyTracking,
     Gesture,
-    Log,
     MicAudio,
     Move,
     Object,
@@ -19,7 +16,7 @@ from mmdemo.features import (
     SelectedObjects,
     VADUtteranceBuilder,
     WhisperTranscription,
-    Planner,
+    CGTFrame
 )
 
 if __name__ == "__main__":
@@ -71,19 +68,15 @@ if __name__ == "__main__":
     # common ground tracking
     cgt = CommonGroundTracking(moves, props)
 
-    plan = Planner(cgt)
-
-    # friction
-    friction = Friction(dense_paraphrased_transcriptions, plan)
     # create output frame for video
-    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction, plan) #removed gaze
+    output_frame = CGTFrame(color, gesture, selected_objects, cgt, calibration)
 
     # run demo and show output
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
             # SaveVideo(output_frame, frame_rate=2.2),
-            # Log(dense_paraphrased_transcriptions, props, moves, friction, csv=True),
+            # Log(dense_paraphrased_transcriptions, props, moves, csv=True),
             # Log(transcriptions, stdout=True),
         ]
     )
