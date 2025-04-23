@@ -72,17 +72,26 @@ class SpeechOutput(BaseFeature[SpeechOutputInterface]):
                 sent before. It is possible that the interface will not
                 contain any data before the first new data is sent.
 
+        Outputs:
+        self.speechoutput -- True if the speech output is generated
+        self.length -- Frames since last speech output. Set to 30 when 
+                       speech is output (duration to display lightbulb) 
+                       and -1 for every frame after that. Allows for 
+                       setting duration of lightbulb as well as min. 
+                       frames before starting a new output.
+
         ***Check for new friction
         ***Generate speech
         """
         friction = frictionout.friction_statement
         friction = friction.split("Friction:")[-1].split("r*")[0]
-        if friction == '' or friction == self.last_friction:
+        if friction == '' or friction == self.last_friction or self.length > -30:
             self.length -= 1
             return SpeechOutputInterface(speech_output=self.speechoutput,length=self.length)
         #play a request for interruption
         opening = random.choice(os.listdir("C:/GitHub/TRACE/mmdemo/features/speech_output/audio"))
         audio, samplerate = sf.read(fr"C:/GitHub/TRACE/mmdemo/features/speech_output/audio/{opening}")
+        sd.wait()
         sd.play(audio, samplerate)
         sd.wait()
         #generate speech, splits on newline

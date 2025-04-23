@@ -1,0 +1,339 @@
+time,event
+5.030789375305176,P2 positive posture event
+5.510299921035767,P2 individual negative gaze event
+5.510299921035767,group negative gaze event
+10.14331316947937,P2 positive posture event
+10.607658863067627,P2 individual negative gaze event
+10.607658863067627,group negative gaze event
+15.310180187225342,P2 positive posture event
+15.658824443817139,P2 individual negative gaze event
+16.716309309005737,P3 negative posture event
+16.877819061279297,P3 individual negative gaze event
+16.877819061279297,group negative gaze event
+20.34584903717041,P2 positive posture event
+20.699531316757202,P2 individual negative gaze event
+21.832710027694702,P3 negative posture event
+22.006749153137207,P3 individual negative gaze event
+22.006749153137207,group negative gaze event
+25.50704073905945,P2 positive posture event
+25.820215225219727,P2 individual negative gaze event
+27.01537275314331,P3 positive posture event
+27.016372442245483,P3 individual negative gaze event
+27.016372442245483,group negative gaze event
+30.53752851486206,P2 positive posture event
+30.966783046722412,P2 individual negative gaze event
+32.09446883201599,P3 positive posture event
+32.09446883201599,P3 individual negative gaze event
+32.09446883201599,group negative gaze event
+35.55916452407837,P2 positive posture event
+35.99118137359619,P2 individual negative gaze event
+37.20840096473694,P3 positive posture event
+37.20840096473694,P3 individual negative gaze event
+37.20840096473694,group negative gaze event
+40.582308530807495,P2 positive posture event
+41.08969259262085,P2 individual negative gaze event
+42.30234432220459,P3 positive posture event
+42.30334734916687,P3 individual negative gaze event
+42.30334734916687,group negative gaze event
+45.6449077129364,P2 positive posture event
+46.10722613334656,P2 individual negative gaze event
+47.36283755302429,P3 positive posture event
+47.36383318901062,P3 individual negative gaze event
+47.36383318901062,group negative gaze event
+50.66103506088257,P2 positive posture event
+51.19059991836548,P2 individual negative gaze event
+52.43742084503174,P3 positive posture event
+52.43842172622681,P3 individual negative gaze event
+52.43842172622681,group negative gaze event
+55.67337703704834,P2 positive posture event
+55.67337703704834,P3 negative posture event
+56.29830527305603,P2 individual negative gaze event
+57.47878408432007,P3 individual negative gaze event
+57.47878408432007,group negative gaze event
+60.7134165763855,P2 positive posture event
+60.7134165763855,P3 positive posture event
+61.311641693115234,P2 individual negative gaze event
+62.629335165023804,P3 individual negative gaze event
+62.629335165023804,group negative gaze event
+64.71729445457458,P2 negative posture event
+65.81779861450195,P3 positive posture event
+66.38984656333923,P2 individual negative gaze event
+67.74185228347778,P3 individual negative gaze event
+67.74185228347778,group negative gaze event
+69.72302770614624,P2 positive posture event
+70.96137237548828,P3 positive posture event
+71.61340570449829,P2 individual negative gaze event
+72.81252789497375,P3 individual negative gaze event
+72.81252789497375,group negative gaze event
+74.91133165359497,P2 positive posture event
+75.99794340133667,P3 positive posture event
+76.63376927375793,P2 individual negative gaze event
+77.85116338729858,P3 individual negative gaze event
+77.85116338729858,group negative gaze event
+79.97622990608215,P2 positive posture event
+81.10244798660278,P3 positive posture event
+81.75833511352539,P2 individual negative gaze event
+83.01551127433777,P3 individual negative gaze event
+83.01551127433777,group negative gaze event
+85.11886954307556,P2 positive posture event
+86.17604398727417,P3 positive posture event
+86.83535361289978,P2 individual negative gaze event
+86.98148989677429,P3 negative posture event
+88.05083394050598,P3 individual negative gaze event
+88.05083394050598,group negative gaze event
+90.25138974189758,P2 positive posture event
+91.85709810256958,P2 individual negative gaze event
+92.05523753166199,P3 positive posture event
+93.19541215896606,P3 individual negative gaze event
+93.19541215896606,group negative gaze event
+95.37017893791199,P2 positive posture event
+97.0077383518219,P2 individual negative gaze event
+97.1895546913147,P3 positive posture event
+98.22451376914978,P3 individual negative gaze event
+98.22451376914978,group negative gaze event
+100.49233078956604,P2 positive posture event
+102.12103319168091,P2 individual negative gaze event
+102.2941198348999,P3 positive posture event
+103.37480330467224,P3 individual negative gaze event
+103.37480330467224,group negative gaze event
+105.53912448883057,P2 positive posture event
+107.12940287590027,P2 individual negative gaze event
+107.29859781265259,P3 positive posture event
+108.3798816204071,P3 individual negative gaze event
+108.3798816204071,group negative gaze event
+110.69367575645447,P2 positive posture event
+112.13197755813599,P2 individual negative gaze event
+112.31327486038208,P3 positive posture event
+113.3827006816864,P3 individual negative gaze event
+113.3827006816864,group negative gaze event
+115.8073296546936,P2 positive posture event
+117.15355181694031,P2 individual negative gaze event
+117.34878516197205,P3 positive posture event
+118.46478056907654,P3 individual negative gaze event
+118.46478056907654,group negative gaze event
+120.81517171859741,P2 positive posture event
+122.2370536327362,P2 individual negative gaze event
+122.50570130348206,P3 positive posture event
+123.47937083244324,P3 individual negative gaze event
+123.47937083244324,group negative gaze event
+125.91770696640015,P2 positive posture event
+127.34760999679565,P2 individual negative gaze event
+127.56572318077087,P3 positive posture event
+128.51667046546936,P3 individual negative gaze event
+128.51667046546936,group negative gaze event
+131.13871574401855,P2 positive posture event
+132.58104968070984,P3 positive posture event
+132.58205103874207,P2 individual negative gaze event
+133.57171201705933,P3 individual negative gaze event
+133.57171201705933,group negative gaze event
+136.18362951278687,P2 positive posture event
+137.59789538383484,P3 positive posture event
+137.59989881515503,P2 individual negative gaze event
+138.7453169822693,P3 individual negative gaze event
+138.7453169822693,group negative gaze event
+141.20564103126526,P2 positive posture event
+142.62781429290771,P3 positive posture event
+142.62881660461426,P2 individual negative gaze event
+143.9872055053711,P3 individual negative gaze event
+143.9872055053711,group negative gaze event
+146.40368008613586,P2 positive posture event
+147.86489629745483,P3 positive posture event
+147.86589670181274,P2 individual negative gaze event
+149.062114238739,P3 individual negative gaze event
+149.062114238739,group negative gaze event
+151.42862057685852,P2 positive posture event
+153.0880479812622,P3 positive posture event
+153.08904767036438,P2 individual negative gaze event
+154.2718207836151,P3 individual negative gaze event
+154.2718207836151,group negative gaze event
+156.1567907333374,P2 negative posture event
+158.21785497665405,P3 positive posture event
+158.21935868263245,P2 individual negative gaze event
+159.41443800926208,P3 individual negative gaze event
+159.41443800926208,group negative gaze event
+161.2180359363556,P2 positive posture event
+163.42965388298035,P3 positive posture event
+163.43065333366394,P2 individual negative gaze event
+164.60551023483276,P3 individual negative gaze event
+164.60551023483276,group negative gaze event
+166.0526578426361,P3 negative posture event
+166.27375411987305,P2 positive posture event
+168.442387342453,P2 individual negative gaze event
+169.7784686088562,P3 individual negative gaze event
+169.7784686088562,group negative gaze event
+171.0661745071411,P3 positive posture event
+171.29785180091858,P2 positive posture event
+173.5026490688324,P2 individual negative gaze event
+174.9709005355835,P3 individual negative gaze event
+174.9709005355835,group negative gaze event
+176.08571529388428,P3 positive posture event
+176.45860385894775,P2 positive posture event
+177.90215182304382,P3 negative posture event
+178.56441354751587,P2 individual negative gaze event
+180.00305318832397,P3 individual negative gaze event
+180.00305318832397,group negative gaze event
+181.67818236351013,P2 positive posture event
+182.906352519989,P3 positive posture event
+183.64615631103516,P2 individual negative gaze event
+185.16808915138245,P3 individual negative gaze event
+185.16808915138245,group negative gaze event
+186.69533586502075,P2 positive posture event
+186.96863460540771,P3 negative posture event
+188.67829203605652,P2 individual negative gaze event
+190.20314121246338,P3 individual negative gaze event
+190.20314121246338,group negative gaze event
+191.9434220790863,P2 positive posture event
+192.17708659172058,P3 positive posture event
+193.6021809577942,P3 negative posture event
+193.83356189727783,P2 individual negative gaze event
+195.35800218582153,P3 individual negative gaze event
+195.35800218582153,group negative gaze event
+197.00933384895325,P2 positive posture event
+198.69127559661865,P3 negative posture event
+198.9454734325409,P2 individual negative gaze event
+200.53782296180725,P3 individual negative gaze event
+200.53782296180725,group negative gaze event
+202.04635572433472,P2 positive posture event
+203.8389229774475,P3 positive posture event
+204.0210063457489,P2 individual negative gaze event
+205.6655285358429,P3 negative posture event
+205.66652989387512,P3 individual negative gaze event
+205.66652989387512,group negative gaze event
+207.10667753219604,P2 positive posture event
+209.21205067634583,P2 individual negative gaze event
+210.80037713050842,P3 negative posture event
+210.80137658119202,P3 individual negative gaze event
+210.80137658119202,group negative gaze event
+212.22307872772217,P2 positive posture event
+214.38370037078857,P2 individual negative gaze event
+215.95449113845825,P3 negative posture event
+215.95649933815002,P3 individual negative gaze event
+215.95649933815002,group negative gaze event
+217.4546320438385,P2 positive posture event
+217.9563558101654,P2 negative posture event
+219.5761969089508,P2 individual negative gaze event
+220.9696078300476,P3 negative posture event
+220.97060871124268,P3 individual negative gaze event
+220.97060871124268,group negative gaze event
+223.04570841789246,P2 negative posture event
+224.63944053649902,P2 individual negative gaze event
+226.1738839149475,P3 negative posture event
+226.174884557724,P3 individual negative gaze event
+226.174884557724,group negative gaze event
+228.14509773254395,P2 positive posture event
+229.82453966140747,P2 individual negative gaze event
+231.29303359985352,P3 positive posture event
+231.29403376579285,P3 individual positive gaze event
+232.5421781539917,group negative gaze event
+233.28356313705444,P2 positive posture event
+233.28356313705444,P3 negative posture event
+234.86634516716003,P2 individual negative gaze event
+236.40790963172913,P3 individual negative gaze event
+237.64884161949158,group negative gaze event
+238.38807678222656,P2 positive posture event
+238.38807678222656,P3 positive posture event
+240.00989842414856,P2 individual negative gaze event
+240.875173330307,P3 negative posture event
+241.51983284950256,P3 individual negative gaze event
+242.7833125591278,group negative gaze event
+243.48877716064453,P2 positive posture event
+245.09302067756653,P2 individual negative gaze event
+246.05018830299377,P3 positive posture event
+246.72549962997437,P3 individual negative gaze event
+247.8327031135559,group negative gaze event
+248.55299496650696,P2 positive posture event
+250.233904838562,P2 individual negative gaze event
+251.20288562774658,P3 positive posture event
+251.85526823997498,P3 individual negative gaze event
+253.02454948425293,group negative gaze event
+253.7752468585968,P2 positive posture event
+255.46062207221985,P2 individual negative gaze event
+256.42149353027344,P3 positive posture event
+256.9563956260681,P3 individual negative gaze event
+258.1214654445648,group negative gaze event
+258.812625169754,P2 positive posture event
+260.51214051246643,P2 individual negative gaze event
+261.4352021217346,P3 positive posture event
+262.0123429298401,P3 individual negative gaze event
+263.20734214782715,group negative gaze event
+263.44673109054565,P3 negative posture event
+263.8128340244293,P2 positive posture event
+265.1993715763092,P2 negative posture event
+265.53563833236694,P2 individual negative gaze event
+267.0201151371002,P3 individual negative gaze event
+268.54107666015625,P3 negative posture event
+269.3943576812744,group negative gaze event
+270.3385760784149,P2 positive posture event
+270.63991475105286,P2 individual negative gaze event
+272.1192853450775,P2 negative posture event
+272.12028908729553,P3 individual negative gaze event
+273.5430541038513,P3 negative posture event
+274.56853199005127,group negative gaze event
+275.76861596107483,P2 individual negative gaze event
+277.1276388168335,P2 positive posture event
+277.1286413669586,P3 individual negative gaze event
+278.56167459487915,P3 negative posture event
+279.7074007987976,group negative gaze event
+280.88191080093384,P2 individual negative gaze event
+282.1744647026062,P2 positive posture event
+282.1754643917084,P3 individual negative gaze event
+283.6638684272766,P3 negative posture event
+284.7102425098419,group negative gaze event
+285.9591689109802,P2 individual negative gaze event
+286.15417289733887,P2 negative posture event
+287.34392499923706,P3 individual negative gaze event
+288.7586750984192,P3 negative posture event
+289.878538608551,group negative gaze event
+291.0461971759796,P2 individual negative gaze event
+291.27126908302307,P2 positive posture event
+292.50443482398987,P3 individual negative gaze event
+293.768639087677,P3 positive posture event
+294.9917085170746,group negative gaze event
+295.1846363544464,P3 negative posture event
+296.1761598587036,P2 individual negative gaze event
+296.3712818622589,P2 negative posture event
+297.5577669143677,P3 individual negative gaze event
+300.2958142757416,P3 positive posture event
+300.77167773246765,group negative gaze event
+301.28109550476074,P2 individual negative gaze event
+301.4727990627289,P2 positive posture event
+302.6908326148987,P3 individual negative gaze event
+305.4037320613861,P3 positive posture event
+305.8296320438385,group negative gaze event
+306.4407169818878,P2 individual negative gaze event
+306.625789642334,P2 positive posture event
+307.69771218299866,P3 individual negative gaze event
+310.5033116340637,P3 positive posture event
+310.9574830532074,group negative gaze event
+311.5942053794861,P2 individual negative gaze event
+311.754763841629,P2 positive posture event
+312.78336930274963,P3 individual negative gaze event
+315.6027898788452,P3 positive posture event
+315.98395347595215,group negative gaze event
+316.65491938591003,P2 individual negative gaze event
+316.79294300079346,P2 positive posture event
+317.2058217525482,P3 negative posture event
+317.86730694770813,P3 individual negative gaze event
+321.03987431526184,group negative gaze event
+321.7180869579315,P2 individual negative gaze event
+321.83260703086853,P2 positive posture event
+322.2642865180969,P3 negative posture event
+322.93424892425537,P3 individual negative gaze event
+326.08439660072327,group negative gaze event
+326.72195839881897,P2 individual negative gaze event
+326.84649658203125,P2 positive posture event
+327.3729827404022,P3 negative posture event
+328.04875922203064,P3 individual negative gaze event
+331.1188440322876,group negative gaze event
+331.76680302619934,P2 individual negative gaze event
+331.90002822875977,P2 positive posture event
+332.5313837528229,P3 negative posture event
+333.22295117378235,P3 individual negative gaze event
+336.26630425453186,group negative gaze event
+336.7978718280792,P2 individual negative gaze event
+337.0135464668274,P2 positive posture event
+337.57147192955017,P3 negative posture event
+338.35456824302673,P3 individual negative gaze event
+341.2754728794098,group negative gaze event
+341.82566499710083,P2 individual negative gaze event
+342.18082642555237,P2 positive posture event
