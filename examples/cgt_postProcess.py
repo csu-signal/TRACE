@@ -26,6 +26,7 @@ from mmdemo.features import (
     VADUtteranceBuilder,
     WhisperTranscription,
     Planner,
+    DpipCommonGroundTracking
 )
 
 import warnings
@@ -163,6 +164,7 @@ if __name__ == "__main__":
     )
 
     cgt = CommonGroundTracking(moves, props)
+    dpip = DpipCommonGroundTracking(props)
 
     plan = Planner(cgt)
 
@@ -176,6 +178,7 @@ if __name__ == "__main__":
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
+            dpip,
             SaveVideo(output_frame, frame_rate=10),
             Log(friction, csv=True),
             #Log(transcriptions, stdout=True),

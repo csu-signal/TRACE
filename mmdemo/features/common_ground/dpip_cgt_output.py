@@ -1,0 +1,97 @@
+import socket
+import warnings
+from pathlib import Path
+from typing import final
+
+import joblib
+import mediapipe as mp
+import numpy as np
+import torch
+import re
+from typing import Dict, List, Optional
+import threading
+from mmdemo.base_feature import BaseFeature
+from mmdemo.interfaces import PropositionInterface
+import tkinter as tk                    
+from tkinter import ttk
+
+@final
+class DpipCommonGroundTracking(BaseFeature):
+    """
+    Visualize the common gorund for the DPIP task.
+
+    Input interfaces are `PropositionInterface`, ...
+
+    Output interface is `None`
+
+    Keyword arguments:
+    """
+
+    def __init__(
+        self, prop: BaseFeature[PropositionInterface]
+    ):
+        super().__init__(prop) 
+        self.init = False
+        self.t = threading.Thread(target=self.worker)
+        self.t.start()
+
+    def initialize(self):
+        print("DPIP Interface")
+    
+    def get_output(self, prop: PropositionInterface):
+        #if not prop.is_new(): #TODO update to run only when props come in
+        #    return None
+        
+        self.t = threading.Thread(target=self.worker)
+        self.t.start()
+        return
+    
+    def worker(self):
+        #print("New DPIP Interface Update Thread Started")
+        try:
+            if self.init == False:
+                self.init = True
+                self.root = tk.Tk()
+                self.root.title("DPIP Common Ground")
+                self.tabControl = ttk.Notebook(self.root)
+
+                self.tab1 = ttk.Frame(self.tabControl)
+                self.tab2 = ttk.Frame(self.tabControl)
+                self.tab3 = ttk.Frame(self.tabControl)
+
+                self.tabControl.add(self.tab1, text ='D1')
+                self.tabControl.add(self.tab2, text ='D2')
+                self.tabControl.add(self.tab3, text ='D3')
+                
+                self.tabControl.pack(expand = 1, fill ="both")
+
+                self.canvas1 = tk.Canvas(self.tab1, bg="white", height=250, width=300)
+                self.canvas2 = tk.Canvas(self.tab2, bg="white", height=250, width=300)
+                self.canvas3 = tk.Canvas(self.tab3, bg="white", height=250, width=300)
+
+                self.canvas1.pack()
+                self.canvas2.pack()
+                self.canvas3.pack()
+                
+                self.root.mainloop()
+            else:
+                self.canvas1.delete()
+                self.canvas2.delete()
+                self.canvas3.delete()
+
+                self.canvas1.create_rectangle(10, 10, 60, 60, fill='red')
+                self.canvas1.create_rectangle(70, 10, 170, 60, fill='yellow')
+                self.canvas1.create_rectangle(180, 10, 230, 60, fill='green')
+
+                self.canvas1.create_rectangle(10, 70, 60, 120, fill='orange')
+                self.canvas1.create_rectangle(70, 70, 170, 120, fill='blue')
+                self.canvas1.create_rectangle(180, 70, 230, 120, fill='red')
+
+                self.canvas1.create_rectangle(10, 130, 60, 180, fill='yellow')
+                self.canvas1.create_rectangle(180, 130, 230, 180, fill='purple')
+
+                self.canvas1.pack()
+
+        except Exception as e:
+            print(f"DPIP FEATURE THREAD: An error occurred: {e}")
+
