@@ -27,6 +27,7 @@ class DisplayFrame(BaseFeature[EmptyInterface]):
     def initialize(self):
         self.window_name = str(random.random())
         self.window_should_be_up = False
+        cv.namedWindow(self.window_name, cv.WINDOW_NORMAL | cv.WINDOW_KEEPRATIO)
 
     def get_output(
         self,

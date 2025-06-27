@@ -332,6 +332,7 @@ class PlannerInterface(BaseInterface):
 
     solv: bool
     plan: str
+    fbank: set[str]
 
 
 #new interfaces created for AAAI demo
@@ -381,3 +382,18 @@ class GazeSelectionInterface(BaseInterface):
     """
     
     selection: list[tuple[str, str | None]]
+
+@dataclass
+class SpeechOutputInterface(BaseInterface):
+    """
+    speech_output -- indicates if speech was output
+    int -- indicates time to display "idea" joe
+    """
+    speech_output: bool
+    length: int
+
+@dataclass
+class UserInterface(BaseInterface):
+    """
+    returns nothing
+    """
