@@ -15,34 +15,32 @@ from mmdemo.interfaces.data import Cone, Handedness, HciiObjectInfo2D, ObjectInf
 
 
 @dataclass
-class EmptyInterface(BaseInterface):
+class AudioFileInterface(BaseInterface):
     """
-    Output interface when the feature does not have any output
+    Audio chunks as a wav file
+
+    `speaker_id` -- unique identifier for the speaker
+    `start_time`, `end_time` -- start and end time in seconds
+    `path` -- path to wav file
     """
+
+    speaker_id: str
+    start_time: float
+    end_time: float
+    path: Path
 
 
 @dataclass
-class ColorImageInterface(BaseInterface):
+class AudioFileListInterface(BaseInterface):
     """
-    frame_count -- the current frame count
-    frame -- image data with shape (h, w, 3) in RGB format.
-        The values should be integers between 0 and 255.
-    """
+    An interface to return a list of AudioFileInterfces. This
+    is useful because sometimes multiple audio files will need
+    to be returned in a single frame.
 
-    frame_count: int
-    frame: np.ndarray
-
-
-@dataclass
-class DepthImageInterface(BaseInterface):
-    """
-    frame_count -- the current frame count
-    frame -- depth image with shape (h, w). The values should
-        have type uint16 (integers between 0 and 65535).
+    `audio_files` -- the list of audio files
     """
 
-    frame_count: int
-    frame: np.ndarray
+    audio_files: list[AudioFileInterface]
 
 
 @dataclass
@@ -58,7 +56,7 @@ class BodyTrackingInterface(BaseInterface):
 
     bodies: list[dict[str, Any]]
     timestamp_usec: int
-
+    
 
 @dataclass
 class CameraCalibrationInterface(BaseInterface):
@@ -76,12 +74,27 @@ class CameraCalibrationInterface(BaseInterface):
 
 
 @dataclass
-class PoseInterface(BaseInterface):
+class ColorImageInterface(BaseInterface):
     """
-    poses -- list of (participant id, "leaning in" / "leaning out")
+    frame_count -- the current frame count
+    frame -- image data with shape (h, w, 3) in RGB format.
+        The values should be integers between 0 and 255.
     """
 
-    poses: list[tuple[str, str]]
+    frame_count: int
+    frame: np.ndarray
+
+
+@dataclass
+class CommonGroundInterface(BaseInterface):
+    """
+    qbank, fbank, ebank -- sets of propositions describing the
+        current common ground
+    """
+
+    qbank: set[str]
+    fbank: set[str]
+    ebank: set[str]
 
 
 @dataclass
@@ -94,30 +107,37 @@ class ConesInterface(BaseInterface):
 
 
 @dataclass
-class GazeConesInterface(ConesInterface):
+class DepthImageInterface(BaseInterface):
     """
-    `cones` -- the list of cones found
-    `wtd_body_ids` -- `body_ids[i]` is the body id in weight task dataset format for each `cones[i]`
-    `azure_body_ids` -- `body_ids[i]` is the body id in azure kinect format for each `cones[i]`
+    frame_count -- the current frame count
+    frame -- depth image with shape (h, w). The values should
+        have type uint16 (integers between 0 and 65535).
     """
 
-    wtd_body_ids: list[int]
-    azure_body_ids: list[int]
+    frame_count: int
+    frame: np.ndarray
+
 
 
 @dataclass
-class GestureConesInterface(ConesInterface):
+class DpipCommonGroundTracking(BaseInterface):
     """
-    `cones` -- the list of cones found
-    `wtd_body_ids` -- `body_ids[i]` is the body id in weight task dataset format for each `cones[i]`
-    `azure_body_ids` -- `body_ids[i]` is the body id in azure kinect format for each `cones[i]`
-    `handedness` -- `handedness[i]` is the hand used to create `cones[i]`
+    
     """
 
-    wtd_body_ids: list[int]
-    azure_body_ids: list[int]
-    handedness: list[Handedness]
-    
+
+@dataclass
+class EmptyInterface(BaseInterface):
+    """
+    Output interface when the feature does not have any output
+    """
+
+
+@dataclass
+class EngagementLevelInterface(BaseInterface):
+
+    engagement_level: int
+
 
 @dataclass
 class FrictionMetrics:
@@ -176,6 +196,67 @@ class FrictionOutputInterface(BaseInterface):
 
 
 @dataclass
+class GazeConesInterface(ConesInterface):
+    """
+    `cones` -- the list of cones found
+    `wtd_body_ids` -- `body_ids[i]` is the body id in weight task dataset format for each `cones[i]`
+    `azure_body_ids` -- `body_ids[i]` is the body id in azure kinect format for each `cones[i]`
+    """
+
+    wtd_body_ids: list[int]
+    azure_body_ids: list[int]
+
+
+@dataclass
+class GestureConesInterface(ConesInterface):
+    """
+    `cones` -- the list of cones found
+    `wtd_body_ids` -- `body_ids[i]` is the body id in weight task dataset format for each `cones[i]`
+    `azure_body_ids` -- `body_ids[i]` is the body id in azure kinect format for each `cones[i]`
+    `handedness` -- `handedness[i]` is the hand used to create `cones[i]`
+    """
+
+    wtd_body_ids: list[int]
+    azure_body_ids: list[int]
+    handedness: list[Handedness]
+    
+
+@dataclass
+class GazeEventInterface(BaseInterface):
+    """
+    The Interface of GazeEvent feature
+    There are more than one participant in the vedio
+    both positive and negetive event could happen here
+    This interface contains both positive and negative
+    """
+    positive_event: int
+    negative_event: int
+
+@dataclass
+class GestureEventInterface(BaseInterface):
+    """
+    The interface of GestureEvent feature
+    The model is used to detect who is pointing and what is pointed
+    What is pointed is not important in this task
+    We only want to who is pointing
+    Pointing is a positive signal, here only positive event included
+    """
+    positive_event: int
+
+
+
+@dataclass
+class GazeSelectionInterface(BaseInterface):
+    """
+    Whether the gaze of a participant selects other participants
+
+    selection -- [(gaze cone owner, gaze cone target or None)]
+    """
+    
+    selection: list[tuple[str, str | None]]
+
+
+@dataclass
 class HciiGestureConesInterface(ConesInterface):
     """
     `cones` -- the list of cones found
@@ -189,6 +270,29 @@ class HciiGestureConesInterface(ConesInterface):
     azure_body_ids: list[int]
     handedness: list[Handedness]
     nose_positions: list[float]
+
+
+@dataclass
+class HciiSelectedObjectsInterface(BaseInterface):
+    """
+    Which objects are selected by participants
+
+    objects -- [(object info, selected?, participant id), ...]
+    """
+
+    objects: Sequence[tuple[HciiObjectInfo2D, bool, int]]
+
+
+@dataclass
+class MoveInterface(BaseInterface):
+    """
+    speaker_id -- unique identifier for the speaker
+    move -- iterable containing some subset of
+            {"STATEMENT", "ACCEPT", "DOUBT"}
+    """
+
+    speaker_id: str
+    move: Iterable[str]
 
 
 @dataclass
@@ -214,117 +318,6 @@ class ObjectInterface3D(BaseInterface):
 
 
 @dataclass
-class SelectedObjectsInterface(BaseInterface):
-    """
-    Which objects are selected by participants
-
-    objects -- [(object info, selected?), ...]
-    """
-
-    objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D, bool]]
-
-@dataclass
-class HciiSelectedObjectsInterface(BaseInterface):
-    """
-    Which objects are selected by participants
-
-    objects -- [(object info, selected?, participant id), ...]
-    """
-
-    objects: Sequence[tuple[HciiObjectInfo2D, bool, int]]
-
-
-@dataclass
-class SelectedParticipantsInterface(BaseInterface):
-    """
-    Which participants are selected by participants (via gaze)
-
-    participants -- [(ParticipantInfo info, selected?), ...]
-    """
-
-    participants: Sequence[tuple[ParticipantInfo, bool]]
-
-
-@dataclass
-class AudioFileInterface(BaseInterface):
-    """
-    Audio chunks as a wav file
-
-    `speaker_id` -- unique identifier for the speaker
-    `start_time`, `end_time` -- start and end time in seconds
-    `path` -- path to wav file
-    """
-
-    speaker_id: str
-    start_time: float
-    end_time: float
-    path: Path
-
-
-@dataclass
-class AudioFileListInterface(BaseInterface):
-    """
-    An interface to return a list of AudioFileInterfces. This
-    is useful because sometimes multiple audio files will need
-    to be returned in a single frame.
-
-    `audio_files` -- the list of audio files
-    """
-
-    audio_files: list[AudioFileInterface]
-
-
-@dataclass
-class TranscriptionInterface(BaseInterface):
-    """
-    speaker_id -- unique identifier for the speaker
-    start_time -- start time of the utterance
-    end_time -- end time of the utterance
-    text -- transcription of the utterance
-    """
-
-    speaker_id: str
-    start_time: float
-    end_time: float
-    text: str
-
-
-@dataclass
-class PropositionInterface(BaseInterface):
-    """
-    speaker_id -- unique identifier for the speaker
-    prop -- proposition expressed by the speaker
-    """
-
-    speaker_id: str
-    prop: str
-
-
-@dataclass
-class MoveInterface(BaseInterface):
-    """
-    speaker_id -- unique identifier for the speaker
-    move -- iterable containing some subset of
-            {"STATEMENT", "ACCEPT", "DOUBT"}
-    """
-
-    speaker_id: str
-    move: Iterable[str]
-
-
-@dataclass
-class CommonGroundInterface(BaseInterface):
-    """
-    qbank, fbank, ebank -- sets of propositions describing the
-        current common ground
-    """
-
-    qbank: set[str]
-    fbank: set[str]
-    ebank: set[str]
-
-
-@dataclass
 class PlannerInterface(BaseInterface):
     """
     solv -- boolean variable to indicate if the problem is solvable
@@ -346,42 +339,48 @@ class PoseEventInterface(BaseInterface):
     positive_event: int
     negative_event: int
 
-@dataclass
-class GazeEventInterface(BaseInterface):
-    """
-    The Interface of GazeEvent feature
-    There are more than one participant in the vedio
-    both positive and negetive event could happen here
-    This interface contains both positive and negative
-    """
-    positive_event: int
-    negative_event: int
 
 @dataclass
-class GestureEventInterface(BaseInterface):
+class PoseInterface(BaseInterface):
     """
-    The interface of GestureEvent feature
-    The model is used to detect who is pointing and what is pointed
-    What is pointed is not important in this task
-    We only want to who is pointing
-    Pointing is a positive signal, here only positive event included
+    poses -- list of (participant id, "leaning in" / "leaning out")
     """
-    positive_event: int
+
+    poses: list[tuple[str, str]]
+
 
 @dataclass
-class EngagementLevelInterface(BaseInterface):
+class PropositionInterface(BaseInterface):
+    """
+    speaker_id -- unique identifier for the speaker
+    prop -- proposition expressed by the speaker
+    """
 
-    engagement_level: int
+    speaker_id: str
+    prop: str
+
 
 @dataclass
-class GazeSelectionInterface(BaseInterface):
+class SelectedObjectsInterface(BaseInterface):
     """
-    Whether the gaze of a participant selects other participants
+    Which objects are selected by participants
 
-    selection -- [(gaze cone owner, gaze cone target or None)]
+    objects -- [(object info, selected?), ...]
     """
-    
-    selection: list[tuple[str, str | None]]
+
+    objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D, bool]]
+
+
+@dataclass
+class SelectedParticipantsInterface(BaseInterface):
+    """
+    Which participants are selected by participants (via gaze)
+
+    participants -- [(ParticipantInfo info, selected?), ...]
+    """
+
+    participants: Sequence[tuple[ParticipantInfo, bool]]
+
 
 @dataclass
 class SpeechOutputInterface(BaseInterface):
@@ -391,6 +390,22 @@ class SpeechOutputInterface(BaseInterface):
     """
     speech_output: bool
     length: int
+
+
+@dataclass
+class TranscriptionInterface(BaseInterface):
+    """
+    speaker_id -- unique identifier for the speaker
+    start_time -- start time of the utterance
+    end_time -- end time of the utterance
+    text -- transcription of the utterance
+    """
+
+    speaker_id: str
+    start_time: float
+    end_time: float
+    text: str
+
 
 @dataclass
 class UserInterface(BaseInterface):
