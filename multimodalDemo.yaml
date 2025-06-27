@@ -75,7 +75,7 @@ dependencies:
   - mpir=3.0.0=hec2e145_1
   - mpmath=1.3.0=py310haa95532_0
   - networkx=3.2.1=py310haa95532_0
-  - openjpeg=2.5.2=hae555c5_0
+  - openjpeg<2.5.2
   - openssl=3.4.0=h2466b09_0
   - pip=24.0=py310haa95532_0
   - portaudio=19.6.0=he774522_4
