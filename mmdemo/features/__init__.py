@@ -3,6 +3,7 @@ Premade features
 """
 
 from mmdemo.features.common_ground.cgt_feature import CommonGroundTracking
+from mmdemo.features.common_ground.dpip_cgt_output import DpipCommonGroundTracking
 from mmdemo.features.gaze.gaze_body_tracking_feature import GazeBodyTracking
 from mmdemo.features.gaze.aaai_gaze_body_tracking_feature import AaaiGazeBodyTracking
 from mmdemo.features.gesture.gesture_feature import Gesture
@@ -41,5 +42,9 @@ from mmdemo.features.pose_event.pose_event_decision_feature import PoseEvent
 from mmdemo.features.gesture_event.gesture_event_decision_feature import GestureEvent
 from mmdemo.features.engagement_level.engagement_level_feature import EngagementLevel
 from mmdemo.features.outputs.aaai_frame_feature import AAAIFrame
-from mmdemo.features.speech_output.speechoutput_feature import SpeechOutput
-from mmdemo.features.outputs.user_study_frame_feature import UserFrame
+
+# Commented these out because I don't have the speech packages for the user study in my env
+# They aren't needed currently in post process, so I commented them out to start the CGT GUI
+# TODO work with Mariah to get them added and update the yaml
+#from mmdemo.features.speech_output.speechoutput_feature import SpeechOutput
+#from mmdemo.features.outputs.user_study_frame_feature import UserFrame

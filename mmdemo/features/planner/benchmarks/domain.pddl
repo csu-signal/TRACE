@@ -2,8 +2,8 @@
  (:requirements :strips :typing :negative-preconditions :equality :conditional-effects)
  (:types block weight participant)
  (:constants
-   o_20g o_40g o_10g o_30g o_50g - weight
-   participant3 participant2 participant1 - participant
+   o_20g o_10g o_50g o_30g o_40g - weight
+   participant1 participant2 participant3 - participant
  )
  (:predicates (actual_weight ?block - block ?weight - weight) (believed_weight ?block - block ?weight - weight ?participant - participant) (heavier ?heavier - block ?lighter - block ?participant - participant) (is_paying_attention ?participant - participant))
  (:action set_weight

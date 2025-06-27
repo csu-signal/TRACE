@@ -26,12 +26,26 @@ from mmdemo.features import (
     VADUtteranceBuilder,
     WhisperTranscription,
     Planner,
+    DpipCommonGroundTracking
 )
 
 import warnings
 
 # Suppress all warnings
 warnings.filterwarnings("ignore")
+
+#TODO 
+    # Updated features needed (can be place holders for the time being)
+        # Object Tracking
+        # Propositions
+        # CGT - done -> DpipCommonGroundTracking
+            #TODO Dynamic Block Rendering/Updating (Hannah) (independent of the props output so we can parse and pass outputs from the model in when Videep is ready)
+        # Output Frame
+    # Get Post Processing working with DPIP
+        # ground truth inputs (audio and others?) (Austin)
+            # scripts/wtd_annotations/create_all_wtd_inputs.py
+        # video end times?
+        # once post process is working we can move into the output frame for the DPIP task
 
 # mkv path for WTD group
 WTD_MKV_PATH = (
@@ -99,11 +113,6 @@ def create_transcription_and_audio_ground_truth_features(
     return transcription, audio
 
 if __name__ == "__main__":
-    # azure kinect features from camera TODO test live
-    # color, depth, body_tracking, calibration = create_azure_kinect_features(
-    #     DeviceType.CAMERA, camera_index=0
-    # )
-
     group = 1
     ground_truth_dir = Path(WTD_GROUND_TRUTH_DIR.format(group))
 
@@ -124,11 +133,7 @@ if __name__ == "__main__":
     objects = Object(color, depth, calibration)
     selected_objects = SelectedObjects(objects, gesture)  # pyright: ignore
 
-    # transcriptions from microphone TODO test live
-    # audio = MicAudio(device_id=6, speaker_id="group")
-    # utterance_audio = VADUtteranceBuilder(audio, delete_input_files=True)
-    # transcriptions = WhisperTranscription(utterance_audio)
-
+    #TODO get DPIP ground truth utterances
     # transcriptions from the ground truth file
     (
         transcriptions,
@@ -163,21 +168,21 @@ if __name__ == "__main__":
     )
 
     cgt = CommonGroundTracking(moves, props)
-
     plan = Planner(cgt)
 
     # friction
     friction = Friction(dense_paraphrased_transcriptions, plan)
 
-    # TODO create output frame for this demo
+    # TODO create output frame for this demo (without CGT outputs)
     output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction, plan)
 
     # run demo and show output
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
+            DpipCommonGroundTracking(props), #new common ground gui output, (can this replace CommonGroundTracking?)
             SaveVideo(output_frame, frame_rate=10),
-            Log(friction, csv=True),
+            #Log(friction, csv=True),
             #Log(transcriptions, stdout=True),
         ]
     )
