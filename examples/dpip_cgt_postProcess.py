@@ -9,7 +9,7 @@ import os
 from mmdemo.demo import Demo
 from mmdemo.features import (
     AccumulatedSelectedObjects,
-    CommonGroundTracking,
+    DpipCommonGroundTracking,
     DenseParaphrasedTranscription,
     DisplayFrame,
     EMNLPFrame,
@@ -41,6 +41,7 @@ warnings.filterwarnings("ignore")
         # CGT - done -> DpipCommonGroundTracking
             #TODO Dynamic Block Rendering/Updating (Hannah) (independent of the props output so we can parse and pass outputs from the model in when Videep is ready)
         # Output Frame
+
     # Get Post Processing working with DPIP
         # ground truth inputs (audio and others?) (Austin)
             # scripts/wtd_annotations/create_all_wtd_inputs.py
@@ -167,7 +168,7 @@ if __name__ == "__main__":
         model_path=Path(WTD_MOVE_MODEL_PATH.format(group)),
     )
 
-    cgt = CommonGroundTracking(moves, props)
+    cgt = DpipCommonGroundTracking(moves, props)
     plan = Planner(cgt)
 
     # friction
