@@ -90,22 +90,22 @@ if __name__ == "__main__":
     parser.add_argument(
         "--utterancePath",
         nargs="?",
-        default="E:\\Weights_Task\\Data\\GAMR\\Utterances\\Group_01.csv",
+        default="G:\\DPIP\\GAMR\\Utterances\\Group_01.csv",
     )
     parser.add_argument(
         "--audioFile", 
         nargs="?", 
-        default="E:\\Weights_Task\\Data\\Group_01-audio.wav"
+        default="G:\\DPIP\\DPIP_Azure_Recordings\\Group_Test_01-audio1.wav"
     )
     parser.add_argument(
         "--outputFile",
         nargs="?",
-        default="E:\\Weights_Task\\Data\\FactPostProcessing\\Utterances\\Group_01.csv",
+        default="G:\\DPIP\\PostProcessing\\Utterances\\Group_01.csv",
     )
     parser.add_argument(
         "--outputChunkDir",
         nargs="?",
-        default="E:\\Weights_Task\\Data\\FactPostProcessing\\Utterances\\Group_01_chunks",
+        default="G:\\DPIP\\PostProcessing\\Utterances\\Group_01_chunks",
     )
     args = parser.parse_args()
 

@@ -48,27 +48,27 @@ warnings.filterwarnings("ignore")
 
     # Get Post Processing working with DPIP
         # ground truth inputs (audio and others?) (Austin)
-            # scripts/wtd_annotations/create_all_wtd_inputs.py
+            # scripts/dpip_annotations/create_all_dpip_inputs.py
         # video end times?
         # once post process is working we can move into the output frame for the DPIP task
 
 # TODO update to use the DPIP vidoes
 # mkv path for WTD group
-WTD_MKV_PATH = (
-    "G:/Weights_Task/Data/Fib_weights_original_videos/Group_{0:02}-master.mkv"
+DPIP_MKV_PATH = (
+    "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-master.mkv"
 )
 
 # audio path for WTD group
-WTD_AUDIO_PATH = "G:/Weights_Task/Data/Group_{0:02}-audio.wav"
+DPIP_AUDIO_PATH = "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-audio.wav"
 
 # ground truth path for WTD group. These can be generated with
-# scripts/wtd_annotations/create_all_wtd_inputs.py
-WTD_GROUND_TRUTH_DIR = "G:/Weights_Task/Data/wtd_inputs/group{0}"
+# scripts/dpip_annotations/create_all_dpip_inputs.py
+DPIP_GROUND_TRUTH_DIR = "G:/DPIP/dpip_inputs/group{0}"
 
-WTD_MOVE_MODEL_PATH = "G:/brady_wtd_eval_models/move_classifier_{0:02}.pt"
+DPIP_MOVE_MODEL_PATH = "G:/brady_wtd_eval_models/move_classifier_{0:02}.pt" #TODO: New(?) move model
 
 # The number of seconds of the recording to process
-WTD_END_TIMES = {
+DPIP_END_TIMES = {
     1: 5 * 60 + 30,
     2: 5 * 60 + 48,
     3: 8 * 60 + 3,
@@ -120,13 +120,13 @@ def create_transcription_and_audio_ground_truth_features(
 
 if __name__ == "__main__":
     group = 1
-    ground_truth_dir = Path(WTD_GROUND_TRUTH_DIR.format(group))
+    ground_truth_dir = Path(DPIP_GROUND_TRUTH_DIR.format(group))
 
     # load azure kinect features from file
     color, depth, body_tracking, calibration = create_azure_kinect_features(
         DeviceType.PLAYBACK,
-        mkv_path=Path(WTD_MKV_PATH.format(group)),
-        playback_end_seconds=WTD_END_TIMES[group],
+        mkv_path=Path(DPIP_MKV_PATH.format(group)),
+        playback_end_seconds=DPIP_END_TIMES[group],
         playback_frame_rate=PLAYBACK_FRAME_RATE,
     )
 
