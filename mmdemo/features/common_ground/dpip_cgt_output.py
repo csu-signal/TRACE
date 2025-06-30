@@ -11,7 +11,7 @@ import re
 from typing import Dict, List, Optional
 import threading
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import PropositionInterface
+from mmdemo.interfaces import DpipCommonGroundTrackingInterface, PropositionInterface
 import tkinter as tk                    
 from tkinter import ttk
 
@@ -44,7 +44,13 @@ class DpipCommonGroundTracking(BaseFeature):
         
         self.t = threading.Thread(target=self.worker)
         self.t.start()
-        return
+        
+        #TODO output banks for the planner
+        return DpipCommonGroundTrackingInterface(
+            qbank=[],
+            fbank=[],
+            ebank=[],
+        )
     
     def worker(self):
         #print("New DPIP Interface Update Thread Started")

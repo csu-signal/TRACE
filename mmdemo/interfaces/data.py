@@ -74,7 +74,7 @@ class ObjectInfo2D:
 
     p1: tuple[float, float]
     p2: tuple[float, float]
-    object_class: GamrTarget
+    object_class: GamrTarget #TODO add new DPIP classes
 
 @dataclass
 class HciiObjectInfo2D:

@@ -120,7 +120,7 @@ class DepthImageInterface(BaseInterface):
 
 
 @dataclass
-class DpipCommonGroundTracking(BaseInterface):
+class DpipCommonGroundTrackingInterface(CommonGroundInterface):
     """
     returns
     """

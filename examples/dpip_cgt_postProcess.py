@@ -12,7 +12,7 @@ from mmdemo.features import (
     DpipCommonGroundTracking,
     DenseParaphrasedTranscription,
     DisplayFrame,
-    EMNLPFrame,
+    DpipFrame,
     GazeBodyTracking,
     Gesture,
     Log,
@@ -20,7 +20,7 @@ from mmdemo.features import (
     RecordedAudio,
     Move,
     Object,
-    Proposition,
+    DpipProposition,
     SaveVideo,
     SelectedObjects,
     VADUtteranceBuilder,
@@ -37,10 +37,14 @@ warnings.filterwarnings("ignore")
 #TODO 
     # Updated features needed (can be place holders for the time being)
         # Object Tracking
-        # Propositions
-        # CGT - done -> DpipCommonGroundTracking
-            #TODO Dynamic Block Rendering/Updating (Hannah) (independent of the props output so we can parse and pass outputs from the model in when Videep is ready)
-        # Output Frame
+            # I think we can use the existing feature?
+            # TODO to update/create a new GamrTargets/ObjectInfo to include the new class values for the DPIP blocks
+        # Propositions -> DpipProposition
+            #TODO Update to use the new propsition model
+        # CGT -> DpipCommonGroundTracking
+            # TODO output the bank values for the planner
+            # TODO Dynamic Block Rendering/Updating (Hannah) (independent of the props output so we can parse and pass outputs from the model in when Videep is ready)
+        # Output Frame -> DpipFrame
 
     # Get Post Processing working with DPIP
         # ground truth inputs (audio and others?) (Austin)
@@ -48,6 +52,7 @@ warnings.filterwarnings("ignore")
         # video end times?
         # once post process is working we can move into the output frame for the DPIP task
 
+# TODO update to use the DPIP vidoes
 # mkv path for WTD group
 WTD_MKV_PATH = (
     "G:/Weights_Task/Data/Fib_weights_original_videos/Group_{0:02}-master.mkv"
@@ -127,12 +132,13 @@ if __name__ == "__main__":
 
 
     # gaze and gesture
-    gaze = GazeBodyTracking(body_tracking, calibration)
+    # gaze = GazeBodyTracking(body_tracking, calibration) #TODO are we using gaze?
     gesture = Gesture(color, depth, body_tracking, calibration)
 
     # which objects are selected by gesture
+    # TODO update object info for new block types
     objects = Object(color, depth, calibration)
-    selected_objects = SelectedObjects(objects, gesture)  # pyright: ignore
+    selected_objects = SelectedObjects(objects, gesture)
 
     #TODO get DPIP ground truth utterances
     # transcriptions from the ground truth file
@@ -147,6 +153,7 @@ if __name__ == "__main__":
 
     # which objects are referenced (by gesture) during a transcription
     # and dense paraphrased transcription
+    # TODO update selected objects info to return DPIP gamr values and not the old WTD gamr values
     referenced_objects = AccumulatedSelectedObjects(selected_objects, transcriptions)
     dense_paraphrased_transcriptions = DenseParaphrasedTranscription(
         transcriptions, referenced_objects
@@ -158,30 +165,33 @@ if __name__ == "__main__":
     # objects_move = None
 
     # prop extraction and move classifier
-    props = Proposition(dense_paraphrased_transcriptions)
-    #moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects) #live move
-    moves = Move(
-        dense_paraphrased_transcriptions,
-        utterances,
-        gesture=gesture_move,
-        objects=objects_move,
-        model_path=Path(WTD_MOVE_MODEL_PATH.format(group)),
-    )
+    props = DpipProposition(dense_paraphrased_transcriptions)
 
-    cgt = DpipCommonGroundTracking(moves, props)
+    # TODO are we using Move?
+    # moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects) #live move
+    # moves = Move(
+    #     dense_paraphrased_transcriptions,
+    #     utterances,
+    #     gesture=gesture_move,
+    #     objects=objects_move,
+    #     model_path=Path(WTD_MOVE_MODEL_PATH.format(group)),
+    # )
+
+    cgt = DpipCommonGroundTracking(props)
+    
+    # TODO are need to update the planner?
     plan = Planner(cgt)
 
     # friction
     friction = Friction(dense_paraphrased_transcriptions, plan)
 
-    # TODO create output frame for this demo (without CGT outputs)
-    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction, plan)
+    output_frame = DpipFrame(color, gesture, selected_objects, calibration, friction, plan)
 
     # run demo and show output
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
-            DpipCommonGroundTracking(props), #new common ground gui output, (can this replace CommonGroundTracking?)
+            cgt, #new common ground gui output
             SaveVideo(output_frame, frame_rate=10),
             #Log(friction, csv=True),
             #Log(transcriptions, stdout=True),
