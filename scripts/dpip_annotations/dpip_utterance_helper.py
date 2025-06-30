@@ -11,7 +11,7 @@ import numpy as np
 def loadUtteranceFeatures(csvFile):
     featuresArray = []
     features = np.loadtxt(
-        csvFile, delimiter=",", ndmin=2, dtype=str, usecols=list(range(0, 4))
+        csvFile, delimiter=",", ndmin=2, dtype=str, usecols=list(range(0, 3))
     )
     if features.size != 0:
         for f in features:
@@ -58,13 +58,13 @@ def create_utterance_input(utterancePath, audio_file, outputFile, output_chunk_d
         # for each ground truth utterance log the ASR values
         count = 1
         for u in utteranceFeatures:
-            # print(u)
-            startTime = float(u[1])
-            endTime = float(u[2])
+            print(u)
+            startTime = float(u[0])
+            endTime = float(u[1])
             startFrame = int(startTime * 30)
             endFrame = int(endTime * 30)
 
-            text = u[3]
+            text = u[2]
             for i, j in subs:
                 text = re.sub(i, j, text, flags=re.IGNORECASE)
 

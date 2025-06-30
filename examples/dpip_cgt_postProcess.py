@@ -54,18 +54,22 @@ warnings.filterwarnings("ignore")
 
 # TODO update to use the DPIP vidoes
 # mkv path for WTD group
+# DPIP_MKV_PATH = (
+#     "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-master.mkv"
+# )
 DPIP_MKV_PATH = (
-    "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-master.mkv"
+    "G:\\DPIP\\DPIP_Azure_Recordings\\TB_DPIP_Group_03-master.mkv"
 )
 
 # audio path for WTD group
-DPIP_AUDIO_PATH = "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-audio.wav"
+# DPIP_AUDIO_PATH = "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-audio1.wav"
+DPIP_AUDIO_PATH ="G:\\DPIP\\DPIP_Azure_Recordings\\TB_DPIP_Group_03-audio.wav"
 
 # ground truth path for WTD group. These can be generated with
 # scripts/dpip_annotations/create_all_dpip_inputs.py
-DPIP_GROUND_TRUTH_DIR = "G:/DPIP/dpip_inputs/group{0}"
+DPIP_GROUND_TRUTH_DIR = "G:/DPIP/dpip_inputs/group3"
 
-DPIP_MOVE_MODEL_PATH = "G:/brady_wtd_eval_models/move_classifier_{0:02}.pt" #TODO: New(?) move model
+# DPIP_MOVE_MODEL_PATH = "G:/brady_wtd_eval_models/move_classifier_{0:02}.pt" #TODO: New(?) move model
 
 # The number of seconds of the recording to process
 DPIP_END_TIMES = {
