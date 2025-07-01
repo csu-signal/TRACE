@@ -34,6 +34,7 @@ class DpipCommonGroundTracking(BaseFeature):
         self.init = False
         self.t = threading.Thread(target=self.worker)
         self.t.start()
+        self.rowX = {}
 
     def initialize(self):
         print("DPIP Interface")
@@ -81,23 +82,42 @@ class DpipCommonGroundTracking(BaseFeature):
                 
                 self.root.mainloop()
             else:
-                self.canvas1.delete()
-                self.canvas2.delete()
-                self.canvas3.delete()
+                self.canvas1.delete("all")
+                self.canvas2.delete("all")
+                self.canvas3.delete("all")
+                self.rowX = {}
 
-                self.canvas1.create_rectangle(10, 10, 60, 60, fill='red')
-                self.canvas1.create_rectangle(70, 10, 170, 60, fill='yellow')
-                self.canvas1.create_rectangle(180, 10, 230, 60, fill='green')
+                self.renderRectangles(1, 1, 1, 'orange')
+                self.renderRectangles(1, 1, 2, 'white')
+                self.renderRectangles(1, 1, 1, 'blue')
+                self.renderRectangles(1, 2, 2, 'red')
+                self.renderRectangles(1, 2, 1, 'blue')
+                self.renderRectangles(1, 3, 2, 'purple')
 
-                self.canvas1.create_rectangle(10, 70, 60, 120, fill='orange')
-                self.canvas1.create_rectangle(70, 70, 170, 120, fill='blue')
-                self.canvas1.create_rectangle(180, 70, 230, 120, fill='red')
-
-                self.canvas1.create_rectangle(10, 130, 60, 180, fill='yellow')
-                self.canvas1.create_rectangle(180, 130, 230, 180, fill='purple')
+                self.renderRectangles(2, 2, 1, 'red')
+                self.renderRectangles(2, 2, 2, 'purple')
+                self.renderRectangles(3, 3, 1, 'yellow')
 
                 self.canvas1.pack()
+                self.canvas2.pack()
+                self.canvas3.pack()
 
         except Exception as e:
             print(f"DPIP FEATURE THREAD: An error occurred: {e}")
 
+    def renderRectangles(self, side, row, size, color):
+        key = str(side) + "_" + str(row)
+        y = 10 + ((row - 1) * 60)
+        if self.rowX.get(key) is None:
+            self.rowX[key] = 10
+
+        xOffset = 50 * size
+        xStart = self.rowX.get(key)
+        xEnd = self.rowX.get(key) + xOffset
+        if(side == 1):
+             self.canvas1.create_rectangle(xStart, y, xEnd, y + 50, fill=color, outline=color)
+        if(side == 2):
+             self.canvas2.create_rectangle(xStart, y, xEnd, y + 50, fill=color, outline=color)
+        if(side == 3):
+             self.canvas3.create_rectangle(xStart, y, xEnd, y + 50, fill=color, outline=color)
+        self.rowX[key] = xEnd + 5
