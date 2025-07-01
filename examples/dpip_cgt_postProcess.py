@@ -19,7 +19,7 @@ from mmdemo.features import (
     MicAudio,
     RecordedAudio,
     Move,
-    Object,
+    DpipObject,
     DpipProposition,
     SaveVideo,
     SelectedObjects,
@@ -36,42 +36,41 @@ warnings.filterwarnings("ignore")
 
 #TODO 
     # Updated features needed (can be place holders for the time being)
-        # Object Tracking
-            # I think we can use the existing feature?
-            # TODO to update/create a new GamrTargets/ObjectInfo to include the new class values for the DPIP blocks
-        # Propositions -> DpipProposition
+        # Object Tracking -> DpipObject (Jack)
+            # TODO Update to include the new class values for the DPIP blocks
+        # Propositions -> DpipProposition (Videep)
             #TODO Update to use the new propsition model
         # CGT -> DpipCommonGroundTracking
-            # TODO output the bank values for the planner
+            # TODO output the bank values for the Planner (Ibrahim Tim)
             # TODO Dynamic Block Rendering/Updating (Hannah) (independent of the props output so we can parse and pass outputs from the model in when Videep is ready)
         # Output Frame -> DpipFrame
 
-    # Get Post Processing working with DPIP
-        # ground truth inputs (audio and others?) (Austin)
-            # scripts/dpip_annotations/create_all_dpip_inputs.py
-        # video end times?
-        # once post process is working we can move into the output frame for the DPIP task
+    # meeting questions
+        # Videep Abhijnan utterance annotations column values? WTD 4, DPIP 3
+            # G:\Weights_Task\Data\GAMR\Utterances
+            # G:\DPIP\GAMR\Utterances 
 
-# TODO update to use the DPIP vidoes
-# mkv path for WTD group
+
 # DPIP_MKV_PATH = (
 #     "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-master.mkv"
 # )
+
 DPIP_MKV_PATH = (
     "G:\\DPIP\\DPIP_Azure_Recordings\\TB_DPIP_Group_03-master.mkv"
 )
 
-# audio path for WTD group
+# audio path for DPIP group
 # DPIP_AUDIO_PATH = "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-audio1.wav"
 DPIP_AUDIO_PATH ="G:\\DPIP\\DPIP_Azure_Recordings\\TB_DPIP_Group_03-audio.wav"
 
-# ground truth path for WTD group. These can be generated with
+# ground truth path for DPIP group. These can be generated with
 # scripts/dpip_annotations/create_all_dpip_inputs.py
 DPIP_GROUND_TRUTH_DIR = "G:/DPIP/dpip_inputs/group3"
 
 # DPIP_MOVE_MODEL_PATH = "G:/brady_wtd_eval_models/move_classifier_{0:02}.pt" #TODO: New(?) move model
 
 # The number of seconds of the recording to process
+# TODO update for DPIP (fine for now, but they might end early and not work for ablation testing)
 DPIP_END_TIMES = {
     1: 5 * 60 + 30,
     2: 5 * 60 + 48,
@@ -123,7 +122,7 @@ def create_transcription_and_audio_ground_truth_features(
     return transcription, audio
 
 if __name__ == "__main__":
-    group = 1
+    group = 3
     ground_truth_dir = Path(DPIP_GROUND_TRUTH_DIR.format(group))
 
     # load azure kinect features from file
@@ -141,7 +140,7 @@ if __name__ == "__main__":
 
     # which objects are selected by gesture
     # TODO update object info for new block types
-    objects = Object(color, depth, calibration)
+    objects = DpipObject(color, depth, calibration)
     selected_objects = SelectedObjects(objects, gesture)
 
     #TODO get DPIP ground truth utterances
