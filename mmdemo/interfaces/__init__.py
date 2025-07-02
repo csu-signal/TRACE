@@ -148,6 +148,12 @@ class FrictionMetrics:
     perplexity: float
     conditional_entropy: float
 
+@dataclass
+class DpipFrictionOutputInterface(BaseInterface):
+    # TODO add props for board state
+    friction_statement: str
+    transciption_subset: str
+
 
 @dataclass
 class FrictionOutputInterface(BaseInterface):

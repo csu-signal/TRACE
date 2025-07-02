@@ -36,13 +36,13 @@ warnings.filterwarnings("ignore")
 
 #TODO 
     # Updated features needed (can be place holders for the time being)
-        # Object Tracking -> DpipObject (Jack)
+        # Object Tracking -> DpipObject (Jack?)
             # TODO Update to include the new class values for the DPIP blocks
-        # Propositions -> DpipProposition (Videep)
-            #TODO Update to use the new propsition model
+        # Propositions and Friction -> DpipProposition (Videep, Abhijnan)
+            #TODO Update to return the new prop/friction output (interventions and structure status)
+            #TODO Update TARSKI to include a script with Abhijnan's latest code to send back the DPIP values
         # CGT -> DpipCommonGroundTracking
-            # TODO output the bank values for the Planner (Ibrahim Tim)
-            # TODO Dynamic Block Rendering/Updating (Hannah) (independent of the props output so we can parse and pass outputs from the model in when Videep is ready)
+            # TODO parse structure state from the friction output and render the sides
         # Output Frame -> DpipFrame
 
     # meeting questions
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     objects_move = selected_objects
     # objects_move = None
 
-    # prop extraction and move classifier
+    # prop extraction from friction model
     props = DpipProposition(dense_paraphrased_transcriptions)
 
     # TODO are we using Move?
@@ -183,12 +183,9 @@ if __name__ == "__main__":
     cgt = DpipCommonGroundTracking(props)
     
     # TODO are need to update the planner?
-    plan = Planner(cgt)
+    # plan = Planner(cgt)
 
-    # friction
-    friction = Friction(dense_paraphrased_transcriptions, plan)
-
-    output_frame = DpipFrame(color, gesture, selected_objects, calibration, friction, plan)
+    output_frame = DpipFrame(color, gesture, selected_objects, calibration)
 
     # run demo and show output
     demo = Demo(
