@@ -81,7 +81,9 @@ The server needs to start before the demo.
 `ssh traceteam@tarski.cs.colostate.edu`
 `cd fact_server`
 `conda activate frictionEnv`
-`/home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/friction_server.py`
+WTD:`/home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/friction_server.py`
+
+Currently in the works (DPIP: `/home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/dpip_friction_server.py`)
 
 In another local terminal, run the demo in the proper environemnt.
 
