@@ -20,3 +20,4 @@ tmp_*/
 *.pddl
 /demo/featureModules/objects/objectDetectionModels/best_model-objects.pth
 /.vs/*
+mmdemo/features/planner/benchmarks/domain.pddl

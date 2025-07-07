@@ -52,8 +52,6 @@ warnings.filterwarnings("ignore")
         # video end times?
         # once post process is working we can move into the output frame for the DPIP task
 
-# TODO update to use the DPIP vidoes
-# mkv path for WTD group
 # DPIP_MKV_PATH = (
 #     "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-master.mkv"
 # )
@@ -61,11 +59,15 @@ DPIP_MKV_PATH = (
     "G:\\DPIP\\DPIP_Azure_Recordings\\TB_DPIP_Group_03-master.mkv"
 )
 
-# audio path for WTD group
+
+# Secondary camera mkv path
+DPIP_SECOND_MKV_PATH = ()
+
+
 # DPIP_AUDIO_PATH = "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-audio1.wav"
 DPIP_AUDIO_PATH ="G:\\DPIP\\DPIP_Azure_Recordings\\TB_DPIP_Group_03-audio.wav"
 
-# ground truth path for WTD group. These can be generated with
+
 # scripts/dpip_annotations/create_all_dpip_inputs.py
 DPIP_GROUND_TRUTH_DIR = "G:/DPIP/dpip_inputs/group3"
 
@@ -134,6 +136,13 @@ if __name__ == "__main__":
         playback_frame_rate=PLAYBACK_FRAME_RATE,
     )
 
+    # load secondaryazure kinect features from file
+    color2, depth2, _, calibration2 = create_azure_kinect_features(
+        DeviceType.PLAYBACK,
+        mkv_path=Path(DPIP_SECOND_MKV_PATH.format(group)),
+        playback_end_seconds=DPIP_END_TIMES[group],
+        playback_frame_rate=PLAYBACK_FRAME_RATE,
+    )
 
     # gaze and gesture
     # gaze = GazeBodyTracking(body_tracking, calibration) #TODO are we using gaze?
@@ -143,6 +152,8 @@ if __name__ == "__main__":
     # TODO update object info for new block types
     objects = Object(color, depth, calibration)
     selected_objects = SelectedObjects(objects, gesture)
+
+    secodnary_objects = Object(color2, depth2, calibration2)
 
     #TODO get DPIP ground truth utterances
     # transcriptions from the ground truth file
