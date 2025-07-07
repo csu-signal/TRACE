@@ -20,6 +20,15 @@ class GamrTarget(str, Enum):
     MYSTERY_BLOCK = "mystery"
     BLOCKS = "blocks"
 
+class DpipGamrTarget(str, Enum):
+    UNKNOWN = "unknown"
+    RED_BLOCK = "red"
+    BLUE_BLOCK = "blue"
+    YELLOW_BLOCK = "yellow"
+    GREEN_BLOCK = "green"
+    PURPLE_BLOCK = "purple"
+    BROWN_BLOCK = "brown"
+
 
 # https://mediapipe.readthedocs.io/en/latest/solutions/hands.html
 class Handedness(Enum):
@@ -74,7 +83,19 @@ class ObjectInfo2D:
 
     p1: tuple[float, float]
     p2: tuple[float, float]
-    object_class: GamrTarget #TODO add new DPIP classes
+    object_class: GamrTarget
+
+@dataclass
+class DpipObjectInfo2D:
+    """
+    p1 -- top left point (x,y)
+    p2 -- bottom right point (x,y)
+    object_class -- GamrTarget representing the object
+    """
+
+    p1: tuple[float, float]
+    p2: tuple[float, float]
+    object_class: DpipGamrTarget #TODO add new DPIP classes
 
 @dataclass
 class HciiObjectInfo2D:
@@ -93,6 +114,17 @@ class HciiObjectInfo2D:
 
 @dataclass
 class ObjectInfo3D(ObjectInfo2D):
+    """
+    center -- center of block
+    p1 -- top left in 2d?
+    p2 -- bottom right in 2d?
+    object_class -- GamrTarget representing the object
+    """
+
+    center: tuple[float, float, float]
+
+@dataclass
+class DpipObjectInfo3D(DpipObjectInfo2D):
     """
     center -- center of block
     p1 -- top left in 2d?

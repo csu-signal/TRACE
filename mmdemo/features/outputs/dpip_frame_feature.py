@@ -8,7 +8,6 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
     CameraCalibrationInterface,
     ColorImageInterface,
-    FrictionOutputInterface,
     GazeConesInterface,
     GestureConesInterface,
     SelectedObjectsInterface,
@@ -54,13 +53,12 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         gesture: BaseFeature[GestureConesInterface],
         sel_objects: BaseFeature[SelectedObjectsInterface],
         calibration: BaseFeature[CameraCalibrationInterface],
-        friction: BaseFeature[FrictionOutputInterface],
-        plan: BaseFeature[PlannerInterface] | None = None,
+        #plan: BaseFeature[PlannerInterface] | None = None,
     ):
-        if plan is None:
-            super().__init__(color, gesture, sel_objects, calibration, friction) # removed gaze
-        else:
-            super().__init__(color, gesture, sel_objects, calibration, friction, plan) # removed gaze
+        # if plan is None:
+        #     super().__init__(color, gesture, sel_objects, calibration) # removed gaze
+        # else:
+        super().__init__(color, gesture, sel_objects, calibration) # removed gaze
 
     def initialize(self):
         self.last_plan = {"text": "", "color": (255, 255, 255)}
@@ -72,15 +70,13 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         gesture: GestureConesInterface,
         objects: SelectedObjectsInterface,
         calibration: CameraCalibrationInterface,
-        friction: FrictionOutputInterface,
-        plan: PlannerInterface = None,
+        #plan: PlannerInterface = None,
     ):
         if (
             not color.is_new()
            # or not gaze.is_new()
             or not gesture.is_new()
             or not objects.is_new()
-            or not friction.is_new()
         ):
             return None
 
@@ -113,40 +109,8 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
             )
 
         # render plan
-        if plan:
-            DpipFrame.renderPlan(output_frame, plan, self.last_plan)
-
-        if friction and friction.friction_statement != '':
-            frictionStatements = friction.friction_statement.split("r*")
-            fstate = frictionStatements[0]
-            x, y = (50, 75)
-            text = fstate
-            font = cv.FONT_HERSHEY_SIMPLEX
-            font_scale = 0.75
-            font_thickness = 1
-            text_color_bg = (255,255,255)
-            text_color =(0,0,0)
-            text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
-            text_w, text_h = text_size
-            cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
-            cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
-
-            if(len(frictionStatements) > 1):
-                #friction includes rational, print it
-                rstate = frictionStatements[1]
-                x, y = (50, 110)
-                text = rstate
-                font = cv.FONT_HERSHEY_SIMPLEX
-                font_scale = 0.5
-                font_thickness = 1
-                text_color_bg = (255,255,255)
-                text_color =(0,0,0)
-                text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
-                text_w, text_h = text_size
-                cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
-                cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
-
-            # print friction statement
+        # if plan:
+        #     DpipFrame.renderPlan(output_frame, plan, self.last_plan)
        
         # draw frame count
         cv.putText(

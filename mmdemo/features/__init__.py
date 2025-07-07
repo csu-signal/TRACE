@@ -13,6 +13,7 @@ from mmdemo.features.objects.accumulated_selected_objects_feature import (
     AccumulatedSelectedObjects,
 )
 from mmdemo.features.objects.object_feature import Object
+from mmdemo.features.objects.dpip_object_feature import DpipObject
 from mmdemo.features.objects.selected_objects_feature import SelectedObjects
 
 from mmdemo.features.outputs.display_frame_feature import DisplayFrame

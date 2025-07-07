@@ -1,59 +1,152 @@
 from pathlib import Path
+import socket
+import threading
 from typing import final
 
 import nltk
 from sentence_transformers import SentenceTransformer
 
 from mmdemo.base_feature import BaseFeature
+from mmdemo.features.friction import friction_local
 from mmdemo.features.proposition.demo import load_model, process_sentence
 from mmdemo.features.proposition.demo_helpers import get_pickle
-from mmdemo.interfaces import PropositionInterface, TranscriptionInterface
+from mmdemo.interfaces import DpipFrictionOutputInterface, TranscriptionInterface
 
 
 @final
-class DpipProposition(BaseFeature[PropositionInterface]):
+class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
     """
     Extract propositions from a transcription.
 
     Input interface is `TranscriptionInterface`
 
-    Output interface is `PropositionInterface`
+    Output interface is `DpipFrictionOutputInterface`
 
     Keyword arguments:
     `model_path` -- the path to the model (or None to use the default)
     """
 
-    #TODO update prop model path for DPIP
-    DEFAULT_MODEL_PATH = '' #Path(__file__).parent / "data/prop_extraction_model"
+    HOST = "129.82.138.15"  # The server's hostname or IP address (TARSKI)
+    PORT = 65432  # The port used by the server 
 
     def __init__(
         self,
         transcription: BaseFeature[TranscriptionInterface],
+        #plan: BaseFeature[PlannerInterface], commented out for now
         *,
-        model_path: Path | None = None
+        host: str | None = None,
+        port: int | None = 0,
+        minUtteranceValue: int | None = 10,
     ):
-        super().__init__(transcription)
-        if model_path is None:
-            self.model_path = self.DEFAULT_MODEL_PATH
-        else:
-            self.model_path = model_path
+        super().__init__(transcription) 
+        self.transcriptionHistory = []
+        self.frictionSubset = []
+        self.friction = ''
+        self.subsetTranscriptions = ''
+        self.t = threading.Thread(target=self.worker)
+        self.minUtteranceValue = minUtteranceValue
+        self.solvability_history = 0
+
+        if host:
+            self.HOST = host
+        if port != 0:
+            self.PORT = port
+        self.LOCAL = False #Run local or remote #TODO
 
     def initialize(self):
-        return
-        # self.model, self.tokenizer = load_model(str(self.model_path))
-        # self.bert = SentenceTransformer(
-        #     "sentence-transformers/multi-qa-distilbert-cos-v1"
-        # )
-        # self.embeddings = get_pickle(self.bert)
-        # nltk.download("stopwords")
-        # nltk.download("punkt_tab")
+        print("DPIP LLM Friction Init HOST: " + str(self.HOST) + " PORT: " + str(self.PORT))
 
-    def get_output(
-        self,
-        tran: TranscriptionInterface,
-    ):
-        if not tran.is_new():
-            return None
-        
-        #TODO update output method for new dpip props
-        return PropositionInterface(speaker_id=tran.speaker_id, prop='')
+    def get_output(self, transcription: TranscriptionInterface):
+        if not transcription.is_new():
+            return DpipFrictionOutputInterface(friction_statement=self.friction, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
+
+        # if plan.solv:
+        #     self.solvability_history = 0
+        # else:
+        #     self.solvability_history += 1
+
+        # transcription.text += "\nWe believe that " + ", ".join(plan.fbank) +"."
+
+        #if the transcription text is empty don't add it to the history
+        if transcription.text != '':
+            self.transcriptionHistory.append(transcription.speaker_id + ": " + transcription.text)
+            self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
+            # self.transcriptionHistory += "P1: " + transcription.text + "\n"
+                    
+        #if not plan.solv and (self.solvability_history == self.minUtteranceValue or self.solvability_history == 1):
+        if True:
+            self.solvability_history = 1
+            if not self.t.is_alive() and not self.LOCAL:
+                # do this process on the main thread so the socket thread doesn't miss any values
+                # if there are less values in the friction subset the min utterance value pad the list with values from the history
+                if(len(self.frictionSubset) < self.minUtteranceValue):
+                    print(f'\nA minimum of {self.minUtteranceValue} utterances are needed to send to the friction LLM. There have been {len(self.frictionSubset)} utterance(s) since the last friction request. Attempting to add values from transcription history.')
+                    if(len(self.transcriptionHistory) > self.minUtteranceValue):
+                        self.frictionSubset = self.transcriptionHistory[-self.minUtteranceValue:]
+                    else:
+                        # if there are less values in the history then the min utterance value, use the full history
+                        self.frictionSubset = self.transcriptionHistory
+
+                #Add beliefs to 
+                # self.frictionSubset.append("\nWe believe that " + ", ".join(plan.fbank) +".")
+                # format the transcriptions as a string to send over the socket
+                self.subsetTranscriptions = ''
+                for utter in self.frictionSubset:
+                    self.subsetTranscriptions += utter + "\n"
+
+                print("\nSubset of Transcriptions:\n" + self.subsetTranscriptions)
+                self.t = threading.Thread(target=self.worker)
+                self.t.start()
+                self.frictionSubset = []
+            elif self.LOCAL:
+                #TODO
+                friction_detector = friction_local.FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct") #this is the lora model id on huggingface (SFT model)
+                #instead of calling FrictionInference as done above, add the generation arguments to specify parameters like max-length depending on what model you are calling
+                    #for FAAF use, 356 and for SFT use 200 as shown below
+                # define the generation args 
+                custom_args_sft = {
+                        "max_new_tokens": 200,
+                        "temperature": 0.7,
+                        "do_sample": True,
+                        "top_k": 50,
+                        "top_p": 0.9
+                    }
+
+                custom_args_faaf = {
+                        "max_new_tokens": 356,
+                        "temperature": 0.9,
+                        "do_sample": True,
+                        "top_k": 50,
+                        "top_p": 0.9
+                    }
+                # friction_detector = friction_local.FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct", generation_args = custom_args_sft) # instantiate only one of these friction_detector variable
+                friction_detector = friction_local.FrictionInference("Abhijnan/intervention_agent", generation_args = custom_args_faaf)
+                # friction_detector = friction_local.FrictionInference("Abhijnan/dpo_friction_run_with_69ksamples") #this is the dpo model
+                friction_local.start_local(self.subsetTranscriptions,friction_detector)
+            else:
+                print("Friction request in progress...waiting for the thread to complete")
+
+            #TODO include props and board state info for the GUI
+            return DpipFrictionOutputInterface(
+                    friction_statement=self.friction, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
+    
+    def worker(self):
+        print("New DPIP Friction Request Thread Started")
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect((self.HOST, self.PORT))
+                sendData = str.encode(self.subsetTranscriptions)
+                print("Send Data Length:" + str(len(sendData))) 
+                s.sendall(sendData)
+                print("Waiting for friction server response")
+                data = s.recv(2048)
+            received = data.decode()
+            if received != "No Friction":
+                self.friction = received
+                print(f"Received from Server:{received}")
+                print(self.transcriptionHistory[-1])
+        except Exception as e:
+            self.friction = ''
+            print(f"DPIP PROP FEATURE THREAD: An error occurred: {e}")
+
+

@@ -5,6 +5,7 @@ import numpy as np
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
     ConesInterface,
+    DpipObjectInterface3D,
     ObjectInterface3D,
     SelectedObjectsInterface,
 )
@@ -17,19 +18,19 @@ class SelectedObjects(BaseFeature[SelectedObjectsInterface]):
     Determine which objects are selected by checking if their
     centers are contained within cones.
 
-    Input interfaces are `ObjectInterface3D` and any number of `ConesInterface`
+    Input interfaces are `ObjectInterface3D | DpipObjectInterface3D` and any number of `ConesInterface`
 
     Output interface is `SelectedObjectsInterface`.
     """
 
     def __init__(
         self,
-        objects: BaseFeature[ObjectInterface3D],
+        objects: BaseFeature[ObjectInterface3D | DpipObjectInterface3D],
         *cones: BaseFeature[ConesInterface]
     ) -> None:
         super().__init__(objects, *cones)
 
-    def get_output(self, obj: ObjectInterface3D, *cones_list: ConesInterface):
+    def get_output(self, obj: ObjectInterface3D | DpipObjectInterface3D, *cones_list: ConesInterface):
         if not obj.is_new():
             return None
 

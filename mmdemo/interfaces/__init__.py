@@ -11,7 +11,7 @@ from dataclasses import dataclass, asdict
 import numpy as np
 
 from mmdemo.base_interface import BaseInterface
-from mmdemo.interfaces.data import Cone, Handedness, HciiObjectInfo2D, ObjectInfo2D, ObjectInfo3D, ParticipantInfo
+from mmdemo.interfaces.data import Cone, DpipObjectInfo2D, DpipObjectInfo3D, Handedness, HciiObjectInfo2D, ObjectInfo2D, ObjectInfo3D, ParticipantInfo
 
 
 @dataclass
@@ -147,6 +147,12 @@ class FrictionMetrics:
     mutual_information: float
     perplexity: float
     conditional_entropy: float
+
+@dataclass
+class DpipFrictionOutputInterface(BaseInterface):
+    # TODO add props for board state
+    friction_statement: str
+    transciption_subset: str
 
 
 @dataclass
@@ -316,6 +322,16 @@ class ObjectInterface3D(BaseInterface):
 
     objects: list[ObjectInfo3D]
 
+@dataclass
+class DpipObjectInterface3D(BaseInterface):
+    """
+    Object detector 3d locations
+
+    objects -- list of object locations and classes
+    """
+
+    objects: list[DpipObjectInfo3D]
+
 
 @dataclass
 class PlannerInterface(BaseInterface):
@@ -368,7 +384,7 @@ class SelectedObjectsInterface(BaseInterface):
     objects -- [(object info, selected?), ...]
     """
 
-    objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D, bool]]
+    objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D | DpipObjectInfo2D | DpipObjectInfo3D, bool]]
 
 
 @dataclass
