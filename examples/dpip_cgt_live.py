@@ -1,20 +1,33 @@
-from mmdemo.features.friction.friction_feature import Friction
+# from mmdemo.features.friction.friction_feature import Friction
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 
 from mmdemo.demo import Demo
 from mmdemo.features import (
-    AccumulatedSelectedObjects,
+
     CommonGroundTracking,
+    DpipCommonGroundTracking,
+
+
+
+    EMNLPFrame,
+    DpipFrame,
+
+
+
+    DpipObject,
+    Object,
+
+    DpipProposition,
+    Proposition,
+
+    AccumulatedSelectedObjects,
     DenseParaphrasedTranscription,
     DisplayFrame,
-    EMNLPFrame,
     GazeBodyTracking,
     Gesture,
     Log,
     MicAudio,
     Move,
-    Object,
-    DpipProposition,
     SaveVideo,
     SelectedObjects,
     VADUtteranceBuilder,
@@ -38,10 +51,10 @@ if __name__ == "__main__":
     gesture2 = Gesture(color2, depth2, body_tracking2, calibration2)
 
     # which objects are selected by gesture
-    objects = Object(color, depth, calibration)
+    objects = DpipObject(color, depth, calibration)
     selected_objects = SelectedObjects(objects, gesture)  # pyright: ignore
 
-    objects2 = Object(color2, depth2, calibration2)
+    objects2 = DpipObject(color2, depth2, calibration2)
     selected_objects2 = SelectedObjects(objects2, gesture2)
 
     # transcriptions from microphone 
@@ -77,15 +90,15 @@ if __name__ == "__main__":
     moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects)
 
     # common ground tracking
-    cgt = CommonGroundTracking(moves, props)
+    cgt = DpipCommonGroundTracking(moves, props)
 
-    plan = Planner(cgt)
+    # plan = Planner(cgt)
 
     # friction
     friction = Friction(dense_paraphrased_transcriptions, plan)
     # create output frame for video
-    output_frame = EMNLPFrame(color, gesture, selected_objects, cgt, calibration, friction, plan) #removed gaze
-    output_frame2 = EMNLPFrame(color2, gesture2, selected_objects2, cgt, calibration2, friction, plan)
+    output_frame = DpipFrame(color, gesture, selected_objects, calibration) #removed gaze, plan, cgt, friction
+    output_frame2 = DpipFrame(color2, gesture2, selected_objects2, calibration2)
 
     # run demo and show output
     demo = Demo(

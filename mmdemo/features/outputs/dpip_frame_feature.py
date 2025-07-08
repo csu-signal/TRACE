@@ -12,6 +12,7 @@ from mmdemo.interfaces import (
     GestureConesInterface,
     SelectedObjectsInterface,
     PlannerInterface,
+    FrictionOutputInterface
 )
 from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import camera_3d_to_pixel
@@ -53,6 +54,7 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         gesture: BaseFeature[GestureConesInterface],
         sel_objects: BaseFeature[SelectedObjectsInterface],
         calibration: BaseFeature[CameraCalibrationInterface],
+        #friction: BaseFeature[FrictionOutputInterface],
         #plan: BaseFeature[PlannerInterface] | None = None,
     ):
         # if plan is None:
@@ -70,7 +72,8 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         gesture: GestureConesInterface,
         objects: SelectedObjectsInterface,
         calibration: CameraCalibrationInterface,
-        #plan: PlannerInterface = None,
+        # friction: FrictionOutputInterface,
+        # plan: PlannerInterface = None,
     ):
         if (
             not color.is_new()
