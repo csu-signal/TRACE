@@ -59,11 +59,15 @@ DPIP_MKV_PATH = (
     "G:\\DPIP\\DPIP_Azure_Recordings\\TB_DPIP_Group_03-master.mkv"
 )
 
-# audio path for DPIP group
+DPIP_SECOND_MKV_PATH = (
+    ""
+)
+
+# audio path for WTD group
 # DPIP_AUDIO_PATH = "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-audio1.wav"
 DPIP_AUDIO_PATH ="G:\\DPIP\\DPIP_Azure_Recordings\\TB_DPIP_Group_03-audio.wav"
 
-# ground truth path for DPIP group. These can be generated with
+# ground truth path for WTD group. These can be generated with
 # scripts/dpip_annotations/create_all_dpip_inputs.py
 DPIP_GROUND_TRUTH_DIR = "G:/DPIP/dpip_inputs/group3"
 
@@ -133,15 +137,24 @@ if __name__ == "__main__":
         playback_frame_rate=PLAYBACK_FRAME_RATE,
     )
 
+    # load secondary azure kinect features from file
+    # color2, depth2, body_tracking2, calibration2 = create_azure_kinect_features(
+    #     DeviceType.PLAYBACK,
+    #     mkv_path=Path(DPIP_SECOND_MKV_PATH.format(group)),
+    #     playback_end_seconds=DPIP_END_TIMES[group],
+    #     playback_frame_rate=PLAYBACK_FRAME_RATE,
+    # )
 
-    # gaze and gesture
-    # gaze = GazeBodyTracking(body_tracking, calibration) #TODO are we using gaze?
     gesture = Gesture(color, depth, body_tracking, calibration)
+    # gesture2 = Gesture(color2, depth2, body_tracking2, calibration2)
 
     # which objects are selected by gesture
     # TODO update object info for new block types
     objects = DpipObject(color, depth, calibration)
     selected_objects = SelectedObjects(objects, gesture)
+
+    # objects2 = DpipObject(color2, depth2, calibration2)
+    # selected_objects2 = SelectedObjects(objects2, gesture2)
 
     #TODO get DPIP ground truth utterances
     # transcriptions from the ground truth file
@@ -186,13 +199,16 @@ if __name__ == "__main__":
     # plan = Planner(cgt)
 
     output_frame = DpipFrame(color, gesture, selected_objects, calibration)
+    # output_frame2 = DpipFrame(color2, gesture2, selected_objects2, calibration2)
 
     # run demo and show output
     demo = Demo(
         targets=[
             DisplayFrame(output_frame),
             cgt, #new common ground gui output
-            SaveVideo(output_frame, frame_rate=10),
+            # SaveVideo(output_frame, frame_rate=10),
+            # DisplayFrame(output_frame2),
+            # SaveVideo(output_frame2, frame_rate=10, video_name=2),
             #Log(friction, csv=True),
             #Log(transcriptions, stdout=True),
         ]
