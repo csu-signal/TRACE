@@ -197,7 +197,7 @@ Analyze this segment for director beliefs, identify common ground, and suggest f
 
 def segment_transcript_for_friction(df, utterances_per_segment=10):
     """Create transcript segments with compact prompts"""
-    filtered_df = df[df['speaker'].isin(['D1', 'D2', 'D3', 'Builder'])].copy()
+    filtered_df = df[df['speaker'].isin(['D1', 'D2', 'D3', 'Builder', 'Group'])].copy()
     segments = []
     
     for i in range(0, len(filtered_df), utterances_per_segment):
@@ -217,6 +217,39 @@ def segment_transcript_for_friction(df, utterances_per_segment=10):
             'segment_id': i // utterances_per_segment + 1,
             'utterance_count': len(segment_df),
             'speakers_present': list(segment_df['speaker'].unique()),
+            'transcript_segment': transcript_segment,
+            'prompt': prompt
+        }
+        
+        segments.append(segment_info)
+    
+    return segments
+
+def segment_transcript_string_for_friction(values, utterances_per_segment=10):
+    """Create transcript segments with compact prompts"""
+    #filtered_df = df[df['speaker'].isin(['D1', 'D2', 'D3', 'Builder', 'Group'])].copy()
+    segments = []
+    
+    for i in range(0, len(values), utterances_per_segment):
+        segment = values[i:i+utterances_per_segment]
+        speakers = []
+        
+        # Create compact transcript segment
+        transcript_segment = ""
+        for row in segment:
+            x = row.split(":")
+            if(len(x) == 2):
+                speaker = x[0]
+                speakers.append(speaker)
+                transcript_segment += f"{row}\\n"
+        
+        # Create prompt
+        prompt = create_compact_prompt(transcript_segment)
+        
+        segment_info = {
+            'segment_id': i // utterances_per_segment + 1,
+            'utterance_count': len(segment),
+            'speakers_present': list(speakers),
             'transcript_segment': transcript_segment,
             'prompt': prompt
         }
@@ -324,7 +357,7 @@ def process_segments_with_multiple_models(segments, local_models, use_openai=Tru
     for model_name, model_path in local_models.items():
         logger.info(f"Processing with local model: {model_name}")
         
-        model, tokenizer = load_local_model(model_path)
+        model, tokenizer = load_local_model(model_path, "meta-llama/Meta-Llama-3-8B-Instruct")
         if model is None:
             continue
             
@@ -422,13 +455,13 @@ def process_segments_with_multiple_models(segments, local_models, use_openai=Tru
         all_results["results"].append(openai_results)
     
     # Save all results
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f"{output_dir}/friction_analysis_results_{timestamp}.pkl"
+    # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # output_file = f"{output_dir}/friction_analysis_results_{timestamp}.pkl"
     
-    with open(output_file, 'wb') as f:
-        pickle.dump(all_results, f)
+    # with open(output_file, 'wb') as f:
+    #     pickle.dump(all_results, f)
     
-    logger.info(f"Results saved to {output_file}")
+    # logger.info(f"Results saved to {output_file}")
     return all_results
 
 
@@ -468,7 +501,7 @@ def start_server():
 
         # Model setup code from 
         # Set OpenAI API key (set your API key here or as environment variable)
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        # client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         
         # Define local models to test
         local_models = {
@@ -476,7 +509,7 @@ def start_server():
     #         "deli_dpo": 'DELI_all_weights/DELI_dpo_weights/checkpoint-3500',
     #         "deli_sft": "DELI_all_weights/DELI_sft_weights/checkpoint-small-1500",
     #         "deli_ppo": "DELI_all_weights/DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800",
-            "deli_faaf": 'DELI_all_weights/DELI_faaf_weights/checkpoint-2000',
+            "deli_faaf": '/home/traceteam/DELI_faaf/diplomacy_deli_weights/DELI_faaf_weights/checkpoint-2000',
         }
         
         # Generation arguments
@@ -512,17 +545,17 @@ def start_server():
                         ################################ new friction processing
                         # Load transcript data
                         #df = pd.read_csv('group7_transcript.csv')
-                        df = pd.read_csv(StringIO(transcriptions))
+                        df = transcriptions.split('\n')
                         
                         # Create segments
-                        segments = segment_transcript_for_friction(df, utterances_per_segment=20)
+                        segments = segment_transcript_string_for_friction(df, utterances_per_segment=20)
                         logger.info(f"Created {len(segments)} segments")
 
                         # Process segments with all models
                         results = process_segments_with_multiple_models(
                             segments=segments[:5],  # Process first 5 segments for testing
                             local_models=local_models,
-                            use_openai=True,
+                            use_openai=False,
                             generation_args=generation_args,
                             output_dir="friction_analysis_results_DPIP")
 
@@ -531,18 +564,11 @@ def start_server():
                         # TODO check results and fix parsing, this won't work since the results are now a dictionary
                         returnString = ''
                         if results is not None:
-                            if results.friction_statement != '':
-                                returnString += "Friction: " + results.friction_statement
-                                if results.rationale != '':  
-                                    returnString += "r*Rationale" + results.rationale 
-                            else:
-                                conn.sendall(str.encode("No Friction", 'utf-8')) 
-                                break
-                            returnString = returnString.replace("’","'")
+                            print(results)
                             conn.sendall(str.encode(returnString, 'utf-8')) 
                         else:
                             conn.sendall(str.encode("No Friction", 'utf-8'))
-
+                        break
                     except ConnectionResetError as e:
                         print(f"Connection with {addr} was reset: {e}")
                         break

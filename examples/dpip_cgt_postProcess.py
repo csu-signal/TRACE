@@ -206,7 +206,7 @@ if __name__ == "__main__":
         targets=[
             DisplayFrame(output_frame),
             cgt, #new common ground gui output
-            SaveVideo(output_frame, frame_rate=10),
+            # SaveVideo(output_frame, frame_rate=10),
             # DisplayFrame(output_frame2),
             # SaveVideo(output_frame2, frame_rate=10, video_name=2),
             #Log(friction, csv=True),

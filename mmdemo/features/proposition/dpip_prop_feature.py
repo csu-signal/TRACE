@@ -27,7 +27,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
     """
 
     HOST = "129.82.138.15"  # The server's hostname or IP address (TARSKI)
-    PORT = 65432  # The port used by the server 
+    PORT = 65433  # The port used by the server 
 
     def __init__(
         self,
@@ -69,8 +69,9 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
 
         #if the transcription text is empty don't add it to the history
         if transcription.text != '':
-            self.transcriptionHistory.append(transcription.speaker_id + ": " + transcription.text)
-            self.frictionSubset.append(transcription.speaker_id + ": " + transcription.text)
+            t = "\"" + transcription.text.strip('"').strip() + "\""
+            self.transcriptionHistory.append(transcription.speaker_id + ": " + t)
+            self.frictionSubset.append(transcription.speaker_id + ": " + t)
             # self.transcriptionHistory += "P1: " + transcription.text + "\n"
                     
         #if not plan.solv and (self.solvability_history == self.minUtteranceValue or self.solvability_history == 1):
