@@ -7,12 +7,8 @@ from mmdemo.features import (
     CommonGroundTracking,
     DpipCommonGroundTracking,
 
-
-
     EMNLPFrame,
     DpipFrame,
-
-
 
     DpipObject,
     Object,
