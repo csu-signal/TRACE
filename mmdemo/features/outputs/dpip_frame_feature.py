@@ -68,7 +68,6 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
     def get_output(
         self,
         color: ColorImageInterface,
-        # gaze: GazeConesInterface,
         gesture: GestureConesInterface,
         objects: SelectedObjectsInterface,
         calibration: CameraCalibrationInterface,
@@ -77,21 +76,15 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
     ):
         if (
             not color.is_new()
-           # or not gaze.is_new()
             or not gesture.is_new()
             or not objects.is_new()
+            # or not friction.is_new()
         ):
             return None
 
         # ensure we are not modifying the color frame itself
         output_frame = np.copy(color.frame)
         output_frame = cv.cvtColor(output_frame, cv.COLOR_RGB2BGR)
-
-        # render gaze vectors
-        # for cone in gaze.cones:
-        #     DpipFrame.projectVectorLines(
-        #         cone, output_frame, calibration, False, False, True
-        #     )
 
         # render gesture vectors
         for cone in gesture.cones:
@@ -150,14 +143,17 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
             cone
         )
 
-        if gaze:
-            yColor = (255, 107, 170)
-            ZColor = (107, 255, 138)
-            vectorColor = (255, 107, 170)
-        else:
-            yColor = (255, 255, 0)
-            ZColor = (243, 82, 121)
-            vectorColor = (0, 165, 255)
+        # if gaze:
+        #     yColor = (255, 107, 170)
+        #     ZColor = (107, 255, 138)
+        #     vectorColor = (255, 107, 170)
+        # else:
+            # yColor = (255, 255, 0)
+            # ZColor = (243, 82, 121)
+            # vectorColor = (0, 165, 255)
+        yColor = (255, 255, 0)
+        ZColor = (243, 82, 121)
+        vectorColor = (0, 165, 255)
 
         base2D = camera_3d_to_pixel(cone.base, calibration)
         vertex2D = camera_3d_to_pixel(cone.vertex, calibration)
