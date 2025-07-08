@@ -149,5 +149,3 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         except Exception as e:
             self.friction = ''
             print(f"DPIP PROP FEATURE THREAD: An error occurred: {e}")
-
-
