@@ -970,13 +970,13 @@ def process_segments_with_multiple_models(segments, local_models, use_openai=Tru
         all_results["results"].append(openai_results)
     
     # Save all results
-    # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    # output_file = f"{output_dir}/friction_analysis_results_{timestamp}.pkl"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = f"{output_dir}/friction_analysis_results_{timestamp}.pkl"
     
-    # with open(output_file, 'wb') as f:
-    #     pickle.dump(all_results, f)
+    with open(output_file, 'wb') as f:
+        pickle.dump(all_results, f)
     
-    # logger.info(f"Results saved to {output_file}")
+    logger.info(f"Results saved to {output_file}")
     return all_results
 
 # def analyze_friction_results(results_file):
@@ -1144,7 +1144,7 @@ def start_server():
         
         # Generation arguments
         generation_args = {
-            "max_new_tokens": 400,
+            "max_new_tokens": 1000,
             "temperature": 0.7,
             "top_p": 0.9,
         }
@@ -1197,7 +1197,7 @@ def start_server():
                             cg = results['results'][0]['segment_results'][0]['parsed_components']['common_ground']
                             print(f"\nCommon Ground: {cg}\n")
                             if cg is not None:
-                                returnString += cg
+                                returnString += str(cg).replace('\'', "\"")
                                 conn.sendall(str.encode(returnString, 'utf-8')) 
                             else:
                                 conn.sendall(str.encode("None", 'utf-8'))

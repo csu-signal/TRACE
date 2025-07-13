@@ -78,7 +78,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
             if self.csvSupport != None:
                 csv_file = csv.reader(open(self.csvSupport, "r"), delimiter=",")
                 for row in csv_file:
-                    if transcription.text != '' and row[4] != '' and transcription.text.strip('"').strip() == row[4].strip('"').strip() and self.lastUtterance < float(row[0]) and float(row[0]) < self.lastUtterance + 10:
+                    if transcription.text != '' and row[4] != '' and row[4].strip('"').strip() in transcription.text.strip('"').strip() and self.lastUtterance < float(row[0]) and float(row[0]) < self.lastUtterance + 10:
                         if row[3] != '':
                             self.lastUtterance = float(row[0])
                             transcription.speaker_id = row[3]

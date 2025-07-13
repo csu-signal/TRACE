@@ -45,7 +45,7 @@ class DpipCommonGroundTracking(BaseFeature):
         #if not prop.is_new(): #TODO update to run only when props come in
         #    return None
         
-        if(self.init == False or (prop.cg_json != "None")):
+        if(self.init == False or (prop.cg_json != "None" and prop.cg_json != '')):
             self.currentCg= json.loads(prop.cg_json)
             self.t = threading.Thread(target=self.worker)
             self.t.start()
@@ -92,16 +92,27 @@ class DpipCommonGroundTracking(BaseFeature):
                 self.rowX = {}
 
                 #TODO parse and render from json
-                self.renderRectangles(1, 1, 1, 'orange')
-                self.renderRectangles(1, 1, 2, 'white')
-                self.renderRectangles(1, 1, 1, 'blue')
-                self.renderRectangles(1, 2, 2, 'red')
-                self.renderRectangles(1, 2, 1, 'blue')
-                self.renderRectangles(1, 3, 2, 'purple')
+                # self.renderRectangles(1, 1, 1, 'orange')
+                # self.renderRectangles(1, 1, 2, 'white')
+                # self.renderRectangles(1, 1, 1, 'blue')
+                # self.renderRectangles(1, 2, 2, 'red')
+                # self.renderRectangles(1, 2, 1, 'blue')
+                # self.renderRectangles(1, 3, 2, 'purple')
 
-                self.renderRectangles(2, 2, 1, 'red')
-                self.renderRectangles(2, 2, 2, 'purple')
-                self.renderRectangles(3, 3, 1, 'yellow')
+                # self.renderRectangles(2, 2, 1, 'red')
+                # self.renderRectangles(2, 2, 2, 'purple')
+                # self.renderRectangles(3, 3, 1, 'yellow')
+                self.renderSide("D1", "row_0")
+                self.renderSide("D1", "row_1")
+                self.renderSide("D1", "row_2")
+
+                self.renderSide("D2", "row_0")
+                self.renderSide("D2", "row_1")
+                self.renderSide("D2", "row_2")
+
+                self.renderSide("D3", "row_0")
+                self.renderSide("D3", "row_1")
+                self.renderSide("D3", "row_2")
 
                 self.canvas1.pack()
                 self.canvas2.pack()
@@ -110,9 +121,17 @@ class DpipCommonGroundTracking(BaseFeature):
         except Exception as e:
             print(f"DPIP FEATURE THREAD: An error occurred: {e}")
 
+    def renderSide(self, side, row):
+        blocks = self.currentCg[side][row]
+        for b in blocks:
+            self.renderRectangles(int(side.split("D")[1]), int(row.split("_")[1]), b["size"], b["color"])
+
     def renderRectangles(self, side, row, size, color):
+        if(color == "unknown"):
+            color = "black"
+
         key = str(side) + "_" + str(row)
-        y = 10 + ((row - 1) * 60)
+        y = 10 + ((row) * 60) #TODO I think this is upside down, row 0 is the bottom of the structure
         if self.rowX.get(key) is None:
             self.rowX[key] = 10
 
