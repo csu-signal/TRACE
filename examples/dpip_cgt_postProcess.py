@@ -56,20 +56,21 @@ warnings.filterwarnings("ignore")
 # )
 
 DPIP_MKV_PATH = (
-    "G:\\DPIP\\DPIP_Azure_Recordings\\TB_DPIP_Group_03-master.mkv"
+    "D:/DPIP/DPIP_Azure_Recordings/SK_DPIP_Group_07-master.mkv"
 )
 
 DPIP_SECOND_MKV_PATH = (
     ""
 )
 
-# audio path for WTD group
-# DPIP_AUDIO_PATH = "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-audio1.wav"
-DPIP_AUDIO_PATH ="G:\\DPIP\\DPIP_Azure_Recordings\\TB_DPIP_Group_03-audio.wav"
+# audio path for DPIP group
+#DPIP_AUDIO_PATH = "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-audio1.wav"
+DPIP_AUDIO_PATH ="D:/DPIP/DPIP_Azure_Recordings/SK_DPIP_Group_01-audio.mav"
 
 # ground truth path for WTD group. These can be generated with
 # scripts/dpip_annotations/create_all_dpip_inputs.py
-DPIP_GROUND_TRUTH_DIR = "G:/DPIP/dpip_inputs/group3"
+DPIP_GROUND_TRUTH_DIR = "G:/DPIP/dpip_inputs/group{0:01}"
+#DPIP_GROUND_TRUTH_DIR = "G:/DPIP/dpip_inputs/group3"
 
 # DPIP_MOVE_MODEL_PATH = "G:/brady_wtd_eval_models/move_classifier_{0:02}.pt" #TODO: New(?) move model
 
@@ -82,7 +83,7 @@ DPIP_END_TIMES = {
     4: 3 * 60 + 31,
     5: 4 * 60 + 34,
     6: 5 * 60 + 3,
-    7: 8 * 60 + 30,
+    7: 4682,
     8: 6 * 60 + 28,
     9: 3 * 60 + 46,
     10: 6 * 60 + 51,
@@ -126,7 +127,7 @@ def create_transcription_and_audio_ground_truth_features(
     return transcription, audio
 
 if __name__ == "__main__":
-    group = 3
+    group = 7
     ground_truth_dir = Path(DPIP_GROUND_TRUTH_DIR.format(group))
 
     # load azure kinect features from file
@@ -145,13 +146,13 @@ if __name__ == "__main__":
     #     playback_frame_rate=PLAYBACK_FRAME_RATE,
     # )
 
-    gesture = Gesture(color, depth, body_tracking, calibration)
+    #gesture = Gesture(color, depth, body_tracking, calibration)
     # gesture2 = Gesture(color2, depth2, body_tracking2, calibration2)
 
     # which objects are selected by gesture
     # TODO update object info for new block types
-    objects = DpipObject(color, depth, calibration)
-    selected_objects = SelectedObjects(objects, gesture)
+    #objects = DpipObject(color, depth, calibration)
+    #selected_objects = SelectedObjects(objects, gesture)
 
     # objects2 = DpipObject(color2, depth2, calibration2)
     # selected_objects2 = SelectedObjects(objects2, gesture2)
@@ -170,18 +171,18 @@ if __name__ == "__main__":
     # which objects are referenced (by gesture) during a transcription
     # and dense paraphrased transcription
     # TODO update selected objects info to return DPIP gamr values and not the old WTD gamr values
-    referenced_objects = AccumulatedSelectedObjects(selected_objects, transcriptions)
-    dense_paraphrased_transcriptions = DenseParaphrasedTranscription(
-        transcriptions, referenced_objects
-    )
+    #referenced_objects = AccumulatedSelectedObjects(selected_objects, transcriptions)
+    # dense_paraphrased_transcriptions = DenseParaphrasedTranscription(
+    #     transcriptions, referenced_objects
+    # )
 
-    gesture_move = gesture
+    #gesture_move = gesture
     # gesture_move = None
-    objects_move = selected_objects
+    #objects_move = selected_objects
     # objects_move = None
 
     # prop extraction from friction model
-    props = DpipProposition(dense_paraphrased_transcriptions)
+    dpip_prop_friction = DpipProposition(transcriptions)
 
     # TODO are we using Move?
     # moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects) #live move
@@ -193,18 +194,18 @@ if __name__ == "__main__":
     #     model_path=Path(WTD_MOVE_MODEL_PATH.format(group)),
     # )
 
-    cgt = DpipCommonGroundTracking(props)
+    cgt = DpipCommonGroundTracking(dpip_prop_friction)
     
     # TODO are need to update the planner?
     # plan = Planner(cgt)
 
-    output_frame = DpipFrame(color, gesture, selected_objects, calibration)
+    # output_frame = DpipFrame(color, gesture, selected_objects, calibration)
     # output_frame2 = DpipFrame(color2, gesture2, selected_objects2, calibration2)
 
     # run demo and show output
     demo = Demo(
         targets=[
-            DisplayFrame(output_frame),
+            DisplayFrame(color),
             cgt, #new common ground gui output
             # SaveVideo(output_frame, frame_rate=10),
             # DisplayFrame(output_frame2),

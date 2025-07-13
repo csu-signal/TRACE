@@ -1,3 +1,4 @@
+import json
 import socket
 import warnings
 from pathlib import Path
@@ -11,7 +12,7 @@ import re
 from typing import Dict, List, Optional
 import threading
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import DpipCommonGroundTrackingInterface, PropositionInterface
+from mmdemo.interfaces import DpipCommonGroundTrackingInterface, DpipFrictionOutputInterface, PropositionInterface
 import tkinter as tk                    
 from tkinter import ttk
 
@@ -28,23 +29,26 @@ class DpipCommonGroundTracking(BaseFeature):
     """
 
     def __init__(
-        self, prop: BaseFeature[PropositionInterface]
+        self, prop: BaseFeature[DpipFrictionOutputInterface]
     ):
         super().__init__(prop) 
         self.init = False
         self.t = threading.Thread(target=self.worker)
         self.t.start()
         self.rowX = {}
+        self.currentCg = ''
 
     def initialize(self):
         print("DPIP Interface")
     
-    def get_output(self, prop: PropositionInterface):
+    def get_output(self, prop: DpipFrictionOutputInterface):
         #if not prop.is_new(): #TODO update to run only when props come in
         #    return None
         
-        self.t = threading.Thread(target=self.worker)
-        self.t.start()
+        if(self.init == False or (prop.cg_json != "None")):
+            self.currentCg= json.loads(prop.cg_json)
+            self.t = threading.Thread(target=self.worker)
+            self.t.start()
         
         #TODO output banks for the planner
         return DpipCommonGroundTrackingInterface(
@@ -87,6 +91,7 @@ class DpipCommonGroundTracking(BaseFeature):
                 self.canvas3.delete("all")
                 self.rowX = {}
 
+                #TODO parse and render from json
                 self.renderRectangles(1, 1, 1, 'orange')
                 self.renderRectangles(1, 1, 2, 'white')
                 self.renderRectangles(1, 1, 1, 'blue')

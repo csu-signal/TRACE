@@ -153,6 +153,7 @@ class DpipFrictionOutputInterface(BaseInterface):
     # TODO add props for board state
     friction_statement: str
     transciption_subset: str
+    cg_json: str
 
 
 @dataclass

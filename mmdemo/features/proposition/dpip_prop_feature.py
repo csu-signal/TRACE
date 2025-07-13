@@ -42,6 +42,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         self.transcriptionHistory = []
         self.frictionSubset = []
         self.friction = ''
+        self.cg = 'None'
         self.subsetTranscriptions = ''
         self.t = threading.Thread(target=self.worker)
         self.minUtteranceValue = minUtteranceValue
@@ -58,7 +59,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
 
     def get_output(self, transcription: TranscriptionInterface):
         if not transcription.is_new():
-            return DpipFrictionOutputInterface(friction_statement=self.friction, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
+            return DpipFrictionOutputInterface(friction_statement=self.friction, cg_json=self.cg, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
 
         # if plan.solv:
         #     self.solvability_history = 0
@@ -77,7 +78,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         #if not plan.solv and (self.solvability_history == self.minUtteranceValue or self.solvability_history == 1):
         if True:
             self.solvability_history = 1
-            if not self.t.is_alive() and not self.LOCAL:
+            if not self.t.is_alive():
                 # do this process on the main thread so the socket thread doesn't miss any values
                 # if there are less values in the friction subset the min utterance value pad the list with values from the history
                 if(len(self.frictionSubset) < self.minUtteranceValue):
@@ -99,37 +100,12 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
                 self.t = threading.Thread(target=self.worker)
                 self.t.start()
                 self.frictionSubset = []
-            elif self.LOCAL:
-                #TODO
-                friction_detector = friction_local.FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct") #this is the lora model id on huggingface (SFT model)
-                #instead of calling FrictionInference as done above, add the generation arguments to specify parameters like max-length depending on what model you are calling
-                    #for FAAF use, 356 and for SFT use 200 as shown below
-                # define the generation args 
-                custom_args_sft = {
-                        "max_new_tokens": 200,
-                        "temperature": 0.7,
-                        "do_sample": True,
-                        "top_k": 50,
-                        "top_p": 0.9
-                    }
-
-                custom_args_faaf = {
-                        "max_new_tokens": 356,
-                        "temperature": 0.9,
-                        "do_sample": True,
-                        "top_k": 50,
-                        "top_p": 0.9
-                    }
-                # friction_detector = friction_local.FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct", generation_args = custom_args_sft) # instantiate only one of these friction_detector variable
-                friction_detector = friction_local.FrictionInference("Abhijnan/intervention_agent", generation_args = custom_args_faaf)
-                # friction_detector = friction_local.FrictionInference("Abhijnan/dpo_friction_run_with_69ksamples") #this is the dpo model
-                friction_local.start_local(self.subsetTranscriptions,friction_detector)
             else:
                 print("Friction request in progress...waiting for the thread to complete")
 
             #TODO include props and board state info for the GUI
             return DpipFrictionOutputInterface(
-                    friction_statement=self.friction, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
+                    friction_statement=self.friction, cg_json=self.cg, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
     
     def worker(self):
         print("New DPIP Friction Request Thread Started")
@@ -142,8 +118,9 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
                 print("Waiting for friction server response")
                 data = s.recv(2048)
             received = data.decode()
-            if received != "No Friction":
-                self.friction = received
+            if received != " ":
+                #self.friction = received #TODO include and parse friction statement
+                self.cg = received #for now, will eventually parse
                 print(f"Received from Server:{received}")
                 print(self.transcriptionHistory[-1])
         except Exception as e:
