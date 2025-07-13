@@ -1,3 +1,4 @@
+import csv
 from pathlib import Path
 import socket
 import threading
@@ -37,6 +38,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         host: str | None = None,
         port: int | None = 0,
         minUtteranceValue: int | None = 10,
+        csvSupport: str | None = None
     ):
         super().__init__(transcription) 
         self.transcriptionHistory = []
@@ -47,6 +49,8 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         self.t = threading.Thread(target=self.worker)
         self.minUtteranceValue = minUtteranceValue
         self.solvability_history = 0
+        self.csvSupport = csvSupport
+        self.lastUtterance = 0
 
         if host:
             self.HOST = host
@@ -71,9 +75,20 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         #if the transcription text is empty don't add it to the history
         if transcription.text != '':
             t = "\"" + transcription.text.strip('"').strip() + "\""
-            self.transcriptionHistory.append(transcription.speaker_id + ": " + t)
-            self.frictionSubset.append(transcription.speaker_id + ": " + t)
-            # self.transcriptionHistory += "P1: " + transcription.text + "\n"
+            if self.csvSupport != None:
+                csv_file = csv.reader(open(self.csvSupport, "r"), delimiter=",")
+                for row in csv_file:
+                    if transcription.text != '' and row[4] != '' and transcription.text.strip('"').strip() == row[4].strip('"').strip() and self.lastUtterance < float(row[0]) and float(row[0]) < self.lastUtterance + 10:
+                        if row[3] != '':
+                            self.lastUtterance = float(row[0])
+                            transcription.speaker_id = row[3]
+                            print (row)
+                        break
+
+            if transcription.speaker_id != "Group" and transcription.speaker_id != "Instructor":
+                self.transcriptionHistory.append(transcription.speaker_id + ": " + t)
+                self.frictionSubset.append(transcription.speaker_id + ": " + t)
+                # self.transcriptionHistory += "P1: " + transcription.text + "\n"
                     
         #if not plan.solv and (self.solvability_history == self.minUtteranceValue or self.solvability_history == 1):
         if True:
@@ -97,9 +112,10 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
                     self.subsetTranscriptions += utter + "\n"
 
                 print("\nSubset of Transcriptions:\n" + self.subsetTranscriptions)
-                self.t = threading.Thread(target=self.worker)
-                self.t.start()
-                self.frictionSubset = []
+                if len(self.frictionSubset) > 0:
+                    self.t = threading.Thread(target=self.worker)
+                    self.t.start()
+                    self.frictionSubset = []
             else:
                 print("Friction request in progress...waiting for the thread to complete")
 

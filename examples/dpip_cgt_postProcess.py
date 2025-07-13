@@ -182,7 +182,7 @@ if __name__ == "__main__":
     # objects_move = None
 
     # prop extraction from friction model
-    dpip_prop_friction = DpipProposition(transcriptions)
+    dpip_prop_friction = DpipProposition(transcriptions, csvSupport="G:\\DPIP\\GAMR\\Utterances\\group7_transcript.csv")
 
     # TODO are we using Move?
     # moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects) #live move
