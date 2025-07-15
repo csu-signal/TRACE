@@ -350,10 +350,10 @@ def create_coordinate_description_detailed():
     return """
 DIRECTOR VIEWS WITH COORDINATES:
 
-D1 (Front 3x3 Grid View - coordinates as (x,y) where (0,0)=top-left):
-Row 0: (0,0)Yellow - (1,0)Green - (2,0)Yellow
+D1 (Front 3x3 Grid View - coordinates as (x,y) where (0,0)=bottom-left):
+Row 0: (0,0)Green - (1,0)Green - (2,0)Blue
 Row 1: (0,1)Blue - (1,1)Blue - (2,1)Orange/Brown  
-Row 2: (0,2)Green - (1,2)Green - (2,2)Blue
+Row 2: (0,2)Yellow - (1,2)Green - (2,2)Yellow
 D1 sees the front face as a flat 3x3 arrangement, all blocks appear at same depth level.
 
 D2 (Vertical Stacking/Layered View - bottom to top layers):
@@ -546,9 +546,9 @@ D3 beliefs: UNCERTAIN - asks clarifying questions about roles and viewing angles
 <common_ground>
 {
     "D1": {
-        "row_0": [{"color":"yellow", "size":1}, {"color":"green", "size":1}, {"color":"yellow", "size":1}],
-        "row_1": [{"color":"blue", "size":1}, {"color":"blue", "size":1}, {"color":"orange", "size":1}],
-        "row_2": [{"color":"green", "size":1}, {"color":"green", "size":1}, {"color":"blue", "size":1}]
+        "row_0": [{"color":"green", "size":1}, {"color":"green", "size":1}, {"color":"unknown", "size":1}],
+        "row_1": [{"color":"unknown", "size":1}, {"color":"blue", "size":1}, {"color":"unknown", "size":1}],
+        "row_2": [{"color":"unknown", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}]
     },
     "D2": {
         "row_0": [{"color":"yellow", "size":1}, {"color":"green", "size":1}, {"color":"yellow", "size":1}],
@@ -587,10 +587,10 @@ D3 beliefs: UNCERTAIN - asks clarifying questions about viewing constraints ("on
 
 <common_ground>
 {
-    "D1": {
-        "row_0": [{"color":"unknown", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}],
+     "D1": {
+        "row_0": [{"color":"green", "size":1}, {"color":"green", "size":1}, {"color":"unknown", "size":1}],
         "row_1": [{"color":"unknown", "size":1}, {"color":"blue", "size":1}, {"color":"unknown", "size":1}],
-        "row_2": [{"color":"green", "size":1}, {"color":"green", "size":1}, {"color":"unknown", "size":1}]
+        "row_2": [{"color":"unknown", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}]
     },
     "D2": {
         "row_0": [{"color":"unknown", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}],
@@ -650,7 +650,9 @@ ANALYZE: Individual beliefs → Common ground → Friction interventions
 
 COMMON GROUND FORMAT INSTRUCTIONS:
 - Generate JSON showing each director's current mental model of the 3x3 front face grid
-- Use "row_0" (top), "row_1" (middle), "row_2" (bottom) for all directors
+- Use "row_0" (bottom), "row_1" (middle), "row_2" (top) for all directors
+- **AGREEMENT PROPAGATION**: When a director agrees with another's placement using markers like 'yeah', 'yes', 'okay', 'right', 'correct', 'exactly', 'perfect', 'fine', 'good', 'sure', 'alright', incorporate that agreed-upon information into their mental model
+- **CONFIRMATION TRACKING**: If a director confirms a builder's action or another director's description with agreement markers, update their grid to reflect acceptance of that spatial information
 - Each director translates their view perspective into this common 3x3 grid format:
   * D1: Direct mapping from their 3x3 grid view
   * D2: Projects their layered view onto front face (what they think front face contains)

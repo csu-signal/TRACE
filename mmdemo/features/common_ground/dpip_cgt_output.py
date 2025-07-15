@@ -37,6 +37,7 @@ class DpipCommonGroundTracking(BaseFeature):
         self.t.start()
         self.rowX = {}
         self.currentCg = ''
+        self.lastCg = ''
 
     def initialize(self):
         print("DPIP Interface")
@@ -45,8 +46,9 @@ class DpipCommonGroundTracking(BaseFeature):
         #if not prop.is_new(): #TODO update to run only when props come in
         #    return None
         
-        if(self.init == False or (prop.cg_json != "None" and prop.cg_json != '')):
-            self.currentCg= json.loads(prop.cg_json)
+        if(self.init == False or (prop.cg_json != "None" and prop.cg_json != '' and self.lastCg != prop.cg_json)):
+            self.lastCg = prop.cg_json
+            self.currentCg = json.loads(prop.cg_json)
             self.t = threading.Thread(target=self.worker)
             self.t.start()
         
@@ -123,8 +125,9 @@ class DpipCommonGroundTracking(BaseFeature):
 
     def renderSide(self, side, row):
         blocks = self.currentCg[side][row]
+        uiRow = 2 if row == "row_0" else 1 if row == "row_1" else 0
         for b in blocks:
-            self.renderRectangles(int(side.split("D")[1]), int(row.split("_")[1]), b["size"], b["color"])
+            self.renderRectangles(int(side.split("D")[1]), uiRow, b["size"], b["color"])
 
     def renderRectangles(self, side, row, size, color):
         if(color == "unknown"):
