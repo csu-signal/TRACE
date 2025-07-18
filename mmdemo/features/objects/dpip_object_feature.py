@@ -30,7 +30,7 @@ from sam2.build_sam import build_sam2
 from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
 
 GRID_SIZE = 3
-DEFAULT_REGION_FRAC = 0.5
+DEFAULT_REGION_FRAC = 0.45
 
 
 @final
@@ -102,6 +102,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         labels = self.compute_grid_labels(col.frame, segmentation_masks, boxes)
 
         xy_grid = self.grid_labels_to_xy_matrix(labels, GRID_SIZE)
+        print(xy_grid)
         self.all_grid_states[col.frame_count] = xy_grid
 
         overlay = self.draw_grid_overlay(col.frame, boxes, labels=labels, centers=centers, coords=coords)
@@ -111,7 +112,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         cv2.putText(overlay, f"Frame {col.frame_count}", (w - 150, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
         cv2.putText(overlay, f"[W/S] region_frac = {region_frac:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
-        return DpipObjectInterface3D(xyGrid=xy_grid, overlayFrame = overlay)
+        return DpipObjectInterface3D(xyGrid=xy_grid, overlayFrame=overlay)
 
     def build_centered_norm_point_grid(self, n_per_side: int, frac: float = 0.5) -> np.ndarray:
         assert 0 < frac <= 1
