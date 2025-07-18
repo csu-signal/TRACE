@@ -113,29 +113,29 @@ Move on to Voicemeeter Settings subsection if you already have the virtual cable
 
 - For the this set-up you will need to download an additional VB-Cable which is found [here](https://vb-audio.com/Cable/index.htm)
   - After downloading extract the files from the zip folder, the run `VBCABLE_Setup_x64.exe` and install the driver.
-  - Restart your computer
+  - Restart your computer after intallation process to ensure the cable functions properly.
 
 #### Voicemeeter Settings
 Open the VoiceMeeter Potato Application and set the following settings for each of the listed components:
 
 - Stereo Input 1:
   - Click "Select Input Device" and set to the first headset microphone.
-  - Turn on the A2, A3, A4, and B1 buttons. All other buttons should be off.
+  - Next to the Fader Gain bar, turn on the A2, A3, A4, and B1 buttons for Stereo Input 1. All other buttons should be off.
   - Set the Gate dial to 2.7
 
 - Stereo Input 2:
   - Click "Select Input Device" and set to the second headset microphone.
-  - Turn on the A1, A3, A4, and B2 buttons. All other buttons should be off.
+  - Next to the Fader Gain bar, turn on the A1, A3, A4, and B2 buttons for Stereo Input 2. All other buttons should be off.
   - Set the Gate dial to 2.7
 
 - Stereo Input 3:
   - Click "Select Input Device" and set to the third headset microphone.
-  - Turn on the A1, A2, A4, and B3 buttons. All other buttons should be off.
+  - Next to the Fader Gain bar, turn on the A1, A2, A4, and B3 buttons for Stereo Input 3. All other buttons should be off.
   - Set the Gate dial to 2.7
 
 - Stereo Input 4:
   - Click "Select Input Device" and set to the fourth headset microphone.
-  - Turn on the A1, A2, A3, and A5 buttons. All other buttons should be off.
+  - Next to the Fader Gain bar, turn on the A1, A2, A3, and A5 buttons for Stereo Input 4. All other buttons should be off.
   - Set the Gate dial to 2.7
 
 - HARDWARE OUT
