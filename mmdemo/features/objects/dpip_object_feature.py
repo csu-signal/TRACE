@@ -54,10 +54,12 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         calibration: BaseFeature[CameraCalibrationInterface],
         *,
         detection_threshold=0.6,
-        model_path: Path | None = None
+        model_path: Path | None = None,
+        skipPost: bool=False
     ) -> None:
         super().__init__(color, depth, calibration)
         self.all_grid_states = {}
+        self.skipPost = skipPost
         # self.detectionThreshold = detection_threshold
         # if model_path is None:
         #     self.model_path = self.DEFAULT_MODEL_PATH
@@ -84,6 +86,9 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         dep: DepthImageInterface,
         calibration: CameraCalibrationInterface,
     ) -> DpipObjectInterface3D | None:
+        if(self.skipPost):
+            return DpipObjectInterface3D(xyGrid=[], overlayFrame=col.frame) #just to test post transcriptions without a lag
+    
         if not col.is_new() or not dep.is_new():
             return None
         

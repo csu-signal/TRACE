@@ -149,9 +149,8 @@ if __name__ == "__main__":
     #gesture = Gesture(color, depth, body_tracking, calibration)
     #gesture2 = Gesture(color2, depth2, body_tracking2, calibration2)
 
-    # which objects are selected by gesture
-    # TODO update object info for new block types
-    objects = DpipObject(color, depth, calibration)
+    # TODO thread to help speed up?
+    objects = DpipObject(color, depth, calibration, skipPost=True)
     #selected_objects = SelectedObjects(objects, gesture)
 
     # objects2 = DpipObject(color2, depth2, calibration2)

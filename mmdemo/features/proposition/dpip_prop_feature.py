@@ -63,7 +63,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         print("DPIP LLM Friction Init HOST: " + str(self.HOST) + " PORT: " + str(self.PORT))
 
     def get_output(self, transcription: TranscriptionInterface, objects: DpipObjectInterface3D):
-        if not transcription.is_new() or not objects.is_new():
+        if not transcription.is_new():
             return DpipFrictionOutputInterface(friction_statement=self.friction, cg_json=self.cg, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
 
         # if plan.solv:

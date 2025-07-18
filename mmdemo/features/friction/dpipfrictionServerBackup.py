@@ -372,18 +372,6 @@ Stack 5 (rightmost): Yellow block (top), Green block (bottom) - vertical stack
 D3 sees side profile revealing depth dimension with multiple vertical stacking points.
 """
 
-def create_friction_definitions():
-    """Define what friction interventions address in collaborative construction"""
-    return """
-FRICTION INTERVENTIONS target coordination failures:
-- ASSUMPTION CONFLICTS: Directors making incompatible spatial assumptions
-- COMMUNICATION GAPS: Unclear references, ambiguous descriptions, talking past each other
-- VIEWPOINT BLIND SPOTS: Directors not accounting for their limited 2D perspective  
-- BUILDER CONFUSION: Builder expressing uncertainty or making incorrect placements
-- INCONSISTENT DESCRIPTIONS: Same elements described differently by directors
-- COORDINATION BREAKDOWN: Failed attempts to establish shared understanding
-"""
-
 # new_cg_format_prompt = "<common_ground>
 # {
 #     "D1": {
@@ -546,9 +534,9 @@ D3 beliefs: UNCERTAIN - asks clarifying questions about roles and viewing angles
 <common_ground>
 {
     "D1": {
-        "row_0": [{"color":"green", "size":1}, {"color":"green", "size":1}, {"color":"unknown", "size":1}],
-        "row_1": [{"color":"unknown", "size":1}, {"color":"blue", "size":1}, {"color":"unknown", "size":1}],
-        "row_2": [{"color":"unknown", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}]
+        "row_0": [{"color":"yellow", "size":1}, {"color":"green", "size":1}, {"color":"yellow", "size":1}],
+        "row_1": [{"color":"blue", "size":1}, {"color":"blue", "size":1}, {"color":"orange", "size":1}],
+        "row_2": [{"color":"green", "size":1}, {"color":"green", "size":1}, {"color":"blue", "size":1}]
     },
     "D2": {
         "row_0": [{"color":"yellow", "size":1}, {"color":"green", "size":1}, {"color":"yellow", "size":1}],
@@ -587,7 +575,7 @@ D3 beliefs: UNCERTAIN - asks clarifying questions about viewing constraints ("on
 
 <common_ground>
 {
-     "D1": {
+    "D1": {
         "row_0": [{"color":"green", "size":1}, {"color":"green", "size":1}, {"color":"unknown", "size":1}],
         "row_1": [{"color":"unknown", "size":1}, {"color":"blue", "size":1}, {"color":"unknown", "size":1}],
         "row_2": [{"color":"unknown", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}]
@@ -613,6 +601,7 @@ GROUP: Establish shared coordinate system before D1 continues with detailed plac
 </friction>
 """
 
+#TODO outdated replace with create_enhanced_prompt_with_director_views
 def create_compact_prompt(transcript_segment):
     """Create focused prompt for belief extraction and friction analysis"""
     coordinate_desc = create_coordinate_description_detailed()
@@ -690,6 +679,446 @@ Analyze this segment for director beliefs, identify common ground, and suggest f
     
     return prompt
 
+
+def create_director_view_instructions():
+    return """
+COORDINATE MAPPING TO 3x3 GRID:
+- D1/D3 (side views): Y-coordinates are pixel positions, map by clusters
+  * [12-19] → leftmost column (position 0) - highest frequency cluster
+  * [20-27] → center column (position 1) - overlapping ranges  
+  * [28-39] → rightmost column (position 2) - far right positions
+- D2 (top view): X-coordinates are pixel positions, map by depth
+  * [0-11] → front section - includes high-frequency [0-3] range
+  * [12-27] → back section - includes high-frequency [16-19] range
+- Layer mapping: Layer 0→row_0 (bottom), Layer 1→row_1 (middle), Layer 2→row_2 (top)
+
+Note: Coordinates represent pixel positions in director view images, not discrete block positions.
+"""
+
+# def create_director_view_instructions():
+#     return """
+# COORDINATE MAPPING TO 3x3 GRID:
+# - D1/D3 (side views): Y-coordinates map to grid columns
+#   * [30-33] → center/rightmost area (based on actual data)
+#   * Adjust mapping based on actual coordinate ranges in your data
+# - D2 (top view): X-coordinates show depth  
+#   * [24-31] → front section
+#   * [32-39] → back section
+# """
+
+def find_matching_director_views(director_views_df, segment_start_time, segment_end_time, time_tolerance=2.0):
+    """Find director view entries that match the transcript segment timeframe"""
+    # Convert segment times to numeric if they're strings
+    try:
+        start_time = float(segment_start_time)
+        end_time = float(segment_end_time)
+    except (ValueError, TypeError):
+        return pd.DataFrame()  # Return empty if can't parse times
+    
+    # Find director views within the time range (with tolerance)
+    mask = (
+        (director_views_df['frame'] >= start_time - time_tolerance) &
+        (director_views_df['frame'] <= end_time + time_tolerance)
+    )
+    
+    matching_views = director_views_df[mask].copy()
+    
+    if matching_views.empty:
+        # If no exact matches, find closest timestamp
+        time_diffs = abs(director_views_df['frame'] - ((start_time + end_time) / 2))
+        closest_idx = time_diffs.idxmin()
+        closest_time = director_views_df.loc[closest_idx, 'frame']
+        
+        # Get all views from the closest timestamp
+        matching_views = director_views_df[director_views_df['frame'] == closest_time].copy()
+    
+    return matching_views
+
+def format_director_views_for_prompt(director_views_df):
+    """Format director view data for inclusion in prompt"""
+    if director_views_df.empty:
+        return "No director view data available for this time segment."
+    
+    # Group by timestamp and view
+    formatted_output = "DIRECTOR VIEWS FOR THIS SEGMENT:\n"
+    
+    for frame_time in sorted(director_views_df['frame'].unique()):
+        frame_data = director_views_df[director_views_df['frame'] == frame_time]
+        formatted_output += f"\nFrame {frame_time}s:\n"
+        
+        for view in ['D1_side', 'D2_side', 'D3_side']:
+            view_data = frame_data[frame_data['view'] == view]
+            if not view_data.empty:
+                formatted_output += f"  {view}:\n"
+                
+                for layer in [0, 1, 2]:
+                    layer_data = view_data[view_data['layer'] == layer]
+                    if not layer_data.empty:
+                        formatted_output += f"    Layer {layer}: "
+                        blocks = []
+                        for _, row in layer_data.iterrows():
+                            blocks.append(f"{row['block_id']}({row['axis_coords']})")
+                        formatted_output += ", ".join(blocks) + "\n"
+    
+    return formatted_output
+
+
+def find_latest_director_views_in_segment(director_views_df, segment_start_time, segment_end_time):
+    """
+    Find director view entries for the LATEST timestamp within the segment timeframe
+    
+    Args:
+        director_views_df: DataFrame with director view data
+        segment_start_time: Start time of transcript segment
+        segment_end_time: End time of transcript segment
+    
+    Returns:
+        DataFrame with director views from only the latest timestamp in range
+    """
+    # Find all director views within the segment time range
+    views_in_range = director_views_df[
+        (director_views_df['frame'] >= segment_start_time) &
+        (director_views_df['frame'] <= segment_end_time)
+    ]
+    
+    if views_in_range.empty:
+        # Fallback: find closest timestamp to segment end
+        time_diffs = abs(director_views_df['frame'] - segment_end_time)
+        closest_time = director_views_df.loc[time_diffs.idxmin(), 'frame']
+        return director_views_df[director_views_df['frame'] == closest_time]
+    else:
+        # Use the latest (maximum) timestamp within the range
+        latest_timestamp = views_in_range['frame'].max()
+        return director_views_df[director_views_df['frame'] == latest_timestamp]
+
+def format_single_timestamp_director_views(director_views_df):
+    """
+    Format director view data from a single timestamp for inclusion in prompt
+    """
+    if director_views_df.empty:
+        return "No director view data available for this time segment."
+    
+    # Should only have one timestamp now
+    timestamp = director_views_df['frame'].iloc[0]
+    formatted_output = f"DIRECTOR VIEWS FOR THIS SEGMENT:\n\nFrame {timestamp}s:\n"
+    
+    # Group by view
+    for view in ['D1_side', 'D2_side', 'D3_side']:
+        view_data = director_views_df[director_views_df['view'] == view]
+        if not view_data.empty:
+            formatted_output += f"  {view}:\n"
+            
+            # Group by layer
+            for layer in sorted(view_data['layer'].unique()):
+                layer_data = view_data[view_data['layer'] == layer]
+                if not layer_data.empty:
+                    formatted_output += f"    Layer {layer}: "
+                    blocks = []
+                    for _, row in layer_data.iterrows():
+                        blocks.append(f"{row['block_id']}({row['axis_coords']})")
+                    formatted_output += ", ".join(blocks) + "\n"
+    
+    return formatted_output
+
+def segment_transcript_with_latest_director_views(df, director_views_df, utterances_per_segment=10):
+    """
+    Create transcript segments with ONLY the latest director view timestamp per segment
+    """
+    segments = []
+    
+    for i in range(0, len(df), utterances_per_segment):
+        segment_df = df.iloc[i:i+utterances_per_segment]
+        
+        # Get time range for this segment
+        start_time = segment_df['Start Time'].min()
+        end_time = segment_df['End Time'].max()
+        
+        # Create transcript segment
+        transcript_segment = ""
+        speakers_present = ['Unknown']  # Default for raw transcript
+        
+        for _, row in segment_df.iterrows():
+            text = row['Text'] if pd.notna(row['Text']) else ''
+            start_time_str = row['Start Time'] if pd.notna(row['Start Time']) else 'Unknown'
+            transcript_segment += f"[{start_time_str}s]: \"{text.strip()}\"\n"
+        
+        # Find LATEST director views within segment time range
+        latest_views = find_latest_director_views_in_segment(
+            director_views_df, start_time, end_time
+        )
+        
+        # Format director views for prompt (single timestamp only)
+        director_views_text = format_single_timestamp_director_views(latest_views)
+        
+        # Create enhanced prompt
+        prompt = create_enhanced_prompt_with_director_views(transcript_segment, director_views_text)
+        
+        segment_info = {
+            'segment_id': i // utterances_per_segment + 1,
+            'utterance_count': len(segment_df),
+            'speakers_present': speakers_present,
+            'transcript_segment': transcript_segment,
+            'director_views': director_views_text,
+            'time_range': {'start': start_time, 'end': end_time},
+            'selected_timestamp': latest_views['frame'].iloc[0] if not latest_views.empty else None,
+            'matching_views_count': len(latest_views),
+            'prompt': prompt
+        }
+        
+        segments.append(segment_info)
+    
+    return segments
+
+
+
+
+def segment_transcript_with_director_views(df, director_views_df, utterances_per_segment=10):
+    """Create transcript segments with matching director view data"""
+    segments = []
+    
+    for i in range(0, len(df), utterances_per_segment):
+        segment_df = df.iloc[i:i+utterances_per_segment]
+        
+        # Get time range for this segment
+        start_time = segment_df['Start Time'].min()
+        end_time = segment_df['End Time'].max()
+        
+        # Create transcript segment
+        transcript_segment = ""
+        speakers_present = ['Unknown']  # Default for raw transcript
+        
+        for _, row in segment_df.iterrows():
+            # Handle raw transcript format without speaker column
+            text = row['Text'] if pd.notna(row['Text']) else ''
+            start_time_str = row['Start Time'] if pd.notna(row['Start Time']) else 'Unknown'
+            
+            # For raw transcript, use timestamp as identifier since no speaker diarization
+            transcript_segment += f"[{start_time_str}s]: \"{text.strip()}\"\n"
+        
+        # Find matching director views
+        matching_views = find_matching_director_views(
+            director_views_df, start_time, end_time
+        )
+        
+        # Format director views for prompt
+        director_views_text = format_director_views_for_prompt(matching_views)
+        
+        # Create enhanced prompt
+        prompt = create_enhanced_prompt_with_director_views(transcript_segment, director_views_text)
+        
+        segment_info = {
+            'segment_id': i // utterances_per_segment + 1,
+            'utterance_count': len(segment_df),
+            'speakers_present': speakers_present,
+            'transcript_segment': transcript_segment,
+            'director_views': director_views_text,
+            'time_range': {'start': start_time, 'end': end_time},
+            'matching_views_count': len(matching_views),
+            'prompt': prompt
+        }
+        
+        segments.append(segment_info)
+    
+    return segments
+
+
+def create_friction_definitions():
+    """Define what friction interventions address in collaborative construction"""
+    return """
+FRICTION INTERVENTIONS target coordination failures:
+- ASSUMPTION CONFLICTS: Directors making incompatible spatial assumptions
+- COMMUNICATION GAPS: Unclear references, ambiguous descriptions, talking past each other
+- VIEWPOINT BLIND SPOTS: Directors not accounting for their limited 2D perspective  
+- BUILDER CONFUSION: Builder expressing uncertainty or making incorrect placements
+- INCONSISTENT DESCRIPTIONS: Same elements described differently by directors
+- COORDINATION BREAKDOWN: Failed attempts to establish shared understanding
+"""
+
+
+def create_enhanced_prompt_with_director_views(transcript_segment, director_views_text):
+    """Create prompt with both transcript and director view data"""
+    director_instructions = create_director_view_instructions()
+    friction_def = create_friction_definitions()
+    
+    # Updated few-shot example using new format
+    few_shot_example_new = """
+EXAMPLE ANALYSIS:
+
+TRANSCRIPT: D1: "I can see green blocks at the bottom row, then blue blocks in the middle." D2: "Yeah, I see the green foundation layer too, with some rectangular pieces." D3: "From my side it looks the same as what D1 is saying." Builder: "Should I put the orange block on top of the blue?" D1: "Yes, that matches what I see - orange goes on the blue section." D2: "Perfect, that aligns with my top view."
+
+DIRECTOR VIEWS: Frame 387.456s shows D1_side Layer 0 with gs3([20,21,22,23]), gl2([22,23,24,25]) indicating green blocks in leftmost area. Layer 1 has bs3([20,21,22,23]) for blue in leftmost, ol1([32,33,34,35]) for orange in rightmost. D2_side confirms green blocks in Layer 0 and orange in Layer 1. D3_side matches D1_side exactly.
+
+<belief_state>
+D1 beliefs: CONFIDENT - sees green blocks at bottom row (specifically gs3, gl2 in leftmost area), blue blocks in middle (bs3 in leftmost), orange placement confirmed for rightmost position (ol1). EXPLICIT - directly states spatial relationships from front view.
+D2 beliefs: AGREEABLE - confirms "green foundation layer" (references gs1, gs3, gl1, gl2), mentions "rectangular pieces" (sees 4x8 blocks), confirms orange placement aligns with top view.
+D3 beliefs: ADOPTIVE - states "same as what D1 is saying" inheriting D1's spatial claims, implicitly agrees with orange placement through silence.
+</belief_state>
+
+<common_ground>
+{
+    "D1": {
+        "row_0": [{"color":"green", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}],
+        "row_1": [{"color":"blue", "size":1}, {"color":"unknown", "size":1}, {"color":"orange", "size":1}],
+        "row_2": [{"color":"unknown", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}]
+    },
+    "D2": {
+        "row_0": [{"color":"green", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}],
+        "row_1": [{"color":"unknown", "size":1}, {"color":"unknown", "size":1}, {"color":"orange", "size":1}],
+        "row_2": [{"color":"unknown", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}]
+    },
+    "D3": {
+        "row_0": [{"color":"green", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}],
+        "row_1": [{"color":"blue", "size":1}, {"color":"unknown", "size":1}, {"color":"orange", "size":1}],
+        "row_2": [{"color":"unknown", "size":1}, {"color":"unknown", "size":1}, {"color":"unknown", "size":1}]
+    }
+}
+</common_ground>
+
+<friction>
+D1: Specify which exact positions your remaining blocks occupy instead of general descriptions.
+D2: Clarify how your rectangular pieces relate to the 3x3 grid structure D1 describes.
+D3: Contribute your specific side-view observations rather than just agreeing with D1.
+GROUP: Cross-validate your different perspectives before confirming block placements.
+</friction>
+"""
+
+    common_ground_template = '''{
+    "D1": {
+        "row_0": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_1": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_2": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}]
+    },
+    "D2": {
+        "row_0": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_1": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_2": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}]
+    },
+    "D3": {
+        "row_0": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_1": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_2": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}]
+    }
+}'''
+    
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+You analyze collaborative construction where 3 directors (D1, D2, D3) with different 2D views guide a builder to construct a 3D block structure.
+
+{director_instructions}
+
+{friction_def}
+
+ANALYZE: Individual beliefs → Common ground → Friction interventions
+{few_shot_example_new}
+
+ANALYSIS INSTRUCTIONS:
+- Use the director view data to understand what each director can actually see
+- Only include in common ground what directors explicitly mention in dialogue
+- Use "unknown" for positions not discussed, even if visible in director views
+- Map coordinates from director views to 3x3 grid positions using the coordinate mapping
+- Track agreement markers ("yeah", "yes", "perfect") to propagate information between directors
+- Use exact colors from transcript: "red", "blue", "green", "yellow", "orange", "brown"
+
+OUTPUT FORMAT:
+<belief_state>
+[Director beliefs based on their utterances and what they can see in their views]
+</belief_state>
+
+<common_ground>
+""" + common_ground_template + """
+</common_ground>
+
+<friction>
+D1: [specific issue, max 1 sentence]
+D2: [specific issue, max 1 sentence]
+D3: [specific issue, max 1 sentence]
+GROUP: [coordination strategy, max 1 sentence]
+</friction>
+<|eot_id|><|start_header_id|>user<|end_header_id|>
+TRANSCRIPT SEGMENT:
+""" + transcript_segment + """
+
+""" + director_views_text + """
+
+Analyze this segment for director beliefs, identify common ground, and suggest friction interventions.
+<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+"""
+    
+    return prompt
+
+
+def filter_segments_by_alignment(segments, director_views_df, alignment_tolerance=2.0):
+    """
+    Filter segments to keep only those with good timestamp alignment to director views
+    
+    Args:
+        segments: List of segment dictionaries
+        director_views_df: DataFrame with director view data
+        alignment_tolerance: Maximum time gap in seconds for keeping a segment
+    
+    Returns:
+        List of filtered segments that meet alignment criteria
+    """
+    filtered_segments = []
+    dv_timestamps = director_views_df['frame'].values
+    
+    for segment in segments:
+        start_time = segment['time_range']['start']
+        end_time = segment['time_range']['end']
+        segment_midpoint = (start_time + end_time) / 2
+        
+        # Find closest director view timestamp
+        time_diffs = abs(dv_timestamps - segment_midpoint)
+        min_time_gap = min(time_diffs)
+        
+        # Keep segment only if within tolerance
+        if min_time_gap <= alignment_tolerance:
+            filtered_segments.append(segment)
+    
+    return filtered_segments
+
+
+
+
+
+def segment_transcript_for_friction_aligned(df, utterances_per_segment=10):
+    """Create transcript segments that align with raw transcript segmentation"""
+    
+    # DON'T filter - use all rows like raw function does
+    # This ensures same number of utterances per segment
+    segments = []
+    
+    for i in range(0, len(df), utterances_per_segment):
+        segment_df = df.iloc[i:i+utterances_per_segment]
+        
+        # Create transcript segment with speaker info when available
+        transcript_segment = ""
+        speakers_present = []
+        
+        for _, row in segment_df.iterrows():
+            speaker = row['speaker'] if pd.notna(row['speaker']) else 'Unknown'
+            text = row['Text'] if pd.notna(row['Text']) else ''
+            
+            # Track speakers present
+            if speaker != 'Unknown' and speaker not in speakers_present:
+                speakers_present.append(speaker)
+            
+            transcript_segment += f"{speaker}: \"{text.strip()}\"\n"
+        
+        # Create prompt
+        prompt = create_compact_prompt(transcript_segment)
+        
+        segment_info = {
+            'segment_id': i // utterances_per_segment + 1,
+            'utterance_count': len(segment_df),
+            'speakers_present': speakers_present if speakers_present else ['Unknown'],
+            'transcript_segment': transcript_segment,
+            'prompt': prompt
+        }
+        
+        segments.append(segment_info)
+    
+    return segments
+
 def segment_transcript_for_friction(df, utterances_per_segment=10):
     """Create transcript segments with compact prompts"""
     filtered_df = df[df['speaker'].isin(['D1', 'D2', 'D3', 'Builder'])].copy()
@@ -714,6 +1143,41 @@ def segment_transcript_for_friction(df, utterances_per_segment=10):
             'speakers_present': list(segment_df['speaker'].unique()),
             'transcript_segment': transcript_segment,
             'prompt': prompt
+        }
+        
+        segments.append(segment_info)
+    
+    return segments
+
+
+def segment_raw_transcript_for_friction(df, utterances_per_segment=10):
+    """Create transcript segments from raw transcript without speaker diarization"""
+    # No speaker filtering since raw transcript doesn't have speaker column
+    segments = []
+    
+    for i in range(0, len(df), utterances_per_segment):
+        segment_df = df.iloc[i:i+utterances_per_segment]
+        
+        # Create compact transcript segment without speaker labels
+        transcript_segment = ""
+        for _, row in segment_df.iterrows():
+            text = row['Text'] if pd.notna(row['Text']) else ''
+            start_time = row['Start Time'] if pd.notna(row['Start Time']) else 'Unknown'
+            transcript_segment += f"[{start_time}s]: \"{text.strip()}\"\n"
+        
+        # Create prompt
+        prompt = create_compact_prompt(transcript_segment)
+        
+        segment_info = {
+            'segment_id': i // utterances_per_segment + 1,
+            'utterance_count': len(segment_df),
+            'speakers_present': ['Unknown'],  # No speaker info available
+            'transcript_segment': transcript_segment,
+            'prompt': prompt,
+            'time_range': {
+                'start': segment_df['Start Time'].min(),
+                'end': segment_df['End Time'].max()
+            }
         }
         
         segments.append(segment_info)
@@ -1142,11 +1606,12 @@ def start_server():
     #         "deli_sft": "DELI_all_weights/DELI_sft_weights/checkpoint-small-1500",
     #         "deli_ppo": "DELI_all_weights/DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800",
             "deli_faaf": '/home/traceteam/DELI_faaf/diplomacy_deli_weights/DELI_faaf_weights/checkpoint-2000',
+            #"wtd_faaf_new": 'wtd_faaf_new/wtd_faaf_new/checkpoint-3000'
         }
         
         # Generation arguments
         generation_args = {
-            "max_new_tokens": 1000,
+            "max_new_tokens": 2048,
             "temperature": 0.7,
             "top_p": 0.9,
         }
@@ -1180,16 +1645,18 @@ def start_server():
                         df = transcriptions.split('\n')
                         
                         # Create segments
+                        #TODO update to include the DF for the struture state and timestamps (segment_transcript_with_latest_director_views)
                         segments = segment_transcript_string_for_friction(df, utterances_per_segment=20)
                         logger.info(f"Created {len(segments)} segments")
 
                         # Process segments with all models
                         results = process_segments_with_multiple_models(
-                            segments=segments[:5],  # Process first 5 segments for testing
+                            segments=segments[0:20], 
                             local_models=local_models,
                             use_openai=False,
                             generation_args=generation_args,
-                            output_dir="friction_analysis_results_DPIP")
+                            output_dir="friction_analysis_results_DPIP_group7",
+)
 
                         ################################
 

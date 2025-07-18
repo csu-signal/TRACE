@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     # gaze and gesture
     # gaze = GazeBodyTracking(body_tracking, calibration)
-    gesture = Gesture(color, depth, body_tracking, calibration)
+    # gesture = Gesture(color, depth, body_tracking, calibration)
     # gesture2 = Gesture(color2, depth2, body_tracking2, calibration2)
 
     # which objects are selected by gesture
@@ -75,7 +75,6 @@ if __name__ == "__main__":
     #     transcriptions, referenced_objects
     # )
 
-
     # prop extraction and move classifier
     props = DpipProposition(transcriptions, objects)
     # moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects)
@@ -87,8 +86,9 @@ if __name__ == "__main__":
 
     # friction
     # friction = Friction(dense_paraphrased_transcriptions, plan)
+
     # create output frame for video
-    output_frame = DpipFrame(color, objects, calibration) # removed gaze, plan, cgt, friction
+    output_frame = DpipFrame(color, objects, calibration)
     # output_frame2 = DpipFrame(color2, objects2, calibration2)
 
     # run demo and show output
@@ -104,6 +104,6 @@ if __name__ == "__main__":
             # Log(transcriptions, stdout=True),
         ]
     )
-    demo.show_dependency_graph()
+    #demo.show_dependency_graph()
     demo.run()
     demo.print_time_benchmarks()
