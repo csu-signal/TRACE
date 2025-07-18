@@ -93,6 +93,63 @@ Install Docker for windows from [here](https://docs.docker.com/desktop/setup/ins
 
 In `mmdemo/features/planner/planner.py`, change the path in check solution from `C:\\Users\\benkh\\Documents\\GitHub\\TRACE\\mmdemo\\features\\planner\\benchmarks` to the path of the benchmarks folder on your machine.
 
+## Multiple Mic Set-Up with VoiceMeeter Potato for Live Use
+
+Ensure the live file you are running has the number of `MicAudio` objects as microphones being used.
+
+If you do not have VoiceMeeter Potato, you can download Voicemeeter Potato [here](https://vb-audio.com/Voicemeeter/potato.htm)
+
+- This software is free but there is a wait time after opening. This wait time increases the more it is used, maxing out at a 300 second wait.
+- Purchasing a license is only valid for one PC.
+
+Once downloaded set up the following in the VoiceMeeter Potato Application:
+
+### DPIP Live Audio Set-Up
+
+Instructions for `dpip_cgt_live.py` audio set up.
+
+- For the this set-up you will need to download an additional VB-Cable which is found [here](https://vb-audio.com/Cable/index.htm)
+  - After downloading extract the files from the zip folder, the run `VBCABLE_Setup_x64.exe` and install the driver.
+  - Restart your computer
+
+Once restarted, open the VoiceMeeter Potato Application and set the following settings for each of the listed components:
+
+- Stereo Input 1:
+  - Click "Select Input Device" and set to the first microphone.
+  - Turn on the A2, A3, A4, and B1 buttons. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- Stereo Input 2:
+  - Click "Select Input Device" and set to the second microphone.
+  - Turn on the A1, A3, A4, and B2 buttons. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- Stereo Input 3:
+  - Click "Select Input Device" and set to the third microphone.
+  - Turn on the A1, A2, A4, and B3 buttons. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- Stereo Input 4:
+  - Click "Select Input Device" and set to the fourth microphone.
+  - Turn on the A1, A2, A3, and A5. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- HARDWARE OUT
+  - A1 : Set to first mic \(ensures D1 hears D2, D3, and Builder\)
+  - A2 : Set to second mic \(ensures D2 hears D1, D3, and Builder\)
+  - A3 : Set to third mic \(ensures D3 hears D1, D2, and Builder\)
+  - A4 : Set to fourth mic \(ensures Builder hears D1, D2, and D3\)
+  - A5 : Set to `CABLE Input` \(workaround virtual cable for the 4th microphone\)
+
+Once these setting have been set, run `TRACE\scripts\print_audio_devices.py` to see the device id's of each input. \(i.e. `9` is the device I.D for the listed output item`9 : Voicemeeter Out B1 (VB-Audio Vo`)
+- Device IDs 
+  - `audio1` should use the device ID for `Voicemeeter Out B1`
+  - `audio2` should use the device ID for `Voicemeeter Out B2`
+  - `audio3` should use the device ID for `Voicemeeter Out B3`
+  - `audio4` hould use the device ID for `CABLE Output`
+
+### WTD-CGT Live Audio Set-Up
+
 ## Common Setup Issues
 
 ### Solution for .dll File Errors

@@ -1,6 +1,6 @@
 # from mmdemo.features.friction.friction_feature import Friction
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
-
+from mmdemo.features.friction.friction_feature import Friction
 from mmdemo.demo import Demo
 from mmdemo.features import (
 
@@ -55,18 +55,16 @@ if __name__ == "__main__":
 
     # transcriptions from microphone 
 
-    # laptop microphones
-    # audio1 = MicAudio(device_id=7, speaker_id="P1")
-    # audio2 = MicAudio(device_id=9, speaker_id="P2")
-    # audio3 = MicAudio(device_id=11, speaker_id="P3")
-    # utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, delete_input_files=False)
-
-    audio = MicAudio(device_id=7, speaker_id="P1")
-    utterance_audio = VADUtteranceBuilder(audio, delete_input_files=False)
+    # Multiple microphones - laptop
+    audio1 = MicAudio(device_id=9, speaker_id="D1")
+    audio2 = MicAudio(device_id=4, speaker_id="D2")
+    audio3 = MicAudio(device_id=15, speaker_id="D3")
+    audio4 = MicAudio(device_id=3, speaker_id="Builder")
+    utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, audio4, delete_input_files=False)
 
     #######################################################################################
 
-    # rosch microphone - Index: 39, Name: Microphone (USB audio CODEC)
+    # single microphone - rosch microphone - Index: 39, Name: Microphone (USB audio CODEC)
     # audio1 = MicAudio(device_id=9, speaker_id="P1")
     # utterance_audio = VADUtteranceBuilder(audio1, delete_input_files=True)
     #######################################################################################
@@ -83,17 +81,17 @@ if __name__ == "__main__":
 
     # prop extraction and move classifier
     props = DpipProposition(dense_paraphrased_transcriptions)
-    moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects)
+    # moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects)
 
     # common ground tracking
-    cgt = DpipCommonGroundTracking(moves, props)
+    cgt = DpipCommonGroundTracking(props)
 
     # plan = Planner(cgt)
 
     # friction
-    friction = Friction(dense_paraphrased_transcriptions, plan)
+    # friction = Friction(dense_paraphrased_transcriptions, plan)
     # create output frame for video
-    output_frame = DpipFrame(color, gesture, selected_objects, calibration) #removed gaze, plan, cgt, friction
+    output_frame = DpipFrame(color, gesture, selected_objects, calibration) # removed gaze, plan, cgt, friction
     output_frame2 = DpipFrame(color2, gesture2, selected_objects2, calibration2)
 
     # run demo and show output
@@ -103,7 +101,8 @@ if __name__ == "__main__":
             SaveVideo(output_frame, frame_rate=2.2),
             DisplayFrame(output_frame2),
             SaveVideo(output_frame2, frame_rate=2.2, video_name = 2),
-            Log(dense_paraphrased_transcriptions, props, moves, friction, csv=True),
+            # Log(dense_paraphrased_transcriptions, props, moves, friction, csv=True),
+            Log(dense_paraphrased_transcriptions, props, csv=True),
             # Log(transcriptions, stdout=True),
         ]
     )
