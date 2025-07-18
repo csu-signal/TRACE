@@ -37,21 +37,18 @@ if __name__ == "__main__":
         DeviceType.CAMERA, camera_index=0
     )
 
-    color2, depth2, body_tracking2, calibration2 = create_azure_kinect_features(
-        DeviceType.CAMERA, camera_index=1
-    )
+    # color2, depth2, body_tracking2, calibration2 = create_azure_kinect_features(
+    #     DeviceType.CAMERA, camera_index=1
+    # )
 
     # gaze and gesture
     # gaze = GazeBodyTracking(body_tracking, calibration)
     gesture = Gesture(color, depth, body_tracking, calibration)
-    gesture2 = Gesture(color2, depth2, body_tracking2, calibration2)
+    # gesture2 = Gesture(color2, depth2, body_tracking2, calibration2)
 
     # which objects are selected by gesture
     objects = DpipObject(color, depth, calibration)
-    selected_objects = SelectedObjects(objects, gesture)  # pyright: ignore
-
-    objects2 = DpipObject(color2, depth2, calibration2)
-    selected_objects2 = SelectedObjects(objects2, gesture2)
+    # objects2 = DpipObject(color2, depth2, calibration2)
 
     # transcriptions from microphone 
 
@@ -73,14 +70,14 @@ if __name__ == "__main__":
 
     # which objects are referenced (by gesture) during a transcription
     # and dense paraphrased transcription
-    referenced_objects = AccumulatedSelectedObjects(selected_objects, transcriptions)
-    dense_paraphrased_transcriptions = DenseParaphrasedTranscription(
-        transcriptions, referenced_objects
-    )
+    # referenced_objects = AccumulatedSelectedObjects(selected_objects, transcriptions)
+    # dense_paraphrased_transcriptions = DenseParaphrasedTranscription(
+    #     transcriptions, referenced_objects
+    # )
 
 
     # prop extraction and move classifier
-    props = DpipProposition(dense_paraphrased_transcriptions)
+    props = DpipProposition(transcriptions, objects)
     # moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects)
 
     # common ground tracking
@@ -91,18 +88,19 @@ if __name__ == "__main__":
     # friction
     # friction = Friction(dense_paraphrased_transcriptions, plan)
     # create output frame for video
-    output_frame = DpipFrame(color, gesture, selected_objects, calibration) # removed gaze, plan, cgt, friction
-    output_frame2 = DpipFrame(color2, gesture2, selected_objects2, calibration2)
+    output_frame = DpipFrame(color, objects, calibration) # removed gaze, plan, cgt, friction
+    # output_frame2 = DpipFrame(color2, objects2, calibration2)
 
     # run demo and show output
     demo = Demo(
         targets=[
+            #DisplayFrame(color),
+            #SaveVideo(output_frame, frame_rate=2.2),
             DisplayFrame(output_frame),
-            SaveVideo(output_frame, frame_rate=2.2),
-            DisplayFrame(output_frame2),
-            SaveVideo(output_frame2, frame_rate=2.2, video_name = 2),
+            cgt, #new common ground gui output
+            #SaveVideo(output_frame2, frame_rate=2.2, video_name = 2),
             # Log(dense_paraphrased_transcriptions, props, moves, friction, csv=True),
-            Log(dense_paraphrased_transcriptions, props, csv=True),
+            #Log(dense_paraphrased_transcriptions, props, csv=True),
             # Log(transcriptions, stdout=True),
         ]
     )

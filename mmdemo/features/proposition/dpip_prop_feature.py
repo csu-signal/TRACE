@@ -11,7 +11,7 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.features.friction import friction_local
 from mmdemo.features.proposition.demo import load_model, process_sentence
 from mmdemo.features.proposition.demo_helpers import get_pickle
-from mmdemo.interfaces import DpipFrictionOutputInterface, TranscriptionInterface
+from mmdemo.interfaces import DpipFrictionOutputInterface, DpipObjectInterface3D, TranscriptionInterface
 
 
 @final
@@ -33,6 +33,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
     def __init__(
         self,
         transcription: BaseFeature[TranscriptionInterface],
+        objects: BaseFeature[DpipObjectInterface3D],
         #plan: BaseFeature[PlannerInterface], commented out for now
         *,
         host: str | None = None,
@@ -40,7 +41,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         minUtteranceValue: int | None = 10,
         csvSupport: str | None = None
     ):
-        super().__init__(transcription) 
+        super().__init__(transcription, objects) 
         self.transcriptionHistory = []
         self.frictionSubset = []
         self.friction = ''
@@ -61,8 +62,8 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
     def initialize(self):
         print("DPIP LLM Friction Init HOST: " + str(self.HOST) + " PORT: " + str(self.PORT))
 
-    def get_output(self, transcription: TranscriptionInterface):
-        if not transcription.is_new():
+    def get_output(self, transcription: TranscriptionInterface, objects: DpipObjectInterface3D):
+        if not transcription.is_new() or not objects.is_new():
             return DpipFrictionOutputInterface(friction_statement=self.friction, cg_json=self.cg, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
 
         # if plan.solv:

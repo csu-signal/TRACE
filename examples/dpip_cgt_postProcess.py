@@ -147,11 +147,11 @@ if __name__ == "__main__":
     # )
 
     #gesture = Gesture(color, depth, body_tracking, calibration)
-    # gesture2 = Gesture(color2, depth2, body_tracking2, calibration2)
+    #gesture2 = Gesture(color2, depth2, body_tracking2, calibration2)
 
     # which objects are selected by gesture
     # TODO update object info for new block types
-    #objects = DpipObject(color, depth, calibration)
+    objects = DpipObject(color, depth, calibration)
     #selected_objects = SelectedObjects(objects, gesture)
 
     # objects2 = DpipObject(color2, depth2, calibration2)
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     # objects_move = None
 
     # prop extraction from friction model
-    dpip_prop_friction = DpipProposition(transcriptions, csvSupport="G:\\DPIP\\GAMR\\Utterances\\group7_transcript.csv")
+    dpip_prop_friction = DpipProposition(transcriptions, objects, csvSupport="G:\\DPIP\\GAMR\\Utterances\\group7_transcript.csv")
 
     # TODO are we using Move?
     # moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects) #live move
@@ -199,13 +199,13 @@ if __name__ == "__main__":
     # TODO are need to update the planner?
     # plan = Planner(cgt)
 
-    # output_frame = DpipFrame(color, gesture, selected_objects, calibration)
+    output_frame = DpipFrame(color, objects, calibration)
     # output_frame2 = DpipFrame(color2, gesture2, selected_objects2, calibration2)
 
     # run demo and show output
     demo = Demo(
         targets=[
-            DisplayFrame(color),
+            DisplayFrame(output_frame),
             cgt, #new common ground gui output
             # SaveVideo(output_frame, frame_rate=10),
             # DisplayFrame(output_frame2),

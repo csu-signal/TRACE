@@ -8,6 +8,7 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
     CameraCalibrationInterface,
     ColorImageInterface,
+    DpipObjectInterface3D,
     GazeConesInterface,
     GestureConesInterface,
     SelectedObjectsInterface,
@@ -50,9 +51,8 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
     def __init__(
         self,
         color: BaseFeature[ColorImageInterface],
-        #gaze: BaseFeature[GazeConesInterface],
-        gesture: BaseFeature[GestureConesInterface],
-        sel_objects: BaseFeature[SelectedObjectsInterface],
+        #gesture: BaseFeature[GestureConesInterface],
+        objects: BaseFeature[DpipObjectInterface3D],
         calibration: BaseFeature[CameraCalibrationInterface],
         #friction: BaseFeature[FrictionOutputInterface],
         #plan: BaseFeature[PlannerInterface] | None = None,
@@ -60,7 +60,7 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         # if plan is None:
         #     super().__init__(color, gesture, sel_objects, calibration) # removed gaze
         # else:
-        super().__init__(color, gesture, sel_objects, calibration) # removed gaze
+        super().__init__(color, objects, calibration) # removed gaze
 
     def initialize(self):
         self.last_plan = {"text": "", "color": (255, 255, 255)}
@@ -68,62 +68,61 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
     def get_output(
         self,
         color: ColorImageInterface,
-        gesture: GestureConesInterface,
-        objects: SelectedObjectsInterface,
+        #gesture: GestureConesInterface,
+        objects: DpipObjectInterface3D,
         calibration: CameraCalibrationInterface,
         # friction: FrictionOutputInterface,
         # plan: PlannerInterface = None,
     ):
         if (
             not color.is_new()
-            or not gesture.is_new()
             or not objects.is_new()
             # or not friction.is_new()
         ):
             return None
 
-        # ensure we are not modifying the color frame itself
-        output_frame = np.copy(color.frame)
-        output_frame = cv.cvtColor(output_frame, cv.COLOR_RGB2BGR)
+        # # ensure we are not modifying the color frame itself
+        # output_frame = np.copy(color.frame)
+        # output_frame = cv.cvtColor(output_frame, cv.COLOR_RGB2BGR)
 
-        # render gesture vectors
-        for cone in gesture.cones:
-            DpipFrame.projectVectorLines(
-                cone, output_frame, calibration, True, False, False
-            )
+        # # render gesture vectors
+        # for cone in gesture.cones:
+        #     DpipFrame.projectVectorLines(
+        #         cone, output_frame, calibration, True, False, False
+        #     )
 
-        # render objects
-        for obj in objects.objects:
-            c = (0, 255, 0) if obj[1] == True else (0, 0, 255)
-            block = obj[0]
-            cv.rectangle(
-                output_frame,
-                (int(block.p1[0]), int(block.p1[1])),
-                (int(block.p2[0]), int(block.p2[1])),
-                color=c,
-                thickness=5,
-            )
+        # # render objects
+        # for obj in objects.objects:
+        #     c = (0, 255, 0) if obj[1] == True else (0, 0, 255)
+        #     block = obj[0]
+        #     cv.rectangle(
+        #         output_frame,
+        #         (int(block.p1[0]), int(block.p1[1])),
+        #         (int(block.p2[0]), int(block.p2[1])),
+        #         color=c,
+        #         thickness=5,
+        #     )
 
-        # render plan
-        # if plan:
-        #     DpipFrame.renderPlan(output_frame, plan, self.last_plan)
+        # # render plan
+        # # if plan:
+        # #     DpipFrame.renderPlan(output_frame, plan, self.last_plan)
        
-        # draw frame count
-        cv.putText(
-            output_frame,
-            "FRAME:" + str(color.frame_count),
-            (50, 50),
-            cv.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 0, 255),
-            2,
-            cv.LINE_AA,
-        )
+        # # draw frame count
+        # cv.putText(
+        #     output_frame,
+        #     "FRAME:" + str(color.frame_count),
+        #     (50, 50),
+        #     cv.FONT_HERSHEY_SIMPLEX,
+        #     1,
+        #     (0, 0, 255),
+        #     2,
+        #     cv.LINE_AA,
+        # )
 
-        output_frame = cv.resize(output_frame, (1280, 720))
-        output_frame = cv.cvtColor(output_frame, cv.COLOR_BGR2RGB)
+        # output_frame = cv.resize(output_frame, (1280, 720))
+        # output_frame = cv.cvtColor(output_frame, cv.COLOR_BGR2RGB)
 
-        return ColorImageInterface(frame=output_frame, frame_count=color.frame_count)
+        return ColorImageInterface(frame=objects.overlayFrame, frame_count=color.frame_count)
 
     @staticmethod
     def projectVectorLines(cone: Cone, frame, calibration, includeY, includeZ, gaze):

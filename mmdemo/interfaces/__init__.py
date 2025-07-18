@@ -328,10 +328,12 @@ class DpipObjectInterface3D(BaseInterface):
     """
     Object detector 3d locations
 
-    objects -- list of object locations and classes
+    xyGrid -- the x y grid
+    overlayFrame -- the overlay frame
     """
 
-    objects: list[DpipObjectInfo3D]
+    xyGrid: set[str]
+    overlayFrame: np.ndarray
 
 
 @dataclass
