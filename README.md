@@ -146,7 +146,7 @@ Once these setting have been set, run `TRACE\scripts\print_audio_devices.py` to 
   - `audio1` should use the device ID for `Voicemeeter Out B1`
   - `audio2` should use the device ID for `Voicemeeter Out B2`
   - `audio3` should use the device ID for `Voicemeeter Out B3`
-  - `audio4` hould use the device ID for `CABLE Output`
+  - `audio4` should use the device ID for `CABLE Output`
 
 ### WTD-CGT Live Audio Set-Up
 
