@@ -108,11 +108,11 @@ Once downloaded follow the set up instruction below for the live demo you plan t
 
 Instructions for `dpip_cgt_live.py` audio set up.
 
-- For the this set-up you will need to download an additional VB-Cable which is found [here](https://vb-audio.com/Cable/index.htm)
+- \(Ignore if you already have the virtual cable driver)\For the this set-up you will need to download an additional VB-Cable which is found [here](https://vb-audio.com/Cable/index.htm)
   - After downloading extract the files from the zip folder, the run `VBCABLE_Setup_x64.exe` and install the driver.
   - Restart your computer
 
-Once restarted, open the VoiceMeeter Potato Application and set the following settings for each of the listed components:
+Open the VoiceMeeter Potato Application and set the following settings for each of the listed components:
 
 - Stereo Input 1:
   - Click "Select Input Device" and set to the first headset microphone.
