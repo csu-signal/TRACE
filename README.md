@@ -150,6 +150,26 @@ Once these setting have been set, run `TRACE\scripts\print_audio_devices.py` to 
 
 ### WTD-CGT Live Audio Set-Up
 
+- Stereo Input 1:
+  - Click "Select Input Device" and set to the first microphone.
+  - Turn on the A2, A3, and B1 buttons. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- Stereo Input 2:
+  - Click "Select Input Device" and set to the second microphone.
+  - Turn on the A1, A3, and B2 buttons. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- Stereo Input 3:
+  - Click "Select Input Device" and set to the third microphone.
+  - Turn on the A1, A2, and B3 buttons. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- HARDWARE OUT
+  - A1 : Set to first mic \(ensures P1 hears P2 and P3\)
+  - A2 : Set to second mic \(ensures P2 hears P1 and P3\)
+  - A3 : Set to third mic \(ensures P3 hears P1 and P2\)
+
 ## Common Setup Issues
 
 ### Solution for .dll File Errors
