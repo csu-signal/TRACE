@@ -1,5 +1,6 @@
 import csv
 from pathlib import Path
+import pickle
 import socket
 import threading
 from typing import final
@@ -11,7 +12,7 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.features.friction import friction_local
 from mmdemo.features.proposition.demo import load_model, process_sentence
 from mmdemo.features.proposition.demo_helpers import get_pickle
-from mmdemo.interfaces import DpipFrictionOutputInterface, DpipObjectInterface3D, TranscriptionInterface
+from mmdemo.interfaces import DpipActionInterface, DpipFrictionOutputInterface, DpipObjectInterface3D, TranscriptionInterface
 
 
 @final
@@ -34,6 +35,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         self,
         transcription: BaseFeature[TranscriptionInterface],
         objects: BaseFeature[DpipObjectInterface3D],
+        actions: BaseFeature[DpipActionInterface],
         #plan: BaseFeature[PlannerInterface], commented out for now
         *,
         host: str | None = None,
@@ -41,7 +43,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         minUtteranceValue: int | None = 10,
         csvSupport: str | None = None
     ):
-        super().__init__(transcription, objects) 
+        super().__init__(transcription, objects, actions) 
         self.transcriptionHistory = []
         self.frictionSubset = []
         self.friction = ''
@@ -52,6 +54,8 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         self.solvability_history = 0
         self.csvSupport = csvSupport
         self.lastUtterance = 0
+        self.currentStructure = {}
+        self.timestamp = 0
 
         if host:
             self.HOST = host
@@ -62,8 +66,8 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
     def initialize(self):
         print("DPIP LLM Friction Init HOST: " + str(self.HOST) + " PORT: " + str(self.PORT))
 
-    def get_output(self, transcription: TranscriptionInterface, objects: DpipObjectInterface3D):
-        if not transcription.is_new():
+    def get_output(self, transcription: TranscriptionInterface, objects: DpipObjectInterface3D, actions: DpipActionInterface):
+        if not transcription.is_new() or not actions.is_new():
             return DpipFrictionOutputInterface(friction_statement=self.friction, cg_json=self.cg, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
 
         # if plan.solv:
@@ -72,6 +76,8 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         #     self.solvability_history += 1
 
         # transcription.text += "\nWe believe that " + ", ".join(plan.fbank) +"."
+        self.currentStructure = actions.structure
+        self.timestamp = objects.frame_index
 
         #if the transcription text is empty don't add it to the history
         if transcription.text != '':
@@ -129,9 +135,10 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((self.HOST, self.PORT))
-                sendData = str.encode(self.subsetTranscriptions)
-                print("Send Data Length:" + str(len(sendData))) 
-                s.sendall(sendData)
+                my_object = {"transcripts": self.subsetTranscriptions, "structure": self.currentStructure, "timestamp":self.timestamp}
+                serialized_data = pickle.dumps(my_object)
+                print("Send Data Length:" + str(len(serialized_data))) 
+                s.sendall(serialized_data)
                 print("Waiting for friction server response")
                 data = s.recv(2048)
             received = data.decode()

@@ -29,6 +29,7 @@ from mmdemo.features import (
     VADUtteranceBuilder,
     WhisperTranscription,
     Planner,
+    DpipActionFeature
 )
 
 if __name__ == "__main__":
@@ -75,20 +76,14 @@ if __name__ == "__main__":
     #     transcriptions, referenced_objects
     # )
 
-    # prop extraction and move classifier
-    props = DpipProposition(transcriptions, objects)
-    # moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects)
+    actions = DpipActionFeature(objects)
+    props = DpipProposition(transcriptions, objects, actions)
 
     # common ground tracking
     cgt = DpipCommonGroundTracking(props)
 
-    # plan = Planner(cgt)
-
-    # friction
-    # friction = Friction(dense_paraphrased_transcriptions, plan)
-
     # create output frame for video
-    output_frame = DpipFrame(color, objects, calibration)
+    output_frame = DpipFrame(color, objects, actions)
     # output_frame2 = DpipFrame(color2, objects2, calibration2)
 
     # run demo and show output

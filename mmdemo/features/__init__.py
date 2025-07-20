@@ -4,6 +4,7 @@ Premade features
 
 from mmdemo.features.common_ground.cgt_feature import CommonGroundTracking
 from mmdemo.features.common_ground.dpip_cgt_output import DpipCommonGroundTracking
+from mmdemo.features.common_ground.action_feature import DpipActionFeature
 from mmdemo.features.gaze.gaze_body_tracking_feature import GazeBodyTracking
 from mmdemo.features.gaze.aaai_gaze_body_tracking_feature import AaaiGazeBodyTracking
 from mmdemo.features.gesture.gesture_feature import Gesture

@@ -1,7 +1,7 @@
 # ssh traceteam@tarski.cs.colostate.edu
 # cd fact_server
 # conda activate frictionEnv
-# /home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/dpip_friction_server.py
+# /home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/dpip_friction_server.py --standalone --config "fact_server/testTranscript.json"
 
 import socket
 import torch
@@ -19,6 +19,7 @@ from datetime import datetime
 from peft import PeftModel
 import re
 from typing import Dict, List, Optional, Any
+import argparse
  
 
 # Set up logging
@@ -57,6 +58,7 @@ def generate_with_retries(model, tokenizer, segment, generation_args, device, ma
     """Generate with retries until valid common ground or max retries reached"""
     
     original_prompt = segment['prompt']
+    print(original_prompt + "\n")
     
     for attempt in range(max_retries):
         try:
@@ -820,6 +822,144 @@ def format_single_timestamp_director_views(director_views_df):
     
     return formatted_output
 
+def format_single_timestamp_director_views_string(dv, timestamp):
+    """
+    Format director view data from a single timestamp for inclusion in prompt
+    """
+    if len(dv) == 0:
+        return "No director view data available for this time segment."
+    
+    # Should only have one timestamp now
+    formatted_output = f"DIRECTOR VIEWS FOR THIS SEGMENT:\n\nFrame {timestamp}s:\n"
+    
+    # Group by view
+    c0_0 = dv["(0, 0)"]
+    c0_1 = dv["(0, 1)"]
+    c0_2 = dv["(0, 2)"]
+    c1_0 = dv["(1, 0)"]
+    c1_2 = dv["(1, 2)"]
+    c2_0 = dv["(2, 0)"]
+    c2_2 = dv["(2, 2)"]
+
+    for view in ['D1_side', 'D2_side', 'D3_side']:
+        formatted_output += f"  {view}:\n"
+        layer0 = "    Layer 0: "
+        layer1 = "    Layer 1: "
+        layer2 = "    Layer 2: "
+        if view == 'D1_side':
+            for index, b in enumerate(c0_0[:3]):
+                if index == 0:
+                    layer0 += f"{b}(0,0,{index}),"
+                if index == 1:
+                    layer1 += f"{b}(0,0,{index}),"
+                if index == 2:
+                    layer2 += f"{b}(0,0,{index}),"
+            for index, b in enumerate(c1_0[:3]):
+                if index == 0:
+                    layer0 += f"{b}(1,0,{index}),"
+                if index == 1:
+                    layer1 += f"{b}(1,0,{index}),"
+                if index == 2:
+                    layer2 += f"{b}(1,0,{index}),"
+            for index, b in enumerate(c2_0[:3]):
+                if index == 0:
+                    layer0 += f"{b}(2,0,{index}),"
+                if index == 1:
+                    layer1 += f"{b}(2,0,{index}),"
+                if index == 2:
+                    layer2 += f"{b}(2,0,{index}),"
+        if view == 'D2_side':
+            for index, b in enumerate(c0_0[:3]):
+                if index == 0:
+                    layer0 += f"{b}(0,0,{index}),"
+                if index == 1:
+                    layer1 += f"{b}(0,0,{index}),"
+                if index == 2:
+                    layer2 += f"{b}(0,0,{index}),"
+            for index, b in enumerate(c0_1[:3]):
+                if index == 0:
+                    layer0 += f"{b}(0,1,{index}),"
+                if index == 1:
+                    layer1 += f"{b}(0,1,{index}),"
+                if index == 2:
+                    layer2 += f"{b}(0,1,{index}),"
+            for index, b in enumerate(c0_2[:3]):
+                if index == 0:
+                    layer0 += f"{b}(0,2,{index}),"
+                if index == 1:
+                    layer1 += f"{b}(0,2,{index}),"
+                if index == 2:
+                    layer2 += f"{b}(0,2,{index}),"
+        if view == 'D3_side':
+            for index, b in enumerate(c0_2[:3]):
+                if index == 0:
+                    layer0 += f"{b}(0,2,{index}),"
+                if index == 1:
+                    layer1 += f"{b}(0,2,{index}),"
+                if index == 2:
+                    layer2 += f"{b}(0,2,{index}),"
+            for index, b in enumerate(c1_2[:3]):
+                if index == 0:
+                    layer0 += f"{b}(1,2,{index}),"
+                if index == 1:
+                    layer1 += f"{b}(1,2,{index}),"
+                if index == 2:
+                    layer2 += f"{b}(1,2,{index}),"
+            for index, b in enumerate(c2_2[:3]):
+                if index == 0:
+                    layer0 += f"{b}(2,2,{index}),"
+                if index == 1:
+                    layer1 += f"{b}(2,2,{index}),"
+                if index == 2:
+                    layer2 += f"{b}(2,2,{index}),"
+
+        formatted_output += layer0.rstrip(",") + "\n"
+        formatted_output += layer1.rstrip(",") + "\n"
+        formatted_output += layer2.rstrip(",") + "\n"
+    
+    return formatted_output
+
+def segment_transcript_string_for_friction(values, structure, timestamp, utterances_per_segment=10):
+    """Create transcript segments with compact prompts"""
+    #filtered_df = df[df['speaker'].isin(['D1', 'D2', 'D3', 'Builder', 'Group'])].copy()
+    segments = []
+    
+    for i in range(0, len(values), utterances_per_segment):
+        segment = values[i:i+utterances_per_segment]
+        speakers = []
+        
+        # Create compact transcript segment
+        transcript_segment = ""
+        for row in segment:
+            x = row.split(":")
+            if(len(x) == 2):
+                speaker = x[0]
+                speakers.append(speaker)
+                transcript_segment += f"{row}\\n"
+        
+        # Format director views for prompt (single timestamp only)
+        director_views_text = format_single_timestamp_director_views_string(structure, timestamp)
+        
+        # Create enhanced prompt
+        prompt = create_enhanced_prompt_with_director_views(transcript_segment, director_views_text)
+        
+        segment_info = {
+            'segment_id': i // utterances_per_segment + 1,
+            'utterance_count': len(segment),
+            'speakers_present': list(speakers),
+            'transcript_segment': transcript_segment,
+            'director_views': director_views_text,
+            'prompt': prompt,
+            #'time_range': {'start': timestamp, 'end': timestamp},
+            'selected_timestamp': timestamp,
+            #'matching_views_count': len(latest_views),
+            'prompt': prompt
+        }
+        
+        segments.append(segment_info)
+    
+    return segments
+
 def segment_transcript_with_latest_director_views(df, director_views_df, utterances_per_segment=10):
     """
     Create transcript segments with ONLY the latest director view timestamp per segment
@@ -1553,40 +1693,7 @@ def segment_raw_transcript_for_friction(df, utterances_per_segment=10):
     
     return segments
 
-def segment_transcript_string_for_friction(values, utterances_per_segment=10):
-    """Create transcript segments with compact prompts"""
-    #filtered_df = df[df['speaker'].isin(['D1', 'D2', 'D3', 'Builder', 'Group'])].copy()
-    segments = []
-    
-    for i in range(0, len(values), utterances_per_segment):
-        segment = values[i:i+utterances_per_segment]
-        speakers = []
-        
-        # Create compact transcript segment
-        transcript_segment = ""
-        for row in segment:
-            x = row.split(":")
-            if(len(x) == 2):
-                speaker = x[0]
-                speakers.append(speaker)
-                transcript_segment += f"{row}\\n"
-        
-        # Create prompt
-        prompt = create_compact_prompt(transcript_segment)
-        
-        segment_info = {
-            'segment_id': i // utterances_per_segment + 1,
-            'utterance_count': len(segment),
-            'speakers_present': list(speakers),
-            'transcript_segment': transcript_segment,
-            'prompt': prompt
-        }
-        
-        segments.append(segment_info)
-    
-    return segments
-
-def start_server():
+def start_server(local_models, generation_args):
     HOST = '129.82.138.15'  # Standard loopback interface address (localhost)
     PORT = 65433       # Port to listen on (non-privileged ports are > 1023)
 
@@ -1598,23 +1705,6 @@ def start_server():
         # Model setup code from 
         # Set OpenAI API key (set your API key here or as environment variable)
         # client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        
-        # Define local models to test
-        local_models = {
-    #         "sft_deli_multiturn": 'sft_deli_multiturn_rogue_cleaned/checkpoint-3000',
-    #         "deli_dpo": 'DELI_all_weights/DELI_dpo_weights/checkpoint-3500',
-    #         "deli_sft": "DELI_all_weights/DELI_sft_weights/checkpoint-small-1500",
-    #         "deli_ppo": "DELI_all_weights/DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800",
-            "deli_faaf": '/home/traceteam/DELI_faaf/diplomacy_deli_weights/DELI_faaf_weights/checkpoint-2000',
-            #"wtd_faaf_new": 'wtd_faaf_new/wtd_faaf_new/checkpoint-3000'
-        }
-        
-        # Generation arguments
-        generation_args = {
-            "max_new_tokens": 2048,
-            "temperature": 0.7,
-            "top_p": 0.9,
-        }
         
         # import glob
         # result_files = glob.glob("friction_analysis_results*/*.pkl")
@@ -1635,7 +1725,11 @@ def start_server():
                         if not data:
                             break
                         print("Received Data Length:" + str(len(data)))
-                        transcriptions = data.decode()
+                        deserialized_object = pickle.loads(data)
+                        transcriptions = deserialized_object["transcripts"]
+                        structure = deserialized_object["structure"]
+                        timestamp = deserialized_object["timestamp"]
+                      
                         print(f"Transcriptions:\n{transcriptions}")
                         print("\nGenerating friction for dialogue...")
 
@@ -1646,7 +1740,7 @@ def start_server():
                         
                         # Create segments
                         #TODO update to include the DF for the struture state and timestamps (segment_transcript_with_latest_director_views)
-                        segments = segment_transcript_string_for_friction(df, utterances_per_segment=20)
+                        segments = segment_transcript_string_for_friction(df, structure, timestamp, utterances_per_segment=20)
                         logger.info(f"Created {len(segments)} segments")
 
                         # Process segments with all models
@@ -1655,8 +1749,7 @@ def start_server():
                             local_models=local_models,
                             use_openai=False,
                             generation_args=generation_args,
-                            output_dir="friction_analysis_results_DPIP_group7",
-)
+                            output_dir="friction_analysis_results_DPIP_server",)
 
                         ################################
 
@@ -1681,4 +1774,51 @@ def start_server():
                         break
 
 if __name__ == "__main__":
-    start_server()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--standalone", action='store_true')
+    parser.add_argument("--config", type=str, default="fact_server/testTranscript.json")
+
+    args = parser.parse_args()
+
+    # Define local models to test
+    local_models = {
+#         "sft_deli_multiturn": 'sft_deli_multiturn_rogue_cleaned/checkpoint-3000',
+#         "deli_dpo": 'DELI_all_weights/DELI_dpo_weights/checkpoint-3500',
+#         "deli_sft": "DELI_all_weights/DELI_sft_weights/checkpoint-small-1500",
+#         "deli_ppo": "DELI_all_weights/DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800",
+        "deli_faaf": '/home/traceteam/DELI_faaf/diplomacy_deli_weights/DELI_faaf_weights/checkpoint-2000',
+        #"wtd_faaf_new": 'wtd_faaf_new/wtd_faaf_new/checkpoint-3000'
+    }
+    
+    # Generation arguments
+    generation_args = {
+        "max_new_tokens": 2048,
+        "temperature": 0.7,
+        "top_p": 0.9,
+    }
+
+    if(not args.standalone):
+        start_server(local_models, generation_args)
+    else:
+        with open(args.config, 'r') as f:
+                data = json.load(f)
+                transcriptions = data["transcripts"]
+                structure = data["structure"]
+                timestamp = data["timestamp"]
+                
+                print(f"Transcriptions:\n{transcriptions}")
+                print("\nGenerating friction for dialogue...")
+
+                ################################ new friction processing
+                
+                # Create segments
+                segments = segment_transcript_string_for_friction(transcriptions, structure, timestamp, utterances_per_segment=20)
+                logger.info(f"Created {len(segments)} segments")
+
+                # Process segments with all models
+                results = process_segments_with_multiple_models(
+                    segments=segments[0:20], 
+                    local_models=local_models,
+                    use_openai=False,
+                    generation_args=generation_args,
+                    output_dir="friction_analysis_results_DPIP_standalone",)

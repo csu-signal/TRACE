@@ -13,6 +13,7 @@ from mmdemo.interfaces import (
     CameraCalibrationInterface,
     ColorImageInterface,
     DepthImageInterface,
+    DpipActionInterface,
     DpipObjectInterface3D,
 )
 from mmdemo.interfaces.data import DpipGamrTarget, DpipObjectInfo3D
@@ -52,13 +53,13 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         self,
         color: BaseFeature[ColorImageInterface],
         depth: BaseFeature[DepthImageInterface],
-        calibration: BaseFeature[CameraCalibrationInterface],
+        actions: BaseFeature[DpipActionInterface],
         *,
         detection_threshold=0.6,
         model_path: Path | None = None,
         skipPost: bool=False
     ) -> None:
-        super().__init__(color, depth, calibration)
+        super().__init__(color, depth, actions)
         self.all_grid_states = {}
         self.skipPost = skipPost
         self.lastCol = None
@@ -94,10 +95,10 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         self,
         col: ColorImageInterface,
         dep: DepthImageInterface,
-        calibration: CameraCalibrationInterface,
+        actions: DpipActionInterface,
     ) -> DpipObjectInterface3D | None:
         if(self.skipPost):
-            return DpipObjectInterface3D(xyGrid=[], overlayFrame=col.frame) #just to test post transcriptions without a lag
+            return DpipObjectInterface3D(xyGrid=self.xy_grid, frame_index=col.frame_count, region_frac=self.region_frac, labels=self.labels, boxes=self.boxes, centers=self.centers, coords=self.coords, segmentation_masks = self.segmentation_masks)
     
         if not col.is_new() or not dep.is_new():
             return None
@@ -113,7 +114,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             self.t = threading.Thread(target=self.worker)
             self.t.start()
 
-        return DpipObjectInterface3D(xyGrid=self.xy_grid, region_frac=self.region_frac, labels=self.labels, boxes=self.boxes, centers=self.centers, coords=self.coords, segmentation_masks = self.segmentation_masks)
+        return DpipObjectInterface3D(xyGrid=self.xy_grid, frame_index=col.frame_count, region_frac=self.region_frac, labels=self.labels, boxes=self.boxes, centers=self.centers, coords=self.coords, segmentation_masks = self.segmentation_masks)
 
     def build_centered_norm_point_grid(self, n_per_side: int, frac: float = 0.5) -> np.ndarray:
         assert 0 < frac <= 1

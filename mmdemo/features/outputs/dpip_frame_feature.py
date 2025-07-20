@@ -84,7 +84,6 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
 
         # ensure we are not modifying the color frame itself
         output_frame = np.copy(color.frame)
-        output_frame = cv.cvtColor(output_frame, cv.COLOR_RGB2BGR)
         h, w, _ = color.frame.shape
 
         # # render gesture vectors
@@ -128,8 +127,6 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         cv.putText(output_frame, f"[W/S] region_frac = {objects.region_frac:.2f}", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
         output_frame = cv.resize(output_frame, (1280, 720))
-        output_frame = cv.cvtColor(output_frame, cv.COLOR_BGR2RGB)
-
         return ColorImageInterface(frame=output_frame, frame_count=color.frame_count)
     
     def visualize_segmentation_masks(
@@ -166,7 +163,7 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
                         label += f"\n{user_label}"
                 cx, cy = centers[idx]
                 for k, line in enumerate(label.split("\n")):
-                    cv.putText(overlay, line, (cx - 75, cy + k * 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                    cv.putText(overlay, line, (cx - 75, cy + k * 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
         return overlay
 
     @staticmethod

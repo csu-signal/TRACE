@@ -26,30 +26,14 @@ from mmdemo.features import (
     VADUtteranceBuilder,
     WhisperTranscription,
     Planner,
-    DpipCommonGroundTracking
+    DpipCommonGroundTracking,
+    DpipActionFeature
 )
 
 import warnings
 
 # Suppress all warnings
 warnings.filterwarnings("ignore")
-
-#TODO 
-    # Updated features needed (can be place holders for the time being)
-        # Object Tracking -> DpipObject (Jack?)
-            # TODO Update to include the new class values for the DPIP blocks
-        # Propositions and Friction -> DpipProposition (Videep, Abhijnan)
-            #TODO Update to return the new prop/friction output (interventions and structure status)
-            #TODO Update TARSKI to include a script with Abhijnan's latest code to send back the DPIP values
-        # CGT -> DpipCommonGroundTracking
-            # TODO parse structure state from the friction output and render the sides
-        # Output Frame -> DpipFrame
-
-    # meeting questions
-        # Videep Abhijnan utterance annotations column values? WTD 4, DPIP 3
-            # G:\Weights_Task\Data\GAMR\Utterances
-            # G:\DPIP\GAMR\Utterances 
-
 
 # DPIP_MKV_PATH = (
 #     "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-master.mkv"
@@ -65,7 +49,7 @@ DPIP_SECOND_MKV_PATH = (
 
 # audio path for DPIP group
 #DPIP_AUDIO_PATH = "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-audio1.wav"
-DPIP_AUDIO_PATH ="D:/DPIP/DPIP_Azure_Recordings/SK_DPIP_Group_01-audio.mav"
+#DPIP_AUDIO_PATH ="D:/DPIP/DPIP_Azure_Recordings/SK_DPIP_Group_01-audio.mav"
 
 # ground truth path for WTD group. These can be generated with
 # scripts/dpip_annotations/create_all_dpip_inputs.py
@@ -146,17 +130,12 @@ if __name__ == "__main__":
     #     playback_frame_rate=PLAYBACK_FRAME_RATE,
     # )
 
-    #gesture = Gesture(color, depth, body_tracking, calibration)
-    #gesture2 = Gesture(color2, depth2, body_tracking2, calibration2)
-
-    # TODO thread to help speed up?
-    objects = DpipObject(color, depth, calibration, skipPost=True)
-    #selected_objects = SelectedObjects(objects, gesture)
+    objects = DpipObject(color, depth, calibration, skipPost=False)
+    actions = DpipActionFeature(objects)
 
     # objects2 = DpipObject(color2, depth2, calibration2)
     # selected_objects2 = SelectedObjects(objects2, gesture2)
 
-    #TODO get DPIP ground truth utterances
     # transcriptions from the ground truth file
     (
         transcriptions,
@@ -167,38 +146,15 @@ if __name__ == "__main__":
         chunk_dir_path=ground_truth_dir / "chunks",
     )
 
-    # which objects are referenced (by gesture) during a transcription
-    # and dense paraphrased transcription
-    # TODO update selected objects info to return DPIP gamr values and not the old WTD gamr values
-    #referenced_objects = AccumulatedSelectedObjects(selected_objects, transcriptions)
-    # dense_paraphrased_transcriptions = DenseParaphrasedTranscription(
-    #     transcriptions, referenced_objects
-    # )
-
-    #gesture_move = gesture
-    # gesture_move = None
-    #objects_move = selected_objects
-    # objects_move = None
-
     # prop extraction from friction model
-    dpip_prop_friction = DpipProposition(transcriptions, objects, csvSupport="G:\\DPIP\\GAMR\\Utterances\\group7_transcript.csv")
-
-    # TODO are we using Move?
-    # moves = Move(dense_paraphrased_transcriptions, utterance_audio, gesture, selected_objects) #live move
-    # moves = Move(
-    #     dense_paraphrased_transcriptions,
-    #     utterances,
-    #     gesture=gesture_move,
-    #     objects=objects_move,
-    #     model_path=Path(WTD_MOVE_MODEL_PATH.format(group)),
-    # )
+    dpip_prop_friction = DpipProposition(transcriptions, objects, actions, csvSupport="G:\\DPIP\\GAMR\\Utterances\\group7_transcript.csv")
 
     cgt = DpipCommonGroundTracking(dpip_prop_friction)
     
     # TODO are need to update the planner?
     # plan = Planner(cgt)
 
-    output_frame = DpipFrame(color, objects, calibration)
+    output_frame = DpipFrame(color, objects, actions)
     # output_frame2 = DpipFrame(color2, gesture2, selected_objects2, calibration2)
 
     # run demo and show output

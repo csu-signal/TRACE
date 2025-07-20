@@ -332,12 +332,23 @@ class DpipObjectInterface3D(BaseInterface):
     """
 
     xyGrid: set[str]
+    frame_index: int
     region_frac: float
     boxes: list
     centers: list
     coords: list
     segmentation_masks: list
     labels: dict
+
+@dataclass
+class DpipActionInterface(BaseInterface):
+    """
+    Action interface
+
+    actions -- the actions
+    """
+
+    structure: dict
 
 @dataclass
 class PlannerInterface(BaseInterface):
