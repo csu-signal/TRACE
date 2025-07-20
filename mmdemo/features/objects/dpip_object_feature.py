@@ -1,4 +1,5 @@
 from pathlib import Path
+import threading
 from typing import final
 
 import cv2
@@ -60,6 +61,15 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         super().__init__(color, depth, calibration)
         self.all_grid_states = {}
         self.skipPost = skipPost
+        self.lastCol = None
+        self.xy_grid = None
+        self.region_frac = DEFAULT_REGION_FRAC
+        self.boxes = {}
+        self.centers = {}
+        self.coords = {}
+        self.segmentation_masks = {}
+        self.labels = {}
+        self.t = threading.Thread(target=self.worker)
         # self.detectionThreshold = detection_threshold
         # if model_path is None:
         #     self.model_path = self.DEFAULT_MODEL_PATH
@@ -92,27 +102,18 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         if not col.is_new() or not dep.is_new():
             return None
         
-        h, w, _ = col.frame.shape
-        region_frac = DEFAULT_REGION_FRAC
-        sam2_mask_generator = self.create_sam2_mask_generator()
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('w'):
+            self.region_frac = min(self.region_frac + 0.05, 1.0)
+        elif key == ord('s'):
+            self.region_frac = max(self.region_frac - 0.05, 0.05)
+       
+        self.lastCol = col 
+        if not self.t.is_alive():
+            self.t = threading.Thread(target=self.worker)
+            self.t.start()
 
-        segmentation_masks = self.get_segmentation_masks(sam2_mask_generator, col.frame, region_frac)
-
-        boxes, centers, coords = self.build_centered_grid_boxes(col.frame.shape, GRID_SIZE, region_frac)
-        labels = self.compute_grid_labels(col.frame, segmentation_masks, boxes)
-
-        xy_grid = self.grid_labels_to_xy_matrix(labels, GRID_SIZE)
-        print(xy_grid)
-        self.all_grid_states[col.frame_count] = xy_grid
-
-        overlay = self.draw_grid_overlay(col.frame, boxes, labels=labels, centers=centers, coords=coords)
-        overlay = self.visualize_segmentation_masks(overlay, segmentation_masks, alpha=0.6)
-
-        #TODO move to output feature
-        cv2.putText(overlay, f"Frame {col.frame_count}", (w - 150, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
-        cv2.putText(overlay, f"[W/S] region_frac = {region_frac:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-
-        return DpipObjectInterface3D(xyGrid=xy_grid, overlayFrame=overlay)
+        return DpipObjectInterface3D(xyGrid=self.xy_grid, region_frac=self.region_frac, labels=self.labels, boxes=self.boxes, centers=self.centers, coords=self.coords, segmentation_masks = self.segmentation_masks)
 
     def build_centered_norm_point_grid(self, n_per_side: int, frac: float = 0.5) -> np.ndarray:
         assert 0 < frac <= 1
@@ -192,29 +193,6 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         return grid_matrix
 
 
-    def visualize_segmentation_masks(
-        self,
-        image: np.ndarray,
-        masks: List[np.ndarray],
-        alpha: float = 0.5,
-        random_colors: bool = True
-    ) -> np.ndarray:
-        overlay = image.copy()
-
-        # Default color palette
-        def generate_color():
-            return tuple(random.randint(0, 255) for _ in range(3))
-
-        for mask in masks:
-            color = generate_color() if random_colors else (0, 255, 0)
-            colored_mask = np.zeros_like(image, dtype=np.uint8)
-            for c in range(3):
-                colored_mask[:, :, c] = mask * color[c]
-            overlay = cv2.addWeighted(overlay, 1.0, colored_mask, alpha, 0)
-
-        return overlay
-
-
     def build_centered_grid_boxes(self, image_shape, grid_size, region_frac):
         h, w = image_shape[:2]
         region_size = region_frac * min(h, w)
@@ -235,23 +213,6 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 centers.append((int(x_center), int(y_center)))
                 coords.append((i, j))
         return boxes, centers, coords
-
-
-    def draw_grid_overlay(self, image, boxes, labels=None, centers=None, coords=None, color=(0, 255, 0), thickness=2):
-        overlay = image.copy()
-        for idx, (pt1, pt2) in enumerate(boxes):
-            cv2.rectangle(overlay, pt1, pt2, color, thickness)
-            if centers and coords:
-                label = f"{coords[idx]}"
-                if labels:
-                    user_label = labels.get(coords[idx], "")
-                    if user_label:
-                        label += f"\n{user_label}"
-                cx, cy = centers[idx]
-                for k, line in enumerate(label.split("\n")):
-                    cv2.putText(overlay, line, (cx - 50, cy + k * 15), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1)
-        return overlay
-
 
     def circular_mean_hue(self, hue_values: np.ndarray) -> float:
         angles = np.deg2rad(hue_values * 2)  # Map to [0, 360] → radians
@@ -326,3 +287,23 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                     max_overlap = intersection
             labels[(idx // GRID_SIZE, idx % GRID_SIZE)] = best_label
         return labels
+    
+    def worker(self):
+        print("New Object Request Thread Started")
+        try:
+            h, w, _ = self.lastCol.frame.shape
+            sam2_mask_generator = self.create_sam2_mask_generator()
+
+            self.segmentation_masks = self.get_segmentation_masks(sam2_mask_generator, self.lastCol.frame, self.region_frac)
+
+            self.boxes, self.centers, self.coords = self.build_centered_grid_boxes(self.lastCol.frame.shape, GRID_SIZE, self.region_frac)
+            self.labels = self.compute_grid_labels(self.lastCol.frame, self.segmentation_masks, self.boxes)
+
+            self.xy_grid = self.grid_labels_to_xy_matrix(self.labels, GRID_SIZE)
+            print(self.xy_grid)
+            self.all_grid_states[self.lastCol.frame_count] = self.xy_grid
+            
+        except Exception as e:
+            self.xy_grid = None
+            self.region_frac = DEFAULT_REGION_FRAC
+            print(f"DPIP OBJECT FEATURE THREAD: An error occurred: {e}")

@@ -1,5 +1,6 @@
+import random
 import re
-from typing import final
+from typing import List, final
 
 import cv2 as cv
 import numpy as np
@@ -81,9 +82,10 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         ):
             return None
 
-        # # ensure we are not modifying the color frame itself
-        # output_frame = np.copy(color.frame)
-        # output_frame = cv.cvtColor(output_frame, cv.COLOR_RGB2BGR)
+        # ensure we are not modifying the color frame itself
+        output_frame = np.copy(color.frame)
+        output_frame = cv.cvtColor(output_frame, cv.COLOR_RGB2BGR)
+        h, w, _ = color.frame.shape
 
         # # render gesture vectors
         # for cone in gesture.cones:
@@ -119,10 +121,53 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         #     cv.LINE_AA,
         # )
 
-        # output_frame = cv.resize(output_frame, (1280, 720))
-        # output_frame = cv.cvtColor(output_frame, cv.COLOR_BGR2RGB)
+        output_frame = self.draw_grid_overlay(color.frame, objects.boxes, labels=objects.labels, centers=objects.centers, coords=objects.coords)
+        output_frame = self.visualize_segmentation_masks(output_frame, objects.segmentation_masks, alpha=0.6)
 
-        return ColorImageInterface(frame=objects.overlayFrame, frame_count=color.frame_count)
+        cv.putText(output_frame, f"Frame {color.frame_count}", (w - 200, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+        cv.putText(output_frame, f"[W/S] region_frac = {objects.region_frac:.2f}", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
+        output_frame = cv.resize(output_frame, (1280, 720))
+        output_frame = cv.cvtColor(output_frame, cv.COLOR_BGR2RGB)
+
+        return ColorImageInterface(frame=output_frame, frame_count=color.frame_count)
+    
+    def visualize_segmentation_masks(
+        self,
+        image: np.ndarray,
+        masks: List[np.ndarray],
+        alpha: float = 0.5,
+        random_colors: bool = True
+    ) -> np.ndarray:
+        overlay = image.copy()
+
+        # Default color palette
+        def generate_color():
+            return tuple(random.randint(0, 255) for _ in range(3))
+
+        for mask in masks:
+            color = generate_color() if random_colors else (0, 255, 0)
+            colored_mask = np.zeros_like(image, dtype=np.uint8)
+            for c in range(3):
+                colored_mask[:, :, c] = mask * color[c]
+            overlay = cv.addWeighted(overlay, 1.0, colored_mask, alpha, 0)
+
+        return overlay
+    
+    def draw_grid_overlay(self, image, boxes, labels=None, centers=None, coords=None, color=(0, 255, 0), thickness=2):
+        overlay = image.copy()
+        for idx, (pt1, pt2) in enumerate(boxes):
+            cv.rectangle(overlay, pt1, pt2, color, thickness)
+            if centers and coords:
+                label = f"{coords[idx]}"
+                if labels:
+                    user_label = labels.get(coords[idx], "")
+                    if user_label:
+                        label += f"\n{user_label}"
+                cx, cy = centers[idx]
+                for k, line in enumerate(label.split("\n")):
+                    cv.putText(overlay, line, (cx - 75, cy + k * 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        return overlay
 
     @staticmethod
     def projectVectorLines(cone: Cone, frame, calibration, includeY, includeZ, gaze):

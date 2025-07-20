@@ -62,7 +62,7 @@ if __name__ == "__main__":
     #######################################################################################
 
     # single microphone - rosch microphone - Index: 39, Name: Microphone (USB audio CODEC)
-    # audio1 = MicAudio(device_id=9, speaker_id="P1")
+    # audio1 = MicAudio(device_id =9, speaker_id="P1")
     # utterance_audio = VADUtteranceBuilder(audio1, delete_input_files=True)
     #######################################################################################
 

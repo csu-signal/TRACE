@@ -329,12 +329,15 @@ class DpipObjectInterface3D(BaseInterface):
     Object detector 3d locations
 
     xyGrid -- the x y grid
-    overlayFrame -- the overlay frame
     """
 
     xyGrid: set[str]
-    overlayFrame: np.ndarray
-
+    region_frac: float
+    boxes: list
+    centers: list
+    coords: list
+    segmentation_masks: list
+    labels: dict
 
 @dataclass
 class PlannerInterface(BaseInterface):
