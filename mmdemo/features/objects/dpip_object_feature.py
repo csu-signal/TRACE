@@ -258,13 +258,13 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         # else:
         #     color_name = "unknown"
 
-        if 115 <= mean_hue < 127:
+        if 114 <= mean_hue < 127:
             color_name = "red"
-        elif 106 <= mean_hue < 115:
+        elif 105 <= mean_hue < 114:
             color_name = "orange"
-        elif 94 <= mean_hue < 105:
+        elif 93 <= mean_hue < 105:
             color_name = "yellow"
-        elif 25 <= mean_hue < 50:
+        elif 25 <= mean_hue < 55:
             color_name = "green"
         elif 6 <= mean_hue < 15:
             color_name = "blue"
