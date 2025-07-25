@@ -149,6 +149,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
             region_size = region_frac * min(H, W)
             cy, cx = H // 2, W // 2
+            # cy, cx = H * 0.3, W // 2
             half = int(region_size / 2)
             y0, y1 = cy - half, cy + half
             x0, x1 = cx - half, cx + half
@@ -199,6 +200,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         region_size = region_frac * min(h, w)
         cell_size = region_size / grid_size
         cy, cx = h / 2, w / 2
+        # cy, cx = (h * 0.3), w / 2
         boxes = []
         centers = []
         coords = []
@@ -243,18 +245,32 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         mean_hsv = self.mean_hsv_from_mask(image, mask)
         mean_hue = mean_hsv[0]
 
-        if mean_hue < 10 or mean_hue >= 160:
+        # if mean_hue < 10 or mean_hue >= 160:
+        #     color_name = "red"
+        # elif 10 <= mean_hue < 20:
+        #     color_name = "orange"
+        # elif 20 <= mean_hue < 35:
+        #     color_name = "yellow"
+        # elif 35 <= mean_hue < 85:
+        #     color_name = "green"
+        # elif 85 <= mean_hue < 170:
+        #     color_name = "blue"
+        # else:
+        #     color_name = "unknown"
+
+        if 115 <= mean_hue < 127:
             color_name = "red"
-        elif 10 <= mean_hue < 20:
+        elif 106 <= mean_hue < 115:
             color_name = "orange"
-        elif 20 <= mean_hue < 35:
+        elif 94 <= mean_hue < 105:
             color_name = "yellow"
-        elif 35 <= mean_hue < 85:
+        elif 25 <= mean_hue < 50:
             color_name = "green"
-        elif 85 <= mean_hue < 170:
+        elif 6 <= mean_hue < 15:
             color_name = "blue"
         else:
             color_name = "unknown"
+
 
         return color_name, mean_hsv
 
@@ -290,7 +306,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         return labels
     
     def worker(self):
-        print("New Object Request Thread Started")
+        print("\nNew Object Request Thread Started")
         try:
             h, w, _ = self.lastCol.frame.shape
             sam2_mask_generator = self.create_sam2_mask_generator()

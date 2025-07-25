@@ -9,6 +9,8 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import (
     CameraCalibrationInterface,
     ColorImageInterface,
+    DpipActionInterface,
+    DpipFrictionOutputInterface,
     DpipObjectInterface3D,
     GazeConesInterface,
     GestureConesInterface,
@@ -42,9 +44,8 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
     """
     Return the output frame used in the EMNLP Demo
 
-    Input interfaces are `ColorImageInterface`, `GazeConesInterface`,
-    `GestureConesInterface`, `SelectedObjectsInterface`,
-    `FrictionOutputInterface`, `PlannerInterface`
+    Input interfaces are `ColorImageInterface`, `DpipObjectInterface3D`,
+    `DpipActionInterface`, `DpipFrictionOutputInterface`
 
     Output interface is `ColorImageInterface`
     """
@@ -54,14 +55,14 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         color: BaseFeature[ColorImageInterface],
         #gesture: BaseFeature[GestureConesInterface],
         objects: BaseFeature[DpipObjectInterface3D],
-        calibration: BaseFeature[CameraCalibrationInterface],
-        #friction: BaseFeature[FrictionOutputInterface],
+        action: BaseFeature[DpipActionInterface],
+        friction: BaseFeature[DpipFrictionOutputInterface],
         #plan: BaseFeature[PlannerInterface] | None = None,
     ):
         # if plan is None:
         #     super().__init__(color, gesture, sel_objects, calibration) # removed gaze
         # else:
-        super().__init__(color, objects, calibration) # removed gaze
+        super().__init__(color, objects, action, friction) # removed gaze
 
     def initialize(self):
         self.last_plan = {"text": "", "color": (255, 255, 255)}
@@ -71,14 +72,14 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         color: ColorImageInterface,
         #gesture: GestureConesInterface,
         objects: DpipObjectInterface3D,
-        calibration: CameraCalibrationInterface,
-        # friction: FrictionOutputInterface,
+        actions: DpipActionInterface,
+        friction: DpipFrictionOutputInterface,
         # plan: PlannerInterface = None,
     ):
         if (
             not color.is_new()
             or not objects.is_new()
-            # or not friction.is_new()
+            or not friction.is_new()
         ):
             return None
 
@@ -107,24 +108,54 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         # # render plan
         # # if plan:
         # #     DpipFrame.renderPlan(output_frame, plan, self.last_plan)
+
+        if friction and friction.friction_statement != '':
+            frictionStatements = friction.friction_statement.split("r*")
+            fstate = frictionStatements[0]
+            x, y = (50, 125)
+            text = fstate
+            font = cv.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.75
+            font_thickness = 1
+            text_color_bg = (255,255,255)
+            text_color =(0,0,0)
+            text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
+            text_w, text_h = text_size
+            cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
+            cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
+
+            if(len(frictionStatements) > 1):
+                #friction includes rational, print it
+                rstate = frictionStatements[1]
+                x, y = (50, 110)
+                text = rstate
+                font = cv.FONT_HERSHEY_SIMPLEX
+                font_scale = 0.5
+                font_thickness = 1
+                text_color_bg = (255,255,255)
+                text_color =(0,0,0)
+                text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
+                text_w, text_h = text_size
+                cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
+                cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
+
+            # print friction statement
        
-        # # draw frame count
-        # cv.putText(
-        #     output_frame,
-        #     "FRAME:" + str(color.frame_count),
-        #     (50, 50),
-        #     cv.FONT_HERSHEY_SIMPLEX,
-        #     1,
-        #     (0, 0, 255),
-        #     2,
-        #     cv.LINE_AA,
-        # )
+        # draw frame count
+        cv.putText(
+            output_frame,
+            "FRAME:" + str(color.frame_count),
+            (50, 50),
+            cv.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 0, 255),
+            2,
+            cv.LINE_AA,
+        )
 
-        output_frame = self.draw_grid_overlay(color.frame, objects.boxes, labels=objects.labels, centers=objects.centers, coords=objects.coords)
+        output_frame = self.draw_grid_overlay(output_frame, objects.boxes, labels=objects.labels, centers=objects.centers, coords=objects.coords)
         output_frame = self.visualize_segmentation_masks(output_frame, objects.segmentation_masks, alpha=0.6)
-
-        cv.putText(output_frame, f"Frame {color.frame_count}", (w - 200, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
-        cv.putText(output_frame, f"[W/S] region_frac = {objects.region_frac:.2f}", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        cv.putText(output_frame, f"[W/S] region_frac = {objects.region_frac:.2f}", (50, 100), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
         output_frame = cv.resize(output_frame, (1280, 720))
         return ColorImageInterface(frame=output_frame, frame_count=color.frame_count)

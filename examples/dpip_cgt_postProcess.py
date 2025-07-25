@@ -149,12 +149,12 @@ if __name__ == "__main__":
     # prop extraction from friction model
     dpip_prop_friction = DpipProposition(transcriptions, objects, actions, csvSupport="G:\\DPIP\\GAMR\\Utterances\\group7_transcript.csv")
 
-    cgt = DpipCommonGroundTracking(dpip_prop_friction)
+    cgt = DpipCommonGroundTracking(dpip_prop_friction, color, saveCanvas=True)
     
     # TODO are need to update the planner?
     # plan = Planner(cgt)
 
-    output_frame = DpipFrame(color, objects, actions)
+    output_frame = DpipFrame(color, objects, actions, dpip_prop_friction)
     # output_frame2 = DpipFrame(color2, gesture2, selected_objects2, calibration2)
 
     # run demo and show output

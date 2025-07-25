@@ -1157,7 +1157,7 @@ ANALYSIS INSTRUCTIONS:
 - Map coordinates from director views to 3x3 grid positions using the coordinate mapping
 - Track agreement markers ("yeah", "yes", "perfect") to propagate information between directors
 - Use exact colors from transcript: "red", "blue", "green", "yellow", "orange", "brown"
-
+- If the group talks about anything not related off task, you must ask them to stop, and resume the task
 OUTPUT FORMAT:
 <belief_state>
 [Director beliefs based on their utterances and what they can see in their views]
@@ -1583,6 +1583,7 @@ def process_segments_with_multiple_models(segments, local_models, use_openai=Tru
         pickle.dump(all_results, f)
     
     logger.info(f"Results saved to {output_file}")
+    print(all_results)
     return all_results
 
 # def analyze_friction_results(results_file):
@@ -1721,7 +1722,7 @@ def start_server(local_models, generation_args):
                 print(f"Connected by {addr}")
                 while True:
                     try:
-                        data = conn.recv(2048)
+                        data = conn.recv(4096)
                         if not data:
                             break
                         print("Received Data Length:" + str(len(data)))
@@ -1754,13 +1755,19 @@ def start_server(local_models, generation_args):
                         ################################
 
                         # TODO include friction intervention with the cg as the entire return string
-                        returnString = ''
                         if results is not None:
                             cg = results['results'][0]['segment_results'][0]['parsed_components']['common_ground']
+                            cg = str(cg).replace('\'', "\"")
+                            friction = results['results'][0]['segment_results'][0]['parsed_components']['friction']
                             print(f"\nCommon Ground: {cg}\n")
+                            print(f"Friction: {friction}\n") 
+                            
+                            my_object = {"commonGround": cg, "friction": friction}
+                            serialized_data = pickle.dumps(my_object)
+                            print("Send Data Length:" + str(len(serialized_data))) 
+
                             if cg is not None:
-                                returnString += str(cg).replace('\'', "\"")
-                                conn.sendall(str.encode(returnString, 'utf-8')) 
+                                conn.sendall(serialized_data) 
                             else:
                                 conn.sendall(str.encode("None", 'utf-8'))
                         else:
@@ -1786,8 +1793,8 @@ if __name__ == "__main__":
 #         "deli_dpo": 'DELI_all_weights/DELI_dpo_weights/checkpoint-3500',
 #         "deli_sft": "DELI_all_weights/DELI_sft_weights/checkpoint-small-1500",
 #         "deli_ppo": "DELI_all_weights/DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800",
-        "deli_faaf": '/home/traceteam/DELI_faaf/diplomacy_deli_weights/DELI_faaf_weights/checkpoint-2000',
-        #"wtd_faaf_new": 'wtd_faaf_new/wtd_faaf_new/checkpoint-3000'
+        #"deli_faaf": '/home/traceteam/DELI_faaf/diplomacy_deli_weights/DELI_faaf_weights/checkpoint-2000',
+        "wtd_faaf_new": '/home/traceteam/DELI_faaf/diplomacy_deli_weights/DELI_faaf_weights/checkpoint-3000/checkpoint-3000'
     }
     
     # Generation arguments

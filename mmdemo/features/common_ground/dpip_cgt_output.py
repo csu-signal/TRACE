@@ -1,4 +1,5 @@
 import json
+import shutil
 import socket
 import warnings
 from pathlib import Path
@@ -12,9 +13,11 @@ import re
 from typing import Dict, List, Optional
 import threading
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import DpipCommonGroundTrackingInterface, DpipFrictionOutputInterface, PropositionInterface
+from mmdemo.interfaces import ColorImageInterface, DpipCommonGroundTrackingInterface, DpipFrictionOutputInterface, PropositionInterface
 import tkinter as tk                    
 from tkinter import ttk
+from PIL import ImageGrab
+import os
 
 @final
 class DpipCommonGroundTracking(BaseFeature):
@@ -29,23 +32,43 @@ class DpipCommonGroundTracking(BaseFeature):
     """
 
     def __init__(
-        self, prop: BaseFeature[DpipFrictionOutputInterface]
+        self, prop: BaseFeature[DpipFrictionOutputInterface], color: BaseFeature[ColorImageInterface], saveCanvas: bool | None = False
     ):
-        super().__init__(prop) 
+        super().__init__(prop, color) 
         self.init = False
         self.t = threading.Thread(target=self.worker)
         self.t.start()
         self.rowX = {}
         self.currentCg = ''
         self.lastCg = ''
+        self.saveCanvas = saveCanvas
+        self.frameIndex = 0
+
+        if(self.saveCanvas):
+            if os.path.isdir("cg_output/"):
+                shutil.rmtree("cg_output/")
+
+            # Create the folder and any necessary parent directories
+            # exist_ok=True prevents an error if the directory already exists
+            os.makedirs("cg_output/", exist_ok=True)
+            os.makedirs("cg_output/d1/", exist_ok=True)
+            os.makedirs("cg_output/d2/", exist_ok=True)
+            os.makedirs("cg_output/d3/", exist_ok=True)
 
     def initialize(self):
         print("DPIP Interface")
+
+    def save_canvas(self, canvas_widget, filename):
+        x = self.root.winfo_rootx() + canvas_widget.winfo_x()
+        y = self.root.winfo_rooty() + canvas_widget.winfo_y()
+        x1 = x + canvas_widget.winfo_width()
+        y1 = y + canvas_widget.winfo_height()
+        ImageGrab.grab().crop((x, y, x1, y1)).save(filename)
     
-    def get_output(self, prop: DpipFrictionOutputInterface):
+    def get_output(self, prop: DpipFrictionOutputInterface, color:ColorImageInterface):
         #if not prop.is_new(): #TODO update to run only when props come in
         #    return None
-        
+        self.frameIndex = color.frame_count
         if(self.init == False or (prop.cg_json != "None" and prop.cg_json != '' and self.lastCg != prop.cg_json)):
             self.lastCg = prop.cg_json
             self.currentCg = json.loads(prop.cg_json)
@@ -93,17 +116,6 @@ class DpipCommonGroundTracking(BaseFeature):
                 self.canvas3.delete("all")
                 self.rowX = {}
 
-                #TODO parse and render from json
-                # self.renderRectangles(1, 1, 1, 'orange')
-                # self.renderRectangles(1, 1, 2, 'white')
-                # self.renderRectangles(1, 1, 1, 'blue')
-                # self.renderRectangles(1, 2, 2, 'red')
-                # self.renderRectangles(1, 2, 1, 'blue')
-                # self.renderRectangles(1, 3, 2, 'purple')
-
-                # self.renderRectangles(2, 2, 1, 'red')
-                # self.renderRectangles(2, 2, 2, 'purple')
-                # self.renderRectangles(3, 3, 1, 'yellow')
                 self.renderSide("D1", "row_0")
                 self.renderSide("D1", "row_1")
                 self.renderSide("D1", "row_2")
@@ -119,6 +131,14 @@ class DpipCommonGroundTracking(BaseFeature):
                 self.canvas1.pack()
                 self.canvas2.pack()
                 self.canvas3.pack()
+
+                if(self.save_canvas):
+                    self.tabControl.select(0) # Selects the second tab (index 0)
+                    self.save_canvas(self.canvas1, f"cg_output/d1/{self.frameIndex}.png")
+                    self.tabControl.select(1) # Selects the second tab (index 1)
+                    self.save_canvas(self.canvas2, f"cg_output/d2/{self.frameIndex}.png")
+                    self.tabControl.select(2) # Selects the second tab (index 2)
+                    self.save_canvas(self.canvas3, f"cg_output/d3/{self.frameIndex}.png")
 
         except Exception as e:
             print(f"DPIP FEATURE THREAD: An error occurred: {e}")

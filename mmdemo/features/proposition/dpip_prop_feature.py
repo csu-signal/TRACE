@@ -126,7 +126,6 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
             else:
                 print("Friction request in progress...waiting for the thread to complete")
 
-            #TODO include props and board state info for the GUI
             return DpipFrictionOutputInterface(
                     friction_statement=self.friction, cg_json=self.cg, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
     
@@ -139,14 +138,18 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
                 serialized_data = pickle.dumps(my_object)
                 print("Send Data Length:" + str(len(serialized_data))) 
                 s.sendall(serialized_data)
+                
                 print("Waiting for friction server response")
                 data = s.recv(2048)
-            received = data.decode()
-            if received != " ":
-                #self.friction = received #TODO include and parse friction statement
-                self.cg = received #for now, will eventually parse
-                print(f"Received from Server:{received}")
-                print(self.transcriptionHistory[-1])
+            deserialized_object = pickle.loads(data)
+            cg = deserialized_object["commonGround"]
+            friction = deserialized_object["friction"]
+            if cg != '':
+                self.cg = cg
+            if friction != '':
+                self.friction = friction
+            print(f"Received from Server:{deserialized_object}")
+            print(self.transcriptionHistory[-1])
         except Exception as e:
             self.friction = ''
             print(f"DPIP PROP FEATURE THREAD: An error occurred: {e}")
