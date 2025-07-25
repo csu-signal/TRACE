@@ -1,6 +1,8 @@
 .DS_Store
 .vscode/
 
+cg_output/
+
 __pycache__/
 *.egg-info/
 
