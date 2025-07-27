@@ -1,7 +1,6 @@
 from pathlib import Path
 import threading
 from typing import final
-
 import cv2
 import numpy as np
 import torch
@@ -32,8 +31,14 @@ from sam2.build_sam import build_sam2
 from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
 
 GRID_SIZE = 3
-DEFAULT_REGION_FRAC = 0.45
-
+DEFAULT_REGION_FRAC = 0.35 # changing this to 0.35 since a larger grid box is going beyond the base board - Sifat
+COLOR_THRESHOLDS = {
+    "red": (114, 127),
+    "orange": (105, 114),
+    "yellow": (93, 105),
+    "green": (25, 55),
+    "blue": (6, 15),
+}
 
 @final
 class DpipObject(BaseFeature[DpipObjectInterface3D]):
@@ -162,8 +167,16 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             sam2_output = sam2_mask_generator.generate(blurred_cropped_image)
             segmentation_masks = [mask["segmentation"] for mask in sam2_output]
 
+            # To avoid returning maps of objects smaller than 50% of one grid square - Sifat
+            cropped_area_of_image = (y1 - y0) * (x1 - x0)
+            min_mask_area = 0.5 * (cropped_area_of_image / (GRID_SIZE ** 2))
+
             aligned_masks = []
             for mask in segmentation_masks:
+                mask_area = np.sum(mask)
+                if mask_area < min_mask_area:
+                    # print("map too small") # for debugging, please comment out - Sifat
+                    continue
                 full_mask = np.zeros((H, W), dtype=mask.dtype)
                 full_mask[y0:y1, x0:x1] = mask
                 aligned_masks.append(full_mask)
@@ -258,21 +271,13 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         # else:
         #     color_name = "unknown"
 
-        if 114 <= mean_hue < 127:
-            color_name = "red"
-        elif 105 <= mean_hue < 114:
-            color_name = "orange"
-        elif 93 <= mean_hue < 105:
-            color_name = "yellow"
-        elif 25 <= mean_hue < 55:
-            color_name = "green"
-        elif 6 <= mean_hue < 15:
-            color_name = "blue"
-        else:
-            color_name = "unknown"
-
-
+        color_name = "unknown"
+        for name, (low, high) in COLOR_THRESHOLDS.items():
+            if low <= mean_hue < high:
+                color_name = name
+                break
         return color_name, mean_hsv
+
 
     def estimate_shape(self, mask: np.ndarray) -> str:
         contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -297,11 +302,21 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 cell_mask = np.zeros_like(mask, dtype=np.uint8)
                 cell_mask[y0:y1, x0:x1] = 1
                 intersection = np.logical_and(mask, cell_mask).sum()
+                grid_area = (y1 - y0) * (x1 - x0)
+                # if mask doesn't cover 50% of square, ignore - Sifat
+                if intersection < 0.5 * grid_area:
+                    continue 
                 if intersection > max_overlap:
                     color, mean_hsv = self.estimate_dominant_color(image, mask & cell_mask)
                     shape = self.estimate_shape(mask)
                     best_label = f"{color} {shape}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
                     max_overlap = intersection
+
+            # for debugging raw coverage constraint - Sifat
+            if max_overlap > 0:
+                coverage_percent = (max_overlap / grid_area) * 100
+                print(f"Grid cell ({idx // GRID_SIZE}, {idx % GRID_SIZE}) coverage: {coverage_percent:.2f}%")
+
             labels[(idx // GRID_SIZE, idx % GRID_SIZE)] = best_label
         return labels
     
