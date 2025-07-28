@@ -4,6 +4,7 @@ import pickle
 import socket
 import threading
 from typing import final
+import copy
 
 import nltk
 from sentence_transformers import SentenceTransformer
@@ -44,8 +45,9 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         csvSupport: str | None = None
     ):
         super().__init__(transcription, objects, actions) 
-        self.transcriptionHistory = []
-        self.frictionSubset = []
+        self.transcriptionHistory = {}
+        self.transcriptionIndex = 0
+        self.frictionSubset = {}
         self.friction = ''
         self.cg = 'None'
         self.subsetTranscriptions = ''
@@ -55,6 +57,8 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         self.csvSupport = csvSupport
         self.lastUtterance = 0
         self.currentStructure = {}
+        self.startingIndex = 0
+        self.endingIndex = 0
         self.timestamp = 0
 
         if host:
@@ -76,7 +80,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         #     self.solvability_history += 1
 
         # transcription.text += "\nWe believe that " + ", ".join(plan.fbank) +"."
-        self.currentStructure = actions.structure
+        self.currentStructure[self.transcriptionIndex] = copy.deepcopy(actions.structure)
         self.timestamp = objects.frame_index
 
         #if the transcription text is empty don't add it to the history
@@ -93,8 +97,9 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
                         break
 
             if transcription.speaker_id != "Group" and transcription.speaker_id != "Instructor":
-                self.transcriptionHistory.append(transcription.speaker_id + ": " + t)
-                self.frictionSubset.append(transcription.speaker_id + ": " + t)
+                self.transcriptionHistory[self.transcriptionIndex] = (transcription.speaker_id + ": " + t)
+                self.frictionSubset[self.transcriptionIndex] = (transcription.speaker_id + ": " + t)
+                self.transcriptionIndex = self.transcriptionIndex + 1
                 # self.transcriptionHistory += "P1: " + transcription.text + "\n"
                     
         #if not plan.solv and (self.solvability_history == self.minUtteranceValue or self.solvability_history == 1):
@@ -106,7 +111,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
                 if(len(self.frictionSubset) < self.minUtteranceValue):
                     print(f'\nA minimum of {self.minUtteranceValue} utterances are needed to send to the friction LLM. There have been {len(self.frictionSubset)} utterance(s) since the last friction request. Attempting to add values from transcription history.')
                     if(len(self.transcriptionHistory) > self.minUtteranceValue):
-                        self.frictionSubset = self.transcriptionHistory[-self.minUtteranceValue:]
+                        self.frictionSubset = dict(list(self.transcriptionHistory.items())[-self.minUtteranceValue:])
                     else:
                         # if there are less values in the history then the min utterance value, use the full history
                         self.frictionSubset = self.transcriptionHistory
@@ -116,13 +121,17 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
                 # format the transcriptions as a string to send over the socket
                 self.subsetTranscriptions = ''
                 for utter in self.frictionSubset:
-                    self.subsetTranscriptions += utter + "\n"
+                    self.subsetTranscriptions += self.frictionSubset[utter] + "\n"
 
                 print("\nSubset of Transcriptions:\n" + self.subsetTranscriptions)
-                if len(self.frictionSubset) > 0:
+                if len(self.frictionSubset) >= 10:
+                    self.startingIndex = list(self.frictionSubset)[0]
+                    self.endingIndex = list(self.frictionSubset)[-1]
                     self.t = threading.Thread(target=self.worker)
                     self.t.start()
-                    self.frictionSubset = []
+                    self.frictionSubset = {}
+                else:
+                     print("A minimum of 10 utterances are required to make a request.")
             else:
                 print("Friction request in progress...waiting for the thread to complete")
 
@@ -134,7 +143,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((self.HOST, self.PORT))
-                my_object = {"transcripts": self.subsetTranscriptions, "structure": self.currentStructure, "timestamp":self.timestamp}
+                my_object = {"transcripts": self.subsetTranscriptions, "start_structure": self.currentStructure[self.startingIndex],  "end_structure": self.currentStructure[self.endingIndex], "timestamp":self.timestamp}
                 serialized_data = pickle.dumps(my_object)
                 print("Send Data Length:" + str(len(serialized_data))) 
                 s.sendall(serialized_data)
@@ -149,7 +158,6 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
             if friction != '':
                 self.friction = friction
             print(f"Received from Server:{deserialized_object}")
-            print(self.transcriptionHistory[-1])
         except Exception as e:
             self.friction = ''
             print(f"DPIP PROP FEATURE THREAD: An error occurred: {e}")

@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 from pydantic import BaseModel, Field, ValidationError
 from typing import List, Dict, Optional
 
+lastFriction = ''
  
 class BlockInfo(BaseModel):
     color: str = Field(..., description="Block color: red, blue, green, yellow, orange, brown, or unknown")
@@ -64,7 +65,7 @@ def generate_with_retries(model, tokenizer, segment, generation_args, device, ma
         try:
             # Modify prompt for retry attempts
             if attempt > 0:
-                retry_prompt = original_prompt + f"\n\nIMPORTANT (Attempt {attempt+1}): Ensure the common_ground section contains VALID JSON with exactly the required structure. Use proper quotes and formatting."
+                retry_prompt = original_prompt #+ f"\n\nIMPORTANT (Attempt {attempt+1}): Ensure the common_ground section contains VALID JSON with exactly the required structure. Use proper quotes and formatting."
             else:
                 retry_prompt = original_prompt
             
@@ -72,6 +73,11 @@ def generate_with_retries(model, tokenizer, segment, generation_args, device, ma
             generated_text = generate_with_local_model(
                 model, tokenizer, retry_prompt, generation_args, device
             )
+
+             # !!! CRITICAL DEBUGGING STEP !!!
+            print("--- RAW MODEL OUTPUT (ATTEMPT {}) ---".format(attempt + 1))
+            print(generated_text)
+            print("---------------------------------")
             
             # Parse the generated text
             parsed_components = parse_friction_response_robust(generated_text)
@@ -152,6 +158,7 @@ def parse_tags_robust(text, tags=None):
 
 def parse_friction_response_robust(text: str) -> Dict[str, Any]:
     """Enhanced parsing function for friction analysis response"""
+    global lastFriction
     
     result = {
         "belief_state": "",
@@ -196,7 +203,11 @@ def parse_friction_response_robust(text: str) -> Dict[str, Any]:
     
     friction_content = extract_with_patterns(text, friction_patterns)
     if friction_content:
-        result["friction"] = clean_content(friction_content)
+        f = clean_content(friction_content)
+        if(f != ''):
+            lastFriction = f
+        print(f'Last friction: {lastFriction}\n')
+        result["friction"] = f
         result["raw_sections"]["friction"] = friction_content
     
     return result
@@ -1065,15 +1076,18 @@ def segment_transcript_with_director_views(df, director_views_df, utterances_per
 def create_friction_definitions():
     """Define what friction interventions address in collaborative construction"""
     return """
-FRICTION INTERVENTIONS target coordination failures:
-- ASSUMPTION CONFLICTS: Directors making incompatible spatial assumptions
-- COMMUNICATION GAPS: Unclear references, ambiguous descriptions, talking past each other
-- VIEWPOINT BLIND SPOTS: Directors not accounting for their limited 2D perspective  
-- BUILDER CONFUSION: Builder expressing uncertainty or making incorrect placements
-- INCONSISTENT DESCRIPTIONS: Same elements described differently by directors
-- COORDINATION BREAKDOWN: Failed attempts to establish shared understanding
-"""
-
+The following are cases where friction intervention must happen -
+- the builder agrees to place a block without confirming the size of the block 
+- The director does not specify the size of the block 
+- There is a change in the view of a director even if that director did not provide intervention 
+- If the conversation strays away from the task, tt must be brought back to the task
+ """
+# - ASSUMPTION CONFLICTS: Directors making incompatible spatial assumptions
+# - COMMUNICATION GAPS: Unclear references, ambiguous descriptions, talking past each other
+# - VIEWPOINT BLIND SPOTS: Directors not accounting for their limited 2D perspective  
+# - BUILDER CONFUSION: Builder expressing uncertainty or making incorrect placements
+# - INCONSISTENT DESCRIPTIONS: Same elements described differently by directors
+# - COORDINATION BREAKDOWN: Failed attempts to establish shared understanding
 
 def create_enhanced_prompt_with_director_views(transcript_segment, director_views_text):
     """Create prompt with both transcript and director view data"""
@@ -1143,7 +1157,6 @@ GROUP: Cross-validate your different perspectives before confirming block placem
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 You analyze collaborative construction where 3 directors (D1, D2, D3) with different 2D views guide a builder to construct a 3D block structure.
 
-{director_instructions}
 
 {friction_def}
 
@@ -1157,7 +1170,8 @@ ANALYSIS INSTRUCTIONS:
 - Map coordinates from director views to 3x3 grid positions using the coordinate mapping
 - Track agreement markers ("yeah", "yes", "perfect") to propagate information between directors
 - Use exact colors from transcript: "red", "blue", "green", "yellow", "orange", "brown"
-- If the group talks about anything not related off task, you must ask them to stop, and resume the task
+- Do not generate friction if it is not necessary at this time.
+
 OUTPUT FORMAT:
 <belief_state>
 [Director beliefs based on their utterances and what they can see in their views]
@@ -1461,7 +1475,7 @@ def process_segments_with_multiple_models(segments, local_models, use_openai=Tru
     
     if generation_args is None:
         generation_args = {
-            "max_new_tokens": 1000,
+            "max_new_tokens": 1500,
             "temperature": 0.7,
             "top_p": 0.9
         }
@@ -1728,7 +1742,8 @@ def start_server(local_models, generation_args):
                         print("Received Data Length:" + str(len(data)))
                         deserialized_object = pickle.loads(data)
                         transcriptions = deserialized_object["transcripts"]
-                        structure = deserialized_object["structure"]
+                        startingStructure = deserialized_object["start_structure"]
+                        endingStructure = deserialized_object["end_structure"]
                         timestamp = deserialized_object["timestamp"]
                       
                         print(f"Transcriptions:\n{transcriptions}")
@@ -1741,7 +1756,7 @@ def start_server(local_models, generation_args):
                         
                         # Create segments
                         #TODO update to include the DF for the struture state and timestamps (segment_transcript_with_latest_director_views)
-                        segments = segment_transcript_string_for_friction(df, structure, timestamp, utterances_per_segment=20)
+                        segments = segment_transcript_string_for_friction(df, endingStructure, timestamp, utterances_per_segment=20)
                         logger.info(f"Created {len(segments)} segments")
 
                         # Process segments with all models
@@ -1758,11 +1773,10 @@ def start_server(local_models, generation_args):
                         if results is not None:
                             cg = results['results'][0]['segment_results'][0]['parsed_components']['common_ground']
                             cg = str(cg).replace('\'', "\"")
-                            friction = results['results'][0]['segment_results'][0]['parsed_components']['friction']
                             print(f"\nCommon Ground: {cg}\n")
-                            print(f"Friction: {friction}\n") 
+                            print(f"Friction: {lastFriction}\n") 
                             
-                            my_object = {"commonGround": cg, "friction": friction}
+                            my_object = {"commonGround": cg, "friction": lastFriction}
                             serialized_data = pickle.dumps(my_object)
                             print("Send Data Length:" + str(len(serialized_data))) 
 
@@ -1793,8 +1807,8 @@ if __name__ == "__main__":
 #         "deli_dpo": 'DELI_all_weights/DELI_dpo_weights/checkpoint-3500',
 #         "deli_sft": "DELI_all_weights/DELI_sft_weights/checkpoint-small-1500",
 #         "deli_ppo": "DELI_all_weights/DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800",
-        #"deli_faaf": '/home/traceteam/DELI_faaf/diplomacy_deli_weights/DELI_faaf_weights/checkpoint-2000',
-        "wtd_faaf_new": '/home/traceteam/DELI_faaf/diplomacy_deli_weights/DELI_faaf_weights/checkpoint-3000/checkpoint-3000'
+        "deli_faaf": '/home/traceteam/DELI_faaf/diplomacy_deli_weights/DELI_faaf_weights/checkpoint-2000',
+        #"wtd_faaf_new": '/home/traceteam/DELI_faaf/diplomacy_deli_weights/DELI_faaf_weights/checkpoint-3000/checkpoint-3000'
     }
     
     # Generation arguments
@@ -1809,6 +1823,7 @@ if __name__ == "__main__":
     else:
         with open(args.config, 'r') as f:
                 data = json.load(f)
+                data = data[-1]
                 transcriptions = data["transcripts"]
                 structure = data["structure"]
                 timestamp = data["timestamp"]
