@@ -59,10 +59,10 @@ if __name__ == "__main__":
     # transcriptions from microphone 
 
     # Multiple microphones - laptop
-    audio1 = MicAudio(device_id=10, speaker_id="D1")
-    audio2 = MicAudio(device_id=5, speaker_id="D2")
+    audio1 = MicAudio(device_id=9, speaker_id="D1")
+    audio2 = MicAudio(device_id=4, speaker_id="D2")
     audio3 = MicAudio(device_id=16, speaker_id="D3")
-    audio4 = MicAudio(device_id=4, speaker_id="Builder")
+    audio4 = MicAudio(device_id=3, speaker_id="Builder")
     utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, audio4, delete_input_files=False)
 
     #######################################################################################
@@ -98,12 +98,12 @@ if __name__ == "__main__":
             #SaveVideo(output_frame, frame_rate=2.2),
             DisplayFrame(output_frame),
             cgt, #new common ground gui output
-            # SaveVideo(output_frame, frame_rate=2.2, video_name = 2),
+            SaveVideo(output_frame, frame_rate=2.2, video_name = 2),
             # Log(dense_paraphrased_transcriptions, props, moves, friction, csv=True),
             #Log(dense_paraphrased_transcriptions, props, csv=True),
-            # Log(transcriptions, csv = True),
-            # Log(props, csv = True),
-            # Log(actions, csv = True)
+            Log(transcriptions, csv = True),
+            Log(props, csv = True),
+            Log(actions, csv = True)    
             # Log(friction, csv = True)
         ]
     )

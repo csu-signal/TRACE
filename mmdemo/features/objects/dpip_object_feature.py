@@ -309,7 +309,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 if intersection > max_overlap:
                     color, mean_hsv = self.estimate_dominant_color(image, mask & cell_mask)
                     shape = self.estimate_shape(mask)
-                    best_label = f"{color} {shape}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
+                    # best_label = f"{color} {shape}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
+                    best_label = f"{color} {shape}\nHue: {int(mean_hsv[0])}" # Only printing hue since we don't do anything with sat and val - Sifat
                     max_overlap = intersection
 
             # for debugging raw coverage constraint - Sifat

@@ -110,27 +110,12 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         # #     DpipFrame.renderPlan(output_frame, plan, self.last_plan)
 
         if friction and friction.friction_statement != '':
-            frictionStatements = friction.friction_statement.split("r*")
-            fstate = frictionStatements[0]
-            x, y = (50, 125)
-            text = fstate
-            font = cv.FONT_HERSHEY_SIMPLEX
-            font_scale = 0.75
-            font_thickness = 1
-            text_color_bg = (255,255,255)
-            text_color =(0,0,0)
-            text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
-            text_w, text_h = text_size
-            cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
-            cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
-
-            if(len(frictionStatements) > 1):
-                #friction includes rational, print it
-                rstate = frictionStatements[1]
-                x, y = (50, 110)
-                text = rstate
+            frictionStatements = friction.friction_statement.split("\n")
+            for index, fstate in enumerate(frictionStatements):
+                x, y = (50, 120 + (30 * index))
+                text = fstate
                 font = cv.FONT_HERSHEY_SIMPLEX
-                font_scale = 0.5
+                font_scale = 0.75
                 font_thickness = 1
                 text_color_bg = (255,255,255)
                 text_color =(0,0,0)
@@ -138,6 +123,21 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
                 text_w, text_h = text_size
                 cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
                 cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
+
+            # if(len(frictionStatements) > 1):
+            #     #friction includes rational, print it
+            #     rstate = frictionStatements[1]
+            #     x, y = (50, 110)
+            #     text = rstate
+            #     font = cv.FONT_HERSHEY_SIMPLEX
+            #     font_scale = 0.5
+            #     font_thickness = 1
+            #     text_color_bg = (255,255,255)
+            #     text_color =(0,0,0)
+            #     text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
+            #     text_w, text_h = text_size
+            #     cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
+            #     cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
 
             # print friction statement
        
