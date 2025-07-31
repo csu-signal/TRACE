@@ -6,13 +6,8 @@ import threading
 from typing import final
 import copy
 
-import nltk
-from sentence_transformers import SentenceTransformer
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.features.friction import friction_local
-from mmdemo.features.proposition.demo import load_model, process_sentence
-from mmdemo.features.proposition.demo_helpers import get_pickle
 from mmdemo.interfaces import DpipActionInterface, DpipFrictionOutputInterface, DpipObjectInterface3D, TranscriptionInterface
 
 

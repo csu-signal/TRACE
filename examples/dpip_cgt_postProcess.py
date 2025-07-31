@@ -27,7 +27,8 @@ from mmdemo.features import (
     WhisperTranscription,
     Planner,
     DpipCommonGroundTracking,
-    DpipActionFeature
+    DpipActionFeature,
+    #DpipSpeechOutput
 )
 
 import warnings
@@ -153,6 +154,9 @@ if __name__ == "__main__":
     
     # TODO are need to update the planner?
     # plan = Planner(cgt)
+
+    #speech output
+    #speech_output = DpipSpeechOutput(dpip_prop_friction)
 
     output_frame = DpipFrame(color, objects, actions, dpip_prop_friction)
     # output_frame2 = DpipFrame(color2, gesture2, selected_objects2, calibration2)

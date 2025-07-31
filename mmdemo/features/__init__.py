@@ -50,5 +50,6 @@ from mmdemo.features.outputs.aaai_frame_feature import AAAIFrame
 # Commented these out because I don't have the speech packages for the user study in my env
 # They aren't needed currently in post process, so I commented them out to start the CGT GUI
 # TODO work with Mariah to get them added and update the yaml
-#from mmdemo.features.speech_output.speechoutput_feature import SpeechOutput
-#from mmdemo.features.outputs.user_study_frame_feature import UserFrame
+# from mmdemo.features.speech_output.speechoutput_feature import SpeechOutput
+# from mmdemo.features.speech_output.dpipSpeechoutput_feature import DpipSpeechOutput
+# from mmdemo.features.outputs.user_study_frame_feature import UserFrame

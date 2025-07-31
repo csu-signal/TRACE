@@ -16,7 +16,8 @@ from mmdemo.interfaces import (
     GestureConesInterface,
     SelectedObjectsInterface,
     PlannerInterface,
-    FrictionOutputInterface
+    FrictionOutputInterface,
+    SpeechOutputInterface
 )
 from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import camera_3d_to_pixel
@@ -52,6 +53,7 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
 
     def __init__(
         self,
+        #speechoutput: BaseFeature[SpeechOutputInterface],
         color: BaseFeature[ColorImageInterface],
         #gesture: BaseFeature[GestureConesInterface],
         objects: BaseFeature[DpipObjectInterface3D],
@@ -62,13 +64,15 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         # if plan is None:
         #     super().__init__(color, gesture, sel_objects, calibration) # removed gaze
         # else:
-        super().__init__(color, objects, action, friction) # removed gaze
+        #super().__init__(speechoutput, color, objects, action, friction) # removed gaze
+        super().__init__(color, objects, action, friction)
 
     def initialize(self):
         self.last_plan = {"text": "", "color": (255, 255, 255)}
         
     def get_output(
         self,
+        #speech: SpeechOutputInterface,
         color: ColorImageInterface,
         #gesture: GestureConesInterface,
         objects: DpipObjectInterface3D,
@@ -112,7 +116,7 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         if friction and friction.friction_statement != '':
             frictionStatements = friction.friction_statement.split("\n")
             for index, fstate in enumerate(frictionStatements):
-                x, y = (50, 120 + (30 * index))
+                x, y = (50, 75 + (30 * index))
                 text = fstate
                 font = cv.FONT_HERSHEY_SIMPLEX
                 font_scale = 0.75
@@ -155,7 +159,7 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
 
         output_frame = self.draw_grid_overlay(output_frame, objects.boxes, labels=objects.labels, centers=objects.centers, coords=objects.coords)
         output_frame = self.visualize_segmentation_masks(output_frame, objects.segmentation_masks, alpha=0.6)
-        cv.putText(output_frame, f"[W/S] region_frac = {objects.region_frac:.2f}", (50, 100), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        # cv.putText(output_frame, f"[W/S] region_frac = {objects.region_frac:.2f}", (50, 100), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
         output_frame = cv.resize(output_frame, (1280, 720))
         return ColorImageInterface(frame=output_frame, frame_count=color.frame_count)
