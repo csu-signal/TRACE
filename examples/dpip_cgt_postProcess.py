@@ -1,5 +1,6 @@
 from mmdemo.base_feature import BaseFeature
 from mmdemo.features.friction.friction_feature import Friction
+from mmdemo.features.speech_output.dpipSpeechoutput_feature import DpipSpeechOutput
 from mmdemo.features.wtd_ablation_testing.transcription_feature import _TranscriptionAndAudioGroundTruth, AudioGroundTruth, TranscriptionGroundTruth
 from mmdemo.interfaces import ColorImageInterface
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
@@ -150,15 +151,15 @@ if __name__ == "__main__":
     # prop extraction from friction model
     dpip_prop_friction = DpipProposition(transcriptions, objects, actions, csvSupport="G:\\DPIP\\GAMR\\Utterances\\group7_transcript.csv")
 
-    cgt = DpipCommonGroundTracking(dpip_prop_friction, color, saveCanvas=True)
+    cgt = DpipCommonGroundTracking(dpip_prop_friction, color, actions, saveCanvas=True)
     
     # TODO are need to update the planner?
     # plan = Planner(cgt)
 
     #speech output
-    #speech_output = DpipSpeechOutput(dpip_prop_friction)
+    speech_output = DpipSpeechOutput(dpip_prop_friction)
 
-    output_frame = DpipFrame(color, objects, actions, dpip_prop_friction)
+    output_frame = DpipFrame(speech_output, color, objects, actions, dpip_prop_friction)
     # output_frame2 = DpipFrame(color2, gesture2, selected_objects2, calibration2)
 
     # run demo and show output

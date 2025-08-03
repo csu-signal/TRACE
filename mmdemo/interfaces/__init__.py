@@ -349,6 +349,7 @@ class DpipActionInterface(BaseInterface):
     """
 
     structure: dict
+    jsonStructure: dict
 
 @dataclass
 class PlannerInterface(BaseInterface):

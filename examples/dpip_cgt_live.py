@@ -4,6 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 
 # from mmdemo.features.friction.friction_feature import Friction
+from mmdemo.features.speech_output.dpipSpeechoutput_feature import DpipSpeechOutput
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 from mmdemo.features.friction.friction_feature import Friction
 from mmdemo.demo import Demo
@@ -85,10 +86,13 @@ if __name__ == "__main__":
     props = DpipProposition(transcriptions, objects, actions)
 
     # common ground tracking
-    cgt = DpipCommonGroundTracking(props, color, saveCanvas=True)
+    cgt = DpipCommonGroundTracking(props, color, actions, saveCanvas=True)
+
+    #speech output
+    speech_output = DpipSpeechOutput(props)
 
     # create output frame for video
-    output_frame = DpipFrame(color, objects, actions, props)
+    output_frame = DpipFrame(speech_output, color, objects, actions, props)
     # output_frame2 = DpipFrame(color2, objects2, calibration2)
 
     # run demo and show output

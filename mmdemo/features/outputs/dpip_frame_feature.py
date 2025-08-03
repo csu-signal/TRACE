@@ -53,7 +53,7 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
 
     def __init__(
         self,
-        #speechoutput: BaseFeature[SpeechOutputInterface],
+        speechoutput: BaseFeature[SpeechOutputInterface],
         color: BaseFeature[ColorImageInterface],
         #gesture: BaseFeature[GestureConesInterface],
         objects: BaseFeature[DpipObjectInterface3D],
@@ -65,14 +65,14 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         #     super().__init__(color, gesture, sel_objects, calibration) # removed gaze
         # else:
         #super().__init__(speechoutput, color, objects, action, friction) # removed gaze
-        super().__init__(color, objects, action, friction)
+        super().__init__(speechoutput, color, objects, action, friction)
 
     def initialize(self):
         self.last_plan = {"text": "", "color": (255, 255, 255)}
         
     def get_output(
         self,
-        #speech: SpeechOutputInterface,
+        speech: SpeechOutputInterface,
         color: ColorImageInterface,
         #gesture: GestureConesInterface,
         objects: DpipObjectInterface3D,

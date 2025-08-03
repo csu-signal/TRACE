@@ -833,6 +833,111 @@ def format_single_timestamp_director_views(director_views_df):
     
     return formatted_output
 
+def charToColor(c):
+    match c:
+        case "b":
+            return "blue"
+        case "o":
+            return "orange"
+        case "g":
+            return "green"
+        case "y":
+            return "yellow"
+        case "r":
+            return "red"  
+        case "n":
+            return "none"
+        case _:
+            return "unknown"
+
+
+import copy
+def structToJson(dv):
+    c0_0 = copy.deepcopy(dv["(0, 0)"])
+    while len(c0_0) < 3:
+        c0_0.append("ns") #pad the array with "none sqaures"
+
+    c0_1 = copy.deepcopy(dv["(0, 1)"])
+    while len(c0_1) < 3:
+        c0_1.append("ns")
+
+    c0_2 = copy.deepcopy(dv["(0, 2)"])
+    while len(c0_2) < 3:
+        c0_2.append("ns")
+
+    c1_0 = copy.deepcopy(dv["(1, 0)"])
+    while len(c1_0) < 3:
+        c1_0.append("ns")
+
+    c1_2 = copy.deepcopy(dv["(1, 2)"])
+    while len(c1_2) < 3:
+        c1_2.append("ns")
+
+    c2_0 = copy.deepcopy(dv["(2, 0)"])
+    while len(c2_0) < 3:
+        c2_0.append("ns")
+
+    c2_2 = copy.deepcopy(dv["(2, 2)"])
+    while len(c2_2) < 3:
+        c2_2.append("ns")
+
+    json = {
+        "D1": {
+            "row_0": [
+                {"color":f"{charToColor(c0_0[0][0])}", "size":2 if c0_0[0][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c1_0[0][0])}", "size":2 if c1_0[0][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c2_0[0][0])}", "size":2 if c2_0[0][1] == 'r' else 1},
+                ],
+            "row_1": [
+                {"color":f"{charToColor(c0_0[1][0])}", "size":2 if c0_0[1][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c1_0[1][0])}", "size":2 if c1_0[1][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c2_0[1][0])}", "size":2 if c2_0[1][1] == 'r' else 1},
+                ],
+            "row_2": [
+                {"color":f"{charToColor(c0_0[2][0])}", "size":2 if c0_0[2][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c1_0[2][0])}", "size":2 if c1_0[2][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c2_0[2][0])}", "size":2 if c2_0[2][1] == 'r' else 1},
+            ]
+        },
+        "D2": {
+            "row_0": [
+                {"color":f"{charToColor(c0_2[0][0])}", "size":2 if c0_2[0][1] == 'r' else 1},
+                {"color":f"{charToColor(c0_1[0][0])}", "size":2 if c0_1[0][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c0_0[0][0])}", "size":2 if c0_0[0][1] == 'r' else 1}, 
+                ],
+            "row_1": [
+                {"color":f"{charToColor(c0_2[1][0])}", "size":2 if c0_2[1][1] == 'r' else 1},
+                {"color":f"{charToColor(c0_1[1][0])}", "size":2 if c0_1[1][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c0_0[1][0])}", "size":2 if c0_0[1][1] == 'r' else 1}, 
+                ],
+            "row_2": [
+                {"color":f"{charToColor(c0_2[2][0])}", "size":2 if c0_2[2][1] == 'r' else 1},
+                {"color":f"{charToColor(c0_1[2][0])}", "size":2 if c0_1[2][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c0_0[2][0])}", "size":2 if c0_0[2][1] == 'r' else 1}, 
+            ]
+        },
+        "D3": {
+            "row_0": [
+                {"color":f"{charToColor(c2_2[0][0])}", "size":2 if c2_2[0][1] == 'r' else 1},
+                {"color":f"{charToColor(c1_2[0][0])}", "size":2 if c1_2[0][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c0_2[0][0])}", "size":2 if c0_2[0][1] == 'r' else 1}, 
+                ],
+            "row_1": [
+                {"color":f"{charToColor(c2_2[1][0])}", "size":2 if c2_2[1][1] == 'r' else 1},
+                {"color":f"{charToColor(c1_2[1][0])}", "size":2 if c1_2[1][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c0_2[1][0])}", "size":2 if c0_2[1][1] == 'r' else 1}, 
+                ],
+            "row_2": [
+                {"color":f"{charToColor(c2_2[2][0])}", "size":2 if c2_2[2][1] == 'r' else 1},
+                {"color":f"{charToColor(c1_2[2][0])}", "size":2 if c1_2[2][1] == 'r' else 1}, 
+                {"color":f"{charToColor(c0_2[2][0])}", "size":2 if c0_2[2][1] == 'r' else 1}, 
+            ]
+        }
+    }
+    return json
+    
+    
+
 def format_single_timestamp_director_views_string(dv, timestamp):
     """
     Format director view data from a single timestamp for inclusion in prompt
@@ -841,7 +946,7 @@ def format_single_timestamp_director_views_string(dv, timestamp):
         return "No director view data available for this time segment."
     
     # Should only have one timestamp now
-    formatted_output = f"DIRECTOR VIEWS FOR THIS SEGMENT:\n\nFrame {timestamp}s:\n"
+    formatted_output = f":\n"
     
     # Group by view
     c0_0 = dv["(0, 0)"]
@@ -879,14 +984,14 @@ def format_single_timestamp_director_views_string(dv, timestamp):
                     layer1 += f"{b}(2,0,{index}),"
                 if index == 2:
                     layer2 += f"{b}(2,0,{index}),"
-        if view == 'D2_side':
-            for index, b in enumerate(c0_0[:3]):
+        if view == 'D2_side': #in reading from left to right order from the pov of the director
+            for index, b in enumerate(c0_2[:3]):
                 if index == 0:
-                    layer0 += f"{b}(0,0,{index}),"
+                    layer0 += f"{b}(0,2,{index}),"
                 if index == 1:
-                    layer1 += f"{b}(0,0,{index}),"
+                    layer1 += f"{b}(0,2,{index}),"
                 if index == 2:
-                    layer2 += f"{b}(0,0,{index}),"
+                    layer2 += f"{b}(0,2,{index}),"
             for index, b in enumerate(c0_1[:3]):
                 if index == 0:
                     layer0 += f"{b}(0,1,{index}),"
@@ -894,28 +999,14 @@ def format_single_timestamp_director_views_string(dv, timestamp):
                     layer1 += f"{b}(0,1,{index}),"
                 if index == 2:
                     layer2 += f"{b}(0,1,{index}),"
-            for index, b in enumerate(c0_2[:3]):
+            for index, b in enumerate(c0_0[:3]):
                 if index == 0:
-                    layer0 += f"{b}(0,2,{index}),"
+                    layer0 += f"{b}(0,0,{index}),"
                 if index == 1:
-                    layer1 += f"{b}(0,2,{index}),"
+                    layer1 += f"{b}(0,0,{index}),"
                 if index == 2:
-                    layer2 += f"{b}(0,2,{index}),"
-        if view == 'D3_side':
-            for index, b in enumerate(c0_2[:3]):
-                if index == 0:
-                    layer0 += f"{b}(0,2,{index}),"
-                if index == 1:
-                    layer1 += f"{b}(0,2,{index}),"
-                if index == 2:
-                    layer2 += f"{b}(0,2,{index}),"
-            for index, b in enumerate(c1_2[:3]):
-                if index == 0:
-                    layer0 += f"{b}(1,2,{index}),"
-                if index == 1:
-                    layer1 += f"{b}(1,2,{index}),"
-                if index == 2:
-                    layer2 += f"{b}(1,2,{index}),"
+                    layer2 += f"{b}(0,0,{index}),"
+        if view == 'D3_side': #in reading from left to right order from the pov of the director
             for index, b in enumerate(c2_2[:3]):
                 if index == 0:
                     layer0 += f"{b}(2,2,{index}),"
@@ -923,6 +1014,20 @@ def format_single_timestamp_director_views_string(dv, timestamp):
                     layer1 += f"{b}(2,2,{index}),"
                 if index == 2:
                     layer2 += f"{b}(2,2,{index}),"
+            for index, b in enumerate(c1_2[:3]):
+                if index == 0:
+                    layer0 += f"{b}(1,2,{index}),"
+                if index == 1:
+                    layer1 += f"{b}(1,2,{index}),"
+                if index == 2:
+                    layer2 += f"{b}(1,2,{index}),"
+            for index, b in enumerate(c0_2[:3]):
+                if index == 0:
+                    layer0 += f"{b}(0,2,{index}),"
+                if index == 1:
+                    layer1 += f"{b}(0,2,{index}),"
+                if index == 2:
+                    layer2 += f"{b}(0,2,{index}),"
 
         formatted_output += layer0.rstrip(",") + "\n"
         formatted_output += layer1.rstrip(",") + "\n"
@@ -930,7 +1035,7 @@ def format_single_timestamp_director_views_string(dv, timestamp):
     
     return formatted_output
 
-def segment_transcript_string_for_friction(values, structure, timestamp, utterances_per_segment=10):
+def segment_transcript_string_for_friction(values, startStructure, endStructure, timestamp, utterances_per_segment=10):
     """Create transcript segments with compact prompts"""
     #filtered_df = df[df['speaker'].isin(['D1', 'D2', 'D3', 'Builder', 'Group'])].copy()
     segments = []
@@ -949,17 +1054,20 @@ def segment_transcript_string_for_friction(values, structure, timestamp, utteran
                 transcript_segment += f"{row}\\n"
         
         # Format director views for prompt (single timestamp only)
-        director_views_text = format_single_timestamp_director_views_string(structure, timestamp)
-        
+        # start_director_views_text = format_single_timestamp_director_views_string(startStructure, timestamp)
+        # end_director_views_text = format_single_timestamp_director_views_string(endStructure, timestamp)
+        start_director_views_text = structToJson(startStructure)
+        end_director_views_text = structToJson(endStructure)
         # Create enhanced prompt
-        prompt = create_enhanced_prompt_with_director_views(transcript_segment, director_views_text)
+        prompt = create_enhanced_prompt_with_director_views(transcript_segment, str(start_director_views_text), str(end_director_views_text))
         
         segment_info = {
             'segment_id': i // utterances_per_segment + 1,
             'utterance_count': len(segment),
             'speakers_present': list(speakers),
             'transcript_segment': transcript_segment,
-            'director_views': director_views_text,
+            'start director_views': start_director_views_text,
+            'end director_views': end_director_views_text,
             'prompt': prompt,
             #'time_range': {'start': timestamp, 'end': timestamp},
             'selected_timestamp': timestamp,
@@ -1081,6 +1189,7 @@ The following are cases where friction intervention must happen -
 - The director does not specify the size of the block 
 - There is a change in the view of a director even if that director did not provide intervention 
 - If the conversation strays away from the task, tt must be brought back to the task
+- A block is added to the board without any mention of it in the transcript
  """
 # - ASSUMPTION CONFLICTS: Directors making incompatible spatial assumptions
 # - COMMUNICATION GAPS: Unclear references, ambiguous descriptions, talking past each other
@@ -1089,7 +1198,7 @@ The following are cases where friction intervention must happen -
 # - INCONSISTENT DESCRIPTIONS: Same elements described differently by directors
 # - COORDINATION BREAKDOWN: Failed attempts to establish shared understanding
 
-def create_enhanced_prompt_with_director_views(transcript_segment, director_views_text):
+def create_enhanced_prompt_with_director_views(transcript_segment, start_director_views_text, end_director_views_text):
     """Create prompt with both transcript and director view data"""
     director_instructions = create_director_view_instructions()
     friction_def = create_friction_definitions()
@@ -1098,9 +1207,31 @@ def create_enhanced_prompt_with_director_views(transcript_segment, director_view
     few_shot_example_new = """
 EXAMPLE ANALYSIS:
 
-TRANSCRIPT: D1: "I can see green blocks at the bottom row, then blue blocks in the middle." D2: "Yeah, I see the green foundation layer too, with some rectangular pieces." D3: "From my side it looks the same as what D1 is saying." Builder: "Should I put the orange block on top of the blue?" D1: "Yes, that matches what I see - orange goes on the blue section." D2: "Perfect, that aligns with my top view."
+TRANSCRIPT: 
+D1: "I can see green blocks at the bottom row, then blue blocks in the middle." 
+D2: "Yeah, I see the green foundation layer too, with some rectangular pieces." 
+D3: "From my side it looks the same as what D1 is saying." 
+Builder: "Should I put the orange block on top of the blue?" 
+D1: "Yes, that matches what I see - orange goes on the blue section." 
+D2: "Perfect, that aligns with my view."
 
-DIRECTOR VIEWS: Frame 387.456s shows D1_side Layer 0 with gs3([20,21,22,23]), gl2([22,23,24,25]) indicating green blocks in leftmost area. Layer 1 has bs3([20,21,22,23]) for blue in leftmost, ol1([32,33,34,35]) for orange in rightmost. D2_side confirms green blocks in Layer 0 and orange in Layer 1. D3_side matches D1_side exactly.
+DIRECTOR VIEWS: Frame Xs shows 
+D1_side 
+Layer 0 with gs3([20,21,22,23]), gl2([22,23,24,25]) indicating green blocks in leftmost area. 
+Layer 1 has bs3([20,21,22,23]) for blue in leftmost, ol1([32,33,34,35]) for orange in rightmost. 
+
+D2_side confirms green blocks in Layer 0 and orange in Layer 1. 
+D3_side matches D1_side exactly.
+
+
+
+DIRECTOR VIEWS: Frame Xs shows 
+D1_side 
+Layer 0 with gs3([20,21,22,23]), gl2([22,23,24,25]) indicating green blocks in leftmost area. 
+Layer 1 has bs3([20,21,22,23]) for blue in leftmost, ol1([32,33,34,35]) for orange in rightmost. 
+
+D2_side confirms green blocks in Layer 0 and orange in Layer 1. 
+D3_side matches D1_side exactly.
 
 <belief_state>
 D1 beliefs: CONFIDENT - sees green blocks at bottom row (specifically gs3, gl2 in leftmost area), blue blocks in middle (bs3 in leftmost), orange placement confirmed for rightmost position (ol1). EXPLICIT - directly states spatial relationships from front view.
@@ -1155,31 +1286,60 @@ GROUP: Cross-validate your different perspectives before confirming block placem
 }'''
     
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-You analyze collaborative construction where 3 directors (D1, D2, D3) with different 2D views guide a builder to construct a 3D block structure.
+You are an expert AI facilitator for a collaborative Lego task. Your task is to analyze a dialogue segment, 
+and the game's physical state to identify points of miscommunication, inefficiency, or potential error.
+
+Lego Task Background:
+Three "Directors" (D1, D2,D3) each with a unique 2D view of a target 3D structure, must verbally guide a 
+"Builder." The Builder has no view and relies entirely on the Directors' combined instructions to place LEGO blocks. 
+The team's goal is to accurately replicate the hidden structure by overcoming their limited, individual perspectives.
+The builder is the only one who can place blocks on the structure 
+
+You are given a segment of transcripts, and the board state at the start of the transcript, and the end of the transcript. Focus on the 
+blocks that have been added or removed in this segment:
 
 
-{friction_def}
+""" + transcript_segment + """
 
-ANALYZE: Individual beliefs → Common ground → Friction interventions
-{few_shot_example_new}
+DIRECTOR VIEWS AT THE START OF THE SEGMENT
+""" + start_director_views_text + """
+
+DIRECTOR VIEWS AT THE END OF THE SEGMENT
+""" + end_director_views_text + """
+
+How to Interpret Director Views:
+Grid: The board is a 3x3 grid with 3 layers of height. 
+Coordinates are (x, y, z), where x is the row, y is the column, 
+and z is the layer (0 is the bottom).
+
+     (x=0)  (x=1)  (x=2)
+(y=0) [0,0]  [1,0]  [2,0]
+(y=1) [0,1]  [1,1]  [2,1]
+(y=2) [0,2]  [1,2]  [2,2]
+
+Blocks: Notation is color+size. 
+Colors are r,b,y,o,g (red, blue, yellow, orange, green). 
+Size is s (short, 1x1) or l (long, 1x2 or 2x1). For example, bl is a "blue long block".
+
+Views: Director views show the blocks visible from their perspective at a 
+specific layer z. For example, D3_side: Layer 0: gl(2,2,0) means Director 3 sees a green long block 
+at position (x=2, y=2) on the bottom layer.
+
+
+""" + friction_def + """
+
+
+ANALYZE: Common ground → Friction interventions
+
 
 ANALYSIS INSTRUCTIONS:
-- Use the director view data to understand what each director can actually see
-- Only include in common ground what directors explicitly mention in dialogue
-- Use "unknown" for positions not discussed, even if visible in director views
+- Use the director view data to understand what each director can see from their perspective on the board
 - Map coordinates from director views to 3x3 grid positions using the coordinate mapping
-- Track agreement markers ("yeah", "yes", "perfect") to propagate information between directors
-- Use exact colors from transcript: "red", "blue", "green", "yellow", "orange", "brown"
-- Do not generate friction if it is not necessary at this time.
+- List all of the blocks that have been added, or removed.
+- Given the start and end board state, if there is any explicit disagreement on any of the blocks, specify which block. 
+- Identify the specific blocks that have been added or removed by comparing the board state at the start and at the end of the transcript segment.
 
 OUTPUT FORMAT:
-<belief_state>
-[Director beliefs based on their utterances and what they can see in their views]
-</belief_state>
-
-<common_ground>
-""" + common_ground_template + """
-</common_ground>
 
 <friction>
 D1: [specific issue, max 1 sentence]
@@ -1187,13 +1347,23 @@ D2: [specific issue, max 1 sentence]
 D3: [specific issue, max 1 sentence]
 GROUP: [coordination strategy, max 1 sentence]
 </friction>
+
+<common ground>
+Block at position <x,y,z> has been explicitly disagreed upon (source in the transcript) and must not be in the common ground.
+Block at position <x,y,z> is not mentioned in the transcript but has been added to the board
+</common ground>
 <|eot_id|><|start_header_id|>user<|end_header_id|>
 TRANSCRIPT SEGMENT:
 """ + transcript_segment + """
 
-""" + director_views_text + """
+DIRECTOR VIEWS AT THE START OF THE SEGMENT
+""" + start_director_views_text + """
 
-Analyze this segment for director beliefs, identify common ground, and suggest friction interventions.
+
+DIRECTOR VIEWS AT THE END OF THE SEGMENT
+""" + end_director_views_text + """
+
+Analyze this segment to identify suggest friction interventions.
 <|eot_id|><|start_header_id|>assistant<|end_header_id|>
 """
     
@@ -1756,7 +1926,7 @@ def start_server(local_models, generation_args):
                         
                         # Create segments
                         #TODO update to include the DF for the struture state and timestamps (segment_transcript_with_latest_director_views)
-                        segments = segment_transcript_string_for_friction(df, endingStructure, timestamp, utterances_per_segment=20)
+                        segments = segment_transcript_string_for_friction(df, startingStructure, endingStructure, timestamp, utterances_per_segment=20)
                         logger.info(f"Created {len(segments)} segments")
 
                         # Process segments with all models
@@ -1825,8 +1995,11 @@ if __name__ == "__main__":
                 data = json.load(f)
                 data = data[-1]
                 transcriptions = data["transcripts"]
-                structure = data["structure"]
+                startingStructure = data["start_structure"]
+                endingStructure = data["end_structure"]
                 timestamp = data["timestamp"]
+
+              
                 
                 print(f"Transcriptions:\n{transcriptions}")
                 print("\nGenerating friction for dialogue...")
@@ -1834,7 +2007,7 @@ if __name__ == "__main__":
                 ################################ new friction processing
                 
                 # Create segments
-                segments = segment_transcript_string_for_friction(transcriptions, structure, timestamp, utterances_per_segment=20)
+                segments = segment_transcript_string_for_friction(transcriptions, startingStructure, endingStructure, timestamp, utterances_per_segment=20)
                 logger.info(f"Created {len(segments)} segments")
 
                 # Process segments with all models

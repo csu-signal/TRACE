@@ -200,7 +200,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                     # Only keep the first line: "color shape"
                     label = label.split("\n")[0]
                 else:
-                    label = "unknown"
+                    label = "none square"
                 # Just get the first letter from the color and shape respectively
                 if len(label.split(" ")) == 2:
                     row.append(f"{label.split(' ')[0][0]}{label.split(' ')[1][0]}")

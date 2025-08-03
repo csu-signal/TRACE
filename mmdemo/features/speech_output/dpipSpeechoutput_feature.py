@@ -83,28 +83,29 @@ class DpipSpeechOutput(BaseFeature[SpeechOutputInterface]):
         ***Check for new friction
         ***Generate speech
         """
-        friction = frictionout.friction_statement
+        friction = frictionout.friction_statement.split('\n')
         if len(friction) != 4 or friction == self.last_friction or self.length > -30:
             self.length -= 1
-            return SpeechOutputInterface(speech_output=self.speechoutput,length=self.length)
+            return SpeechOutputInterface(speech_output=self.speechoutput,length=self.length) #TODO response outputs
         #play a request for interruption
-        friction = friction.split("\n")[3]
-        opening = random.choice(os.listdir("C:/GitHub/TRACE/mmdemo/features/speech_output/audio"))
-        audio, samplerate = sf.read(fr"C:/GitHub/TRACE/mmdemo/features/speech_output/audio/{opening}")
-        sd.wait()
-        sd.play(audio, samplerate)
-        sd.wait()
+        friction = friction[3]
+        # opening = random.choice(os.listdir("C:/GitHub/TRACE/mmdemo/features/speech_output/audio"))
+        # audio, samplerate = sf.read(fr"C:/GitHub/TRACE/mmdemo/features/speech_output/audio/{opening}")
+        # sd.wait()
+        # sd.play(audio, samplerate)
+        # sd.wait()
         #generate speech, splits on newline
-        generator = self.pipeline(
-        friction, voice=self.voice_tensor,
-        speed=1, split_pattern=r'\n+'
-        )
-        # play the speech
-        for i, (gs, ps, audio) in enumerate(generator):
-            sd.play(audio, 24000)
-            # sd.wait()
-            # self.length = audio.shape[0] #length of friction?
-            self.length = 30
+        if(friction != self.last_friction):
+            generator = self.pipeline(
+            friction, voice=self.voice_tensor,
+            speed=1, split_pattern=r'\n+'
+            )
+            # play the speech
+            for i, (gs, ps, audio) in enumerate(generator):
+                sd.play(audio, 24000)
+                # sd.wait()
+                # self.length = audio.shape[0] #length of friction?
+                self.length = 30
         self.last_friction = friction
         return SpeechOutputInterface(speech_output=True,length=self.length)
 
