@@ -206,29 +206,53 @@ class DpipCommonGroundTracking(BaseFeature):
         blocks = self.lastCgStruct[side][row]
         blocksLLM = self.currentCg[side][row]
         uiRow = 2 if row == "row_0" else 1 if row == "row_1" else 0
-        for i, b in enumerate(blocks):
+        length = len(blocks)
+        skip = False
+
+        for i, b in enumerate(blocks):   
             if(blocksLLM[i]["color"] == "unknown"):
-                self.renderRectangles(int(side.split("D")[1]), uiRow, blocksLLM[i]["size"], blocksLLM[i]["color"], b["color"], True)
+                if skip:
+                    skip = False
+                    continue
+                size = blocksLLM[i]["size"]
+                color = blocksLLM[i]["color"]
+                if(size == 2 and i + 1 < length and blocksLLM[i + 1]["size"] == size and blocksLLM[i + 1]["color"] == color):
+                    self.renderRectangles(int(side.split("D")[1]), uiRow, size, color, b["color"], True)
+                    skip = True
+                else:
+                    self.renderRectangles(int(side.split("D")[1]), uiRow, 1, color, b["color"], True)
             else:
-                self.renderRectangles(int(side.split("D")[1]), uiRow, b["size"], b["color"], b["color"], False)
+                if skip:
+                    skip = False
+                    continue
+                size = b["size"]
+                color = b["color"]
+                if(size == 2 and i + 1 < length and blocks[i + 1]["size"] == size and blocks[i + 1]["color"] == color):
+                    self.renderRectangles(int(side.split("D")[1]), uiRow, size, color, b["color"], False)
+                    skip = True
+                else:
+                    self.renderRectangles(int(side.split("D")[1]), uiRow, 1, color, b["color"], False)
 
     def renderRectangles(self, side, row, size, color, outline, llm):
         if (llm and color != "unknown"):
             return
-        colorLabel = color
+        
+        if(color == "none"):
+            color = "white"
 
-        if(color == "unknown" or color == "none"):
+        if(color == "unknown"):
             if(llm):
                 color = "black"
             else:
                 color = 'gray'
 
-        if(outline == "unknown" or outline == "none"):
+        if(outline == "unknown"):
             outline = 'gray'
 
         if(not llm):
             outline = color
 
+        #colorLabel = color
         font = "black"
         if color == "black":
             font = "white"
@@ -238,17 +262,19 @@ class DpipCommonGroundTracking(BaseFeature):
         if self.rowX.get(key) is None:
             self.rowX[key] = 10
 
-        xOffset = 50 * size
+        xOffset = (50 * size) 
+        if(size == 2):
+            xOffset = xOffset + 10
         xStart = self.rowX.get(key)
         xEnd = self.rowX.get(key) + xOffset
-        shape = "r" if size == 2 else "s"
+        #shape = "r" if size == 2 else "s"
         if(side == 1):
              self.canvas1.create_rectangle(xStart, y, xEnd, y + 50, fill=color, outline=outline, width=5)
-             self.canvas1.create_text(xStart + 15, y + 15, text=f"{colorLabel[0]}{shape}", fill=font)
+             #self.canvas1.create_text(xStart + 15, y + 15, text=f"{colorLabel[0]}{shape}", fill=font)
         if(side == 2):
              self.canvas2.create_rectangle(xStart, y, xEnd, y + 50, fill=color, outline=outline, width=5)
-             self.canvas2.create_text(xStart + 15, y + 15, text=f"{colorLabel[0]}{shape}", fill=font)
+             #self.canvas2.create_text(xStart + 15, y + 15, text=f"{colorLabel[0]}{shape}", fill=font)
         if(side == 3):
              self.canvas3.create_rectangle(xStart, y, xEnd, y + 50, fill=color, outline=outline, width=5)
-             self.canvas3.create_text(xStart + 15, y + 15, text=f"{colorLabel[0]}{shape}", fill=font)
+             #self.canvas3.create_text(xStart + 15, y + 15, text=f"{colorLabel[0]}{shape}", fill=font)
         self.rowX[key] = xEnd + 10
