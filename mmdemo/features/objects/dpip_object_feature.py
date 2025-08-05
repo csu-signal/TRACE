@@ -7,14 +7,12 @@ from typing import List, Tuple, final
 import cv2
 import numpy as np
 import torch
-from dpip_config import *
 from PIL import Image
 from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
 from sam2.build_sam import build_sam2
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.features.objects.config import CLASSES, DEVICE, NUM_CLASSES
-from mmdemo.features.objects.model import create_model
+from mmdemo.features.objects.dpip_config import *
 from mmdemo.interfaces import (
     CameraCalibrationInterface,
     ColorImageInterface,
@@ -23,7 +21,6 @@ from mmdemo.interfaces import (
     DpipObjectInterface3D,
 )
 from mmdemo.interfaces.data import DpipGamrTarget, DpipObjectInfo3D
-from mmdemo.utils.coordinates import CoordinateConversionError, pixel_to_camera_3d
 
 
 @final
