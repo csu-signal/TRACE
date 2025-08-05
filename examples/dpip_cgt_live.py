@@ -1,42 +1,40 @@
-import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-# from mmdemo.features.friction.friction_feature import Friction
-from mmdemo.features.speech_output.dpipSpeechoutput_feature import DpipSpeechOutput
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
-from mmdemo.features.friction.friction_feature import Friction
+
 from mmdemo.demo import Demo
 from mmdemo.features import (
-
-    CommonGroundTracking,
-    DpipCommonGroundTracking,
-
-    EMNLPFrame,
-    DpipFrame,
-
-    DpipObject,
-    Object,
-
-    DpipProposition,
-    Proposition,
-
     AccumulatedSelectedObjects,
+    CommonGroundTracking,
     DenseParaphrasedTranscription,
     DisplayFrame,
+    DpipActionFeature,
+    DpipCommonGroundTracking,
+    DpipFrame,
+    DpipObject,
+    DpipProposition,
+    EMNLPFrame,
     GazeBodyTracking,
     Gesture,
     Log,
     MicAudio,
     Move,
+    Object,
+    Planner,
+    Proposition,
     SaveVideo,
     SelectedObjects,
     VADUtteranceBuilder,
     WhisperTranscription,
-    Planner,
-    DpipActionFeature
 )
+from mmdemo.features.friction.friction_feature import Friction
+
+# from mmdemo.features.friction.friction_feature import Friction
+from mmdemo.features.speech_output.dpipSpeechoutput_feature import DpipSpeechOutput
 
 if __name__ == "__main__":
     # azure kinect features from camera
@@ -57,14 +55,16 @@ if __name__ == "__main__":
     objects = DpipObject(color, depth, calibration)
     # objects2 = DpipObject(color2, depth2, calibration2)
 
-    # transcriptions from microphone 
+    # transcriptions from microphone
 
     # Multiple microphones - laptop
     audio1 = MicAudio(device_id=9, speaker_id="D1")
     audio2 = MicAudio(device_id=4, speaker_id="D2")
     audio3 = MicAudio(device_id=16, speaker_id="D3")
     audio4 = MicAudio(device_id=3, speaker_id="Builder")
-    utterance_audio = VADUtteranceBuilder(audio1, audio2, audio3, audio4, delete_input_files=False)
+    utterance_audio = VADUtteranceBuilder(
+        audio1, audio2, audio3, audio4, delete_input_files=False
+    )
 
     #######################################################################################
 
@@ -88,29 +88,30 @@ if __name__ == "__main__":
     # common ground tracking
     cgt = DpipCommonGroundTracking(props, color, actions, saveCanvas=True)
 
-    #speech output
-    speech_output = DpipSpeechOutput(props)
+    # speech output
+    #    speech_output = DpipSpeechOutput(props)
 
     # create output frame for video
-    output_frame = DpipFrame(speech_output, color, objects, actions, props)
+    # output_frame = DpipFrame(speech_output, color, objects, actions, props)
+    output_frame = DpipFrame(color, objects, actions, props)
     # output_frame2 = DpipFrame(color2, objects2, calibration2)
 
     # run demo and show output
     demo = Demo(
         targets=[
-            #DisplayFrame(color),
-            #SaveVideo(output_frame, frame_rate=2.2),
+            # DisplayFrame(color),
+            # SaveVideo(output_frame, frame_rate=2.2),
             DisplayFrame(output_frame),
-            cgt, #new common ground gui output
-            SaveVideo(output_frame, frame_rate=2.2, video_name = 2),
+            cgt,  # new common ground gui output
+            SaveVideo(output_frame, frame_rate=2.2, video_name=2),
             # Log(dense_paraphrased_transcriptions, props, moves, friction, csv=True),
-            #Log(dense_paraphrased_transcriptions, props, csv=True),
-            Log(transcriptions, csv = True),
-            Log(props, csv = True),
-            Log(actions, csv = True)    
+            # Log(dense_paraphrased_transcriptions, props, csv=True),
+            Log(transcriptions, csv=True),
+            Log(props, csv=True),
+            Log(actions, csv=True)
             # Log(friction, csv = True)
         ]
     )
-    #demo.show_dependency_graph()
+    # demo.show_dependency_graph()
     demo.run()
     demo.print_time_benchmarks()

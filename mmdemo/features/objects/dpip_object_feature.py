@@ -10,6 +10,7 @@ import torch
 from PIL import Image
 from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
 from sam2.build_sam import build_sam2
+from sam2.utils.amg import MaskData, rle_to_mask
 
 from mmdemo.base_feature import BaseFeature
 from mmdemo.features.objects.dpip_config import *
@@ -79,7 +80,13 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 torch.backends.cuda.matmul.allow_tf32 = True
                 torch.backends.cudnn.allow_tf32 = True
 
-        self.sam2_mask_generator = self.create_sam2_mask_generator()
+        per_cell_centered_grids = self.build_per_cell_centered_norm_point_grids(
+            GRID_SIZE, POINT_PROMPTS_PER_AXIS, DEFAULT_POINT_PROMPT_GRID_REGION_FRAC
+        )
+
+        self.sam2_mask_generator = self.create_sam2_mask_generator(
+            [per_cell_centered_grids]
+        )
 
     def get_output(
         self,
@@ -139,7 +146,10 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 self.lastCol.frame.shape, GRID_SIZE, self.region_frac
             )
             self.labels = self.compute_grid_labels(
-                self.lastCol.frame, self.segmentation_masks, self.boxes
+                self.lastCol.frame,
+                self.segmentation_masks,
+                self.boxes,
+                self.region_frac,
             )
 
             self.xy_grid = self.grid_labels_to_xy_matrix(self.labels, GRID_SIZE)
@@ -198,7 +208,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         if masked_pixels.shape[0] == 0:
             return np.array([0.0, 0.0, 0.0], dtype=np.float32)
 
-        mean_h = circular_mean_hue(masked_pixels[:, 0])
+        mean_h = self.circular_mean_hue(masked_pixels[:, 0])
         mean_s = masked_pixels[:, 1].mean()
         mean_v = masked_pixels[:, 2].mean()
 
@@ -207,7 +217,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     def estimate_dominant_color(
         self, image: np.ndarray, mask: np.ndarray
     ) -> Tuple[str, Tuple[float, float, float]]:
-        mean_hsv = mean_hsv_from_mask(image, mask)
+        mean_hsv = self.mean_hsv_from_mask(image, mask)
         mean_hue = mean_hsv[0]
 
         if mean_hue < RED_MIN_HUE or mean_hue >= RED_MAX_HUE:
@@ -247,11 +257,11 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         return (w * h) < size_threshold
 
     def is_mask_square(self, mask: np.ndarray) -> bool:
-        width_height_ratio = calculate_mask_width_height_ratio(mask)
+        width_height_ratio = self.calculate_mask_width_height_ratio(mask)
         return MIN_SQUARE_RATIO < width_height_ratio < MAX_SQUARE_RATIO
 
     def is_mask_rectangle(self, mask: np.ndarray) -> bool:
-        width_height_ratio = calculate_mask_width_height_ratio(mask)
+        width_height_ratio = self.calculate_mask_width_height_ratio(mask)
         return (
             LOWER_MIN_RECTANGLE_RATIO < width_height_ratio < LOWER_MAX_RECTANGLE_RATIO
             or UPPER_MIN_RECTANGLE_RATIO
@@ -260,9 +270,9 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         )
 
     def estimate_shape(self, mask: np.ndarray) -> str:
-        if is_mask_square(mask):
+        if self.is_mask_square(mask):
             return "square"
-        elif is_mask_rectangle(mask):
+        elif self.is_mask_rectangle(mask):
             return "rectangle"
         else:
             return "invalid-shape"
@@ -317,17 +327,33 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 intersection = np.logical_and(mask, cell_mask).sum()
                 if (
                     intersection > max_overlap
-                    and (is_mask_square(mask) or is_mask_rectangle(mask))
-                    and not is_mask_too_small(mask, mask_size_threshold)
+                    and (self.is_mask_square(mask) or self.is_mask_rectangle(mask))
+                    and not self.is_mask_too_small(mask, mask_size_threshold)
                 ):
                     best_mask = mask
                     max_overlap = intersection
             if best_mask is not None:
-                color, mean_hsv = estimate_dominant_color(image, best_mask)
-                shape = estimate_shape(best_mask)
+                color, mean_hsv = self.estimate_dominant_color(image, best_mask)
+                shape = self.estimate_shape(best_mask)
                 best_label = f"{color} {shape}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
                 labels[(idx // GRID_SIZE, idx % GRID_SIZE)] = best_label
         return labels
+
+    def grid_labels_to_xy_matrix(self, labels: dict, grid_size: int) -> list[list[str]]:
+        # TODO: I feel like this function could be better. It seems redundant to try to construct the grid matrix from the labels.
+        grid_matrix = []
+        for i in range(grid_size):
+            row = []
+            for j in range(grid_size):
+                label = labels.get((i, j), "")
+                if label:
+                    # Only keep the first line: "color shape"
+                    label = label.split("\n")[0]
+                # Just get the first letter from the color and shape respectively
+                if len(label.split(" ")) == 2:
+                    row.append(f"{label.split(' ')[0][0]}{label.split(' ')[1][0]}")
+            grid_matrix.append(row)
+        return grid_matrix
 
     def build_centered_norm_point_grid(
         self, points_per_axis: int, region_frac: float = 0.9
@@ -398,7 +424,9 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     # ========== SAM2 Segmentation ==========
 
     def create_sam2_mask_generator(self, point_grids):
-        sam2_checkpoint = "../sam2/checkpoints/sam2.1_hiera_large.pt"
+        sam2_checkpoint = (
+            "C:\\Users\\Multimodal_Demo\\sam2\\checkpoints\\sam2.1_hiera_large.pt"
+        )
         sam2_model_config = "configs/sam2.1/sam2.1_hiera_l.yaml"
 
         sam2 = build_sam2(
@@ -431,7 +459,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
             x0, y0, x1, y1 = crop_bounds
             cropped_image = image[y0:y1, x0:x1]
-            refined_image = apply_blur(cropped_image)
+            refined_image = self.apply_blur(cropped_image)
             rgb_refined_image = cv2.cvtColor(refined_image, cv2.COLOR_BGR2RGB)
 
             mask_data = sam2_mask_generator._generate_masks(rgb_refined_image)

@@ -1,23 +1,24 @@
 import random
 import re
-from typing import List, final
+from typing import List, Tuple, final
 
 import cv2 as cv
 import numpy as np
 
 from mmdemo.base_feature import BaseFeature
+from mmdemo.features.objects.dpip_config import *
 from mmdemo.interfaces import (
     CameraCalibrationInterface,
     ColorImageInterface,
     DpipActionInterface,
     DpipFrictionOutputInterface,
     DpipObjectInterface3D,
+    FrictionOutputInterface,
     GazeConesInterface,
     GestureConesInterface,
-    SelectedObjectsInterface,
     PlannerInterface,
-    FrictionOutputInterface,
-    SpeechOutputInterface
+    SelectedObjectsInterface,
+    SpeechOutputInterface,
 )
 from mmdemo.interfaces.data import Cone
 from mmdemo.utils.coordinates import camera_3d_to_pixel
@@ -27,6 +28,7 @@ class Color:
     def __init__(self, name, color):
         self.name = name
         self.color = color
+
 
 colors = [
     Color("red", (0, 0, 255)),
@@ -53,38 +55,35 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
 
     def __init__(
         self,
-        speechoutput: BaseFeature[SpeechOutputInterface],
+        # speechoutput: BaseFeature[SpeechOutputInterface],
         color: BaseFeature[ColorImageInterface],
-        #gesture: BaseFeature[GestureConesInterface],
+        # gesture: BaseFeature[GestureConesInterface],
         objects: BaseFeature[DpipObjectInterface3D],
         action: BaseFeature[DpipActionInterface],
         friction: BaseFeature[DpipFrictionOutputInterface],
-        #plan: BaseFeature[PlannerInterface] | None = None,
+        # plan: BaseFeature[PlannerInterface] | None = None,
     ):
         # if plan is None:
         #     super().__init__(color, gesture, sel_objects, calibration) # removed gaze
         # else:
-        #super().__init__(speechoutput, color, objects, action, friction) # removed gaze
-        super().__init__(speechoutput, color, objects, action, friction)
+        # super().__init__(speechoutput, color, objects, action, friction) # removed gaze
+        # super().__init__(speechoutput, color, objects, action, friction)
+        super().__init__(color, objects, action, friction)
 
     def initialize(self):
         self.last_plan = {"text": "", "color": (255, 255, 255)}
-        
+
     def get_output(
         self,
-        speech: SpeechOutputInterface,
+        # speech: SpeechOutputInterface,
         color: ColorImageInterface,
-        #gesture: GestureConesInterface,
+        # gesture: GestureConesInterface,
         objects: DpipObjectInterface3D,
         actions: DpipActionInterface,
         friction: DpipFrictionOutputInterface,
         # plan: PlannerInterface = None,
     ):
-        if (
-            not color.is_new()
-            or not objects.is_new()
-            or not friction.is_new()
-        ):
+        if not color.is_new() or not objects.is_new() or not friction.is_new():
             return None
 
         # ensure we are not modifying the color frame itself
@@ -113,7 +112,7 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         # # if plan:
         # #     DpipFrame.renderPlan(output_frame, plan, self.last_plan)
 
-        if friction and friction.friction_statement != '':
+        if friction and friction.friction_statement != "":
             frictionStatements = friction.friction_statement.split("\n")
             for index, fstate in enumerate(frictionStatements):
                 x, y = (50, 75 + (30 * index))
@@ -121,12 +120,29 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
                 font = cv.FONT_HERSHEY_SIMPLEX
                 font_scale = 0.75
                 font_thickness = 1
-                text_color_bg = (255,255,255)
-                text_color =(0,0,0)
-                text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
+                text_color_bg = (255, 255, 255)
+                text_color = (0, 0, 0)
+                text_size, _ = cv.getTextSize(
+                    str(text), font, font_scale, font_thickness
+                )
                 text_w, text_h = text_size
-                cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
-                cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
+                cv.rectangle(
+                    output_frame,
+                    (x - 5, y - 5),
+                    (int(x + text_w + 10), int(y + text_h + 10)),
+                    text_color_bg,
+                    -1,
+                )
+                cv.putText(
+                    output_frame,
+                    str(text),
+                    (int(x), int(y + text_h + font_scale - 1)),
+                    font,
+                    font_scale,
+                    text_color,
+                    font_thickness,
+                    cv.LINE_AA,
+                )
 
             # if(len(frictionStatements) > 1):
             #     #friction includes rational, print it
@@ -144,7 +160,7 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
             #     cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
 
             # print friction statement
-       
+
         # draw frame count
         cv.putText(
             output_frame,
@@ -157,48 +173,77 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
             cv.LINE_AA,
         )
 
-        output_frame = self.draw_grid_overlay(output_frame, objects.boxes, labels=objects.labels, centers=objects.centers, coords=objects.coords)
-        output_frame = self.visualize_segmentation_masks(output_frame, objects.segmentation_masks, alpha=0.6)
+        output_frame = self.grid_overlay(output_frame, objects.boxes)
+        output_frame = self.segmentation_masks_overlay(
+            output_frame, objects.segmentation_masks, alpha=0.6
+        )
         # cv.putText(output_frame, f"[W/S] region_frac = {objects.region_frac:.2f}", (50, 100), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
         output_frame = cv.resize(output_frame, (1280, 720))
         return ColorImageInterface(frame=output_frame, frame_count=color.frame_count)
-    
-    def visualize_segmentation_masks(
+
+    # ========== Overlays ==========
+
+    def segmentation_masks_overlay(
         self,
         image: np.ndarray,
         masks: List[np.ndarray],
+        region_frac: float = 1,
         alpha: float = 0.5,
-        random_colors: bool = True
+        random_colors: bool = True,
     ) -> np.ndarray:
-        overlay = image.copy()
-
-        # Default color palette
-        def generate_color():
+        def generate_random_color():
             return tuple(random.randint(0, 255) for _ in range(3))
 
+        overlay = image.copy()
+
+        h, w = image.shape[:2]
+        region_size = region_frac * min(h, w)
+        cell_size = region_size / GRID_SIZE
+        mask_size_threshold = 0.5 * cell_size**2
+
+        if not masks:
+            return overlay
+
         for mask in masks:
-            color = generate_color() if random_colors else (0, 255, 0)
+            #            if (is_mask_square(mask) or is_mask_rectangle(mask)) and not is_mask_too_small(mask, mask_size_threshold):
+            color = generate_random_color() if random_colors else (0, 255, 0)
             colored_mask = np.zeros_like(image, dtype=np.uint8)
             for c in range(3):
                 colored_mask[:, :, c] = mask * color[c]
             overlay = cv.addWeighted(overlay, 1.0, colored_mask, alpha, 0)
-
         return overlay
-    
-    def draw_grid_overlay(self, image, boxes, labels=None, centers=None, coords=None, color=(0, 255, 0), thickness=2):
+
+    def grid_overlay(
+        self,
+        image: np.ndarray,
+        boxes: List[Tuple[Tuple[int, int], Tuple[int, int]]],
+        color: Tuple[int, int, int] = (0, 255, 0),
+        thickness: int = 2,
+    ) -> np.ndarray:
         overlay = image.copy()
         for idx, (pt1, pt2) in enumerate(boxes):
             cv.rectangle(overlay, pt1, pt2, color, thickness)
-            if centers and coords:
-                label = f"{coords[idx]}"
-                if labels:
-                    user_label = labels.get(coords[idx], "")
-                    if user_label:
-                        label += f"\n{user_label}"
-                cx, cy = centers[idx]
-                for k, line in enumerate(label.split("\n")):
-                    cv.putText(overlay, line, (cx - 75, cy + k * 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+        return overlay
+
+    def point_prompt_overlay(
+        image: np.ndarray,
+        norm_points: np.ndarray,
+        crop_bounds: Tuple[int, int, int, int],
+        color: Tuple[int, int, int] = (0, 0, 255),
+        radius: int = 3,
+        thickness: int = -1,
+    ) -> np.ndarray:
+        overlay = image.copy()
+        x0, y0, x1, y1 = crop_bounds
+        crop_w = x1 - x0
+        crop_h = y1 - y0
+
+        for x_norm, y_norm in norm_points:
+            x = int(x0 + x_norm * crop_w)
+            y = int(y0 + y_norm * crop_h)
+            cv.circle(overlay, (x, y), radius, color, thickness)
+
         return overlay
 
     @staticmethod
@@ -224,9 +269,9 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         #     ZColor = (107, 255, 138)
         #     vectorColor = (255, 107, 170)
         # else:
-            # yColor = (255, 255, 0)
-            # ZColor = (243, 82, 121)
-            # vectorColor = (0, 165, 255)
+        # yColor = (255, 255, 0)
+        # ZColor = (243, 82, 121)
+        # vectorColor = (0, 165, 255)
         yColor = (255, 255, 0)
         ZColor = (243, 82, 121)
         vectorColor = (0, 165, 255)
@@ -289,12 +334,12 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         #             label.append(relation + rhs)
         #         else:
         #             label.append(rhs)
-        return ''
+        return ""
 
     @staticmethod
     def renderPlan(frame, plan, last_plan):
         """
-        Renders the plan text on the frame. 
+        Renders the plan text on the frame.
         If the plan is None, it renders the last known state.
         """
         # if plan and plan.is_new():
@@ -315,8 +360,15 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         font = cv.FONT_HERSHEY_SIMPLEX
         font_scale = 1
         thickness = 2
-        cv.putText(frame, last_plan["text"], position, font, font_scale, last_plan["color"], thickness)
-
+        cv.putText(
+            frame,
+            last_plan["text"],
+            position,
+            font,
+            font_scale,
+            last_plan["color"],
+            thickness,
+        )
 
     @staticmethod
     def conePointsBase(cone):

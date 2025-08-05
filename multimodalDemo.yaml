@@ -1,4 +1,4 @@
-name: multimodalDemo
+name: multimodalDemo-dpip
 channels:
   - pytorch
   - nvidia
