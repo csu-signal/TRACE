@@ -64,7 +64,7 @@ if __name__ == "__main__":
     # Multiple microphones - laptop
     audio1 = MicAudio(device_id=9, speaker_id="D1")
     audio2 = MicAudio(device_id=4, speaker_id="D2")
-    audio3 = MicAudio(device_id=16, speaker_id="D3")
+    audio3 = MicAudio(device_id=15, speaker_id="D3")
     audio4 = MicAudio(device_id=3, speaker_id="Builder")
     utterance_audio = VADUtteranceBuilder(
         audio1, audio2, audio3, audio4, delete_input_files=False
