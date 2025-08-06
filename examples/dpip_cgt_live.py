@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-
+import torch
 from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
 
 from mmdemo.demo import Demo
@@ -37,6 +37,7 @@ from mmdemo.features.friction.friction_feature import Friction
 from mmdemo.features.speech_output.dpipSpeechoutput_feature import DpipSpeechOutput
 
 if __name__ == "__main__":
+    print(f"is cuda available? {torch.cuda.is_available()}")
     # azure kinect features from camera
     color, depth, body_tracking, calibration = create_azure_kinect_features(
         DeviceType.CAMERA, camera_index=0

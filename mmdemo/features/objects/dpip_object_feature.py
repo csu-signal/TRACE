@@ -59,6 +59,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         self.coords = {}
         self.segmentation_masks = {}
         self.labels = {}
+        self.norm_point_prompt_grid = None
+        self.crop_bounds = None
         self.t = threading.Thread(target=self.worker)
         # self.detectionThreshold = detection_threshold
         # if model_path is None:
@@ -80,12 +82,12 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 torch.backends.cuda.matmul.allow_tf32 = True
                 torch.backends.cudnn.allow_tf32 = True
 
-        per_cell_centered_grids = self.build_per_cell_centered_norm_point_grids(
+        self.norm_point_prompt_grid = self.build_per_cell_centered_norm_point_grids(
             GRID_SIZE, POINT_PROMPTS_PER_AXIS, DEFAULT_POINT_PROMPT_GRID_REGION_FRAC
         )
 
         self.sam2_mask_generator = self.create_sam2_mask_generator(
-            [per_cell_centered_grids]
+            [self.norm_point_prompt_grid]
         )
 
     def get_output(
@@ -99,6 +101,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 xyGrid=self.xy_grid,
                 frame_index=col.frame_count,
                 region_frac=self.region_frac,
+                norm_point_prompt_grid=self.norm_point_prompt_grid,
+                crop_bounds=self.crop_bounds,
                 labels=self.labels,
                 boxes=self.boxes,
                 centers=self.centers,
@@ -124,6 +128,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             xyGrid=self.xy_grid,
             frame_index=col.frame_count,
             region_frac=self.region_frac,
+            norm_point_prompt_grid=self.norm_point_prompt_grid,
+            crop_bounds=self.crop_bounds,
             labels=self.labels,
             boxes=self.boxes,
             centers=self.centers,
@@ -134,13 +140,15 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     def worker(self):
         print("\nNew Object Request Thread Started")
         try:
-            crop_bounds = self.get_center_crop_bounds(
+            self.crop_bounds = self.get_center_crop_bounds(
                 self.lastCol.frame.shape, self.region_frac
             )
 
-            self.segmentation_masks = self.get_segmentation_masks(
-                self.sam2_mask_generator, self.lastCol.frame, crop_bounds
+            all_segmentation_masks = self.get_segmentation_masks(
+                self.sam2_mask_generator, self.lastCol.frame, self.crop_bounds
             )
+
+            self.segmentation_masks = self.filter_masks(all_segmentation_masks)
 
             self.boxes, self.centers, self.coords = self.build_centered_grid_boxes(
                 self.lastCol.frame.shape, GRID_SIZE, self.region_frac
@@ -235,6 +243,16 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
         return color_name, mean_hsv
 
+    def estimate_shape(self, mask: np.ndarray) -> str:
+        if self.is_mask_square(mask):
+            return "square"
+        elif self.is_mask_rectangle(mask):
+            return "rectangle"
+        else:
+            return "invalid-shape"
+
+    # ========== Mask Utilities ==========
+
     def calculate_mask_width_height_ratio(self, mask: np.ndarray) -> float:
         contours, _ = cv2.findContours(
             mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
@@ -269,13 +287,20 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             < UPPER_MAX_RECTANGLE_RATIO
         )
 
-    def estimate_shape(self, mask: np.ndarray) -> str:
-        if self.is_mask_square(mask):
-            return "square"
-        elif self.is_mask_rectangle(mask):
-            return "rectangle"
-        else:
-            return "invalid-shape"
+    def filter_masks(self, masks: List[np.ndarray]) -> List[np.ndarray]:
+        h, w = self.lastCol.frame.shape[:2]
+        region_size = self.region_frac * min(h, w)
+        cell_size = region_size / GRID_SIZE
+        mask_size_threshold = MASK_SIZE_THRESH_FRAC * cell_size**2
+
+        filtered_masks = []
+        for mask in masks:
+            if (
+                self.is_mask_square(mask) or self.is_mask_rectangle(mask)
+            ) and not self.is_mask_too_small(mask, mask_size_threshold):
+                filtered_masks.append(mask)
+        print(f"Kept {len(filtered_masks)} out of {len(masks)} masks")
+        return filtered_masks
 
     # ========== Grid Utilities ==========
 
@@ -315,7 +340,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         h, w = image.shape[:2]
         region_size = region_frac * min(h, w)
         cell_size = region_size / GRID_SIZE
-        mask_size_threshold = 0.5 * cell_size**2
+        mask_size_threshold = MASK_SIZE_THRESH_FRAC * cell_size**2
 
         labels = {}
         for idx, ((x0, y0), (x1, y1)) in enumerate(grid_boxes):
@@ -325,11 +350,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 cell_mask = np.zeros_like(mask, dtype=np.uint8)
                 cell_mask[y0:y1, x0:x1] = 1
                 intersection = np.logical_and(mask, cell_mask).sum()
-                if (
-                    intersection > max_overlap
-                    and (self.is_mask_square(mask) or self.is_mask_rectangle(mask))
-                    and not self.is_mask_too_small(mask, mask_size_threshold)
-                ):
+                if intersection > max_overlap:
                     best_mask = mask
                     max_overlap = intersection
             if best_mask is not None:
@@ -428,6 +449,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             "C:\\Users\\Multimodal_Demo\\sam2\\checkpoints\\sam2.1_hiera_large.pt"
         )
         sam2_model_config = "configs/sam2.1/sam2.1_hiera_l.yaml"
+
+        print(f"SAM2 device is {self.device}")
 
         sam2 = build_sam2(
             sam2_model_config,

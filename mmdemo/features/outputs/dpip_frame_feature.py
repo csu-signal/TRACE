@@ -177,6 +177,9 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         output_frame = self.segmentation_masks_overlay(
             output_frame, objects.segmentation_masks, alpha=0.6
         )
+        output_frame = self.point_prompt_overlay(
+            output_frame, objects.norm_point_prompt_grid, objects.crop_bounds
+        )
         # cv.putText(output_frame, f"[W/S] region_frac = {objects.region_frac:.2f}", (50, 100), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
         output_frame = cv.resize(output_frame, (1280, 720))
@@ -188,7 +191,6 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         self,
         image: np.ndarray,
         masks: List[np.ndarray],
-        region_frac: float = 1,
         alpha: float = 0.5,
         random_colors: bool = True,
     ) -> np.ndarray:
@@ -197,16 +199,10 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
 
         overlay = image.copy()
 
-        h, w = image.shape[:2]
-        region_size = region_frac * min(h, w)
-        cell_size = region_size / GRID_SIZE
-        mask_size_threshold = 0.5 * cell_size**2
-
         if not masks:
             return overlay
 
         for mask in masks:
-            #            if (is_mask_square(mask) or is_mask_rectangle(mask)) and not is_mask_too_small(mask, mask_size_threshold):
             color = generate_random_color() if random_colors else (0, 255, 0)
             colored_mask = np.zeros_like(image, dtype=np.uint8)
             for c in range(3):
@@ -227,6 +223,7 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         return overlay
 
     def point_prompt_overlay(
+        self,
         image: np.ndarray,
         norm_points: np.ndarray,
         crop_bounds: Tuple[int, int, int, int],
@@ -235,6 +232,10 @@ class DpipFrame(BaseFeature[ColorImageInterface]):
         thickness: int = -1,
     ) -> np.ndarray:
         overlay = image.copy()
+
+        if crop_bounds is None or norm_points is None:
+            return overlay
+
         x0, y0, x1, y1 = crop_bounds
         crop_w = x1 - x0
         crop_h = y1 - y0

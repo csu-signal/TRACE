@@ -32,6 +32,9 @@ LOWER_MAX_RECTANGLE_RATIO = 0.7
 UPPER_MIN_RECTANGLE_RATIO = 1.8
 UPPER_MAX_RECTANGLE_RATIO = 2.2
 
+# Fraction for determining the threshold that will ignore masks that don't take up X% of a grid cell's area
+MASK_SIZE_THRESH_FRAC = 0.8
+
 # Cell depths
 # NOTE: Use the inspect_grid_depth_ranges.py script to calibrate these values (higher values means closer to the camera, lower depth values mean further away, this is true for Depth Anything V2)
 # NOTE: Depth Anything V2 does not use metric values by default to measure depth, so depth values can be negative. Even if you swtich it to use metric, higher values are closer and lower values are further away.

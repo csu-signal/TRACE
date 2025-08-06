@@ -2,16 +2,23 @@
 Premade output interfaces
 """
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Iterable, Sequence
-from typing import Dict, List, Optional
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
 
 from mmdemo.base_interface import BaseInterface
-from mmdemo.interfaces.data import Cone, DpipObjectInfo2D, DpipObjectInfo3D, Handedness, HciiObjectInfo2D, ObjectInfo2D, ObjectInfo3D, ParticipantInfo
+from mmdemo.interfaces.data import (
+    Cone,
+    DpipObjectInfo2D,
+    DpipObjectInfo3D,
+    Handedness,
+    HciiObjectInfo2D,
+    ObjectInfo2D,
+    ObjectInfo3D,
+    ParticipantInfo,
+)
 
 
 @dataclass
@@ -56,7 +63,7 @@ class BodyTrackingInterface(BaseInterface):
 
     bodies: list[dict[str, Any]]
     timestamp_usec: int
-    
+
 
 @dataclass
 class CameraCalibrationInterface(BaseInterface):
@@ -118,7 +125,6 @@ class DepthImageInterface(BaseInterface):
     frame: np.ndarray
 
 
-
 @dataclass
 class DpipCommonGroundTrackingInterface(CommonGroundInterface):
     """
@@ -135,18 +141,19 @@ class EmptyInterface(BaseInterface):
 
 @dataclass
 class EngagementLevelInterface(BaseInterface):
-
     engagement_level: int
 
 
 @dataclass
 class FrictionMetrics:
     """Metrics for generated friction statements"""
+
     nll: float
     predictive_entropy: float
     mutual_information: float
     perplexity: float
     conditional_entropy: float
+
 
 @dataclass
 class DpipFrictionOutputInterface(BaseInterface):
@@ -160,35 +167,35 @@ class DpipFrictionOutputInterface(BaseInterface):
 class FrictionOutputInterface(BaseInterface):
     """
     Interface for friction generation output in collaborative weight estimation task.
-    
+
     Attributes:
-        friction_statement (str): 
+        friction_statement (str):
             Main friction statement to be displayed/spoken.
             Example: "Are we sure about comparing these blocks without considering their volume?"
 
         transciption_subset (str):
             The transcription subset
-            
-        task_state (str): 
+
+        task_state (str):
             Current state of the weight estimation task.
             Hidden from UI but useful for debugging.
             Example: "Red (10g) and Blue blocks compared, Yellow block pending"
-            
-        belief_state (str): 
+
+        belief_state (str):
             Participants' current beliefs about weights.
             Helps explain friction but may not need display.
             Example: "P1 believes yellow is heaviest, P2 uncertain about blue"
-            
-        rationale (str): 
+
+        rationale (str):
             Reasoning behind the friction intervention.
             Could be shown as tooltip/explanation.
             Example: "Participants are making assumptions without evidence"
-            
-        metrics (Optional[FrictionMetrics]): 
+
+        metrics (Optional[FrictionMetrics]):
             Model's generation metrics including confidence.
             Useful for debugging and demo insights.
     """
-    
+
     friction_statement: str
     transciption_subset: str
     # task_state: str
@@ -196,7 +203,7 @@ class FrictionOutputInterface(BaseInterface):
     # rationale: str
     # raw_generation: str
 
-    #metrics: Optional[FrictionMetrics] = None
+    # metrics: Optional[FrictionMetrics] = None
 
     def to_dict(self):
         return asdict(self)  # Converts the object into a dictionary
@@ -226,7 +233,7 @@ class GestureConesInterface(ConesInterface):
     wtd_body_ids: list[int]
     azure_body_ids: list[int]
     handedness: list[Handedness]
-    
+
 
 @dataclass
 class GazeEventInterface(BaseInterface):
@@ -236,8 +243,10 @@ class GazeEventInterface(BaseInterface):
     both positive and negetive event could happen here
     This interface contains both positive and negative
     """
+
     positive_event: int
     negative_event: int
+
 
 @dataclass
 class GestureEventInterface(BaseInterface):
@@ -248,8 +257,8 @@ class GestureEventInterface(BaseInterface):
     We only want to who is pointing
     Pointing is a positive signal, here only positive event included
     """
-    positive_event: int
 
+    positive_event: int
 
 
 @dataclass
@@ -259,7 +268,7 @@ class GazeSelectionInterface(BaseInterface):
 
     selection -- [(gaze cone owner, gaze cone target or None)]
     """
-    
+
     selection: list[tuple[str, str | None]]
 
 
@@ -269,7 +278,7 @@ class HciiGestureConesInterface(ConesInterface):
     `cones` -- the list of cones found
     `wtd_body_ids` -- `body_ids[i]` is the body id in weight task dataset format for each `cones[i]`
     `azure_body_ids` -- `body_ids[i]` is the body id in azure kinect format for each `cones[i]`
-    `handedness` -- `handedness[i]` is the hand used to create `cones[i]`  
+    `handedness` -- `handedness[i]` is the hand used to create `cones[i]`
     `nose_position` -- the nose position
     """
 
@@ -323,6 +332,7 @@ class ObjectInterface3D(BaseInterface):
 
     objects: list[ObjectInfo3D]
 
+
 @dataclass
 class DpipObjectInterface3D(BaseInterface):
     """
@@ -334,11 +344,14 @@ class DpipObjectInterface3D(BaseInterface):
     xyGrid: set[str]
     frame_index: int
     region_frac: float
+    norm_point_prompt_grid: np.ndarray
+    crop_bounds: Tuple[int, int, int, int]
     boxes: list
     centers: list
     coords: list
     segmentation_masks: list
     labels: dict
+
 
 @dataclass
 class DpipActionInterface(BaseInterface):
@@ -351,6 +364,7 @@ class DpipActionInterface(BaseInterface):
     structure: dict
     jsonStructure: dict
 
+
 @dataclass
 class PlannerInterface(BaseInterface):
     """
@@ -362,7 +376,7 @@ class PlannerInterface(BaseInterface):
     fbank: set[str]
 
 
-#new interfaces created for AAAI demo
+# new interfaces created for AAAI demo
 @dataclass
 class PoseEventInterface(BaseInterface):
     """
@@ -370,6 +384,7 @@ class PoseEventInterface(BaseInterface):
     Because different students behave in different ways
     both positive and negative could happen here
     """
+
     positive_event: int
     negative_event: int
 
@@ -402,7 +417,9 @@ class SelectedObjectsInterface(BaseInterface):
     objects -- [(object info, selected?), ...]
     """
 
-    objects: Sequence[tuple[ObjectInfo2D | ObjectInfo3D | DpipObjectInfo2D | DpipObjectInfo3D, bool]]
+    objects: Sequence[
+        tuple[ObjectInfo2D | ObjectInfo3D | DpipObjectInfo2D | DpipObjectInfo3D, bool]
+    ]
 
 
 @dataclass
@@ -422,6 +439,7 @@ class SpeechOutputInterface(BaseInterface):
     speech_output -- indicates if speech was output
     int -- indicates time to display "idea" joe
     """
+
     speech_output: bool
     length: int
 
