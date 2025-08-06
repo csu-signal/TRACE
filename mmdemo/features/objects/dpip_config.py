@@ -38,8 +38,11 @@ MAX_RECTANGLE_RATIO = 2.2
 
 # ========== Mask Filtering ==========
 
-# Fraction for determining the threshold that will ignore masks that don't take up X% of a grid cell's area
+# Fraction for determining the threshold that will ignore masks that aren't  X% of a grid cell's area
 MASK_SIZE_THRESH_FRAC = 0.7
+
+# Fraction for determining the threshold that ignore masks that don't take up X% of a particular grid cell's area. This is different, albeit nuanced, than MASK_SIZE_THRESH_FRAC, which just makes sure that a mask's size is greater than a percentage of a grid cell. This ensures that a mask actually covers X% of a particular grid cell.
+CELL_AREA_INTERSECTION_THRESH_FRAC = 0.5
 
 # ========== Depth Stuff ==========
 
@@ -66,4 +69,4 @@ SAM2_STABILITY_SCORE_THRESH = 0.75
 
 # Postprocess Small Regions Parameters
 POSTPROCESS_MIN_AREA = 1000
-POSTPROCESS_NMS_THRESH = 1
+POSTPROCESS_NMS_THRESH = 0.9

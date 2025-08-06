@@ -351,7 +351,9 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         h, w = image.shape[:2]
         region_size = region_frac * min(h, w)
         cell_size = region_size / GRID_SIZE
-        mask_size_threshold = MASK_SIZE_THRESH_FRAC * cell_size**2
+        cell_area_intersection_threshold = (
+            CELL_AREA_INTERSECTION_THRESH_FRAC * cell_size**2
+        )
 
         labels = {}
         for idx, ((x0, y0), (x1, y1)) in enumerate(grid_boxes):
@@ -362,7 +364,10 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 cell_mask = np.zeros_like(mask, dtype=np.uint8)
                 cell_mask[y0:y1, x0:x1] = 1
                 intersection = np.logical_and(mask, cell_mask).sum()
-                if intersection > max_overlap:
+                if (
+                    intersection > max_overlap
+                    and intersection > cell_area_intersection_threshold
+                ):
                     best_mask = mask
                     max_overlap = intersection
             if best_mask is not None:
@@ -478,7 +483,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             pred_iou_thresh=SAM2_PREDICTED_IOU_THRESH,
             stability_score_thresh=SAM2_STABILITY_SCORE_THRESH,
             multimask_output=True,
-            use_m2m=False,
+            use_m2m=True,
         )
 
         return sam2_mask_generator
