@@ -52,7 +52,18 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         self.all_grid_states = {}
         self.skipPost = skipPost
         self.lastCol = None
-        self.xy_grid = None
+        self.main_xy_grid = [["", "", ""], ["", "", ""], ["", "", ""]]
+        self.xy_grid_counts = {
+            (0, 0): ("", 0),
+            (0, 1): ("", 0),
+            (0, 2): ("", 0),
+            (1, 0): ("", 0),
+            (1, 1): ("", 0),
+            (1, 2): ("", 0),
+            (2, 0): ("", 0),
+            (2, 1): ("", 0),
+            (2, 2): ("", 0),
+        }
         self.region_frac = DEFAULT_REGION_FRAC
         self.boxes = {}
         self.centers = {}
@@ -86,6 +97,10 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             GRID_SIZE, POINT_PROMPTS_PER_AXIS, DEFAULT_POINT_PROMPT_GRID_REGION_FRAC
         )
 
+        #        self.norm_point_prompt_grid = self.build_per_cell_cross_norm_point_grids(
+        #            GRID_SIZE, POINT_PROMPTS_PER_AXIS, DEFAULT_POINT_PROMPT_GRID_REGION_FRAC
+        #        )
+
         self.sam2_mask_generator = self.create_sam2_mask_generator(
             [self.norm_point_prompt_grid]
         )
@@ -98,7 +113,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     ) -> DpipObjectInterface3D | None:
         if self.skipPost:
             return DpipObjectInterface3D(
-                xyGrid=self.xy_grid,
+                xyGrid=self.main_xy_grid,
                 frame_index=col.frame_count,
                 region_frac=self.region_frac,
                 norm_point_prompt_grid=self.norm_point_prompt_grid,
@@ -125,7 +140,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             self.t.start()
 
         return DpipObjectInterface3D(
-            xyGrid=self.xy_grid,
+            xyGrid=self.main_xy_grid,
             frame_index=col.frame_count,
             region_frac=self.region_frac,
             norm_point_prompt_grid=self.norm_point_prompt_grid,
@@ -173,9 +188,28 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 self.region_frac,
             )
 
-            self.xy_grid = self.grid_labels_to_xy_matrix(self.labels, GRID_SIZE)
-            print(self.xy_grid)
-            self.all_grid_states[self.lastCol.frame_count] = self.xy_grid
+            current_xy_grid = self.grid_labels_to_xy_matrix(self.labels, GRID_SIZE)
+            print(f"current xy_grid: {current_xy_grid}")
+
+            for x in range(GRID_SIZE):
+                for y in range(GRID_SIZE):
+                    current_val, current_count = self.xy_grid_counts[(x, y)]
+                    if current_xy_grid[x][y] == current_val:
+                        current_count += 1
+                    else:
+                        current_val = current_xy_grid[x][y]
+                        current_count = 0
+                    self.xy_grid_counts[(x, y)] = (current_val, current_count)
+
+            for x in range(GRID_SIZE):
+                for y in range(GRID_SIZE):
+                    current_val, current_count = self.xy_grid_counts[(x, y)]
+                    if current_count > 3:
+                        self.main_xy_grid[x][y] = current_val
+
+            print(f"main xy_grid: {self.main_xy_grid}")
+
+            self.all_grid_states[self.lastCol.frame_count] = self.main_xy_grid
 
         except Exception as e:
             self.xy_grid = None
@@ -309,8 +343,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 or MIN_RECTANGLE_RATIO < aspect_ratio < MAX_RECTANGLE_RATIO
             )
             and area > area_threshold
-            #            and extent > 0.95
-            #            and solidity > 0.95
+            and extent > 0.9
+            and solidity > 0.95
         )
 
     # ========== Grid Utilities ==========
@@ -429,7 +463,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
         return np.array(all_points, dtype=np.float32)
 
-    def build_per_cell_norm_cross_grids(
+    def build_per_cell_cross_norm_point_grids(
         self, grid_size: int, points_per_axis: int, region_frac: float
     ) -> np.ndarray:
         assert 0 < region_frac <= 1.0
@@ -482,8 +516,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             point_grids=point_grids,
             pred_iou_thresh=SAM2_PREDICTED_IOU_THRESH,
             stability_score_thresh=SAM2_STABILITY_SCORE_THRESH,
-            multimask_output=True,
-            use_m2m=True,
+            multimask_output=False,
+            use_m2m=False,
         )
 
         return sam2_mask_generator
