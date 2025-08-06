@@ -148,7 +148,20 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 self.sam2_mask_generator, self.lastCol.frame, self.crop_bounds
             )
 
-            self.segmentation_masks = self.filter_masks(all_segmentation_masks)
+            h, w = self.lastCol.frame.shape[:2]
+            region_size = self.region_frac * min(h, w)
+            cell_size = region_size / GRID_SIZE
+            area_threshold = MASK_SIZE_THRESH_FRAC * cell_size**2
+
+            filtered_masks = []
+            for mask in all_segmentation_masks:
+                if self.is_valid_block_mask(mask, area_threshold):
+                    filtered_masks.append(mask)
+
+            print(
+                f"Kept {len(filtered_masks)} out of {len(all_segmentation_masks)} masks"
+            )
+            self.segmentation_masks = filtered_masks
 
             self.boxes, self.centers, self.coords = self.build_centered_grid_boxes(
                 self.lastCol.frame.shape, GRID_SIZE, self.region_frac
@@ -261,18 +274,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             return 0
         biggest_contour = max(contours, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(biggest_contour)
-        return w / h
-
-    def is_mask_too_small(self, mask: np.ndarray, size_threshold: int) -> bool:
-        contours, _ = cv2.findContours(
-            mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
-        if not contours:
-            return True
-        biggest_contour = max(contours, key=cv2.contourArea)
-        x, y, w, h = cv2.boundingRect(biggest_contour)
-
-        return (w * h) < size_threshold
+        return max(w, h) / (min(w, h) + 1e-5)
 
     def is_mask_square(self, mask: np.ndarray) -> bool:
         width_height_ratio = self.calculate_mask_width_height_ratio(mask)
@@ -280,27 +282,32 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
     def is_mask_rectangle(self, mask: np.ndarray) -> bool:
         width_height_ratio = self.calculate_mask_width_height_ratio(mask)
-        return (
-            LOWER_MIN_RECTANGLE_RATIO < width_height_ratio < LOWER_MAX_RECTANGLE_RATIO
-            or UPPER_MIN_RECTANGLE_RATIO
-            < width_height_ratio
-            < UPPER_MAX_RECTANGLE_RATIO
+        return MIN_RECTANGLE_RATIO < width_height_ratio < MAX_RECTANGLE_RATIO
+
+    def is_valid_block_mask(self, mask: np.ndarray, area_threshold: int):
+        contours, _ = cv2.findContours(
+            mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
+        if not contours:
+            return False
 
-    def filter_masks(self, masks: List[np.ndarray]) -> List[np.ndarray]:
-        h, w = self.lastCol.frame.shape[:2]
-        region_size = self.region_frac * min(h, w)
-        cell_size = region_size / GRID_SIZE
-        mask_size_threshold = MASK_SIZE_THRESH_FRAC * cell_size**2
+        contour = max(contours, key=cv2.contourArea)
+        area = cv2.contourArea(contour)
+        x, y, w, h = cv2.boundingRect(contour)
+        extent = area / (w * h)
 
-        filtered_masks = []
-        for mask in masks:
-            if (
-                self.is_mask_square(mask) or self.is_mask_rectangle(mask)
-            ) and not self.is_mask_too_small(mask, mask_size_threshold):
-                filtered_masks.append(mask)
-        print(f"Kept {len(filtered_masks)} out of {len(masks)} masks")
-        return filtered_masks
+        aspect_ratio = max(w, h) / (min(w, h) + 1e-5)
+        solidity = area / (cv2.contourArea(cv2.convexHull(contour)) + 1e-5)
+
+        return (
+            extent > 0.95
+            and (
+                MIN_SQUARE_RATIO < aspect_ratio < MAX_SQUARE_RATIO
+                or MIN_RECTANGLE_RATIO < aspect_ratio < MAX_RECTANGLE_RATIO
+            )
+            and solidity > 0.95
+            and area > area_threshold
+        )
 
     # ========== Grid Utilities ==========
 

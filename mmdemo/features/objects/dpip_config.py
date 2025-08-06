@@ -22,15 +22,12 @@ GREEN_MAX_HUE = 85
 BLUE_MIN_HUE = 85
 BLUE_MAX_HUE = 160
 
-# Shape ratios - these are based on the width and height of the bounding boxes for the segmentations. The ratio is calculated as width / height
+# Shape ratios - these are based on the width and height of the bounding boxes for the segmentations. The ratio is calculated as max(width, height) / min(width, height)
 MIN_SQUARE_RATIO = 0.8
 MAX_SQUARE_RATIO = 1.2
 
-# Rectangles need a lower range and an upper range. If height is bigger, then ratio should be close to 0.5. If width is bigger, then ratio should be close to 2
-LOWER_MIN_RECTANGLE_RATIO = 0.3
-LOWER_MAX_RECTANGLE_RATIO = 0.7
-UPPER_MIN_RECTANGLE_RATIO = 1.8
-UPPER_MAX_RECTANGLE_RATIO = 2.2
+MIN_RECTANGLE_RATIO = 1.8
+MAX_RECTANGLE_RATIO = 2.2
 
 # Fraction for determining the threshold that will ignore masks that don't take up X% of a grid cell's area
 MASK_SIZE_THRESH_FRAC = 0.8
