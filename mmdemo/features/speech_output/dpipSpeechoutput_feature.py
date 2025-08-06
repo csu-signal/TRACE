@@ -84,11 +84,35 @@ class DpipSpeechOutput(BaseFeature[SpeechOutputInterface]):
         ***Generate speech
         """
         friction = frictionout.friction_statement.split('\n')
+        ranking = frictionout.ranking.split('\n')
+        min = 10
+        user = "Group"
+
         if len(friction) != 4 or friction == self.last_friction or self.length > -30:
             self.length -= 1
             return SpeechOutputInterface(speech_output=self.speechoutput,length=self.length) #TODO response outputs
+        
         #play a request for interruption
-        friction = friction[3]
+        if(ranking != ''):
+            try:
+                for rank in ranking:
+                    a = rank.split(": ")
+                    r = int(a[1])
+                    if(r != 0 and r < min):
+                        min = r
+                        user = a[0]
+            except Exception as e:
+                min = 10
+                print("Rank Error, defaulting to group")
+
+        if(min == 10):
+            friction = friction[3]
+        else:
+            for f in friction:
+                if user in f:
+                    friction = f
+                    break
+            
         # opening = random.choice(os.listdir("C:/GitHub/TRACE/mmdemo/features/speech_output/audio"))
         # audio, samplerate = sf.read(fr"C:/GitHub/TRACE/mmdemo/features/speech_output/audio/{opening}")
         # sd.wait()

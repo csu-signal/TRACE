@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field, ValidationError
 from typing import List, Dict, Optional
 
 lastFriction = ''
+lastRanking = ''
  
 class BlockInfo(BaseModel):
     color: str = Field(..., description="Block color: red, blue, green, yellow, orange, brown, or unknown")
@@ -159,6 +160,7 @@ def parse_tags_robust(text, tags=None):
 def parse_friction_response_robust(text: str) -> Dict[str, Any]:
     """Enhanced parsing function for friction analysis response"""
     global lastFriction
+    global lastRanking
     
     result = {
         "belief_state": "",
@@ -200,12 +202,23 @@ def parse_friction_response_robust(text: str) -> Dict[str, Any]:
         r"FRICTION:\s*\n(.*?)(?=\n\n[A-Z]|\Z)",
         r"FRICTION:\s*(.*?)(?=The main issues|\Z)"
     ]
+
+    friction_importance = [
+        r"<friction_importance>(.*?)</friction_importance>",
+    ]
     
     friction_content = extract_with_patterns(text, friction_patterns)
-    if friction_content:
+    friction_ranking = extract_with_patterns(text, friction_importance)
+    if friction_content and friction_ranking:
         f = clean_content(friction_content)
         if(f != ''):
             lastFriction = f
+
+        r = clean_content(friction_ranking)
+        if(r != ''):
+            lastRanking = r
+        
+        print(f'Ranking friction: {lastRanking}\n')
         print(f'Last friction: {lastFriction}\n')
         result["friction"] = f
         result["raw_sections"]["friction"] = friction_content
@@ -1058,8 +1071,10 @@ def segment_transcript_string_for_friction(values, startStructure, endStructure,
         # end_director_views_text = format_single_timestamp_director_views_string(endStructure, timestamp)
         start_director_views_text = structToJson(startStructure)
         end_director_views_text = structToJson(endStructure)
+
+        changes = get_changes_as_string(start_director_views_text, end_director_views_text)
         # Create enhanced prompt
-        prompt = create_enhanced_prompt_with_director_views(transcript_segment, str(start_director_views_text), str(end_director_views_text))
+        prompt = create_enhanced_prompt_with_director_views(transcript_segment, str(start_director_views_text), str(end_director_views_text), changes)
         
         segment_info = {
             'segment_id': i // utterances_per_segment + 1,
@@ -1128,7 +1143,40 @@ def segment_transcript_with_latest_director_views(df, director_views_df, utteran
     
     return segments
 
+import json
+def get_changes_as_string(old, new):
+    changes = {}
 
+    for director in old:
+        changes[director] = {"added": [], "removed": []}
+        for row_idx in range(3):
+            row_key = f"row_{row_idx}"
+            for col_idx in range(3):
+                old_cell = old[director][row_key][col_idx]
+                new_cell = new[director][row_key][col_idx]
+
+                position = (row_idx * 3 + col_idx + 1)
+
+                if old_cell['color'] != new_cell['color']:
+                    if old_cell['color'] != 'none':
+                        changes[director]["removed"].append(
+                            f"{old_cell['color']} removed at position {position}, layer {old_cell['size']}"
+                        )
+                    if new_cell['color'] != 'none':
+                        changes[director]["added"].append(
+                            f"{new_cell['color']} added at position {position}, layer {new_cell['size']}"
+                        )
+
+    # Convert to single formatted string
+    output_lines = []
+    for director, diff in changes.items():
+        output_lines.append(f"Changes for {director}:")
+        for action in ['added', 'removed']:
+            for item in diff[action]:
+                output_lines.append(f"  - {item}")
+        output_lines.append("")  # Add empty line after each director
+
+    return "\n".join(output_lines).strip()
 
 
 def segment_transcript_with_director_views(df, director_views_df, utterances_per_segment=10):
@@ -1185,9 +1233,9 @@ def create_friction_definitions():
     """Define what friction interventions address in collaborative construction"""
     return """
 The following are cases where friction intervention must happen -
-- the builder agrees to place a block without confirming the size of the block 
+- The builder agrees to place a block without confirming the size of the block 
 - The director does not specify the size of the block 
-- There is a change in the view of a director even if that director did not provide intervention 
+- An addition or removal of blocks occurs for a director without confirmation: For example, a red block has been added to D2's side but D2 has not asked the builder to place any block
 - If the conversation strays away from the task, tt must be brought back to the task
 - A block is added to the board without any mention of it in the transcript
  """
@@ -1198,7 +1246,7 @@ The following are cases where friction intervention must happen -
 # - INCONSISTENT DESCRIPTIONS: Same elements described differently by directors
 # - COORDINATION BREAKDOWN: Failed attempts to establish shared understanding
 
-def create_enhanced_prompt_with_director_views(transcript_segment, start_director_views_text, end_director_views_text):
+def create_enhanced_prompt_with_director_views(transcript_segment, start_director_views_text, end_director_views_text,changes):
     """Create prompt with both transcript and director view data"""
     director_instructions = create_director_view_instructions()
     friction_def = create_friction_definitions()
@@ -1293,51 +1341,121 @@ Lego Task Background:
 Three "Directors" (D1, D2,D3) each with a unique 2D view of a target 3D structure, must verbally guide a 
 "Builder." The Builder has no view and relies entirely on the Directors' combined instructions to place LEGO blocks. 
 The team's goal is to accurately replicate the hidden structure by overcoming their limited, individual perspectives.
-The builder is the only one who can place blocks on the structure 
+The builder is the only one who can place blocks on the structure. The Directors can not place blocks, they can only communicate what they see
 
-You are given a segment of transcripts, and the board state at the start of the transcript, and the end of the transcript. Focus on the 
-blocks that have been added or removed in this segment:
+You are given a segment of transcripts, and the board state at the end of the transcript as a common ground JSON, and the addtition and removal of blocks that occur 
+during this transcript segment
 
 
-""" + transcript_segment + """
+The Common Ground JSON structure represents a 3x3 grid structure as seen by three directors: D1, D2, and D3, each observing one side of the same 3D Lego build. For each director,
+the structure is encoded using three rows: row_0 (bottom), row_1 (middle), and row_2 (top), with each row containing three cells from left to right (indices 0, 1, 2). 
+This means that row_0, index 0 refers to the bottom-left position, while row_2, index 2 refers to the top-right position from that director's view.
 
-DIRECTOR VIEWS AT THE START OF THE SEGMENT
-""" + start_director_views_text + """
+Each cell in the grid is a dictionary with two keys:
+color: the color of the visible block at that position (e.g., "red", "blue", "green", or "none" if empty).
+size: the vertical size (height) of the visible block, typically 1.
 
-DIRECTOR VIEWS AT THE END OF THE SEGMENT
-""" + end_director_views_text + """
-
-How to Interpret Director Views:
-Grid: The board is a 3x3 grid with 3 layers of height. 
-Coordinates are (x, y, z), where x is the row, y is the column, 
-and z is the layer (0 is the bottom).
-
-     (x=0)  (x=1)  (x=2)
-(y=0) [0,0]  [1,0]  [2,0]
-(y=1) [0,1]  [1,1]  [2,1]
-(y=2) [0,2]  [1,2]  [2,2]
-
-Blocks: Notation is color+size. 
-Colors are r,b,y,o,g (red, blue, yellow, orange, green). 
-Size is s (short, 1x1) or l (long, 1x2 or 2x1). For example, bl is a "blue long block".
-
-Views: Director views show the blocks visible from their perspective at a 
-specific layer z. For example, D3_side: Layer 0: gl(2,2,0) means Director 3 sees a green long block 
-at position (x=2, y=2) on the bottom layer.
+Each director sees one face of the structure: D1 from the left, D2 from the front, and D3 from the right. 
+To interpret a director's view, imagine looking directly at one face of the structure, 
+with row_2 at the top and row_0 at the bottom.
 
 
 """ + friction_def + """
+EXAMPLE ANALYSIS: 
+
+Transcript: 
+
+D1: ok there is a red block beside the blue 
+Builder: Like that? 
+D1: Yes 
+D1: now a yellow 
+Builder: okayy
+D1: Now can you do the inverse of that on the next layer?
+Builder: Huh? 
+D2: I think he means the other way. I wish you could just get into our heads. 
+Builder: oo Like the inception? 
+D2: Yeah exactly 
 
 
+Changes for D1 (left to tih):
+  - red added at position 1, layer 1 
+  - yellow added at position 2, layer 1
+
+Changes for D2:
+    - red added at position 2 layer 1
+    - red added at position 3 layer 1
+Changes for D3: 
+    - None
+
+
+
+BOARD STATE COMMON GROUND JSON:
+{
+'D1': {'row_0': [{'color': 'red', 'size': 1}, {'color': 'yellow', 'size': 1}, {'color': 'none', 'size': 1}], 
+        'row_1': [{'color': 'orange', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}], 
+        'row_2': [{'color': 'none', 'size': 1}, {'color': 'none', 'size': 1},  {'color': 'none', 'size': 1}]}, 
+ 'D2': {'row_0': [{'color': 'none', 'size': 1}, {'color': 'red', 'size': 1},  {'color': 'red', 'size': 1}], 
+         'row_1': [{'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}], 
+         'row_2': [{'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}]}, 
+  D3': {'row_0': [{'color': 'orange', 'size': 1}, {'color': 'none', 'size': 1},  {'color': 'none', 'size': 1}], 
+         'row_1': [{'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}], 
+         'row_2': [{'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}]}
+}
+
+<friction>
+D1: Be more specific about the size and the position of the yellow block when you communicate with the builder
+D2: Clarify how the red blocked by the builder added to your view relates to the structure
+D3: Please do not deviate the conversation off task. 
+GROUP: Be explicit while mentioning the size and the postion of the blocks to the builder. Pay attention if a block was added or removed on your side 
+</friction>
+
+<friction_importance>
+D1: 2
+D2: 1
+D3: 3
+GROUP: 4
+</friction_importance>
+
+Friction Importance Rationale: 
+D1 is not clear with the position and the size of the blocks and may lead to confusion to the builder.
+D2 has not specified for a red block to be placed but there is a change in their view. Hence this is the most important friction statement
+D3 has deviated from the task about a conversation about movies
+
+
+<common ground>
+{
+    'D1': {
+        'row_0': [{'color': 'red', 'size': 1}, {'color': 'yellow', 'size': 1}, {'color': 'none', 'size': 1}],
+        'row_1': [{'color': 'orange', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}],
+        'row_2': [{'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}]
+    },
+    'D2': {
+        'row_0': [{'color': 'none', 'size': 1}, {'color': 'UNKNOWN', 'size': 'UNKNOWN'}, {'color': 'UNKNOWN', 'size': 'UNKNOWN'}],
+        'row_1': [{'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}],
+        'row_2': [{'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}]
+    },
+    'D3': {
+        'row_0': [{'color': 'orange', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}],
+        'row_1': [{'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}],
+        'row_2': [{'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}]
+    }
+}
+</common ground>
+
+<common ground rationale> 
+D2's red block at position 2 layer 1 and position 1 layer 1 has been marked UKNOWN in the common ground json since there is no confirmation from D2 regarding the placement of these blocks.
+</common ground rationale> 
 ANALYZE: Common ground → Friction interventions
-
-
 ANALYSIS INSTRUCTIONS:
-- Use the director view data to understand what each director can see from their perspective on the board
-- Map coordinates from director views to 3x3 grid positions using the coordinate mapping
-- List all of the blocks that have been added, or removed.
-- Given the start and end board state, if there is any explicit disagreement on any of the blocks, specify which block. 
-- Identify the specific blocks that have been added or removed by comparing the board state at the start and at the end of the transcript segment.
+- Think step by step
+- Identify any changes that have been made to each director's view.
+- If a change occurs to a director's view because of another direcotro's instructions,you must mark that block as UNKNOWN in the common ground json
+- Given the common ground json, if there is any explicit disagreement on any of the blocks, you must specify which block using UNKNOWN for that postiion in the common ground json file. 
+- You must make edits to the common ground JSON file if necessay by adding UNKNOWN in the relavant postion. Do not generate given  common ground if there are unknown blocks in the board.
+- Analyse the changes in the view of each director and confirm if those changes are valid, based on the transcriptions
+- Suggest friction interventions if there have been additions to a director's view, without confirmation from the director
+- Rank the MOST important friction statement between D1, D2, D3, and the GROUP with 1 being the most important and 4 being the least important. Do not rank multiple friction statements the same
+
 
 OUTPUT FORMAT:
 
@@ -1348,20 +1466,49 @@ D3: [specific issue, max 1 sentence]
 GROUP: [coordination strategy, max 1 sentence]
 </friction>
 
+<friction_importance>
+D1: rank
+D2: rank
+D3: rank
+GROUP: rank
+</friction_importance>
+Friction Importance Rationale:  [rationale for ranking friction statements]
 <common ground>
-Block at position <x,y,z> has been explicitly disagreed upon (source in the transcript) and must not be in the common ground.
-Block at position <x,y,z> is not mentioned in the transcript but has been added to the board
+{
+    "D1": {
+        "row_0": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_1": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_2": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}]
+    },
+    "D2": {
+        "row_0": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_1": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_2": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}]
+    },
+    "D3": {
+        "row_0": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_1": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
+        "row_2": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}]
+    }
+}
 </common ground>
+
+<common ground rationale> 
+Rationale for marking UNKNOWN for any block in the common ground json. 
+</common ground rationale> 
 <|eot_id|><|start_header_id|>user<|end_header_id|>
+
+
 TRANSCRIPT SEGMENT:
 """ + transcript_segment + """
-
-DIRECTOR VIEWS AT THE START OF THE SEGMENT
-""" + start_director_views_text + """
 
 
 DIRECTOR VIEWS AT THE END OF THE SEGMENT
 """ + end_director_views_text + """
+
+CHANGE IN DIRECTOR VIEWS AT THIS SEGMENT
+
+""" + changes + """
 
 Analyze this segment to identify suggest friction interventions.
 <|eot_id|><|start_header_id|>assistant<|end_header_id|>
@@ -1946,7 +2093,7 @@ def start_server(local_models, generation_args):
                             print(f"\nCommon Ground: {cg}\n")
                             print(f"Friction: {lastFriction}\n") 
                             
-                            my_object = {"commonGround": cg, "friction": lastFriction}
+                            my_object = {"commonGround": cg, "friction": lastFriction, "ranking": lastRanking}
                             serialized_data = pickle.dumps(my_object)
                             print("Send Data Length:" + str(len(serialized_data))) 
 

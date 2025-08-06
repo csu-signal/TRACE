@@ -44,6 +44,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         self.transcriptionIndex = 0
         self.frictionSubset = {}
         self.friction = ''
+        self.ranking = ''
         self.cg = 'None'
         self.subsetTranscriptions = ''
         self.t = threading.Thread(target=self.worker)
@@ -67,7 +68,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
 
     def get_output(self, transcription: TranscriptionInterface, objects: DpipObjectInterface3D, actions: DpipActionInterface):
         if not transcription.is_new() or not actions.is_new():
-            return DpipFrictionOutputInterface(friction_statement=self.friction, cg_json=self.cg, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
+            return DpipFrictionOutputInterface(friction_statement=self.friction, ranking=self.ranking, cg_json=self.cg, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
 
         # if plan.solv:
         #     self.solvability_history = 0
@@ -131,7 +132,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
                 print("Friction request in progress...waiting for the thread to complete")
 
             return DpipFrictionOutputInterface(
-                    friction_statement=self.friction, cg_json=self.cg, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
+                    friction_statement=self.friction, ranking=self.ranking, cg_json=self.cg, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
     
     def worker(self):
         print("New DPIP Friction Request Thread Started")
@@ -148,10 +149,13 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
             deserialized_object = pickle.loads(data)
             cg = deserialized_object["commonGround"]
             friction = deserialized_object["friction"]
+            ranking =  deserialized_object["ranking"]
             if cg != '':
                 self.cg = cg
             if friction != '':
                 self.friction = friction
+            if ranking != '':
+                self.ranking = ranking
             print(f"Received from Server:{deserialized_object}")
         except Exception as e:
             self.friction = ''

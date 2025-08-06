@@ -42,7 +42,7 @@ warnings.filterwarnings("ignore")
 # )
 
 DPIP_MKV_PATH = (
-    "D:/DPIP/DPIP_Azure_Recordings/SK_DPIP_Group_07-master.mkv"
+    "D:\\DPIP\\Demo-0825\\demo2-master.mkv"
 )
 
 DPIP_SECOND_MKV_PATH = (
@@ -50,31 +50,7 @@ DPIP_SECOND_MKV_PATH = (
 )
 
 # audio path for DPIP group
-#DPIP_AUDIO_PATH = "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-audio1.wav"
-#DPIP_AUDIO_PATH ="D:/DPIP/DPIP_Azure_Recordings/SK_DPIP_Group_01-audio.mav"
-
-# ground truth path for WTD group. These can be generated with
-# scripts/dpip_annotations/create_all_dpip_inputs.py
-DPIP_GROUND_TRUTH_DIR = "G:/DPIP/dpip_inputs/group{0:01}"
-#DPIP_GROUND_TRUTH_DIR = "G:/DPIP/dpip_inputs/group3"
-
-# DPIP_MOVE_MODEL_PATH = "G:/brady_wtd_eval_models/move_classifier_{0:02}.pt" #TODO: New(?) move model
-
-# The number of seconds of the recording to process
-# TODO update for DPIP (fine for now, but they might end early and not work for ablation testing)
-DPIP_END_TIMES = {
-    1: 5 * 60 + 30,
-    2: 5 * 60 + 48,
-    3: 8 * 60 + 3,
-    4: 3 * 60 + 31,
-    5: 4 * 60 + 34,
-    6: 5 * 60 + 3,
-    7: 4682,
-    8: 6 * 60 + 28,
-    9: 3 * 60 + 46,
-    10: 6 * 60 + 51,
-    11: 2 * 60 + 19,
-}
+DPIP_GROUND_TRUTH_DIR = "D:\\DPIP\\Demo-0825\\postOutputs"
 
 # Number of frames to evaluate per second. This must
 # be a divisor of 30 (the true frame rate). Higher rates
@@ -113,14 +89,13 @@ def create_transcription_and_audio_ground_truth_features(
     return transcription, audio
 
 if __name__ == "__main__":
-    group = 7
-    ground_truth_dir = Path(DPIP_GROUND_TRUTH_DIR.format(group))
+    ground_truth_dir = Path(DPIP_GROUND_TRUTH_DIR)
 
     # load azure kinect features from file
     color, depth, body_tracking, calibration = create_azure_kinect_features(
         DeviceType.PLAYBACK,
-        mkv_path=Path(DPIP_MKV_PATH.format(group)),
-        playback_end_seconds=DPIP_END_TIMES[group],
+        mkv_path=Path(DPIP_MKV_PATH),
+        playback_end_seconds=539,
         playback_frame_rate=PLAYBACK_FRAME_RATE,
     )
 
@@ -149,7 +124,7 @@ if __name__ == "__main__":
     )
 
     # prop extraction from friction model
-    dpip_prop_friction = DpipProposition(transcriptions, objects, actions, csvSupport="G:\\DPIP\\GAMR\\Utterances\\group7_transcript.csv")
+    dpip_prop_friction = DpipProposition(transcriptions, objects, actions)
 
     cgt = DpipCommonGroundTracking(dpip_prop_friction, color, actions, saveCanvas=True)
     

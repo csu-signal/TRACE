@@ -11,7 +11,7 @@ import numpy as np
 def loadUtteranceFeatures(csvFile):
     featuresArray = []
     features = np.loadtxt(
-        csvFile, delimiter=",", ndmin=2, dtype=str, usecols=list(range(0, 3))
+        csvFile, delimiter=",", ndmin=2, dtype=str, usecols=list(range(0, 4))
     )
     if features.size != 0:
         for f in features:
@@ -61,10 +61,11 @@ def create_utterance_input(utterancePath, audio_file, outputFile, output_chunk_d
             print(u)
             startTime = float(u[0])
             endTime = float(u[1])
+            speakerId = str(u[2])
             startFrame = int(startTime * 30)
             endFrame = int(endTime * 30)
 
-            text = u[2]
+            text = u[3]
             for i, j in subs:
                 text = re.sub(i, j, text, flags=re.IGNORECASE)
 
@@ -80,7 +81,7 @@ def create_utterance_input(utterancePath, audio_file, outputFile, output_chunk_d
                     wf2.writeframes(chunk)
 
             writer.writerow(
-                [count, endFrame, "Group", text, startFrame, endFrame, chunk_name]
+                [count, endFrame, speakerId, text, startFrame, endFrame, chunk_name]
             )
             count += 1
 
@@ -90,22 +91,22 @@ if __name__ == "__main__":
     parser.add_argument(
         "--utterancePath",
         nargs="?",
-        default="G:\\DPIP\\GAMR\\Utterances\\Group_01.csv",
+        default="D:\\DPIP\\Demo-0825\\demo2-utterances.csv",
     )
     parser.add_argument(
         "--audioFile", 
         nargs="?", 
-        default="G:\\DPIP\\DPIP_Azure_Recordings\\Group_Test_01-audio1.wav"
+        default="D:\\DPIP\\Demo-0825\\demo2-audio.wav"
     )
     parser.add_argument(
         "--outputFile",
         nargs="?",
-        default="G:\\DPIP\\PostProcessing\\Utterances\\Group_01.csv",
+        default="D:\\DPIP\\Demo-0825\\postOutputs\\utterances.csv",
     )
     parser.add_argument(
         "--outputChunkDir",
         nargs="?",
-        default="G:\\DPIP\\PostProcessing\\Utterances\\Group_01_chunks",
+        default="D:\\DPIP\\Demo-0825\\postOutputs\\chunks",
     )
     args = parser.parse_args()
 

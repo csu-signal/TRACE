@@ -133,7 +133,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         region_frac = 1 
         centered_grid = self.build_centered_norm_point_grid(points_per_axis, frac=region_frac)
 
-        sam2_checkpoint = "../sam2/checkpoints/sam2.1_hiera_large.pt"
+        sam2_checkpoint = "C:\GitHub\sam2\checkpoints\sam2.1_hiera_large.pt"
         sam2_model_config = "configs/sam2.1/sam2.1_hiera_l.yaml"
 
         sam2 = build_sam2(sam2_model_config, sam2_checkpoint, device=self.device, apply_postprocessing=False)

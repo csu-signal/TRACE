@@ -159,9 +159,9 @@ class DpipCommonGroundTracking(BaseFeature):
                 
                 self.tabControl.pack(expand = 1, fill ="both")
 
-                self.canvas1 = tk.Canvas(self.tab1, bg="white", height=250, width=400)
-                self.canvas2 = tk.Canvas(self.tab2, bg="white", height=250, width=400)
-                self.canvas3 = tk.Canvas(self.tab3, bg="white", height=250, width=400)
+                self.canvas1 = tk.Canvas(self.tab1, bg="white", height=250, width=250)
+                self.canvas2 = tk.Canvas(self.tab2, bg="white", height=250, width=250)
+                self.canvas3 = tk.Canvas(self.tab3, bg="white", height=250, width=250)
 
                 self.canvas1.pack()
                 self.canvas2.pack()

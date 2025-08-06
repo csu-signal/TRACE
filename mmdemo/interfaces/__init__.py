@@ -154,6 +154,7 @@ class DpipFrictionOutputInterface(BaseInterface):
     friction_statement: str
     transciption_subset: str
     cg_json: str
+    ranking: str
 
 
 @dataclass
