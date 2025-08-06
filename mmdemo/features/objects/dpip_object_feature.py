@@ -240,6 +240,12 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     ) -> Tuple[str, Tuple[float, float, float]]:
         mean_hsv = self.mean_hsv_from_mask(image, mask)
         mean_hue = mean_hsv[0]
+        mean_saturation = mean_hsv[1]
+
+        color_name = ""
+
+        if mean_saturation < WHITE_BASEBOARD_SATURATION_THRESH:
+            return color_name, mean_hsv
 
         if mean_hue < RED_MIN_HUE or mean_hue >= RED_MAX_HUE:
             color_name = "red"
@@ -251,18 +257,16 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             color_name = "green"
         elif BLUE_MIN_HUE <= mean_hue < BLUE_MAX_HUE:
             color_name = "blue"
-        else:
-            color_name = "invalid-color"
 
         return color_name, mean_hsv
 
     def estimate_shape(self, mask: np.ndarray) -> str:
+        shape = ""
         if self.is_mask_square(mask):
-            return "square"
+            shape = "square"
         elif self.is_mask_rectangle(mask):
-            return "rectangle"
-        else:
-            return "invalid-shape"
+            shape = "rectangle"
+        return shape
 
     # ========== Mask Utilities ==========
 
@@ -300,13 +304,13 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         solidity = area / (cv2.contourArea(cv2.convexHull(contour)) + 1e-5)
 
         return (
-            extent > 0.95
-            and (
+            (
                 MIN_SQUARE_RATIO < aspect_ratio < MAX_SQUARE_RATIO
                 or MIN_RECTANGLE_RATIO < aspect_ratio < MAX_RECTANGLE_RATIO
             )
-            and solidity > 0.95
             and area > area_threshold
+            #            and extent > 0.95
+            #            and solidity > 0.95
         )
 
     # ========== Grid Utilities ==========
@@ -353,6 +357,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         for idx, ((x0, y0), (x1, y1)) in enumerate(grid_boxes):
             best_mask = None
             max_overlap = 0
+            label = ""
             for mask in masks:
                 cell_mask = np.zeros_like(mask, dtype=np.uint8)
                 cell_mask[y0:y1, x0:x1] = 1
@@ -363,8 +368,9 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             if best_mask is not None:
                 color, mean_hsv = self.estimate_dominant_color(image, best_mask)
                 shape = self.estimate_shape(best_mask)
-                best_label = f"{color} {shape}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
-                labels[(idx // GRID_SIZE, idx % GRID_SIZE)] = best_label
+                if shape and color:
+                    label = f"{color} {shape}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
+            labels[(idx // GRID_SIZE, idx % GRID_SIZE)] = label
         return labels
 
     def grid_labels_to_xy_matrix(self, labels: dict, grid_size: int) -> list[list[str]]:
@@ -377,9 +383,9 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 if label:
                     # Only keep the first line: "color shape"
                     label = label.split("\n")[0]
-                # Just get the first letter from the color and shape respectively
-                if len(label.split(" ")) == 2:
-                    row.append(f"{label.split(' ')[0][0]}{label.split(' ')[1][0]}")
+                    # Just get the first letter from the color and shape respectively
+                    label = f"{label.split(' ')[0][0]}{label.split(' ')[1][0]}"
+                row.append(label)
             grid_matrix.append(row)
         return grid_matrix
 
