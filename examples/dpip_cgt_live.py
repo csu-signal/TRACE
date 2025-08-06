@@ -13,6 +13,7 @@ from mmdemo.features import (
     DenseParaphrasedTranscription,
     DisplayFrame,
     DpipActionFeature,
+    DpipBlockDetections,
     DpipCommonGroundTracking,
     DpipFrame,
     DpipObject,
@@ -55,6 +56,8 @@ if __name__ == "__main__":
     # which objects are selected by gesture
     objects = DpipObject(color, depth, calibration)
     # objects2 = DpipObject(color2, depth2, calibration2)
+
+    block_detections = DpipBlockDetections(objects)
 
     # transcriptions from microphone
 
@@ -103,6 +106,7 @@ if __name__ == "__main__":
             # DisplayFrame(color),
             # SaveVideo(output_frame, frame_rate=2.2),
             DisplayFrame(output_frame),
+            DisplayFrame(block_detections),
             cgt,  # new common ground gui output
             SaveVideo(output_frame, frame_rate=2.2, video_name=2),
             # Log(dense_paraphrased_transcriptions, props, moves, friction, csv=True),

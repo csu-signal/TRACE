@@ -210,7 +210,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         return (180.0 * mean_angle) / (2 * np.pi)
 
     def mean_hsv_from_mask(self, image_bgr: np.ndarray, mask: np.ndarray) -> np.ndarray:
-        hsv = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
+        hsv = cv2.cvtColor(image_bgr, cv2.COLOR_RGB2HSV)
         masked_pixels = hsv[mask > 0]
 
         if masked_pixels.shape[0] == 0:
@@ -483,9 +483,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             x0, y0, x1, y1 = crop_bounds
             cropped_image = image[y0:y1, x0:x1]
             refined_image = self.apply_blur(cropped_image)
-            rgb_refined_image = cv2.cvtColor(refined_image, cv2.COLOR_BGR2RGB)
 
-            mask_data = sam2_mask_generator._generate_masks(rgb_refined_image)
+            mask_data = sam2_mask_generator._generate_masks(refined_image)
 
             mask_data = SAM2AutomaticMaskGenerator.postprocess_small_regions(
                 mask_data, POSTPROCESS_MIN_AREA, POSTPROCESS_NMS_THRESH
