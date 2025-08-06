@@ -20,9 +20,9 @@ YELLOW_MIN_HUE = 20
 YELLOW_MAX_HUE = 35
 
 GREEN_MIN_HUE = 35
-GREEN_MAX_HUE = 85
+GREEN_MAX_HUE = 95
 
-BLUE_MIN_HUE = 85
+BLUE_MIN_HUE = 95
 BLUE_MAX_HUE = 160
 
 WHITE_BASEBOARD_SATURATION_THRESH = 75
@@ -39,10 +39,10 @@ MAX_RECTANGLE_RATIO = 2.2
 # ========== Mask Filtering ==========
 
 # Fraction for determining the threshold that will ignore masks that aren't  X% of a grid cell's area
-MASK_SIZE_THRESH_FRAC = 0.7
+MASK_SIZE_THRESH_FRAC = 0.6
 
 # Fraction for determining the threshold that ignore masks that don't take up X% of a particular grid cell's area. This is different, albeit nuanced, than MASK_SIZE_THRESH_FRAC, which just makes sure that a mask's size is greater than a percentage of a grid cell. This ensures that a mask actually covers X% of a particular grid cell.
-CELL_AREA_INTERSECTION_THRESH_FRAC = 0.5
+CELL_AREA_INTERSECTION_THRESH_FRAC = 0.4
 
 # ========== Depth Stuff ==========
 
@@ -58,10 +58,11 @@ DEPTH_MAX_CONFIG = "grid_cell_max_depths.json"
 
 # ========== SAM2 Configuration ==========
 
-POINT_PROMPTS_PER_AXIS = 3  # the sqrt of the number of point prompts in the grid that SAM2 automatic mask generator uses
-DEFAULT_POINT_PROMPT_GRID_REGION_FRAC = (
-    0.7  # How centered to make the point prompts within the central crop of the image
-)
+# The number of rows and columns to place in the point prompt grid
+POINT_PROMPTS_PER_AXIS = 3
+# How centered to make the point prompts within the central crop of the image
+DEFAULT_POINT_PROMPT_GRID_REGION_FRAC = 0.55
+
 
 # Automatic Mask Generator Parameters
 SAM2_PREDICTED_IOU_THRESH = 0.5
