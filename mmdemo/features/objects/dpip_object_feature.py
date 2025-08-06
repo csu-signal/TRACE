@@ -1,3 +1,4 @@
+import copy
 import random
 import threading
 import time
@@ -52,6 +53,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         self.all_grid_states = {}
         self.skipPost = skipPost
         self.lastCol = None
+        self.xy_grid = None
         self.main_xy_grid = [["", "", ""], ["", "", ""], ["", "", ""]]
         self.xy_grid_counts = {
             (0, 0): ("", 0),
@@ -113,7 +115,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     ) -> DpipObjectInterface3D | None:
         if self.skipPost:
             return DpipObjectInterface3D(
-                xyGrid=self.main_xy_grid,
+                xyGrid=copy.deepcopy(self.main_xy_grid),
                 frame_index=col.frame_count,
                 region_frac=self.region_frac,
                 norm_point_prompt_grid=self.norm_point_prompt_grid,
@@ -140,7 +142,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             self.t.start()
 
         return DpipObjectInterface3D(
-            xyGrid=self.main_xy_grid,
+            xyGrid=copy.deepcopy(self.main_xy_grid),
             frame_index=col.frame_count,
             region_frac=self.region_frac,
             norm_point_prompt_grid=self.norm_point_prompt_grid,
@@ -209,10 +211,12 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
             print(f"main xy_grid: {self.main_xy_grid}")
 
+            self.xy_grid = current_xy_grid
+
             self.all_grid_states[self.lastCol.frame_count] = self.main_xy_grid
 
         except Exception as e:
-            self.xy_grid = None
+            self.main_xy_grid = None
             self.region_frac = DEFAULT_REGION_FRAC
             print(f"DPIP OBJECT FEATURE THREAD: An error occurred: {e}")
 
