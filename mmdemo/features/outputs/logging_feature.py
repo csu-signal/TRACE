@@ -60,7 +60,7 @@ class Log(BaseFeature[EmptyInterface]):
                 self.output_dir = Path(self._out_dir)
             else:
                 self.output_dir = Path(
-                    "logging-output-"
+                    "D:\\Demo\\logging-output-"
                     + datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S")
                 )
             os.makedirs(self.output_dir, exist_ok=True)

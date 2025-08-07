@@ -38,12 +38,12 @@ class SaveVideo(BaseFeature[EmptyInterface]):
 
         if video_name is None:
             self.video_name = Path(
-                "output-video-"
+                "D:\Demo\output-video-"
                 + datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S-" + ".mp4")
             )
         elif video_name == 2:
             self.video_name = Path(
-                "output-video-"
+                "D:\Demo\output-video-"
                 + datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S-" + "SecondaryCamera" + ".mp4")
             )
         else:

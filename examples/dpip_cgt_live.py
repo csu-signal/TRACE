@@ -64,7 +64,7 @@ if __name__ == "__main__":
     # Multiple microphones - laptop
     audio1 = MicAudio(device_id=9, speaker_id="D1")
     audio2 = MicAudio(device_id=4, speaker_id="D2")
-    audio3 = MicAudio(device_id=15, speaker_id="D3")
+    audio3 = MicAudio(device_id=16, speaker_id="D3")
     audio4 = MicAudio(device_id=3, speaker_id="Builder")
     utterance_audio = VADUtteranceBuilder(
         audio1, audio2, audio3, audio4, delete_input_files=False
@@ -93,11 +93,11 @@ if __name__ == "__main__":
     cgt = DpipCommonGroundTracking(props, color, actions, saveCanvas=True)
 
     # speech output
-    #    speech_output = DpipSpeechOutput(props)
+    speech_output = DpipSpeechOutput(props)
 
     # create output frame for video
-    # output_frame = DpipFrame(speech_output, color, objects, actions, props)
-    output_frame = DpipFrame(color, objects, actions, props)
+    output_frame = DpipFrame(speech_output, color, objects, actions, props)
+    # output_frame = DpipFrame(color, objects, actions, props)
     # output_frame2 = DpipFrame(color2, objects2, calibration2)
 
     # run demo and show output
