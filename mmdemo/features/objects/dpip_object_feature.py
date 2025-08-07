@@ -19,41 +19,32 @@ from mmdemo.interfaces import (
     CameraCalibrationInterface,
     ColorImageInterface,
     DepthImageInterface,
-    DpipActionInterface,
     DpipObjectInterface3D,
 )
-from mmdemo.interfaces.data import DpipGamrTarget, DpipObjectInfo3D
 
 
 @final
 class DpipObject(BaseFeature[DpipObjectInterface3D]):
     """
-    A feature to get and track the objects through a scene.
+    A feature to get and track Lego-like blocks in the DPIP task.
 
     Input interfaces are `ColorImageInterface, DepthImageInterface, CameraCalibrationInterface'.
 
     Output interface is `DpipObjectInterface3D`.
-
-    Keyword arguments:
-    `detection_threshold` -- confidence threshold for the object detector model
-    `model_path` -- the path to the model (or None to use the default)
     """
 
     def __init__(
         self,
         color: BaseFeature[ColorImageInterface],
-        depth: BaseFeature[DepthImageInterface],
-        actions: BaseFeature[DpipActionInterface],
+        depth: BaseFeature[DepthImageInterface] | None,
+        calibration: BaseFeature[CameraCalibrationInterface] | None,
         *,
-        detection_threshold=0.6,
-        model_path: Path | None = None,
         skipPost: bool = False,
     ) -> None:
-        super().__init__(color, depth, actions)
+        super().__init__(color, depth, calibration)
         self.all_grid_states = {}
         self.skipPost = skipPost
         self.lastCol = None
-        self.xy_grid = None
         self.main_xy_grid = [["", "", ""], ["", "", ""], ["", "", ""]]
         self.xy_grid_counts = {
             (0, 0): ("", 0),
@@ -75,11 +66,6 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         self.norm_point_prompt_grid = None
         self.crop_bounds = None
         self.t = threading.Thread(target=self.worker)
-        # self.detectionThreshold = detection_threshold
-        # if model_path is None:
-        #     self.model_path = self.DEFAULT_MODEL_PATH
-        # else:
-        #     self.model_path = model_path
 
     def initialize(self):
         if torch.cuda.is_available():
@@ -111,7 +97,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         self,
         col: ColorImageInterface,
         dep: DepthImageInterface,
-        actions: DpipActionInterface,
+        cal: CameraCalibrationInterface,
     ) -> DpipObjectInterface3D | None:
         if self.skipPost:
             return DpipObjectInterface3D(
@@ -210,8 +196,6 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                         self.main_xy_grid[x][y] = current_val
 
             print(f"main xy_grid: {self.main_xy_grid}")
-
-            self.xy_grid = current_xy_grid
 
             self.all_grid_states[self.lastCol.frame_count] = self.main_xy_grid
 
