@@ -24,8 +24,11 @@ from mmdemo.features.objects.object_feature import Object
 from mmdemo.features.objects.selected_objects_feature import SelectedObjects
 from mmdemo.features.outputs.aaai_frame_feature import AAAIFrame
 from mmdemo.features.outputs.display_frame_feature import DisplayFrame
-from mmdemo.features.outputs.dpip_block_detections_feature import DpipBlockDetections
+from mmdemo.features.outputs.dpip_block_detections_frame_feature import (
+    DpipBlockDetectionsFrame,
+)
 from mmdemo.features.outputs.dpip_frame_feature import DpipFrame
+from mmdemo.features.outputs.dpip_objects_frame_feature import DpipObjectsFrame
 from mmdemo.features.outputs.emnlp_frame_feature import EMNLPFrame
 from mmdemo.features.outputs.hcii_it_frame_feature import HCII_IT_Frame
 from mmdemo.features.outputs.logging_feature import Log

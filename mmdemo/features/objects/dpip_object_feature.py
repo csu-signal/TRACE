@@ -36,12 +36,12 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     def __init__(
         self,
         color: BaseFeature[ColorImageInterface],
-        depth: BaseFeature[DepthImageInterface] | None,
-        calibration: BaseFeature[CameraCalibrationInterface] | None,
+        #        depth: BaseFeature[DepthImageInterface],
         *,
         skipPost: bool = False,
     ) -> None:
-        super().__init__(color, depth, calibration)
+        #        super().__init__(color, depth)
+        super().__init__(color)
         self.all_grid_states = {}
         self.skipPost = skipPost
         self.lastCol = None
@@ -85,8 +85,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             GRID_SIZE, POINT_PROMPTS_PER_AXIS, DEFAULT_POINT_PROMPT_GRID_REGION_FRAC
         )
 
-        #        self.norm_point_prompt_grid = self.build_per_cell_cross_norm_point_grids(
-        #            GRID_SIZE, POINT_PROMPTS_PER_AXIS, DEFAULT_POINT_PROMPT_GRID_REGION_FRAC
+        #       self.norm_point_prompt_grid = self.build_per_cell_cross_norm_point_grids(
+        #           GRID_SIZE, POINT_PROMPTS_PER_AXIS, DEFAULT_POINT_PROMPT_GRID_REGION_FRAC
         #        )
 
         self.sam2_mask_generator = self.create_sam2_mask_generator(
@@ -96,8 +96,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     def get_output(
         self,
         col: ColorImageInterface,
-        dep: DepthImageInterface,
-        cal: CameraCalibrationInterface,
+        #        dep: DepthImageInterface,
     ) -> DpipObjectInterface3D | None:
         if self.skipPost:
             return DpipObjectInterface3D(
@@ -113,7 +112,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 segmentation_masks=self.segmentation_masks,
             )
 
-        if not col.is_new() or not dep.is_new():
+        #        if not col.is_new() or not dep.is_new():
+        if not col.is_new():
             return None
 
         key = cv2.waitKey(1) & 0xFF

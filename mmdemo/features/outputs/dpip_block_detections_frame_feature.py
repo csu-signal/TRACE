@@ -9,7 +9,7 @@ from mmdemo.interfaces import ColorImageInterface, DpipObjectInterface3D
 
 
 @final
-class DpipBlockDetections(BaseFeature[ColorImageInterface]):
+class DpipBlockDetectionsFrame(BaseFeature[ColorImageInterface]):
     """
     Return a nice looking fixed-size XY grid of the current block detections
 
