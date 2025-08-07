@@ -1,5 +1,6 @@
 from mmdemo.base_feature import BaseFeature
 from mmdemo.features.friction.friction_feature import Friction
+from mmdemo.features.outputs.dpip_block_detections_feature import DpipBlockDetections
 from mmdemo.features.speech_output.dpipSpeechoutput_feature import DpipSpeechOutput
 from mmdemo.features.wtd_ablation_testing.transcription_feature import _TranscriptionAndAudioGroundTruth, AudioGroundTruth, TranscriptionGroundTruth
 from mmdemo.interfaces import ColorImageInterface
@@ -108,6 +109,8 @@ if __name__ == "__main__":
     # )
 
     objects = DpipObject(color, depth, calibration, skipPost=False)
+    block_detections = DpipBlockDetections(objects)
+    
     actions = DpipActionFeature(objects)
 
     # objects2 = DpipObject(color2, depth2, calibration2)
@@ -124,7 +127,7 @@ if __name__ == "__main__":
     )
 
     # prop extraction from friction model
-    dpip_prop_friction = DpipProposition(transcriptions, objects, actions)
+    dpip_prop_friction = DpipProposition(transcriptions, objects, actions, minUtteranceValue=7)
 
     cgt = DpipCommonGroundTracking(dpip_prop_friction, color, actions, saveCanvas=True)
     
@@ -142,6 +145,7 @@ if __name__ == "__main__":
         targets=[
             DisplayFrame(output_frame),
             cgt, #new common ground gui output
+            DisplayFrame(block_detections),
             # SaveVideo(output_frame, frame_rate=10),
             # DisplayFrame(output_frame2),
             # SaveVideo(output_frame2, frame_rate=10, video_name=2),

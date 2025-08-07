@@ -1149,34 +1149,34 @@ def get_changes_as_string(old, new):
 
     for director in old:
         changes[director] = {"added": [], "removed": []}
-        for row_idx in range(3):
+        for row_idx in range(3):  # layer
             row_key = f"row_{row_idx}"
-            for col_idx in range(3):
+            for col_idx in range(3):  # column
                 old_cell = old[director][row_key][col_idx]
                 new_cell = new[director][row_key][col_idx]
-
-                position = (row_idx * 3 + col_idx + 1)
 
                 if old_cell['color'] != new_cell['color']:
                     if old_cell['color'] != 'none':
                         changes[director]["removed"].append(
-                            f"{old_cell['color']} removed at position {position}, layer {old_cell['size']}"
+                            f"{old_cell['color']} removed at column {col_idx}, layer {row_idx}"
                         )
                     if new_cell['color'] != 'none':
                         changes[director]["added"].append(
-                            f"{new_cell['color']} added at position {position}, layer {new_cell['size']}"
+                            f"{new_cell['color']} added at column {col_idx}, layer {row_idx}"
                         )
 
-    # Convert to single formatted string
+    # Format as string
     output_lines = []
     for director, diff in changes.items():
-        output_lines.append(f"Changes for {director}:")
+        output_lines.append(f"Changes for {director} (Left to right):")
         for action in ['added', 'removed']:
             for item in diff[action]:
                 output_lines.append(f"  - {item}")
-        output_lines.append("")  # Add empty line after each director
+        output_lines.append("")
 
-    return "\n".join(output_lines).strip()
+    return "\n".join(output_lines).strip()  # Add empty line after each director
+
+
 
 
 def segment_transcript_with_director_views(df, director_views_df, utterances_per_segment=10):
@@ -1377,14 +1377,14 @@ Builder: oo Like the inception?
 D2: Yeah exactly 
 
 
-Changes for D1 (left to tih):
-  - red added at position 1, layer 1 
-  - yellow added at position 2, layer 1
+Changes for D1 (left to right):
+  - red added at index 0, layer 0 
+  - yellow added at index 1, layer 0
 
-Changes for D2:
-    - red added at position 2 layer 1
-    - red added at position 3 layer 1
-Changes for D3: 
+Changes for D2 (left to right):
+    - red added at index 2 layer 0
+    - red added at index 3 layer 0
+Changes for D3 (left to right): 
     - None
 
 
@@ -1786,7 +1786,7 @@ def load_local_model_refined(model_path, base_model="llama3_8b_instruct"):
         logger.error(f"Error loading model {model_path}: {str(e)}")
         return None, None
 
-def process_segments_with_multiple_models(segments, local_models, use_openai=True, generation_args=None, output_dir="friction_results", open_ai_model = "gpt-4o-mini"):
+def process_segments_with_multiple_models(segments, local_models, max_retries= 3, use_openai=True, generation_args=None, output_dir="friction_results", open_ai_model = "gpt-4o-mini"):
     """Process transcript segments with multiple models"""
     os.makedirs(output_dir, exist_ok=True)
     
@@ -1827,7 +1827,7 @@ def process_segments_with_multiple_models(segments, local_models, use_openai=Tru
             try:
                 # Generate with retries and validation
                 generated_text, parsed_components = generate_with_retries(
-                    model, tokenizer, segment, generation_args, device, max_retries=3
+                    model, tokenizer, segment, generation_args, device, max_retries=max_retries
                 )
 
                 segment_result = {
@@ -2080,9 +2080,10 @@ def start_server(local_models, generation_args):
                         results = process_segments_with_multiple_models(
                             segments=segments[0:20], 
                             local_models=local_models,
+                            max_retries=1,
                             use_openai=False,
                             generation_args=generation_args,
-                            output_dir="friction_analysis_results_DPIP_server",)
+                            output_dir="friction_analysis_results_DPIP_server")
 
                         ################################
 

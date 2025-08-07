@@ -120,14 +120,14 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
                     self.subsetTranscriptions += self.frictionSubset[utter] + "\n"
 
                 print("\nSubset of Transcriptions:\n" + self.subsetTranscriptions)
-                if len(self.frictionSubset) >= 10:
+                if len(self.frictionSubset) >= self.minUtteranceValue:
                     self.startingIndex = list(self.frictionSubset)[0]
                     self.endingIndex = list(self.frictionSubset)[-1]
                     self.t = threading.Thread(target=self.worker)
                     self.t.start()
                     self.frictionSubset = {}
                 else:
-                     print("A minimum of 10 utterances are required to make a request.")
+                     print(f"A minimum of {self.minUtteranceValue} utterances are required to make a request.")
             else:
                 print("Friction request in progress...waiting for the thread to complete")
 

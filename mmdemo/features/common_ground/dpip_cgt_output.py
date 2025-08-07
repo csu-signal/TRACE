@@ -191,7 +191,7 @@ class DpipCommonGroundTracking(BaseFeature):
                 self.canvas2.pack()
                 self.canvas3.pack()
 
-                if(self.save_canvas):
+                if(self.saveCanvas):
                     self.tabControl.select(0) # Selects the second tab (index 0)
                     self.save_canvas(self.canvas1, f"cg_output/d1/{self.frameIndex}.png")
                     self.tabControl.select(1) # Selects the second tab (index 1)

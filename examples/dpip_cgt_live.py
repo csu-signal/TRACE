@@ -87,7 +87,7 @@ if __name__ == "__main__":
     # )
 
     actions = DpipActionFeature(objects)
-    props = DpipProposition(transcriptions, objects, actions)
+    props = DpipProposition(transcriptions, objects, actions, minUtteranceValue=7)
 
     # common ground tracking
     cgt = DpipCommonGroundTracking(props, color, actions, saveCanvas=True)

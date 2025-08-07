@@ -106,11 +106,15 @@ class DpipSpeechOutput(BaseFeature[SpeechOutputInterface]):
                 print("Rank Error, defaulting to group")
 
         if(min == 10):
-            friction = friction[3]
+            friction = friction[-1]
         else:
             for f in friction:
                 if user in f:
-                    friction = f
+                    # if the friction statement isn't at least 5 words use the group
+                    if(len(f.split(' ')) > 5):
+                        friction = f
+                    else:
+                       friction = friction[-1] 
                     break
             
         # opening = random.choice(os.listdir("C:/GitHub/TRACE/mmdemo/features/speech_output/audio"))
