@@ -71,3 +71,6 @@ SAM2_STABILITY_SCORE_THRESH = 0.75
 # Postprocess Small Regions Parameters
 POSTPROCESS_MIN_AREA = 1000
 POSTPROCESS_NMS_THRESH = 0.9
+
+SAM2_CHECKPOINT_PATH = "C:\\GitHub\\sam2\\checkpoints\\sam2.1_hiera_large.pt"
+SAM2_MODEL_CONFIG_PATH = "configs/sam2.1/sam2.1_hiera_l.yaml"

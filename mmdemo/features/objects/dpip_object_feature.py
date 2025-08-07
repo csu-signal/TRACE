@@ -501,10 +501,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     # ========== SAM2 Segmentation ==========
 
     def create_sam2_mask_generator(self, point_grids):
-        sam2_checkpoint = (
-            "C:\\GitHub\\sam2\\checkpoints\\sam2.1_hiera_large.pt"
-        )
-        sam2_model_config = "configs/sam2.1/sam2.1_hiera_l.yaml"
+        sam2_checkpoint = SAM2_CHECKPOINT_PATH
+        sam2_model_config = SAM2_MODEL_CONFIG_PATH
 
         print(f"SAM2 device is {self.device}")
 
