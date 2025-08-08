@@ -267,7 +267,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         color_name = ""
 
         if mean_saturation < WHITE_BASEBOARD_SATURATION_THRESH:
-            return color_name, mean_hsv
+            return "BASE", mean_hsv
 
         if mean_hue < RED_MIN_HUE or mean_hue >= RED_MAX_HUE:
             color_name = "red"
@@ -395,7 +395,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             if best_mask is not None:
                 color, mean_hsv = self.estimate_dominant_color(image, best_mask)
                 shape = self.estimate_shape(best_mask)
-                if shape and color:
+                if shape or color:
                     label = f"{color} {shape}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
             labels[(idx // GRID_SIZE, idx % GRID_SIZE)] = label
         return labels

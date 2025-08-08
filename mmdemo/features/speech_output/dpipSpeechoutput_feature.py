@@ -88,7 +88,7 @@ class DpipSpeechOutput(BaseFeature[SpeechOutputInterface]):
         min = 10
         user = "Group"
 
-        if len(friction) != 4 or friction == self.last_friction or self.length > -30:
+        if len(friction) == 0 or friction == self.last_friction or self.length > -30:
             self.length -= 1
             return SpeechOutputInterface(speech_output=self.speechoutput,length=self.length) #TODO response outputs
         
@@ -102,20 +102,43 @@ class DpipSpeechOutput(BaseFeature[SpeechOutputInterface]):
                         min = r
                         user = a[0]
             except Exception as e:
-                min = 10
+                user = "Group"
                 print("Rank Error, defaulting to group")
 
-        if(min == 10):
-            friction = friction[-1]
-        else:
-            for f in friction:
-                if user in f:
-                    # if the friction statement isn't at least 5 words use the group
-                    if(len(f.split(' ')) > 5):
-                        friction = f
-                    else:
-                       friction = friction[-1] 
-                    break
+        statements = []
+        frictionStatement=''
+    
+        try:
+            #if there's only one friction statement and it's length is greater than 4 read it
+            if(len(friction) == 1):
+                if(len(friction[0].split(' ')) > 4):
+                    frictionStatement = f
+            else:
+                #if there are multiple statements find the value with the highest rank and track the variations in length and statements
+                for f in friction:
+                    if(f != ''):
+                        statement = f.split(": ")[1]
+                        statements.append(statement)
+                        statementLength = len(statement.split(' '))
+                        
+                        if user in f:
+                            # if the highest ranking friction statement isn't at least 4 words use the group
+                            if(statementLength > 4):
+                                frictionStatement = f
+                            else:
+                                frictionStatement = friction[-1] 
+
+            #if all the statments are the same and more than 4 words, read the last one (group?)
+            #if they are all the same and less than 4 words skip
+            if(len(set(statements)) == 1):
+                if(statementLength > 4):
+                    frictionStatement = friction[-1]
+                else:
+                    frictionStatement = ''
+                    
+        except Exception as e:
+            frictionStatement=''
+            print("Friction Parsing Error")
             
         # opening = random.choice(os.listdir("C:/GitHub/TRACE/mmdemo/features/speech_output/audio"))
         # audio, samplerate = sf.read(fr"C:/GitHub/TRACE/mmdemo/features/speech_output/audio/{opening}")
@@ -123,9 +146,10 @@ class DpipSpeechOutput(BaseFeature[SpeechOutputInterface]):
         # sd.play(audio, samplerate)
         # sd.wait()
         #generate speech, splits on newline
-        if(friction != self.last_friction):
+        #new friction and unqiue statements
+        if(frictionStatement != '' and friction != self.last_friction):
             generator = self.pipeline(
-            friction, voice=self.voice_tensor,
+            frictionStatement, voice=self.voice_tensor,
             speed=1, split_pattern=r'\n+'
             )
             # play the speech

@@ -11,7 +11,6 @@ from mmdemo.interfaces import (
     DpipObjectInterface3D
 )
 
-
 @final
 class DpipActionFeature(BaseFeature[ColorImageInterface]):
     """
@@ -56,137 +55,124 @@ class DpipActionFeature(BaseFeature[ColorImageInterface]):
                 return "unknown"
 
     def structToJson(self, dv):
-        c0_0 = copy.deepcopy(dv["(0, 0)"])
-        while len(c0_0) < 3:
-            c0_0.append("ns") #pad the array with "none sqaures"
+        def pad(v): return copy.deepcopy(v) + [["ns", ""]] * (3 - len(v))
 
-        c0_1 = copy.deepcopy(dv["(0, 1)"])
-        while len(c0_1) < 3:
-            c0_1.append("ns")
+        c0_0 = pad(dv["(0, 0)"])
+        c0_1 = pad(dv["(0, 1)"])
+        c0_2 = pad(dv["(0, 2)"])
+        c1_0 = pad(dv["(1, 0)"])
+        c1_2 = pad(dv["(1, 2)"])
+        c2_0 = pad(dv["(2, 0)"])
+        c2_2 = pad(dv["(2, 2)"])
 
-        c0_2 = copy.deepcopy(dv["(0, 2)"])
-        while len(c0_2) < 3:
-            c0_2.append("ns")
-
-        c1_0 = copy.deepcopy(dv["(1, 0)"])
-        while len(c1_0) < 3:
-            c1_0.append("ns")
-
-        c1_2 = copy.deepcopy(dv["(1, 2)"])
-        while len(c1_2) < 3:
-            c1_2.append("ns")
-
-        c2_0 = copy.deepcopy(dv["(2, 0)"])
-        while len(c2_0) < 3:
-            c2_0.append("ns")
-
-        c2_2 = copy.deepcopy(dv["(2, 2)"])
-        while len(c2_2) < 3:
-            c2_2.append("ns")
+        def cell(c): return {"color": f"{self.charToColor(c[0])}", "size": 2 if c[1] == 'r' else 1}
 
         json = {
             "D1": {
-                "row_0": [
-                    {"color":f"{self.charToColor(c0_0[0][0])}", "size":2 if c0_0[0][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c1_0[0][0])}", "size":2 if c1_0[0][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c2_0[0][0])}", "size":2 if c2_0[0][1] == 'r' else 1},
-                    ],
-                "row_1": [
-                    {"color":f"{self.charToColor(c0_0[1][0])}", "size":2 if c0_0[1][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c1_0[1][0])}", "size":2 if c1_0[1][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c2_0[1][0])}", "size":2 if c2_0[1][1] == 'r' else 1},
-                    ],
-                "row_2": [
-                    {"color":f"{self.charToColor(c0_0[2][0])}", "size":2 if c0_0[2][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c1_0[2][0])}", "size":2 if c1_0[2][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c2_0[2][0])}", "size":2 if c2_0[2][1] == 'r' else 1},
-                ]
+                "row_0": [cell(c0_0[0]), cell(c1_0[0]), cell(c2_0[0])],
+                "row_1": [cell(c0_0[1]), cell(c1_0[1]), cell(c2_0[1])],
+                "row_2": [cell(c0_0[2]), cell(c1_0[2]), cell(c2_0[2])]
             },
             "D2": {
-                "row_0": [
-                    {"color":f"{self.charToColor(c0_2[0][0])}", "size":2 if c0_2[0][1] == 'r' else 1},
-                    {"color":f"{self.charToColor(c0_1[0][0])}", "size":2 if c0_1[0][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c0_0[0][0])}", "size":2 if c0_0[0][1] == 'r' else 1}, 
-                    ],
-                "row_1": [
-                    {"color":f"{self.charToColor(c0_2[1][0])}", "size":2 if c0_2[1][1] == 'r' else 1},
-                    {"color":f"{self.charToColor(c0_1[1][0])}", "size":2 if c0_1[1][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c0_0[1][0])}", "size":2 if c0_0[1][1] == 'r' else 1}, 
-                    ],
-                "row_2": [
-                    {"color":f"{self.charToColor(c0_2[2][0])}", "size":2 if c0_2[2][1] == 'r' else 1},
-                    {"color":f"{self.charToColor(c0_1[2][0])}", "size":2 if c0_1[2][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c0_0[2][0])}", "size":2 if c0_0[2][1] == 'r' else 1}, 
-                ]
+                "row_0": [cell(c0_2[0]), cell(c0_1[0]), cell(c0_0[0])],
+                "row_1": [cell(c0_2[1]), cell(c0_1[1]), cell(c0_0[1])],
+                "row_2": [cell(c0_2[2]), cell(c0_1[2]), cell(c0_0[2])]
             },
             "D3": {
-                "row_0": [
-                    {"color":f"{self.charToColor(c2_2[0][0])}", "size":2 if c2_2[0][1] == 'r' else 1},
-                    {"color":f"{self.charToColor(c1_2[0][0])}", "size":2 if c1_2[0][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c0_2[0][0])}", "size":2 if c0_2[0][1] == 'r' else 1}, 
-                    ],
-                "row_1": [
-                    {"color":f"{self.charToColor(c2_2[1][0])}", "size":2 if c2_2[1][1] == 'r' else 1},
-                    {"color":f"{self.charToColor(c1_2[1][0])}", "size":2 if c1_2[1][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c0_2[1][0])}", "size":2 if c0_2[1][1] == 'r' else 1}, 
-                    ],
-                "row_2": [
-                    {"color":f"{self.charToColor(c2_2[2][0])}", "size":2 if c2_2[2][1] == 'r' else 1},
-                    {"color":f"{self.charToColor(c1_2[2][0])}", "size":2 if c1_2[2][1] == 'r' else 1}, 
-                    {"color":f"{self.charToColor(c0_2[2][0])}", "size":2 if c0_2[2][1] == 'r' else 1}, 
-                ]
+                "row_0": [cell(c2_2[0]), cell(c1_2[0]), cell(c0_2[0])],
+                "row_1": [cell(c2_2[1]), cell(c1_2[1]), cell(c0_2[1])],
+                "row_2": [cell(c2_2[2]), cell(c1_2[2]), cell(c0_2[2])]
             }
         }
         return json
-        
-        
+
     def get_output(
         self,
         objects: DpipObjectInterface3D,
     ):
-        if (not objects.is_new()):
+        if not objects.is_new():
             return None
-        
-        self.frame = objects.xyGrid
-        update = False
 
-         # Compare with previous frame
+        self.frame = objects.xyGrid
+        updated_coords = set()
+
         if self.frame is not None and self.prev_frame is not None:
             for i in range(3):
                 for j in range(3):
                     coord = f"({i}, {j})"
+                    if coord in updated_coords:
+                        continue
+
                     try:
                         prev_val = self.prev_frame[i][j]
                         curr_val = self.frame[i][j]
                     except IndexError:
                         continue
 
-                    if curr_val != prev_val:
-                        # If something new appears that's never been here before: PUT
-                        if prev_val not in self.noneTypes and curr_val not in self.noneTypes:
-                            if curr_val != prev_val:
-                                action = f"Frame {objects.frame_index}: a {curr_val} has been added at {coord}"
-                                print(action)
-                                self.actions.append(action)
-                                self.structure[coord].append(curr_val)
-                                update = True
-                        elif prev_val not in self.noneTypes and curr_val in self.noneTypes:
-                            action = f"Frame {objects.frame_index}: a {prev_val} has been removed at {coord}"
-                            print(action)
-                            self.actions.append(action)
-                            self.structure[coord].pop()
-                            update = True
-                        elif prev_val in self.noneTypes and curr_val not in self.noneTypes:
-                            action = f"Frame {objects.frame_index}: a {curr_val} has been added at {coord}"
-                            print(action)
-                            self.actions.append(action)
+                    # Skip if both empty
+                    if prev_val in self.noneTypes and curr_val in self.noneTypes:
+                        continue
+
+                    # Handle reappearance of same color at base layer as a removal
+                    if (prev_val not in self.noneTypes and curr_val not in self.noneTypes and
+                        prev_val != curr_val and curr_val in self.structure[coord]):
+                        # A previous top layer block was removed
+                        top_block = self.structure[coord][-1] if self.structure[coord] else None
+                        if top_block != curr_val:
+                            self.structure[coord].remove(top_block)
+                            self.actions.append(f"Frame {objects.frame_index}: a {top_block} has been removed at {coord} (restoring {curr_val})")
+                            updated_coords.add(coord)
+                        continue
+
+                    # Skip if color unchanged (even if shape changed)
+                    if prev_val not in self.noneTypes and curr_val not in self.noneTypes:
+                        if prev_val[0] == curr_val[0]:
+                            continue
+
+                    # Check addition
+                    if curr_val not in self.noneTypes:
+                        added = False
+                        for di, dj in [(0, 1), (1, 0)]:
+                            ni, nj = i + di, j + dj
+                            ncoord = f"({ni}, {nj})"
+                            if 0 <= ni < 3 and 0 <= nj < 3:
+                                n_prev_val = self.prev_frame[ni][nj]
+                                n_curr_val = self.frame[ni][nj]
+
+                                if n_curr_val == curr_val and curr_val.endswith('r') and n_prev_val in self.noneTypes:
+                                    self.actions.append(f"Frame {objects.frame_index}: a {curr_val} has been added at {coord}")
+                                    self.actions.append(f"Frame {objects.frame_index}: a {curr_val} has been added at {ncoord}")
+                                    self.structure[coord].append(curr_val)
+                                    self.structure[ncoord].append(curr_val)
+                                    updated_coords.update({coord, ncoord})
+                                    added = True
+                                    break
+                        if not added:
+                            self.actions.append(f"Frame {objects.frame_index}: a {curr_val} has been added at {coord}")
                             self.structure[coord].append(curr_val)
-                            update = True
-            if(update):
+                            updated_coords.add(coord)
+
+                    # Check removal
+                    elif prev_val not in self.noneTypes and curr_val in self.noneTypes:
+                        if prev_val in self.structure[coord]:
+                            self.structure[coord].remove(prev_val)
+                            self.actions.append(f"Frame {objects.frame_index}: a {prev_val} has been removed at {coord}")
+                            updated_coords.add(coord)
+
+                            if prev_val.endswith('r'):
+                                for di, dj in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                                    ni, nj = i + di, j + dj
+                                    ncoord = f"({ni}, {nj})"
+                                    if 0 <= ni < 3 and 0 <= nj < 3 and prev_val in self.structure[ncoord]:
+                                        self.structure[ncoord].remove(prev_val)
+                                        self.actions.append(f"Frame {objects.frame_index}: a {prev_val} has been removed at {ncoord}")
+                                        updated_coords.add(ncoord)
+                                        break
+
+            if updated_coords:
                 print("Structure Update: " + str(self.structure) + "\n")
                 print("Json Structure: " + str(self.structToJson(self.structure)))
 
-            # Update previous frame
             self.prev_frame = self.frame
 
-        return DpipActionInterface(structure = self.structure, jsonStructure = self.structToJson(self.structure))
+        return DpipActionInterface(structure=self.structure, jsonStructure=self.structToJson(self.structure))

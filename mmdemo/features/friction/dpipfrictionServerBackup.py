@@ -695,6 +695,8 @@ D2: [specific issue D2 should address, max 1 sentence]
 D3: [specific issue D3 should address, max 1 sentence]
 GROUP: [coordination strategy for the team, max 1 sentence]
 </friction>
+
+YOU MUST GENERATE CONTENT UNDER THIS FORMAT
 <|eot_id|><|start_header_id|>user<|end_header_id|>
 TRANSCRIPT SEGMENT:
 """ + transcript_segment + """
@@ -1422,7 +1424,7 @@ D2 has not specified for a red block to be placed but there is a change in their
 D3 has deviated from the task about a conversation about movies
 
 
-<common ground>
+<common_ground>
 {
     'D1': {
         'row_0': [{'color': 'red', 'size': 1}, {'color': 'yellow', 'size': 1}, {'color': 'none', 'size': 1}],
@@ -1440,7 +1442,7 @@ D3 has deviated from the task about a conversation about movies
         'row_2': [{'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}, {'color': 'none', 'size': 1}]
     }
 }
-</common ground>
+</common_ground>
 
 <common ground rationale> 
 D2's red block at position 2 layer 1 and position 1 layer 1 has been marked UKNOWN in the common ground json since there is no confirmation from D2 regarding the placement of these blocks.
@@ -1473,7 +1475,7 @@ D3: rank
 GROUP: rank
 </friction_importance>
 Friction Importance Rationale:  [rationale for ranking friction statements]
-<common ground>
+<common_ground>
 {
     "D1": {
         "row_0": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}],
@@ -1491,11 +1493,11 @@ Friction Importance Rationale:  [rationale for ranking friction statements]
         "row_2": [{"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}, {"color":"[color]", "size":[size]}]
     }
 }
-</common ground>
+</common_ground>
 
-<common ground rationale> 
+<common_ground_rationale> 
 Rationale for marking UNKNOWN for any block in the common ground json. 
-</common ground rationale> 
+</common_ground_rationale> 
 <|eot_id|><|start_header_id|>user<|end_header_id|>
 
 
