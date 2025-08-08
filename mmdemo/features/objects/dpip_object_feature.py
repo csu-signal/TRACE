@@ -122,10 +122,10 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         if not col.is_new():
             return None
 
-        if self.combined_mask_u8 is not None:
-            cv2.imshow("combined mask", self.combined_mask_u8)
-        if self.undetected_mask_u8 is not None:
-            cv2.imshow("undetected mask", self.undetected_mask_u8)
+        #        if self.combined_mask_u8 is not None:
+        #            cv2.imshow("combined mask", self.combined_mask_u8)
+        #        if self.undetected_mask_u8 is not None:
+        #            cv2.imshow("undetected mask", self.undetected_mask_u8)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord("w"):
