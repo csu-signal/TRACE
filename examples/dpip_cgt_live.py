@@ -13,7 +13,7 @@ from mmdemo.features import (
     DenseParaphrasedTranscription,
     DisplayFrame,
     DpipActionFeature,
-    DpipBlockDetections,
+    DpipBlockDetectionsFrame,
     DpipCommonGroundTracking,
     DpipFrame,
     DpipObject,
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     objects = DpipObject(color, depth, calibration)
     # objects2 = DpipObject(color2, depth2, calibration2)
 
-    block_detections = DpipBlockDetections(objects)
+    block_detections = DpipBlockDetectionsFrame(objects)
 
     # transcriptions from microphone
 
