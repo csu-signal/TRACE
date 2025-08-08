@@ -25,7 +25,7 @@ GREEN_MAX_HUE = 95
 BLUE_MIN_HUE = 95
 BLUE_MAX_HUE = 160
 
-WHITE_BASEBOARD_SATURATION_THRESH = 75
+WHITE_BASEBOARD_SATURATION_THRESH = 50
 
 # ========== Shape Detection ==========
 
@@ -42,7 +42,8 @@ MAX_RECTANGLE_RATIO = 2.2
 MASK_SIZE_THRESH_FRAC = 0.6
 
 # Fraction for determining the threshold that ignore masks that don't take up X% of a particular grid cell's area. This is different, albeit nuanced, than MASK_SIZE_THRESH_FRAC, which just makes sure that a mask's size is greater than a percentage of a grid cell. This ensures that a mask actually covers X% of a particular grid cell.
-CELL_AREA_INTERSECTION_THRESH_FRAC = 0.4
+BLOCK_CELL_AREA_INTERSECTION_THRESH_FRAC = 0.4
+BASE_CELL_AREA_INTERSECTION_THRESH_FRAC = 0.7
 
 # ========== Depth Stuff ==========
 
