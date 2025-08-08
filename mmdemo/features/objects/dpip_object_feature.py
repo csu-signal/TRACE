@@ -45,7 +45,11 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         self.all_grid_states = {}
         self.skipPost = skipPost
         self.lastCol = None
-        self.main_xy_grid = [["", "", ""], ["", "", ""], ["", "", ""]]
+        self.main_xy_grid = [
+            ["base", "base", "base"],
+            ["base", "base", "base"],
+            ["base", "base", "base"],
+        ]
         self.xy_grid_counts = {
             (0, 0): ("", 0),
             (0, 1): ("", 0),
@@ -178,6 +182,9 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
         for x in range(GRID_SIZE):
             for y in range(GRID_SIZE):
+                if not current_xy_grid[x][y]:
+                    continue
+
                 current_val, current_count = self.xy_grid_counts[(x, y)]
                 if current_xy_grid[x][y] == current_val:
                     current_count += 1
