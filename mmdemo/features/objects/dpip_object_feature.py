@@ -142,67 +142,59 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
     def worker(self):
         print("\nNew Object Request Thread Started")
-        try:
-            self.crop_bounds = self.get_center_crop_bounds(
-                self.lastCol.frame.shape, self.region_frac
-            )
+        self.crop_bounds = self.get_center_crop_bounds(
+            self.lastCol.frame.shape, self.region_frac
+        )
 
-            all_segmentation_masks = self.get_segmentation_masks(
-                self.sam2_mask_generator, self.lastCol.frame, self.crop_bounds
-            )
+        all_segmentation_masks = self.get_segmentation_masks(
+            self.sam2_mask_generator, self.lastCol.frame, self.crop_bounds
+        )
 
-            h, w = self.lastCol.frame.shape[:2]
-            region_size = self.region_frac * min(h, w)
-            cell_size = region_size / GRID_SIZE
-            area_threshold = MASK_SIZE_THRESH_FRAC * cell_size**2
+        h, w = self.lastCol.frame.shape[:2]
+        region_size = self.region_frac * min(h, w)
+        cell_size = region_size / GRID_SIZE
+        area_threshold = MASK_SIZE_THRESH_FRAC * cell_size**2
 
-            filtered_masks = []
-            for mask in all_segmentation_masks:
-                if self.is_valid_block_mask(mask, area_threshold):
-                    filtered_masks.append(mask)
+        filtered_masks = []
+        for mask in all_segmentation_masks:
+            if self.is_valid_block_mask(mask, area_threshold):
+                filtered_masks.append(mask)
 
-            print(
-                f"Kept {len(filtered_masks)} out of {len(all_segmentation_masks)} masks"
-            )
-            self.segmentation_masks = filtered_masks
+        print(f"Kept {len(filtered_masks)} out of {len(all_segmentation_masks)} masks")
+        self.segmentation_masks = filtered_masks
 
-            self.boxes, self.centers, self.coords = self.build_centered_grid_boxes(
-                self.lastCol.frame.shape, GRID_SIZE, self.region_frac
-            )
-            self.labels = self.compute_grid_labels(
-                self.lastCol.frame,
-                self.segmentation_masks,
-                self.boxes,
-                self.region_frac,
-            )
+        self.boxes, self.centers, self.coords = self.build_centered_grid_boxes(
+            self.lastCol.frame.shape, GRID_SIZE, self.region_frac
+        )
+        self.labels, detections = self.compute_grid_detections(
+            self.lastCol.frame,
+            self.segmentation_masks,
+            self.boxes,
+            self.region_frac,
+        )
 
-            current_xy_grid = self.grid_labels_to_xy_matrix(self.labels, GRID_SIZE)
-            print(f"current xy_grid: {current_xy_grid}")
+        current_xy_grid = self.grid_labels_to_xy_matrix(detections, GRID_SIZE)
+        print(f"current xy_grid: {current_xy_grid}")
 
-            for x in range(GRID_SIZE):
-                for y in range(GRID_SIZE):
-                    current_val, current_count = self.xy_grid_counts[(x, y)]
-                    if current_xy_grid[x][y] == current_val:
-                        current_count += 1
-                    else:
-                        current_val = current_xy_grid[x][y]
-                        current_count = 0
-                    self.xy_grid_counts[(x, y)] = (current_val, current_count)
+        for x in range(GRID_SIZE):
+            for y in range(GRID_SIZE):
+                current_val, current_count = self.xy_grid_counts[(x, y)]
+                if current_xy_grid[x][y] == current_val:
+                    current_count += 1
+                else:
+                    current_val = current_xy_grid[x][y]
+                    current_count = 0
+                self.xy_grid_counts[(x, y)] = (current_val, current_count)
 
-            for x in range(GRID_SIZE):
-                for y in range(GRID_SIZE):
-                    current_val, current_count = self.xy_grid_counts[(x, y)]
-                    if current_count > 3:
-                        self.main_xy_grid[x][y] = current_val
+        for x in range(GRID_SIZE):
+            for y in range(GRID_SIZE):
+                current_val, current_count = self.xy_grid_counts[(x, y)]
+                if current_count > 3:
+                    self.main_xy_grid[x][y] = current_val
 
-            print(f"main xy_grid: {self.main_xy_grid}")
+        print(f"main xy_grid: {self.main_xy_grid}")
 
-            self.all_grid_states[self.lastCol.frame_count] = self.main_xy_grid
-
-        except Exception as e:
-            self.main_xy_grid = None
-            self.region_frac = DEFAULT_REGION_FRAC
-            print(f"DPIP OBJECT FEATURE THREAD: An error occurred: {e}")
+        self.all_grid_states[self.lastCol.frame_count] = self.main_xy_grid
 
     # ========== Image Processing ==========
 
@@ -267,7 +259,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         color_name = ""
 
         if mean_saturation < WHITE_BASEBOARD_SATURATION_THRESH:
-            return "BASE", mean_hsv
+            return "base", mean_hsv
 
         if mean_hue < RED_MIN_HUE or mean_hue >= RED_MAX_HUE:
             color_name = "red"
@@ -360,15 +352,18 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 coords.append((i, j))
         return boxes, centers, coords
 
-    def compute_grid_labels(
+    def compute_grid_detections(
         self,
         image: np.ndarray,
         masks: List[np.ndarray],
         grid_boxes: List[Tuple[Tuple[int, int], Tuple[int, int]]],
         region_frac: float,
     ):
+        detections = {}
+        labels = {}
+
         if not masks:
-            return {}
+            return labels, detections
 
         h, w = image.shape[:2]
         region_size = region_frac * min(h, w)
@@ -377,11 +372,12 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             CELL_AREA_INTERSECTION_THRESH_FRAC * cell_size**2
         )
 
-        labels = {}
         for idx, ((x0, y0), (x1, y1)) in enumerate(grid_boxes):
             best_mask = None
             max_overlap = 0
             label = ""
+            color = ""
+            shape = ""
             for mask in masks:
                 cell_mask = np.zeros_like(mask, dtype=np.uint8)
                 cell_mask[y0:y1, x0:x1] = 1
@@ -394,25 +390,36 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                     max_overlap = intersection
             if best_mask is not None:
                 color, mean_hsv = self.estimate_dominant_color(image, best_mask)
-                shape = self.estimate_shape(best_mask)
-                if shape or color:
-                    label = f"{color} {shape}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
+                if color == "base":
+                    label = f"{color}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
+                elif color:
+                    shape = self.estimate_shape(best_mask)
+                    if shape:
+                        label = f"{color} {shape}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
+            detections[(idx // GRID_SIZE, idx % GRID_SIZE)] = {
+                "color": color,
+                "shape": shape,
+            }
             labels[(idx // GRID_SIZE, idx % GRID_SIZE)] = label
-        return labels
+        return labels, detections
 
-    def grid_labels_to_xy_matrix(self, labels: dict, grid_size: int) -> list[list[str]]:
-        # TODO: I feel like this function could be better. It seems redundant to try to construct the grid matrix from the labels.
+    def grid_labels_to_xy_matrix(
+        self, detections: dict, grid_size: int
+    ) -> list[list[str]]:
         grid_matrix = []
         for i in range(grid_size):
             row = []
             for j in range(grid_size):
-                label = labels.get((i, j), "")
-                if label:
-                    # Only keep the first line: "color shape"
-                    label = label.split("\n")[0]
-                    # Just get the first letter from the color and shape respectively
-                    label = f"{label.split(' ')[0][0]}{label.split(' ')[1][0]}"
-                row.append(label)
+                detection = detections.get((i, j), {})
+                grid_cell_value = ""
+                if detection:
+                    if detection["color"] == "base":
+                        grid_cell_value = "base"
+                    elif detection["color"] and detection["shape"]:
+                        grid_cell_value = (
+                            f"{detection['color'][0]}{detection['shape'][0]}"
+                        )
+                row.append(grid_cell_value)
             grid_matrix.append(row)
         return grid_matrix
 
