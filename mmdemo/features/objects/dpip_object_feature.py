@@ -16,7 +16,6 @@ from sam2.utils.amg import MaskData, rle_to_mask
 from mmdemo.base_feature import BaseFeature
 from mmdemo.features.objects.dpip_config import *
 from mmdemo.interfaces import (
-    CameraCalibrationInterface,
     ColorImageInterface,
     DepthImageInterface,
     DpipObjectInterface3D,
@@ -28,27 +27,25 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     """
     A feature to get and track Lego-like blocks in the DPIP task.
 
-    Input interfaces are `ColorImageInterface, DepthImageInterface, CameraCalibrationInterface'.
+    Input interfaces are ColorImageInterface, DepthImageInterface.
 
-    Output interface is `DpipObjectInterface3D`.
+    Output interface is DpipObjectInterface3D.
     """
 
     def __init__(
         self,
         color: BaseFeature[ColorImageInterface],
-        #        depth: BaseFeature[DepthImageInterface],
         *,
         skipPost: bool = False,
     ) -> None:
-        #        super().__init__(color, depth)
         super().__init__(color)
         self.all_grid_states = {}
         self.skipPost = skipPost
         self.lastCol = None
         self.main_xy_grid = [
-            ["base", "base", "base"],
-            ["base", "base", "base"],
-            ["base", "base", "base"],
+            ["", "", ""],
+            ["", "", ""],
+            ["", "", ""],
         ]
         self.xy_grid_counts = {
             (0, 0): ("", 0),
@@ -72,8 +69,6 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         self.t = threading.Thread(target=self.worker)
 
     def initialize(self):
-        self.combined_mask_u8 = None
-        self.undetected_mask_u8 = None
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
@@ -102,7 +97,6 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     def get_output(
         self,
         col: ColorImageInterface,
-        #        dep: DepthImageInterface,
     ) -> DpipObjectInterface3D | None:
         if self.skipPost:
             return DpipObjectInterface3D(
@@ -118,14 +112,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 segmentation_masks=self.segmentation_masks,
             )
 
-        #        if not col.is_new() or not dep.is_new():
         if not col.is_new():
             return None
-
-        #        if self.combined_mask_u8 is not None:
-        #            cv2.imshow("combined mask", self.combined_mask_u8)
-        #        if self.undetected_mask_u8 is not None:
-        #            cv2.imshow("undetected mask", self.undetected_mask_u8)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord("w"):
@@ -273,7 +261,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         color_name = ""
 
         if mean_saturation < WHITE_BASEBOARD_SATURATION_THRESH:
-            return "base", mean_hsv
+            return color_name, mean_hsv
 
         if mean_hue < RED_MIN_HUE or mean_hue >= RED_MAX_HUE:
             color_name = "red"
@@ -404,43 +392,14 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                     max_overlap = intersection
             if best_mask is not None:
                 color, mean_hsv = self.estimate_dominant_color(image, best_mask)
-                if color == "base":
-                    label = f"{color}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
-                elif color:
-                    shape = self.estimate_shape(best_mask)
-                    if shape:
-                        label = f"{color} {shape}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
+                shape = self.estimate_shape(best_mask)
+                if color and shape:
+                    label = f"{color} {shape}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
             detections[(idx // GRID_SIZE, idx % GRID_SIZE)] = {
                 "color": color,
                 "shape": shape,
             }
             labels[(idx // GRID_SIZE, idx % GRID_SIZE)] = label
-
-        # Now determine if a cell mostly contains the base
-        combined_mask = (
-            np.any(np.stack(masks, axis=0), axis=0)
-            if masks
-            else np.zeros(image.shape[:2], dtype=bool)
-        )
-        undetected_mask = ~combined_mask
-
-        self.combined_mask_u8 = combined_mask.astype(np.uint8) * 255
-        self.undetected_mask_u8 = undetected_mask.astype(np.uint8) * 255
-
-        for idx, ((x0, y0), (x1, y1)) in enumerate(grid_boxes):
-            cell_mask = np.zeros_like(undetected_mask, dtype=np.uint8)
-            cell_mask[y0:y1, x0:x1] = 1
-            intersection_mask = np.logical_and(undetected_mask, cell_mask)
-            if intersection_mask.sum() > base_cell_area_intersection_threshold:
-                color, mean_hsv = self.estimate_dominant_color(image, intersection_mask)
-                if color == "base":
-                    detections[(idx // GRID_SIZE, idx % GRID_SIZE)] = {
-                        "color": "base",
-                        "shape": "",
-                    }
-                    labels[
-                        (idx // GRID_SIZE, idx % GRID_SIZE)
-                    ] = f"{color}\nHSV: {int(mean_hsv[0])}, {int(mean_hsv[1])}, {int(mean_hsv[2])}"
 
         return labels, detections
 
@@ -454,9 +413,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 detection = detections.get((i, j), {})
                 grid_cell_value = ""
                 if detection:
-                    if detection["color"] == "base":
-                        grid_cell_value = "base"
-                    elif detection["color"] and detection["shape"]:
+                    if detection["color"] and detection["shape"]:
                         grid_cell_value = (
                             f"{detection['color'][0]}{detection['shape'][0]}"
                         )
