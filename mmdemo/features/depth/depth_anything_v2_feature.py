@@ -10,10 +10,9 @@ from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import ColorImageInterface, DepthImageInterface
 
 
-@final
-class DepthAnythingV2Metric(BaseFeature[DepthImageInterface]):
+class DepthAnythingV2Base(BaseFeature[DepthImageInterface]):
     """
-    Gets a metric depth map using Depth Anything v2.
+    Base class for getting a depth map using Depth Anything v2.
 
     Input interface is ColorImageInterface.
 
@@ -29,19 +28,10 @@ class DepthAnythingV2Metric(BaseFeature[DepthImageInterface]):
         super().__init__(color)
         self.depth_map = None
         self.skipPost = skipPost
-
-    def initialize(self):
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
-
-        self.depth_image_processor = AutoImageProcessor.from_pretrained(
-            "depth-anything/Depth-Anything-V2-Metric-Indoor-Large-hf"
-        )
-        self.depth_model = AutoModelForDepthEstimation.from_pretrained(
-            "depth-anything/Depth-Anything-V2-Metric-Indoor-Large-hf"
-        ).to(self.device)
 
     def get_output(
         self,
@@ -55,12 +45,12 @@ class DepthAnythingV2Metric(BaseFeature[DepthImageInterface]):
         if not col.is_new():
             return None
 
-        self.depth_map = self.get_metric_depth(col.frame)
+        self.depth_map = self.get_depth_map(col.frame)
 
         return DepthImageInterface(frame_count=col.frame_count, frame=self.depth_map)
 
     @torch.no_grad()
-    def get_metric_depth(self, image: np.ndarray) -> np.ndarray:
+    def get_depth_map(self, image: np.ndarray) -> np.ndarray:
         start_time = time.time()
         inputs = self.depth_image_processor(images=image, return_tensors="pt").to(
             self.device
@@ -81,3 +71,53 @@ class DepthAnythingV2Metric(BaseFeature[DepthImageInterface]):
         print(f"time to compute depth map: {end_time - start_time:.4f} seconds")
 
         return depth_resized.squeeze().cpu().numpy()
+
+
+@final
+class DepthAnythingV2Metric(DepthAnythingV2Base):
+    """
+    Gets a metric depth map using Depth Anything v2.
+
+    Input interface is ColorImageInterface.
+
+    Output interface is DepthImageInterface.
+    """
+
+    def __init__(
+        self,
+        color: BaseFeature[ColorImageInterface],
+    ) -> None:
+        super().__init__(color)
+
+    def initialize(self):
+        self.depth_image_processor = AutoImageProcessor.from_pretrained(
+            "depth-anything/Depth-Anything-V2-Metric-Indoor-Large-hf"
+        )
+        self.depth_model = AutoModelForDepthEstimation.from_pretrained(
+            "depth-anything/Depth-Anything-V2-Metric-Indoor-Large-hf"
+        ).to(self.device)
+
+
+@final
+class DepthAnythingV2Relative(DepthAnythingV2Base):
+    """
+    Gets a relative depth map using Depth Anything v2.
+
+    Input interface is ColorImageInterface.
+
+    Output interface is DepthImageInterface.
+    """
+
+    def __init__(
+        self,
+        color: BaseFeature[ColorImageInterface],
+    ) -> None:
+        super().__init__(color)
+
+    def initialize(self):
+        self.depth_image_processor = AutoImageProcessor.from_pretrained(
+            "depth-anything/Depth-Anything-V2-Large-hf"
+        )
+        self.depth_model = AutoModelForDepthEstimation.from_pretrained(
+            "depth-anything/Depth-Anything-V2-Large-hf"
+        ).to(self.device)

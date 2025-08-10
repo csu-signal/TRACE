@@ -5,9 +5,13 @@ Premade features
 from mmdemo.features.common_ground.action_feature import DpipActionFeature
 from mmdemo.features.common_ground.cgt_feature import CommonGroundTracking
 from mmdemo.features.common_ground.dpip_cgt_output import DpipCommonGroundTracking
-from mmdemo.features.depth.depth_anything_v2_feature import DepthAnythingV2Metric
+from mmdemo.features.depth.depth_anything_v2_feature import (
+    DepthAnythingV2Metric,
+    DepthAnythingV2Relative,
+)
 from mmdemo.features.depth.visualize_metric_depth_feature import (
     MetricDepthVisualization,
+    RelativeDepthVisualization,
 )
 from mmdemo.features.engagement_level.engagement_level_feature import EngagementLevel
 from mmdemo.features.gaze.aaai_gaze_body_tracking_feature import AaaiGazeBodyTracking
