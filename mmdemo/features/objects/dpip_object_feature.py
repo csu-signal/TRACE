@@ -35,10 +35,12 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
     def __init__(
         self,
         color: BaseFeature[ColorImageInterface],
+        depth: BaseFeature[DepthImageInterface],
         *,
         skipPost: bool = False,
+        is_metric_depth=False,
     ) -> None:
-        super().__init__(color)
+        super().__init__(color, depth)
         self.all_grid_states = {}
         self.skipPost = skipPost
         self.lastCol = None
@@ -67,13 +69,16 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         self.norm_point_prompt_grid = None
         self.crop_bounds = None
         self.t = threading.Thread(target=self.worker)
+        self.base_mask = None
+        self.is_metric_depth = is_metric_depth
 
-    def initialize(self):
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
+        print(f"SAM2 device is {self.device}")
 
+        # SAM2 specific set up
         if self.device.type == "cuda":
             # use bfloat16 (based on the automatic_mask_generator_example.ipynb in the sam2 repo)
             torch.autocast("cuda", dtype=torch.bfloat16).__enter__()
@@ -82,6 +87,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 torch.backends.cuda.matmul.allow_tf32 = True
                 torch.backends.cudnn.allow_tf32 = True
 
+    def initialize(self):
         self.norm_point_prompt_grid = self.build_per_cell_centered_norm_point_grids(
             GRID_SIZE, POINT_PROMPTS_PER_AXIS, DEFAULT_POINT_PROMPT_GRID_REGION_FRAC
         )
@@ -95,8 +101,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         )
 
     def get_output(
-        self,
-        col: ColorImageInterface,
+        self, col: ColorImageInterface, dep: DepthImageInterface
     ) -> DpipObjectInterface3D | None:
         if self.skipPost:
             return DpipObjectInterface3D(
@@ -112,7 +117,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 segmentation_masks=self.segmentation_masks,
             )
 
-        if not col.is_new():
+        if not col.is_new() and not dep.is_new():
             return None
 
         key = cv2.waitKey(1) & 0xFF
@@ -121,6 +126,10 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         elif key == ord("s"):
             self.region_frac = max(self.region_frac - REGION_FRAC_INCREMENT, 0.05)
 
+        if self.base_mask is not None:
+            cv2.imshow("Base Mask Prediction", self.base_mask.astype(np.uint8) * 255)
+
+        self.lastDep = dep
         self.lastCol = col
         if not self.t.is_alive():
             self.t = threading.Thread(target=self.worker)
@@ -140,13 +149,17 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         )
 
     def worker(self):
-        print("\nNew Object Request Thread Started")
+        #        print("\nNew Object Request Thread Started")
         self.crop_bounds = self.get_center_crop_bounds(
             self.lastCol.frame.shape, self.region_frac
         )
 
         all_segmentation_masks = self.get_segmentation_masks(
             self.sam2_mask_generator, self.lastCol.frame, self.crop_bounds
+        )
+
+        self.base_mask = self.farthest_pixels_mask(
+            self.lastDep.frame, is_metric=self.is_metric_depth
         )
 
         h, w = self.lastCol.frame.shape[:2]
@@ -493,8 +506,6 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         sam2_checkpoint = SAM2_CHECKPOINT_PATH
         sam2_model_config = SAM2_MODEL_CONFIG_PATH
 
-        print(f"SAM2 device is {self.device}")
-
         sam2 = build_sam2(
             sam2_model_config,
             sam2_checkpoint,
@@ -542,11 +553,28 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 aligned_masks.append(full_mask)
 
             end_time = time.time()
-            print(
-                f"time to compute segmentation masks: {end_time - start_time:.4f} seconds"
-            )
+            #            print(
+            #                f"time to compute segmentation masks: {end_time - start_time:.4f} seconds"
+            #            )
 
             return aligned_masks
 
         except Exception as e:
             print(f"Exception while generating segmentation masks: {e}")
+
+    # ========== Depth Processing =========
+
+    def farthest_pixels_mask(
+        self,
+        depth_map: np.ndarray,
+        is_metric: bool = False,
+        depth_threshold: float = DEFAULT_DEPTH_THRESHOLD,
+    ) -> np.ndarray:
+        normalized_depth = cv2.normalize(
+            depth_map, None, 0, 255, cv2.NORM_MINMAX
+        ).astype(np.uint8)
+        # Invert the depth if using metric, since pixels farther away will have higher values
+        if is_metric:
+            normalized_depth = 255 - normalized_depth
+        base_mask = normalized_depth <= depth_threshold
+        return base_mask

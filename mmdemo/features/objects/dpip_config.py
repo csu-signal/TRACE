@@ -57,6 +57,9 @@ CELL_MAX_DEPTH = 15
 DEPTH_MIN_CONFIG = "grid_cell_min_depths.json"
 DEPTH_MAX_CONFIG = "grid_cell_max_depths.json"
 
+# Percentile for defining which pixels are a part of the base mask based on depth values
+DEFAULT_DEPTH_THRESHOLD = 75
+
 # ========== SAM2 Configuration ==========
 
 # The number of rows and columns to place in the point prompt grid

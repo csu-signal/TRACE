@@ -1,3 +1,4 @@
+import threading
 import time
 from typing import final
 
@@ -28,10 +29,12 @@ class DepthAnythingV2Base(BaseFeature[DepthImageInterface]):
         super().__init__(color)
         self.depth_map = None
         self.skipPost = skipPost
+        self.t = threading.Thread(target=self.worker)
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
+        print(f"Depth Anything V2 device is {self.device}")
 
     def get_output(
         self,
@@ -45,9 +48,22 @@ class DepthAnythingV2Base(BaseFeature[DepthImageInterface]):
         if not col.is_new():
             return None
 
-        self.depth_map = self.get_depth_map(col.frame)
+        self.lastCol = col
+        if not self.t.is_alive():
+            self.t = threading.Thread(target=self.worker)
+            self.t.start()
 
-        return DepthImageInterface(frame_count=col.frame_count, frame=self.depth_map)
+        # Avoid race condition where self.depth_map isn't set before returning
+        if self.depth_map is None:
+            return None
+        else:
+            return DepthImageInterface(
+                frame_count=col.frame_count, frame=self.depth_map
+            )
+
+    def worker(self):
+        #        print("\nNew Depth Request Thread Started")
+        self.depth_map = self.get_depth_map(self.lastCol.frame)
 
     @torch.no_grad()
     def get_depth_map(self, image: np.ndarray) -> np.ndarray:
@@ -68,7 +84,7 @@ class DepthAnythingV2Base(BaseFeature[DepthImageInterface]):
         )
 
         end_time = time.time()
-        print(f"time to compute depth map: {end_time - start_time:.4f} seconds")
+        #        print(f"time to compute depth map: {end_time - start_time:.4f} seconds")
 
         return depth_resized.squeeze().cpu().numpy()
 

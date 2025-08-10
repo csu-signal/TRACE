@@ -9,7 +9,7 @@ from mmdemo.features.depth.depth_anything_v2_feature import (
     DepthAnythingV2Metric,
     DepthAnythingV2Relative,
 )
-from mmdemo.features.depth.visualize_metric_depth_feature import (
+from mmdemo.features.depth.visualize_depth_feature import (
     MetricDepthVisualization,
     RelativeDepthVisualization,
 )
