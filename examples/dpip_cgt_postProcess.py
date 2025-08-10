@@ -129,7 +129,7 @@ if __name__ == "__main__":
     # prop extraction from friction model
     dpip_prop_friction = DpipProposition(transcriptions, objects, actions, minUtteranceValue=7)
 
-    cgt = DpipCommonGroundTracking(dpip_prop_friction, color, actions, saveCanvas=True)
+    cgt = DpipCommonGroundTracking(dpip_prop_friction, color, actions, saveCanvas=False)
     
     # TODO are need to update the planner?
     # plan = Planner(cgt)
