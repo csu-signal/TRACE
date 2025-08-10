@@ -21,11 +21,12 @@ class DisplayFrame(BaseFeature[EmptyInterface]):
     def __init__(
         self,
         color: BaseFeature[ColorImageInterface],
+        window_name: str | None = None,
     ):
         super().__init__(color)
+        self.window_name = window_name if window_name else str(random.random())
 
     def initialize(self):
-        self.window_name = str(random.random())
         self.window_should_be_up = False
         self.sized = False
         cv.namedWindow(self.window_name, cv.WINDOW_NORMAL | cv.WINDOW_KEEPRATIO)
