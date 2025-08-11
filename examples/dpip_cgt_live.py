@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     # which objects are selected by gesture
     # objects = DpipObject(color, depth, calibration)
-    objects = DpipObject(color)
+    objects = DpipObject(color, depth)
     # objects2 = DpipObject(color2, depth2, calibration2)
 
     block_detections = DpipBlockDetectionsFrame(objects)

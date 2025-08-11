@@ -393,49 +393,26 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             offset_frac_x=offset_frac_x,
             offset_frac_y=offset_frac_y,
         )
-        region_size: int = x1 - x0
-        cell_size: float = region_size / float(grid_size)
+        region_size = x1 - x0
+        cell_size = region_size / float(grid_size)
 
-        boxes: List[Tuple[Tuple[int, int], Tuple[int, int]]] = []
-        centers: List[Tuple[int, int]] = []
-        coords: List[Tuple[int, int]] = []
+        boxes = []
+        centers = []
+        coords = []
 
         for row_index in range(grid_size):
             for col_index in range(grid_size):
-                cx: float = x0 + (col_index + 0.5) * cell_size
-                cy: float = y0 + (row_index + 0.5) * cell_size
-                half: float = cell_size / 2.0
-                bx0: int = int(round(cx - half))
-                by0: int = int(round(cy - half))
-                bx1: int = int(round(cx + half))
-                by1: int = int(round(cy + half))
+                cx = x0 + (col_index + 0.5) * cell_size
+                cy = y0 + (row_index + 0.5) * cell_size
+                half = cell_size / 2.0
+                bx0 = int(round(cx - half))
+                by0 = int(round(cy - half))
+                bx1 = int(round(cx + half))
+                by1 = int(round(cy + half))
                 boxes.append(((bx0, by0), (bx1, by1)))
                 centers.append((int(round(cx)), int(round(cy))))
                 coords.append((row_index, col_index))
 
-        return boxes, centers, coords
-
-    def build_centered_grid_boxes(
-        self, image_shape: np.ndarray, grid_size: int, region_frac: float
-    ):
-        h, w = image_shape[:2]
-        region_size = region_frac * min(h, w)
-        cell_size = region_size / grid_size
-        cy, cx = h / 2, w / 2
-        boxes = []
-        centers = []
-        coords = []
-        for i in range(grid_size):
-            for j in range(grid_size):
-                x_center = cx - region_size / 2 + (j + 0.5) * cell_size
-                y_center = cy - region_size / 2 + (i + 0.5) * cell_size
-                x0 = int(x_center - cell_size / 2)
-                y0 = int(y_center - cell_size / 2)
-                x1 = int(x_center + cell_size / 2)
-                y1 = int(y_center + cell_size / 2)
-                boxes.append(((x0, y0), (x1, y1)))
-                centers.append((int(x_center), int(y_center)))
-                coords.append((i, j))
         return boxes, centers, coords
 
     def compute_grid_detections(
@@ -624,9 +601,9 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
                 aligned_masks.append(full_mask)
 
             end_time = time.time()
-            #            print(
-            #                f"time to compute segmentation masks: {end_time - start_time:.4f} seconds"
-            #            )
+            print(
+                f"time to compute segmentation masks: {end_time - start_time:.4f} seconds"
+            )
 
             return aligned_masks
 
