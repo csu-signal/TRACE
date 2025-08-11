@@ -38,12 +38,13 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         depth: BaseFeature[DepthImageInterface],
         *,
         skipPost: bool = False,
-        is_metric_depth=False,
+        is_metric_depth: bool = False,
     ) -> None:
         super().__init__(color, depth)
         self.all_grid_states = {}
         self.skipPost = skipPost
         self.lastCol = None
+        self.lastDep = None
         self.main_xy_grid = [
             ["", "", ""],
             ["", "", ""],
@@ -71,7 +72,6 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         self.norm_point_prompt_grid = None
         self.crop_bounds = None
         self.t = threading.Thread(target=self.worker)
-        self.base_mask = None
         self.is_metric_depth = is_metric_depth
 
         if torch.cuda.is_available():
@@ -138,9 +138,6 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         elif key == ord("a"):
             self.offset_frac_x = max(self.offset_frac_x - OFFSET_FRAC_INCREMENT, -1.0)
 
-        if self.base_mask is not None:
-            cv2.imshow("Base Mask Prediction", self.base_mask.astype(np.uint8) * 255)
-
         self.lastDep = dep
         self.lastCol = col
         if not self.t.is_alive():
@@ -162,18 +159,18 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
     def worker(self):
         print("\nNew Object Request Thread Started")
-        self.crop_bounds = self.get_center_crop_bounds(
-            self.lastCol.frame.shape, self.region_frac
+        self.crop_bounds = self.compute_grid_bounding_box(
+            self.lastCol.frame.shape,
+            self.region_frac,
+            self.offset_frac_x,
+            self.offset_frac_y,
         )
 
         all_segmentation_masks = self.get_segmentation_masks(
             self.sam2_mask_generator, self.lastCol.frame, self.crop_bounds
         )
 
-        self.base_mask = self.farthest_pixels_mask(
-            self.lastDep.frame, is_metric=self.is_metric_depth
-        )
-
+        # Filter out masks that are "irregularly" shaped
         h, w = self.lastCol.frame.shape[:2]
         region_size = self.region_frac * min(h, w)
         cell_size = region_size / GRID_SIZE
@@ -206,9 +203,6 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
         for x in range(GRID_SIZE):
             for y in range(GRID_SIZE):
-                if not current_xy_grid[x][y]:
-                    continue
-
                 current_val, current_count = self.xy_grid_counts[(x, y)]
                 if current_xy_grid[x][y] == current_val:
                     current_count += 1
@@ -245,15 +239,6 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             )
             filtered = cv2.medianBlur(filtered, median_ksize)
         return filtered
-
-    def get_center_crop_bounds(
-        self, image_shape: Tuple[int, int], region_frac: float
-    ) -> Tuple[int, int, int, int]:
-        H, W = image_shape[:2]
-        region_size = region_frac * min(H, W)
-        cx, cy = W // 2, H // 2
-        half = int(region_size / 2)
-        return cx - half, cy - half, cx + half, cy + half
 
     # ========== Color and Shape Detection ==========
 
@@ -385,8 +370,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
         x0 = int(round(base_x))
         y0 = int(round(base_y))
-        x1 = x0 + region_size
-        y1 = y0 + region_size
+        x1 = int(round(x0 + region_size))
+        y1 = int(round(y0 + region_size))
 
         return x0, y0, x1, y1
 

@@ -4,7 +4,7 @@ GRID_SIZE = 3  # this should always be 3 for the demo, essentially it will creat
 DEFAULT_REGION_FRAC = 0.35  # Defines the overall size of the grid
 MIN_REGION_FRAC = 0.05
 REGION_FRAC_INCREMENT = 0.01
-OFFSET_FRAC_INCREMENT = 0.01
+OFFSET_FRAC_INCREMENT = 0.02
 
 # ========== Color Detection ==========
 
