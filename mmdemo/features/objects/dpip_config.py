@@ -1,10 +1,10 @@
 # ========== Grid Configuration Defaults ==========
 
 GRID_SIZE = 3  # this should always be 3 for the demo, essentially it will create a GRID_SIZE ** 2 grid
-DEFAULT_REGION_FRAC = 0.35  # Defines the overall size of the grid, the grid will take up (min(frame_height, frame_width) * region_frac) ** 2 space in the center of the frame
-REGION_FRAC_INCREMENT = (
-    0.01  # How much to increment/decrement the region frac by when pressing W or S
-)
+DEFAULT_REGION_FRAC = 0.35  # Defines the overall size of the grid
+MIN_REGION_FRAC = 0.05
+REGION_FRAC_INCREMENT = 0.01
+OFFSET_FRAC_INCREMENT = 0.01
 
 # ========== Color Detection ==========
 

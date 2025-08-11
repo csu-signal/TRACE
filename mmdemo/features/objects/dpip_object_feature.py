@@ -61,6 +61,8 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             (2, 2): ("", 0),
         }
         self.region_frac = DEFAULT_REGION_FRAC
+        self.offset_frac_x = 0.0
+        self.offset_frac_y = 0.0
         self.boxes = {}
         self.centers = {}
         self.coords = {}
@@ -92,9 +94,9 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             GRID_SIZE, POINT_PROMPTS_PER_AXIS, DEFAULT_POINT_PROMPT_GRID_REGION_FRAC
         )
 
-        #       self.norm_point_prompt_grid = self.build_per_cell_cross_norm_point_grids(
-        #           GRID_SIZE, POINT_PROMPTS_PER_AXIS, DEFAULT_POINT_PROMPT_GRID_REGION_FRAC
-        #        )
+        # self.norm_point_prompt_grid = self.build_per_cell_cross_norm_point_grids(
+        #   GRID_SIZE, POINT_PROMPTS_PER_AXIS, DEFAULT_POINT_PROMPT_GRID_REGION_FRAC
+        # )
 
         self.sam2_mask_generator = self.create_sam2_mask_generator(
             [self.norm_point_prompt_grid]
@@ -121,10 +123,20 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
             return None
 
         key = cv2.waitKey(1) & 0xFF
-        if key == ord("w"):
+        if key == ord("W"):
             self.region_frac = min(self.region_frac + REGION_FRAC_INCREMENT, 1.0)
+        elif key == ord("S"):
+            self.region_frac = max(
+                self.region_frac - REGION_FRAC_INCREMENT, MIN_REGION_FRAC
+            )
         elif key == ord("s"):
-            self.region_frac = max(self.region_frac - REGION_FRAC_INCREMENT, 0.05)
+            self.offset_frac_y = min(self.offset_frac_y + OFFSET_FRAC_INCREMENT, 1.0)
+        elif key == ord("w"):
+            self.offset_frac_y = max(self.offset_frac_y - OFFSET_FRAC_INCREMENT, -1.0)
+        elif key == ord("d"):
+            self.offset_frac_x = min(self.offset_frac_x + OFFSET_FRAC_INCREMENT, 1.0)
+        elif key == ord("a"):
+            self.offset_frac_x = max(self.offset_frac_x - OFFSET_FRAC_INCREMENT, -1.0)
 
         if self.base_mask is not None:
             cv2.imshow("Base Mask Prediction", self.base_mask.astype(np.uint8) * 255)
@@ -149,7 +161,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         )
 
     def worker(self):
-        #        print("\nNew Object Request Thread Started")
+        print("\nNew Object Request Thread Started")
         self.crop_bounds = self.get_center_crop_bounds(
             self.lastCol.frame.shape, self.region_frac
         )
@@ -175,8 +187,12 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         print(f"Kept {len(filtered_masks)} out of {len(all_segmentation_masks)} masks")
         self.segmentation_masks = filtered_masks
 
-        self.boxes, self.centers, self.coords = self.build_centered_grid_boxes(
-            self.lastCol.frame.shape, GRID_SIZE, self.region_frac
+        self.boxes, self.centers, self.coords = self.build_grid_boxes(
+            self.lastCol.frame.shape,
+            GRID_SIZE,
+            self.region_frac,
+            self.offset_frac_x,
+            self.offset_frac_y,
         )
         self.labels, detections = self.compute_grid_detections(
             self.lastCol.frame,
@@ -343,6 +359,76 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
         )
 
     # ========== Grid Utilities ==========
+
+    def compute_grid_bounding_box(
+        self,
+        image_shape: Tuple[int, int],
+        region_frac: float,
+        offset_frac_x: float,
+        offset_frac_y: float,
+    ) -> Tuple[int, int, int, int]:
+        image_height, image_width = image_shape[:2]
+        min_side = min(image_height, image_width)
+        region_size = region_frac * min_side
+
+        max_margin_x = image_width - region_size
+        max_margin_y = image_height - region_size
+
+        x0_centered = max_margin_x / 2.0
+        y0_centered = max_margin_y / 2.0
+
+        offset_x = offset_frac_x * x0_centered
+        offset_y = offset_frac_y * y0_centered
+
+        base_x = x0_centered + offset_x
+        base_y = y0_centered + offset_y
+
+        x0 = int(round(base_x))
+        y0 = int(round(base_y))
+        x1 = x0 + region_size
+        y1 = y0 + region_size
+
+        return x0, y0, x1, y1
+
+    def build_grid_boxes(
+        self,
+        image_shape: Tuple[int, int],
+        grid_size: int,
+        region_frac: float,
+        offset_frac_x: float = 0.0,
+        offset_frac_y: float = 0.0,
+    ) -> Tuple[
+        List[Tuple[Tuple[int, int], Tuple[int, int]]],
+        List[Tuple[int, int]],
+        List[Tuple[int, int]],
+    ]:
+        x0, y0, x1, y1 = self.compute_grid_bounding_box(
+            image_shape=image_shape,
+            region_frac=region_frac,
+            offset_frac_x=offset_frac_x,
+            offset_frac_y=offset_frac_y,
+        )
+        region_size: int = x1 - x0
+        cell_size: float = region_size / float(grid_size)
+
+        boxes: List[Tuple[Tuple[int, int], Tuple[int, int]]] = []
+        centers: List[Tuple[int, int]] = []
+        coords: List[Tuple[int, int]] = []
+
+        for row_index in range(grid_size):
+            for col_index in range(grid_size):
+                cx: float = x0 + (col_index + 0.5) * cell_size
+                cy: float = y0 + (row_index + 0.5) * cell_size
+                half: float = cell_size / 2.0
+                bx0: int = int(round(cx - half))
+                by0: int = int(round(cy - half))
+                bx1: int = int(round(cx + half))
+                by1: int = int(round(cy + half))
+                boxes.append(((bx0, by0), (bx1, by1)))
+                centers.append((int(round(cx)), int(round(cy))))
+                coords.append((row_index, col_index))
+
+        return boxes, centers, coords
 
     def build_centered_grid_boxes(
         self, image_shape: np.ndarray, grid_size: int, region_frac: float
