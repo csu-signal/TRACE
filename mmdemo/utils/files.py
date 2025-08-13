@@ -12,7 +12,7 @@ def create_tmp_dir() -> Path:
     """
     while True:
         date_name = datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S")
-        dir = Path(f"D:\\Demo\\tmp_{date_name}_{int(random.random() * 10**6)}")
+        dir = Path(f"tmp_{date_name}_{int(random.random() * 10**6)}")
         try:
             os.makedirs(dir, exist_ok=False)
             return dir
@@ -27,7 +27,7 @@ def create_tmp_dir_with_featureName(featureName) -> Path:
     """
     while True:
         date_name = datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S")
-        dir = Path(f"D:\\Demo\\tmp_{str(featureName)}_{date_name}_{int(random.random() * 10**6)}")
+        dir = Path(f"tmp_{str(featureName)}_{date_name}_{int(random.random() * 10**6)}")
         try:
             os.makedirs(dir, exist_ok=False)
             return dir

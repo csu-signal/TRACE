@@ -40,7 +40,7 @@ class DpipSpeechOutput(BaseFeature[SpeechOutputInterface]):
         ***Initialize the pipeline and load the voice
         """
         self.pipeline = KPipeline(lang_code='a')
-        self.voice_tensor = torch.load('C:/GitHub/TRACE/mmdemo/features/speech_output/am_michael.pt', weights_only=True)
+        self.voice_tensor = torch.load('C:\\Users\\Multimodal_Demo\\TRACE\\mmdemo\\features\\speech_output\\am_michael.pt', weights_only=True)
         self.last_friction = ''
 
     # def _register_dependencies(self, deps: "list[BaseFeature] | tuple"):

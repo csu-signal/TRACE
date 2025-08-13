@@ -502,7 +502,7 @@ class DpipObject(BaseFeature[DpipObjectInterface3D]):
 
     def create_sam2_mask_generator(self, point_grids):
         sam2_checkpoint = (
-            "C:\\GitHub\\sam2\\checkpoints\\sam2.1_hiera_large.pt"
+            "C:\\Users\\Multimodal_Demo\\sam2\\checkpoints\\sam2.1_hiera_large.pt"
         )
         sam2_model_config = "configs/sam2.1/sam2.1_hiera_l.yaml"
 
