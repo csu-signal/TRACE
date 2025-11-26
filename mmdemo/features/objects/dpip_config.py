@@ -1,7 +1,7 @@
 # ========== Grid Configuration Defaults ==========
 
 GRID_SIZE = 3  # this should always be 3 for the demo, essentially it will create a GRID_SIZE ** 2 grid
-DEFAULT_REGION_FRAC = 0.35  # Defines the overall size of the grid, the grid will take up (min(frame_height, frame_width) * region_frac) ** 2 space in the center of the frame
+DEFAULT_REGION_FRAC = 0.30  # Defines the overall size of the grid, the grid will take up (min(frame_height, frame_width) * region_frac) ** 2 space in the center of the frame
 REGION_FRAC_INCREMENT = (
     0.01  # How much to increment/decrement the region frac by when pressing W or S
 )
@@ -10,10 +10,10 @@ REGION_FRAC_INCREMENT = (
 
 # Hue ranges - these are [min, max) (besides red!!), i.e. min value is inclusive and max value is exclusive.
 # NOTE: Red is weird because it's at the top of the hue/color wheel. Instead its range is (min, max], and it checks to see if the mean color value is above max and below min.
-RED_MIN_HUE = 10
+RED_MIN_HUE = 8
 RED_MAX_HUE = 160
 
-ORANGE_MIN_HUE = 10
+ORANGE_MIN_HUE = 8
 ORANGE_MAX_HUE = 20
 
 YELLOW_MIN_HUE = 20
@@ -39,10 +39,10 @@ MAX_RECTANGLE_RATIO = 2.2
 # ========== Mask Filtering ==========
 
 # Fraction for determining the threshold that will ignore masks that aren't  X% of a grid cell's area
-MASK_SIZE_THRESH_FRAC = 0.6
+MASK_SIZE_THRESH_FRAC = 0
 
 # Fraction for determining the threshold that ignore masks that don't take up X% of a particular grid cell's area. This is different, albeit nuanced, than MASK_SIZE_THRESH_FRAC, which just makes sure that a mask's size is greater than a percentage of a grid cell. This ensures that a mask actually covers X% of a particular grid cell.
-CELL_AREA_INTERSECTION_THRESH_FRAC = 0.4
+CELL_AREA_INTERSECTION_THRESH_FRAC = 0.5
 
 # ========== Depth Stuff ==========
 

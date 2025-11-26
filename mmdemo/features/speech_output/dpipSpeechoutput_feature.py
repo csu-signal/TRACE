@@ -125,6 +125,7 @@ class DpipSpeechOutput(BaseFeature[SpeechOutputInterface]):
                             # if the highest ranking friction statement isn't at least 4 words use the group
                             if(statementLength > 4):
                                 frictionStatement = f
+
                             else:
                                 frictionStatement = friction[-1] 
 
@@ -148,6 +149,8 @@ class DpipSpeechOutput(BaseFeature[SpeechOutputInterface]):
         #generate speech, splits on newline
         #new friction and unqiue statements
         if(frictionStatement != '' and friction != self.last_friction):
+            #Removing the user tag for user study (MB)
+            frictionStatement = frictionStatement.replace(user," ")
             generator = self.pipeline(
             frictionStatement, voice=self.voice_tensor,
             speed=1, split_pattern=r'\n+'

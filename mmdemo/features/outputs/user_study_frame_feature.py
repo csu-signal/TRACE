@@ -52,14 +52,14 @@ class UserFrame(BaseFeature[ColorImageInterface]):
     def __init__(
         self,
         speechoutput: BaseFeature[SpeechOutputInterface],
-        common_ground: BaseFeature[CommonGroundInterface],
-        friction: BaseFeature[FrictionOutputInterface],
-        plan: BaseFeature[PlannerInterface] | None = None,
+        friction: BaseFeature[FrictionOutputInterface]
     ):
-        if plan is None:
-            super().__init__(speechoutput, common_ground, friction) # removed gaze
-        else:
-            super().__init__(speechoutput, common_ground, friction, plan) # removed gaze
+        super().__init__(speechoutput, friction)
+        # if plan is None:
+        #     super().__init__(speechoutput, friction, common_ground ) # removed gaze
+        #     if common_ground is None:
+        # else:
+        #     super().__init__(speechoutput, friction, common_ground, plan) # removed gaze
 
     def initialize(self):
         self.has_cgt_data = False
@@ -69,9 +69,9 @@ class UserFrame(BaseFeature[ColorImageInterface]):
     def get_output(
         self,
         speech: SpeechOutputInterface,
-        common: CommonGroundInterface,
         friction: FrictionOutputInterface,
-        plan: PlannerInterface = None,
+        # common: CommonGroundInterface = None,
+        # plan: PlannerInterface = None,
     ):
         # if (
         #     not common.is_new()
@@ -84,50 +84,15 @@ class UserFrame(BaseFeature[ColorImageInterface]):
         # output_frame = np.copy(color.frame)
         # output_frame = cv.cvtColor(output_frame, cv.COLOR_RGB2BGR)
         if speech.length > 0:
-            output_frame = cv.imread(r"C:\GitHub\TRACE\mmdemo\features\speech_output\joe_assistant_idea.JPG")
+            output_frame = cv.imread(r"C:\Users\Multimodal_Demo\TRACE\mmdemo\features\speech_output\joe_assistant_idea.JPG")
         else:
-            output_frame = cv.imread(r"C:\GitHub\TRACE\mmdemo\features\speech_output\joe_assistant.jpeg")
+            output_frame = cv.imread(r"C:\Users\Multimodal_Demo\TRACE\mmdemo\features\speech_output\joe_assistant.jpeg")
 
-        # render gaze vectors
-        # for cone in gaze.cones:
-        #     EMNLPFrame.projectVectorLines(
-        #         cone, output_frame, calibration, False, False, True
-        #     )
 
-        # render gesture vectors
-        # for cone in gesture.cones:
-        #     EMNLPFrame.projectVectorLines(
-        #         cone, output_frame, calibration, True, False, False
-        #     )
-
-        # render objects
-        # for obj in objects.objects:
-        #     c = (0, 255, 0) if obj[1] == True else (0, 0, 255)
-        #     block = obj[0]
-        #     cv.rectangle(
-        #         output_frame,
-        #         (int(block.p1[0]), int(block.p1[1])),
-        #         (int(block.p2[0]), int(block.p2[1])),
-        #         color=c,
-        #         thickness=5,
-        #     )
-
-        # render common ground
-        if self.has_cgt_data or common.is_new():
-            self.has_cgt_data = True
-            # UserFrame.renderBanks(output_frame, 130, 260, "FBank", common.fbank)
-            # UserFrame.renderBanks(output_frame, 130, 130, "EBank", common.ebank)
-        # else:
-            # UserFrame.renderBanks(output_frame, 130, 260, "FBank", set())
-            # UserFrame.renderBanks(output_frame, 130, 130, "EBank", set())
-
-        # render plan
-        if plan:
-            UserFrame.renderPlan(output_frame, plan, self.last_plan)
 
         if friction and friction.friction_statement != '':
-            frictionStatements = friction.friction_statement.split("r*")
-            fstate = frictionStatements[0].split(":")[-1]
+            frictionStatements = self.get_dpip_friction_output(friction)
+            fstate = frictionStatements#[0].split(":")[-1]
             x, y = (900, 300)
             text = fstate
             text = text.split()
@@ -138,11 +103,6 @@ class UserFrame(BaseFeature[ColorImageInterface]):
             text_color =(0,0,0)
             text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
             text_w, text_h = text_size
-            # cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
-            # for word in range(0,len(text),6):
-            #     text_row = " ".join(text[word:word+6])
-            #     cv.putText(output_frame, str(text_row), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
-            #     y += 75
 
             max_chars = 30
             word = 0
@@ -156,232 +116,78 @@ class UserFrame(BaseFeature[ColorImageInterface]):
                 cv.putText(output_frame, str(text_row), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
                 y += 75
 
-            # if(len(frictionStatements) > 1):
-            #     #friction includes rational, print it
-            #     rstate = frictionStatements[1]
-            #     x, y = (50, 110)
-            #     text = rstate
-            #     font = cv.FONT_HERSHEY_SIMPLEX
-            #     font_scale = 0.5
-            #     font_thickness = 1
-            #     text_color_bg = (255,255,255)
-            #     text_color =(0,0,0)
-            #     text_size, _ = cv.getTextSize(str(text), font, font_scale, font_thickness)
-            #     text_w, text_h = text_size
-            #     cv.rectangle(output_frame, (x - 5,y - 5), (int(x + text_w + 10), int(y + text_h + 10)), text_color_bg, -1)
-            #     cv.putText(output_frame, str(text), (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness, cv.LINE_AA)
-
-            # print friction statement
-       
-        
-
-        # draw frame count
-        # cv.putText(
-        #     output_frame,
-        #     "FRAME:" + str(color.frame_count),
-        #     (50, 50),
-        #     cv.FONT_HERSHEY_SIMPLEX,
-        #     1,
-        #     (0, 0, 255),
-        #     2,
-        #     cv.LINE_AA,
-        # )
 
         output_frame = cv.resize(output_frame, (900, 900))
         output_frame = cv.cvtColor(output_frame, cv.COLOR_BGR2RGB)
 
         return ColorImageInterface(frame=output_frame, frame_count=0)
 
-    @staticmethod
-    def projectVectorLines(cone: Cone, frame, calibration, includeY, includeZ, gaze):
-        """
-        Draws lines representing a 3d cone onto the frame.
+    def get_dpip_friction_output(self,frictionout):
+        friction = frictionout.friction_statement.split('\n')
+        ranking = frictionout.ranking.split('\n')
+        min = 10
+        user = "Group"
 
-        Arguments:
-        cone -- the cone object
-        frame -- the frame
-        calibration -- the camera calibration settings
-        includeY -- a flag to include the Y lines
-        includeZ -- a flag to include the Z lines
-        gaze -- a flag indicating if we are rendering a gaze vector
-        """
-        baseUpY, baseDownY, baseUpZ, baseDownZ = UserFrame.conePointsBase(cone)
-        vertexUpY, vertexDownY, vertexUpZ, vertexDownZ = UserFrame.conePointsVertex(
-            cone
-        )
+        if len(friction) == 0:
+            return ''
+        
+        #play a request for interruption
+        if(ranking != ''):
+            try:
+                for rank in ranking:
+                    a = rank.split(": ")
+                    r = int(a[1])
+                    if(r != 0 and r < min):
+                        min = r
+                        user = a[0]
+            except Exception as e:
+                user = "Group"
+                print("Rank Error, defaulting to group")
 
-        if gaze:
-            yColor = (255, 107, 170)
-            ZColor = (107, 255, 138)
-            vectorColor = (255, 107, 170)
-        else:
-            yColor = (255, 255, 0)
-            ZColor = (243, 82, 121)
-            vectorColor = (0, 165, 255)
-
-        base2D = camera_3d_to_pixel(cone.base, calibration)
-        vertex2D = camera_3d_to_pixel(cone.vertex, calibration)
-        cv.line(frame, base2D, vertex2D, color=vectorColor, thickness=5)
-
-        if includeY:
-            baseUp2DY = camera_3d_to_pixel(baseUpY, calibration)
-            baseDown2DY = camera_3d_to_pixel(baseDownY, calibration)
-            vertexUp2DY = camera_3d_to_pixel(vertexUpY, calibration)
-            vertexDown2DY = camera_3d_to_pixel(vertexDownY, calibration)
-
-            pointUpY = (int(baseUp2DY[0]), int(baseUp2DY[1]))
-            pointDownY = (int(baseDown2DY[0]), int(baseDown2DY[1]))
-
-            vertexPointUpY = (int(vertexUp2DY[0]), int(vertexUp2DY[1]))
-            vertexPointDownY = (int(vertexDown2DY[0]), int(vertexDown2DY[1]))
-
-            cv.line(frame, vertexPointUpY, pointUpY, color=yColor, thickness=5)
-            cv.line(frame, vertexPointDownY, pointDownY, color=yColor, thickness=5)
-
-        if includeZ:
-            vertexUp2DZ = camera_3d_to_pixel(vertexUpZ, calibration)
-            vertexDown2DZ = camera_3d_to_pixel(vertexDownZ, calibration)
-            baseUp2DZ = camera_3d_to_pixel(baseUpZ, calibration)
-            baseDown2DZ = camera_3d_to_pixel(baseDownZ, calibration)
-
-            pointUpZ = (int(baseUp2DZ[0]), int(baseUp2DZ[1]))
-            pointDownZ = (int(baseDown2DZ[0]), int(baseDown2DZ[1]))
-
-            vertexPointUpZ = (int(vertexUp2DZ[0]), int(vertexUp2DZ[1]))
-            vertexPpointDownZ = (int(vertexDown2DZ[0]), int(vertexDown2DZ[1]))
-
-            cv.line(frame, vertexPointUpZ, pointUpZ, color=ZColor, thickness=5)
-            cv.line(frame, vertexPpointDownZ, pointDownZ, color=ZColor, thickness=5)
-
-    @staticmethod
-    def getPropValues(propStrings, match):
-        """
-        Gets the prop values
-
-        Arguments:
-        propStrings -- the prop strings array
-        match -- the matching color name
-
-        Returns:
-        label -- the prop label
-        """
-        label = []
-        for prop in propStrings:
-            prop_match = re.match(r"(" + match + r")\s*(=|<|>|!=)\s*(.*)", prop)
-            if prop_match:
-                block = prop_match[1]
-                relation = prop_match[2]
-                rhs = prop_match[3]
-                if relation == "<" or relation == ">" or relation == "!=":
-                    label.append(relation + rhs)
-                else:
-                    label.append(rhs)
-        return label
-
-    @staticmethod
-    def renderBanks(frame, xSpace, yCord, bankLabel, bankValues):
-        """
-        Renders the bank blocks
-
-        Arguments:
-        frame -- the frame
-        xSpace -- the X spacing offset
-        yCord -- the Y cord to render
-        bankLabel -- the bank label
-        bankValues -- the bank values
-        """
-        blocks = len(colors) + 1
-        blockWidth = 112
-        blockHeight = 112
-
-        h, w, _ = frame.shape
-        start = w - (xSpace * blocks)
-        p2 = h - yCord
-        (tw, th), _ = cv.getTextSize(bankLabel, cv.FONT_HERSHEY_SIMPLEX, 1.5, 3)
-        labelCoords = (
-            int(start) - int(tw / 4),
-            (int(blockHeight / 2) + int(th / 2)) + p2,
-        )
-        cv.putText(
-            frame, bankLabel, labelCoords, cv.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 3
-        )
-
-        for i in range(1, blocks):
-            p1 = start + (xSpace * i)
-            color = colors[i - 1]
-            cv.rectangle(
-                frame,
-                (p1, p2),
-                (p1 + blockWidth, p2 + blockHeight),
-                color=color.color,
-                thickness=-1,
-            )
-
-            labels = UserFrame.getPropValues(bankValues, color.name)
-            numberLabels = min(len(labels), 5)
-            if numberLabels > 0:
-                for i, line in enumerate(labels):
-                    (tw, th), _ = cv.getTextSize(
-                        line,
-                        cv.FONT_HERSHEY_SIMPLEX,
-                        fontScales[numberLabels - 1],
-                        fontThickness[numberLabels - 1],
-                    )
-                    y = (
-                        (int(blockHeight / (numberLabels + 1)) + int(th / 3)) * (i + 1)
-                    ) + p2
-                    x = (int(blockWidth / 2) - int(tw / 2)) + p1
-                    cv.putText(
-                        frame,
-                        line,
-                        (x, y),
-                        cv.FONT_HERSHEY_SIMPLEX,
-                        fontScales[numberLabels - 1],
-                        (0, 0, 0),
-                        fontThickness[numberLabels - 1],
-                    )
-
-    @staticmethod
-    def renderPlan(frame, plan, last_plan):
-        """
-        Renders the plan text on the frame. 
-        If the plan is None, it renders the last known state.
-        """
-        # if plan and plan.is_new():
+        statements = []
+        frictionStatement=''
+    
         try:
-            # Update the last solvable state
-            solv = plan.solv
-            text = "Solvable" * solv + "Unsolvable" * (not solv)
-            last_plan["text"] = text
-            last_plan["color"] = (0, 255, 0) if solv else (0, 0, 255)
-        # elif not last_plan.get("text"):
-        except:
-            # Default state if there's no valid last_plan
-            last_plan["text"] = "No Plan yet"
-            last_plan["color"] = (255, 255, 255)
+            #if there's only one friction statement and it's length is greater than 4 read it
+            if(len(friction) == 1):
+                if(len(friction[0].split(' ')) > 4):
+                    frictionStatement = f
+            else:
+                #if there are multiple statements find the value with the highest rank and track the variations in length and statements
+                for f in friction:
+                    if(f != ''):
+                        statement = f.split(": ")[1]
+                        statements.append(statement)
+                        statementLength = len(statement.split(' '))
+                        
+                        if user in f:
+                            # if the highest ranking friction statement isn't at least 4 words use the group
+                            if(statementLength > 4):
+                                frictionStatement = f
 
-        # Render the last known plan state
-        position = (50, 1000)  # x=10, y=30 (bottom-left corner, with some padding)
-        font = cv.FONT_HERSHEY_SIMPLEX
-        font_scale = 1
-        thickness = 2
-        cv.putText(frame, last_plan["text"], position, font, font_scale, last_plan["color"], thickness)
+                            else:
+                                frictionStatement = friction[-1] 
 
+            #if all the statments are the same and more than 4 words, read the last one (group?)
+            #if they are all the same and less than 4 words skip
+            if(len(set(statements)) == 1):
+                if(statementLength > 4):
+                    frictionStatement = friction[-1]
+                else:
+                    frictionStatement = ''
+                    
+        except Exception as e:
+            frictionStatement=''
+            print("Friction Parsing Error")
+            
+        # opening = random.choice(os.listdir("C:/GitHub/TRACE/mmdemo/features/speech_output/audio"))
+        # audio, samplerate = sf.read(fr"C:/GitHub/TRACE/mmdemo/features/speech_output/audio/{opening}")
+        # sd.wait()
+        # sd.play(audio, samplerate)
+        # sd.wait()
+        #generate speech, splits on newline
+        #new friction and unqiue statements
 
-    @staticmethod
-    def conePointsBase(cone):
-        return (
-            [cone.base[0], cone.base[1] + cone.base_radius, cone.base[2]],
-            [cone.base[0], cone.base[1] - cone.base_radius, cone.base[2]],
-            [cone.base[0], cone.base[1], cone.base[2] + cone.base_radius],
-            [cone.base[0], cone.base[1], cone.base[2] - cone.base_radius],
-        )
-
-    @staticmethod
-    def conePointsVertex(cone):
-        return (
-            [cone.vertex[0], cone.vertex[1] + cone.vertex_radius, cone.vertex[2]],
-            [cone.vertex[0], cone.vertex[1] - cone.vertex_radius, cone.vertex[2]],
-            [cone.vertex[0], cone.vertex[1], cone.vertex[2] + cone.vertex_radius],
-            [cone.vertex[0], cone.vertex[1], cone.vertex[2] - cone.vertex_radius],
-        )
+        #Removing the user tag for user study (MB)
+        frictionStatement = frictionStatement.replace(user," ").replace(":","")
+        return frictionStatement

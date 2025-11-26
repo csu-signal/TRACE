@@ -30,7 +30,7 @@ from mmdemo.features import (
     SaveVideo,
     SelectedObjects,
     VADUtteranceBuilder,
-    WhisperTranscription,
+    WhisperTranscription, UserFrame
 )
 from mmdemo.features.friction.friction_feature import Friction
 
@@ -97,6 +97,7 @@ if __name__ == "__main__":
 
     # create output frame for video
     output_frame = DpipFrame(speech_output, color, objects, actions, props)
+    user_frame = UserFrame(speech_output,props)
     # output_frame = DpipFrame(color, objects, actions, props)
     # output_frame2 = DpipFrame(color2, objects2, calibration2)
 
@@ -107,6 +108,7 @@ if __name__ == "__main__":
             # SaveVideo(output_frame, frame_rate=2.2),
             DisplayFrame(output_frame),
             DisplayFrame(block_detections),
+            DisplayFrame(user_frame),
             cgt,  # new common ground gui output
             SaveVideo(output_frame, frame_rate=2.2, video_name=2),
             # Log(dense_paraphrased_transcriptions, props, moves, friction, csv=True),
