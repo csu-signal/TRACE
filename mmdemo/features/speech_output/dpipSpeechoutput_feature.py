@@ -112,7 +112,7 @@ class DpipSpeechOutput(BaseFeature[SpeechOutputInterface]):
             #if there's only one friction statement and it's length is greater than 4 read it
             if(len(friction) == 1):
                 if(len(friction[0].split(' ')) > 4):
-                    frictionStatement = f
+                    frictionStatement = friction[0]
             else:
                 #if there are multiple statements find the value with the highest rank and track the variations in length and statements
                 for f in friction:
@@ -139,7 +139,7 @@ class DpipSpeechOutput(BaseFeature[SpeechOutputInterface]):
                     
         except Exception as e:
             frictionStatement=''
-            print("Friction Parsing Error")
+            print("Friction Parsing Error:")
             
         # opening = random.choice(os.listdir("C:/GitHub/TRACE/mmdemo/features/speech_output/audio"))
         # audio, samplerate = sf.read(fr"C:/GitHub/TRACE/mmdemo/features/speech_output/audio/{opening}")
