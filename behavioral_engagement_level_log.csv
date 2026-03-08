@@ -1,0 +1,158 @@
+time,active events,action,level
+7.084616661071777,1 positive events2 negative events,none,2
+14.088388919830322,2 positive events4 negative events,none,2
+15.134984731674194,1 positive events4 negative events,1 posture positive events are no more active,2
+15.659823894500732,2 positive events2 negative events,2 gaze negative events are no more active,2
+20.149412393569946,1 positive events6 negative events,1 posture positive events are no more active,2
+20.700530290603638,2 positive events4 negative events,2 gaze negative events are no more active,2
+21.205406665802002,2 positive events5 negative events,behavioral engagemental level -1,1
+28.304745197296143,2 positive events6 negative events,none,1
+35.33758878707886,2 positive events3 negative events,none,1
+40.583311319351196,3 positive events6 negative events,1 posture positive events are no more active,1
+41.09069347381592,4 positive events5 negative events,1 gaze negative events are no more active,1
+42.11866354942322,4 positive events4 negative events,2 gaze negative events are no more active,1
+42.11866354942322,3 positive events4 negative events,1 posture positive events are no more active,1
+42.45652461051941,4 positive events6 negative events,none,1
+45.645907163619995,3 positive events6 negative events,1 posture positive events are no more active,1
+46.10822582244873,4 positive events5 negative events,1 gaze negative events are no more active,1
+47.21068477630615,4 positive events4 negative events,2 gaze negative events are no more active,1
+47.21068477630615,3 positive events4 negative events,1 posture positive events are no more active,1
+49.588321924209595,4 positive events6 negative events,none,1
+50.66203856468201,3 positive events6 negative events,1 posture positive events are no more active,1
+51.19059991836548,4 positive events5 negative events,1 gaze negative events are no more active,1
+52.43842172622681,4 positive events4 negative events,2 gaze negative events are no more active,1
+52.43842172622681,3 positive events4 negative events,1 posture positive events are no more active,1
+55.67437696456909,3 positive events6 negative events,1 posture positive events are no more active,1
+56.29930543899536,4 positive events6 negative events,1 gaze negative events are no more active,1
+56.69945502281189,4 positive events7 negative events,none,1
+63.783793926239014,2 positive events5 negative events,none,1
+70.96337080001831,3 positive events4 negative events,none,1
+74.91233229637146,3 positive events6 negative events,1 posture negative events are no more active,1
+75.99993419647217,3 positive events6 negative events,1 posture positive events are no more active,1
+76.4256489276886,4 positive events5 negative events,1 gaze negative events are no more active,1
+77.85217452049255,4 positive events4 negative events,2 gaze negative events are no more active,1
+78.02469968795776,4 positive events6 negative events,none,1
+79.76209616661072,3 positive events6 negative events,1 posture positive events are no more active,1
+81.1034483909607,3 positive events6 negative events,1 posture positive events are no more active,1
+81.75833511352539,4 positive events5 negative events,1 gaze negative events are no more active,1
+82.83769226074219,4 positive events4 negative events,2 gaze negative events are no more active,1
+84.9646315574646,3 positive events6 negative events,1 posture positive events are no more active,1
+85.11987233161926,4 positive events6 negative events,none,1
+86.04489827156067,3 positive events6 negative events,1 posture positive events are no more active,1
+86.70383310317993,4 positive events5 negative events,1 gaze negative events are no more active,1
+87.90324687957764,4 positive events5 negative events,2 gaze negative events are no more active,1
+90.05848717689514,3 positive events7 negative events,1 posture positive events are no more active,1
+91.17212843894958,3 positive events7 negative events,1 posture positive events are no more active,1
+91.85809874534607,3 positive events6 negative events,1 gaze negative events are no more active,1
+92.28977990150452,4 positive events7 negative events,none,1
+99.45806622505188,2 positive events5 negative events,none,1
+106.59355878829956,3 positive events3 negative events,none,1
+110.51953148841858,3 positive events6 negative events,1 posture positive events are no more active,1
+112.13197755813599,4 positive events5 negative events,1 gaze negative events are no more active,1
+112.31427526473999,3 positive events6 negative events,1 posture positive events are no more active,1
+113.3827006816864,4 positive events4 negative events,2 gaze negative events are no more active,1
+113.73454236984253,4 positive events6 negative events,none,1
+115.59821724891663,3 positive events6 negative events,1 posture positive events are no more active,1
+117.15455055236816,4 positive events5 negative events,1 gaze negative events are no more active,1
+117.34978675842285,3 positive events6 negative events,1 posture positive events are no more active,1
+118.46578049659729,4 positive events4 negative events,2 gaze negative events are no more active,1
+120.81617474555969,3 positive events6 negative events,1 posture positive events are no more active,1
+120.81617474555969,4 positive events6 negative events,none,1
+122.23805356025696,4 positive events5 negative events,1 gaze negative events are no more active,1
+122.50670218467712,3 positive events6 negative events,1 posture positive events are no more active,1
+123.47937083244324,4 positive events4 negative events,2 gaze negative events are no more active,1
+125.92169427871704,3 positive events6 negative events,1 posture positive events are no more active,1
+127.34760999679565,4 positive events5 negative events,1 gaze negative events are no more active,1
+127.56672358512878,3 positive events6 negative events,1 posture positive events are no more active,1
+128.04684376716614,4 positive events6 negative events,none,1
+128.51766991615295,4 positive events4 negative events,2 gaze negative events are no more active,1
+130.88929748535156,3 positive events6 negative events,1 posture positive events are no more active,1
+132.33693599700928,4 positive events5 negative events,1 gaze negative events are no more active,1
+132.58205103874207,3 positive events5 negative events,1 posture positive events are no more active,1
+133.57271218299866,4 positive events4 negative events,2 gaze negative events are no more active,1
+135.25360465049744,4 positive events6 negative events,none,1
+135.95067238807678,3 positive events6 negative events,1 posture positive events are no more active,1
+137.59989881515503,4 positive events5 negative events,1 gaze negative events are no more active,1
+137.59989881515503,3 positive events5 negative events,1 posture positive events are no more active,1
+138.7453169822693,4 positive events4 negative events,2 gaze negative events are no more active,1
+141.20764088630676,3 positive events6 negative events,1 posture positive events are no more active,1
+142.4321846961975,4 positive events6 negative events,none,1
+142.62881660461426,4 positive events5 negative events,1 gaze negative events are no more active,1
+142.62881660461426,3 positive events5 negative events,1 posture positive events are no more active,1
+143.7411322593689,4 positive events4 negative events,2 gaze negative events are no more active,1
+146.4046814441681,3 positive events6 negative events,1 posture positive events are no more active,1
+147.6094844341278,4 positive events5 negative events,1 gaze negative events are no more active,1
+147.6094844341278,3 positive events5 negative events,1 posture positive events are no more active,1
+148.82922291755676,4 positive events4 negative events,2 gaze negative events are no more active,1
+149.52991724014282,4 positive events6 negative events,none,1
+151.42961716651917,3 positive events6 negative events,1 posture positive events are no more active,1
+152.8598906993866,4 positive events5 negative events,1 gaze negative events are no more active,1
+152.8598906993866,3 positive events5 negative events,1 posture positive events are no more active,1
+154.0313012599945,4 positive events4 negative events,2 gaze negative events are no more active,1
+156.6250638961792,3 positive events7 negative events,1 posture positive events are no more active,1
+156.6250638961792,3 positive events7 negative events,none,1
+163.67329788208008,3 positive events4 negative events,none,1
+168.23271298408508,4 positive events6 negative events,1 gaze negative events are no more active,1
+168.23271298408508,3 positive events6 negative events,1 posture positive events are no more active,1
+169.59327054023743,3 positive events5 negative events,2 gaze negative events are no more active,1
+170.83322834968567,3 positive events7 negative events,none,1
+177.9041519165039,4 positive events4 negative events,none,1
+181.2062726020813,3 positive events7 negative events,1 posture positive events are no more active,1
+181.4440414905548,2 positive events7 negative events,1 posture positive events are no more active,1
+183.64615631103516,4 positive events6 negative events,1 gaze negative events are no more active,1
+184.90679502487183,4 positive events7 negative events,none,1
+191.94543313980103,2 positive events6 negative events,none,1
+198.9454734325409,2 positive events6 negative events,none,1
+206.0341923236847,2 positive events6 negative events,none,1
+213.14017796516418,2 positive events4 negative events,none,1
+217.21556663513184,1 positive events8 negative events,1 posture positive events are no more active,1
+219.34869050979614,2 positive events8 negative events,1 gaze negative events are no more active,1
+220.28721952438354,2 positive events9 negative events,none,1
+227.3945188522339,0 positive events8 negative events,none,1
+234.6231701374054,4 positive events3 negative events,none,1
+238.1558289527893,3 positive events6 negative events,1 posture positive events are no more active,1
+239.8531928062439,5 positive events5 negative events,1 gaze negative events are no more active,1
+241.3467137813568,4 positive events7 negative events,1 gaze positive events are no more active,1
+241.3467137813568,3 positive events7 negative events,1 posture positive events are no more active,1
+241.69390773773193,3 positive events8 negative events,none,1
+248.80160331726074,3 positive events4 negative events,none,1
+253.0255470275879,4 positive events5 negative events,1 gaze negative events are no more active,1
+253.52405977249146,3 positive events6 negative events,1 posture positive events are no more active,1
+255.21745467185974,4 positive events5 negative events,1 gaze negative events are no more active,1
+255.9519066810608,4 positive events6 negative events,none,1
+256.1898126602173,3 positive events6 negative events,1 posture positive events are no more active,1
+256.9563956260681,4 positive events5 negative events,1 gaze negative events are no more active,1
+257.8973033428192,4 positive events5 negative events,1 gaze negative events are no more active,1
+258.5839464664459,3 positive events6 negative events,1 posture positive events are no more active,1
+260.32703042030334,4 positive events5 negative events,1 gaze negative events are no more active,1
+261.2661497592926,3 positive events6 negative events,1 posture positive events are no more active,1
+261.8712558746338,4 positive events5 negative events,1 gaze negative events are no more active,1
+262.98309898376465,4 positive events6 negative events,none,1
+263.0866358280182,4 positive events5 negative events,1 gaze negative events are no more active,1
+263.8128340244293,3 positive events7 negative events,1 posture positive events are no more active,1
+265.53663873672485,4 positive events7 negative events,1 gaze negative events are no more active,1
+266.5202646255493,3 positive events8 negative events,1 posture positive events are no more active,1
+267.0201151371002,3 positive events7 negative events,1 gaze negative events are no more active,1
+268.32905197143555,3 positive events7 negative events,1 gaze negative events are no more active,1
+268.97239780426025,2 positive events8 negative events,1 posture positive events are no more active,1
+270.00057101249695,2 positive events9 negative events,none,1
+277.1286413669586,2 positive events7 negative events,none,1
+284.30601382255554,1 positive events5 negative events,none,1
+291.52138805389404,1 positive events7 negative events,none,1
+298.67088294029236,1 positive events6 negative events,none,1
+305.8306317329407,3 positive events4 negative events,none,1
+310.5043122768402,3 positive events6 negative events,1 posture positive events are no more active,1
+310.95845079421997,4 positive events5 negative events,1 gaze negative events are no more active,1
+311.4021677970886,4 positive events5 negative events,1 gaze negative events are no more active,1
+311.5952060222626,3 positive events5 negative events,1 posture positive events are no more active,1
+312.78336930274963,4 positive events5 negative events,1 gaze negative events are no more active,1
+312.9624307155609,4 positive events6 negative events,none,1
+315.4742214679718,3 positive events6 negative events,1 posture positive events are no more active,1
+315.85237646102905,4 positive events5 negative events,1 gaze negative events are no more active,1
+316.5137314796448,4 positive events5 negative events,1 gaze negative events are no more active,1
+316.655921459198,3 positive events5 negative events,1 posture positive events are no more active,1
+317.73122477531433,4 positive events6 negative events,1 gaze negative events are no more active,1
+320.0482528209686,4 positive events7 negative events,none,1
+327.1162893772125,2 positive events6 negative events,none,1
+334.18718433380127,1 positive events6 negative events,none,1
+341.27647280693054,1 positive events5 negative events,none,1

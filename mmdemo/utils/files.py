@@ -1,6 +1,7 @@
 import os
 import random
 from pathlib import Path
+from datetime import datetime
 
 
 def create_tmp_dir() -> Path:
@@ -10,7 +11,8 @@ def create_tmp_dir() -> Path:
     to be a new and unique directory.
     """
     while True:
-        dir = Path(f"tmp_{int(random.random() * 10**6)}")
+        date_name = datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S")
+        dir = Path(f"tmp_{date_name}_{int(random.random() * 10**6)}")
         try:
             os.makedirs(dir, exist_ok=False)
             return dir
@@ -24,7 +26,8 @@ def create_tmp_dir_with_featureName(featureName) -> Path:
     to be a new and unique directory.
     """
     while True:
-        dir = Path(f"tmp_{str(featureName)}_{int(random.random() * 10**6)}")
+        date_name = datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S")
+        dir = Path(f"tmp_{str(featureName)}_{date_name}_{int(random.random() * 10**6)}")
         try:
             os.makedirs(dir, exist_ok=False)
             return dir

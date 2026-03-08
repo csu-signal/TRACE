@@ -1,0 +1,157 @@
+from mmdemo.base_feature import BaseFeature
+from mmdemo.features.friction.friction_feature import Friction
+from mmdemo.features.outputs.dpip_block_detections_feature import DpipBlockDetections
+from mmdemo.features.speech_output.dpipSpeechoutput_feature import DpipSpeechOutput
+from mmdemo.features.wtd_ablation_testing.transcription_feature import _TranscriptionAndAudioGroundTruth, AudioGroundTruth, TranscriptionGroundTruth
+from mmdemo.interfaces import ColorImageInterface
+from mmdemo_azure_kinect import DeviceType, create_azure_kinect_features
+from pathlib import Path
+import os
+
+from mmdemo.demo import Demo
+from mmdemo.features import (
+    AccumulatedSelectedObjects,
+    DpipCommonGroundTracking,
+    DenseParaphrasedTranscription,
+    DisplayFrame,
+    DpipFrame,
+    GazeBodyTracking,
+    Gesture,
+    Log,
+    MicAudio,
+    RecordedAudio,
+    Move,
+    DpipObject,
+    DpipProposition,
+    SaveVideo,
+    SelectedObjects,
+    VADUtteranceBuilder,
+    WhisperTranscription,
+    Planner,
+    DpipCommonGroundTracking,
+    DpipActionFeature,
+    #DpipSpeechOutput
+)
+
+import warnings
+
+# Suppress all warnings
+warnings.filterwarnings("ignore")
+
+# DPIP_MKV_PATH = (
+#     "G:/DPIP/DPIP_Azure_Recordings/Group_Test_{0:02}-master.mkv"
+# )
+
+DPIP_MKV_PATH = (
+    "D:\\DPIP\\Demo-0825\\demo2-master.mkv"
+)
+
+DPIP_SECOND_MKV_PATH = (
+    ""
+)
+
+# audio path for DPIP group
+DPIP_GROUND_TRUTH_DIR = "D:\\DPIP\\Demo-0825\\postOutputs"
+
+# Number of frames to evaluate per second. This must
+# be a divisor of 30 (the true frame rate). Higher rates
+# will take longer to process.
+PLAYBACK_FRAME_RATE = 5
+
+def convert_audio(input_path: Path, output_path: Path):
+    """
+    Ensure the input audio will be in the correct format using ffmpeg.
+    Also normalizes the loudness of the audio.
+    """
+    os.system(
+        f"ffmpeg -i {input_path} -filter:a loudnorm -ar 16000 -ac 1 -acodec pcm_s16le {output_path}"
+    )
+
+def create_transcription_and_audio_ground_truth_features(
+    color: BaseFeature[ColorImageInterface], *, csv_path: Path, chunk_dir_path: Path):
+    """
+    Create features for transcription and audio ablation.
+
+    Arguments:
+    `color` -- feature which return color frames, used for frame count
+    `csv_path` -- path to the WTD annotation utterances.csv file.
+    `chunk_dir_path` -- path to the WTD annotation chunks directory
+
+    Returns:
+    transcription -- transcription feature which returns TranscriptionInterface
+    audio -- audio feature which returns AudioFileInterface
+    """
+    ta = _TranscriptionAndAudioGroundTruth(
+        color, csv_path=csv_path, chunk_dir_path=chunk_dir_path
+    )
+    transcription = TranscriptionGroundTruth(ta)
+    audio = AudioGroundTruth(ta)
+
+    return transcription, audio
+
+if __name__ == "__main__":
+    ground_truth_dir = Path(DPIP_GROUND_TRUTH_DIR)
+
+    # load azure kinect features from file
+    color, depth, body_tracking, calibration = create_azure_kinect_features(
+        DeviceType.PLAYBACK,
+        mkv_path=Path(DPIP_MKV_PATH),
+        playback_end_seconds=539,
+        playback_frame_rate=PLAYBACK_FRAME_RATE,
+    )
+
+    # load secondary azure kinect features from file
+    # color2, depth2, body_tracking2, calibration2 = create_azure_kinect_features(
+    #     DeviceType.PLAYBACK,
+    #     mkv_path=Path(DPIP_SECOND_MKV_PATH.format(group)),
+    #     playback_end_seconds=DPIP_END_TIMES[group],
+    #     playback_frame_rate=PLAYBACK_FRAME_RATE,
+    # )
+
+    objects = DpipObject(color, depth, calibration, skipPost=False)
+    block_detections = DpipBlockDetections(objects)
+    
+    actions = DpipActionFeature(objects)
+
+    # objects2 = DpipObject(color2, depth2, calibration2)
+    # selected_objects2 = SelectedObjects(objects2, gesture2)
+
+    # transcriptions from the ground truth file
+    (
+        transcriptions,
+        utterances,
+    ) = create_transcription_and_audio_ground_truth_features(
+        color,
+        csv_path=ground_truth_dir / "utterances.csv",
+        chunk_dir_path=ground_truth_dir / "chunks",
+    )
+
+    # prop extraction from friction model
+    dpip_prop_friction = DpipProposition(transcriptions, objects, actions, minUtteranceValue=7)
+
+    cgt = DpipCommonGroundTracking(dpip_prop_friction, color, actions, saveCanvas=False)
+    
+    # TODO are need to update the planner?
+    # plan = Planner(cgt)
+
+    #speech output
+    speech_output = DpipSpeechOutput(dpip_prop_friction)
+
+    output_frame = DpipFrame(speech_output, color, objects, actions, dpip_prop_friction)
+    # output_frame2 = DpipFrame(color2, gesture2, selected_objects2, calibration2)
+
+    # run demo and show output
+    demo = Demo(
+        targets=[
+            DisplayFrame(output_frame),
+            cgt, #new common ground gui output
+            DisplayFrame(block_detections),
+            # SaveVideo(output_frame, frame_rate=10),
+            # DisplayFrame(output_frame2),
+            # SaveVideo(output_frame2, frame_rate=10, video_name=2),
+            #Log(friction, csv=True),
+            #Log(transcriptions, stdout=True),
+        ]
+    )
+    #demo.show_dependency_graph()
+    demo.run()

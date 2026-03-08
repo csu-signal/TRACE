@@ -50,9 +50,9 @@ Download the following models from [here](https://colostate-my.sharepoint.com/:f
 
 ## CUDA Installation and Pathing (For Windows)(Linux has not been tested)
 
-WINDOWS OS: Ensure that you have CUDA Toolkit 12.4 or greater installed within Program Files for your architecture: https://developer.nvidia.com/cuda-downloads
+WINDOWS OS: Ensure that you have CUDA Toolkit 12.4 or greater installed within Program Files for your architecture: https://developer.nvidia.com/cuda-12-4-0-download-archive?target_os=Windows
 
-- After installing, add the file path, `C:Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8` to your system environment variables under `Path`. Additionally, check that the paths for `CUDA_PATH` and `CUDA_PATH_V12_6`match the newly added file path.
+- After installing, add the file path, `C:Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8` (often the dafault installation path) to your system environment variables under `Path`. Additionally, check that the paths for `CUDA_PATH` and `CUDA_PATH_V12_X`match the newly added file path.
 - If issues with CUDA arise, please check the "Solution for .dll File Errors' sub-section within the 'Common Setup Issues' section of this README file.
 
 ## Azure Kinect features (optional, only for Windows)
@@ -81,7 +81,9 @@ The server needs to start before the demo.
 `ssh traceteam@tarski.cs.colostate.edu`
 `cd fact_server`
 `conda activate frictionEnv`
-`/home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/friction_server.py`
+WTD:`/home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/friction_server.py`
+
+Currently in the works (DPIP: `/home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/dpip_friction_server.py`)
 
 In another local terminal, run the demo in the proper environemnt.
 
@@ -90,6 +92,87 @@ In another local terminal, run the demo in the proper environemnt.
 Install Docker for windows from [here](https://docs.docker.com/desktop/setup/install/windows-install/). Make sure to run it before running the demo.
 
 In `mmdemo/features/planner/planner.py`, change the path in check solution from `C:\\Users\\benkh\\Documents\\GitHub\\TRACE\\mmdemo\\features\\planner\\benchmarks` to the path of the benchmarks folder on your machine.
+
+## Multiple Mic Set-Up with VoiceMeeter Potato for Live Use
+
+Ensure the live file you are running has the number of `MicAudio` objects as microphones being used.
+
+If you do not have VoiceMeeter Potato, you can download Voicemeeter Potato [here](https://vb-audio.com/Voicemeeter/potato.htm)
+
+- This software is free but there is a wait time after opening. This wait time increases the more it is used, maxing out at a 300 second wait.
+- Purchasing a license is only valid for one PC.
+
+Once downloaded follow the set up instruction below for the live demo you plan to use.
+
+### DPIP Live Audio Set-Up
+
+Instructions for `dpip_cgt_live.py` audio set up.
+
+#### Virtual Cable for Fourth Microphone
+Move on to Voicemeeter Settings subsection if you already have the virtual cable driver installed.
+
+- For the this set-up you will need to download an additional VB-Cable which is found [here](https://vb-audio.com/Cable/index.htm)
+  - After downloading extract the files from the zip folder, the run `VBCABLE_Setup_x64.exe` and install the driver.
+  - Restart your computer after intallation process to ensure the cable functions properly.
+
+#### Voicemeeter Settings
+Open the VoiceMeeter Potato Application and set the following settings for each of the listed components:
+
+- Stereo Input 1:
+  - Click "Select Input Device" and set to the first headset microphone.
+  - Next to the Fader Gain bar, turn on the A2, A3, A4, and B1 buttons for Stereo Input 1. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- Stereo Input 2:
+  - Click "Select Input Device" and set to the second headset microphone.
+  - Next to the Fader Gain bar, turn on the A1, A3, A4, and B2 buttons for Stereo Input 2. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- Stereo Input 3:
+  - Click "Select Input Device" and set to the third headset microphone.
+  - Next to the Fader Gain bar, turn on the A1, A2, A4, and B3 buttons for Stereo Input 3. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- Stereo Input 4:
+  - Click "Select Input Device" and set to the fourth headset microphone.
+  - Next to the Fader Gain bar, turn on the A1, A2, A3, and A5 buttons for Stereo Input 4. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- HARDWARE OUT
+  - A1 : Set to first headset \(ensures D1 hears D2, D3, and Builder\)
+  - A2 : Set to second headset \(ensures D2 hears D1, D3, and Builder\)
+  - A3 : Set to third headset \(ensures D3 hears D1, D2, and Builder\)
+  - A4 : Set to fourth headset \(ensures Builder hears D1, D2, and D3\)
+  - A5 : Set to `CABLE Input` \(workaround virtual cable for the 4th microphone\)
+
+Once these setting have been set, run `TRACE\scripts\print_audio_devices.py` to see the device id's of each input. \(i.e. `9` is the device I.D for the listed output item`9 : Voicemeeter Out B1 (VB-Audio Vo`)
+- Device IDs 
+  - `audio1` should use the device ID for `Voicemeeter Out B1`
+  - `audio2` should use the device ID for `Voicemeeter Out B2`
+  - `audio3` should use the device ID for `Voicemeeter Out B3`
+  - `audio4` should use the device ID for `CABLE Output`
+
+### WTD-CGT Live Audio Set-Up
+
+- Stereo Input 1:
+  - Click "Select Input Device" and set to the first headset microphone.
+  - Turn on the A2, A3, and B1 buttons. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- Stereo Input 2:
+  - Click "Select Input Device" and set to the second headset microphone.
+  - Turn on the A1, A3, and B2 buttons. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- Stereo Input 3:
+  - Click "Select Input Device" and set to the third headset microphone.
+  - Turn on the A1, A2, and B3 buttons. All other buttons should be off.
+  - Set the Gate dial to 2.7
+
+- HARDWARE OUT
+  - A1 : Set to first mic \(ensures P1 hears P2 and P3\)
+  - A2 : Set to second mic \(ensures P2 hears P1 and P3\)
+  - A3 : Set to third mic \(ensures P3 hears P1 and P2\)
 
 ## Common Setup Issues
 
@@ -106,11 +189,14 @@ If you are experiencing errors related to .dll files (specially CUDA dlls i.e cu
 5. If updating/reinstalling CUDA doesn't work, try to reinstall Miniconda/Anaconda:
     - Finally, reinstall Miniconda or Anaconda. A fresh installation can resolve conflicts that might arise from previous installations, especially those that affect .dll files.
 
-### Solution for NotImplementedError concerning torchvision
+### Solution for NotImplementedError concerning torchvision or Userwarning: 1Torch was not compiled with flash attention
 
 Uninstall Torch and Torchvision: `pip uninstall torch torchvision`
 
 Got to [here](https://pytorch.org/) to install the proper versions. CUDA 12.4.
+
+### Solution for remote agent NotImplementedError: Cannot copy out of metadata tensor error
+If starting the agent yields this error, run nvidia-smi and make sure it isn't already running. If it is running, use kill -9 and the PID to end it.
 
 # Directory structure
 

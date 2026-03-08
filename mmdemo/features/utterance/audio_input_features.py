@@ -46,7 +46,7 @@ class MicAudio(BaseFeature[AudioFileListInterface]):
         self.speaker_id = speaker_id if speaker_id is not None else f"mic{device_id:03}"
 
     def initialize(self):
-        self.output_dir = create_tmp_dir_with_featureName("micAudio")
+        self.output_dir = create_tmp_dir_with_featureName(f"micAudio")
 
         self.queue = mp.Queue()
         self.done = mp.Value(c_bool, False)

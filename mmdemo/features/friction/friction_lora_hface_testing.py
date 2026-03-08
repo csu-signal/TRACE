@@ -346,7 +346,8 @@ if __name__ == "__main__":
     
     print("Initializing friction detector...")
     friction_detector = FrictionInference("Abhijnan/friction_sft_allsamples_weights_instruct") #this is the lora model id on huggingface (SFT model)
-    
+    # friction_detector = FrictionInference("Abhijnan/dpo_friction_run_with_69ksamples") #this is the dpo model
+
     print("\nGenerating friction for dialogue...")
     result = friction_detector.generate_friction(dialogue1)
     

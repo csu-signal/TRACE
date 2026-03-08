@@ -58,9 +58,10 @@ def create_utterance_input(utterancePath, audio_file, outputFile, output_chunk_d
         # for each ground truth utterance log the ASR values
         count = 1
         for u in utteranceFeatures:
-            # print(u)
-            startTime = float(u[1])
-            endTime = float(u[2])
+            print(u)
+            startTime = float(u[0])
+            endTime = float(u[1])
+            speakerId = str(u[2])
             startFrame = int(startTime * 30)
             endFrame = int(endTime * 30)
 
@@ -80,7 +81,7 @@ def create_utterance_input(utterancePath, audio_file, outputFile, output_chunk_d
                     wf2.writeframes(chunk)
 
             writer.writerow(
-                [count, endFrame, "Group", text, startFrame, endFrame, chunk_name]
+                [count, endFrame, speakerId, text, startFrame, endFrame, chunk_name]
             )
             count += 1
 
@@ -90,22 +91,22 @@ if __name__ == "__main__":
     parser.add_argument(
         "--utterancePath",
         nargs="?",
-        default="E:\\Weights_Task\\Data\\GAMR\\Utterances\\Group_01.csv",
+        default="D:\\DPIP\\Demo-0825\\demo2-utterances.csv",
     )
     parser.add_argument(
         "--audioFile", 
         nargs="?", 
-        default="E:\\Weights_Task\\Data\\Group_01-audio.wav"
+        default="D:\\DPIP\\Demo-0825\\demo2-audio.wav"
     )
     parser.add_argument(
         "--outputFile",
         nargs="?",
-        default="E:\\Weights_Task\\Data\\FactPostProcessing\\Utterances\\Group_01.csv",
+        default="D:\\DPIP\\Demo-0825\\postOutputs\\utterances.csv",
     )
     parser.add_argument(
         "--outputChunkDir",
         nargs="?",
-        default="E:\\Weights_Task\\Data\\FactPostProcessing\\Utterances\\Group_01_chunks",
+        default="D:\\DPIP\\Demo-0825\\postOutputs\\chunks",
     )
     args = parser.parse_args()
 
