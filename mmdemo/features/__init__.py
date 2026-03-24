@@ -54,3 +54,4 @@ from mmdemo.features.utterance.vad_builder_feature import VADUtteranceBuilder
 
 # Basic webcam feature to make it easy to use any camera
 from mmdemo.features.webcam.webcam_feature import WebcamDevice
+from mmdemo.features.intervention_policy.intervention_feature import intervention_policy

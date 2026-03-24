@@ -459,6 +459,12 @@ class TranscriptionInterface(BaseInterface):
     end_time: float
     text: str
 
+@dataclass 
+class InterventionInterface(BaseInterface):
+    """
+    intervene -- indicates whether to intervene or not
+    """
+    intervene: bool
 
 @dataclass
 class UserInterface(BaseInterface):
