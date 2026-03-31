@@ -1,5 +1,13 @@
 import os
 import sys
+import warnings
+
+# Suppress noisy Google API Core Python version deprecation warning.
+warnings.filterwarnings(
+    "ignore",
+    message=r"You are using a Python version .* google\.api_core",
+    category=FutureWarning,
+)
 
 from mmdemo.features.friction.sensor_sheet_friction_feature import SensorSheetFrictionFeature
 from mmdemo.features.outputs.sensor_frame_feature import SensorFrame

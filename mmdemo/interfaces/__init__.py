@@ -211,6 +211,11 @@ class FrictionOutputInterface(BaseInterface):
 
 
 @dataclass
+class SensorSheetFrictionOutputInterface(BaseInterface):
+    friction_statement: str
+
+
+@dataclass
 class GazeConesInterface(ConesInterface):
     """
     `cones` -- the list of cones found
