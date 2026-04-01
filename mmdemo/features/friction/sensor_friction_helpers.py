@@ -129,7 +129,7 @@ def poll_and_diff(sheets_service, sheet_id, previous_state, group):
     result = execute_with_retry(
         sheets_service.spreadsheets().values().get(
             spreadsheetId=sheet_id,
-            range="A1:AZ100"
+            range="Sheet1!A1:AZ100"
         )
     )
     current_rows = result.get('values', [])
