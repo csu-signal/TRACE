@@ -129,7 +129,7 @@ def poll_and_diff(sheets_service, sheet_id, previous_state, group):
     result = execute_with_retry(
         sheets_service.spreadsheets().values().get(
             spreadsheetId=sheet_id,
-            range="Sheet1!A1:AZ100"
+            range="Data!A1:AZ100"
         )
     )
     current_rows = result.get('values', [])
@@ -223,9 +223,6 @@ def get_sensor_assignments(rows):
         assignments[student_id] = max(sensor_y_counts, key=sensor_y_counts.get) \
             if sensor_y_counts else 'unknown'
 
-    print(f"  DEBUG sensor_row: {rows[1][:10]}")
-    print(f"  DEBUG selected_cols: {selected_cols}")
-    print(f"  DEBUG row 412: {rows[2][:10]}")
     return assignments
 
 FRICTION_INDICATORS = """1. Unequal contribution — one student dominates answers while others copy, stay silent, give vague/empty responses, or answer for the wrong sensor
@@ -235,7 +232,29 @@ FRICTION_INDICATORS = """1. Unequal contribution — one student dominates answe
 4. Missing synthesis — when answering questions that require combining all sensors, the group only addresses one or two sensors without connecting across the group
 """
 
-def build_intervention_prompt(deltas, current_state, current_rows, group):
+
+def update_recent_transcriptions(recent_transcriptions, transcription, max_items=3):
+    """
+    Append a new transcription and keep only the most recent `max_items` entries.
+    """
+    text = getattr(transcription, "text", "").strip()
+    if not text:
+        return list(recent_transcriptions)
+
+    speaker_id = getattr(transcription, "speaker_id", "unknown") or "unknown"
+    updated = [entry for entry in recent_transcriptions if entry]
+    updated.append(f"{speaker_id}: {text}")
+    return updated[-max_items:]
+
+
+def format_recent_transcriptions_for_prompt(recent_transcriptions):
+    if not recent_transcriptions:
+        return "None"
+
+    return "\n".join(f"- {transcription}" for transcription in recent_transcriptions)
+
+
+def build_intervention_prompt(deltas, current_state, current_rows, group, recent_transcriptions=None):
     """
     Build prompt from recent deltas + current group sheet state.
     """
@@ -256,9 +275,9 @@ def build_intervention_prompt(deltas, current_state, current_rows, group):
     delta_str = "\n".join(delta_lines)
     
     sensor_assignments = get_sensor_assignments(current_rows)
-    print(f"  DEBUG sensor_assignments raw: {sensor_assignments}")
     group_sensors = {sid: sensor_assignments.get(sid, 'unknown') for sid in group}
-    print(f"  DEBUG group_sensors: {group_sensors}")
+
+    transcription_context = format_recent_transcriptions_for_prompt(recent_transcriptions)
         
     prompt = f"""
 You are an AI tutor monitoring a middle school STEM group activity.
@@ -267,6 +286,9 @@ FRICTION INDICATORS — you must generate a friction intervention sentence or tw
 {FRICTION_INDICATORS}
 Group: {group}
 Sensor assignments: {group_sensors}
+
+Recent transcriptions:
+{transcription_context}
 
 Recent cell updates:
 {delta_str}
@@ -335,37 +357,34 @@ def run_inference(model_pipeline, prompt):
     gc.collect()
     torch.cuda.empty_cache()
  
-    print("model output", output)
-
     # Strip prompt from output
     return output
 
 def run_inference_socket(prompt):
+    total_start_time = time.perf_counter()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
         sendData = str.encode(prompt)
-        print("Send Data Length:" + str(len(sendData)))
+        send_start_time = time.perf_counter()
         s.sendall(sendData)
         # Signal end-of-transmit so server can exit recv loop immediately
         s.shutdown(socket.SHUT_WR)
+        send_elapsed_ms = (time.perf_counter() - send_start_time) * 1000
+        print(f"[Tarski] Prompt sent: {len(sendData)} bytes in {send_elapsed_ms:.1f} ms")
 
-        print("Waiting for friction server response")
         data = bytearray()
         while True:
             try:
                 chunk = s.recv(4096)
-            except ConnectionResetError as e:
-                print(f"ConnectionResetError while receiving: {e}")
+            except ConnectionResetError:
                 break
             if not chunk:
                 break
             data.extend(chunk)
 
     received = data.decode("utf-8", errors="ignore")
-    if received:
-        print("Received data length:" + str(len(received)))
-    else:
-        print("No data received from server (connection reset or empty response)")
+    total_elapsed_s = time.perf_counter() - total_start_time
+    print(f"[Tarski] Response received: {len(received)} chars in {total_elapsed_s:.2f} s")
     return received
 
 # from mmdemo.features.friction.model_configs import load_local_model #import the local model loading logic 
@@ -429,14 +448,8 @@ def build_faaf_model():
     base_llama_path = os.path.join(workspace_root, 'llama3_8b_instruct')
 
     faaf_checkpoint = os.path.join(base_dir, 'DELI_faaf_weights/checkpoint-2000')
-    print(f"Using base model path: {base_llama_path}")
-    print(f"Using FAAF checkpoint path: {faaf_checkpoint}")
 
     model, tokenizer = load_local_model(faaf_checkpoint, base_llama_path)
-
-    # inspect module structure for embed_tokens path mapping
-    embed_modules = [name for name, _ in model.named_modules() if 'embed_tokens' in name]
-    print("embed_modules:", embed_modules)
 
     return model, tokenizer
 

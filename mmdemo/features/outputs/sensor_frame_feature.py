@@ -8,6 +8,7 @@ import numpy as np
 from mmdemo.base_feature import BaseFeature
 from mmdemo.features.friction.sensor_sheet_friction_feature import SensorSheetFrictionFeature
 from mmdemo.features.objects.dpip_config import *
+from mmdemo.features.speech_output.sensorSpeechoutput_feature import extract_speakable_friction_text
 from mmdemo.interfaces import (
     CameraCalibrationInterface,
     ColorImageInterface,
@@ -19,6 +20,7 @@ from mmdemo.interfaces import (
     GestureConesInterface,
     PlannerInterface,
     SelectedObjectsInterface,
+    SensorSheetFrictionOutputInterface,
     SpeechOutputInterface,
 )
 from mmdemo.interfaces.data import Cone
@@ -56,18 +58,20 @@ class SensorFrame(BaseFeature[ColorImageInterface]):
 
     def __init__(
         self,
+        speechoutput: BaseFeature[SpeechOutputInterface],
         color: BaseFeature[ColorImageInterface],
-        friction: BaseFeature[SensorSheetFrictionFeature],
+        friction: BaseFeature[SensorSheetFrictionOutputInterface],
     ):
-        super().__init__(color, friction) 
+        super().__init__(speechoutput, color, friction)
 
     def initialize(self):
         self.last_plan = {"text": "", "color": (255, 255, 255)}
 
     def get_output(
         self,
+        speech: SpeechOutputInterface,
         color: ColorImageInterface,
-        friction: SensorSheetFrictionFeature
+        friction: SensorSheetFrictionOutputInterface,
     ):
         if not color.is_new() or not friction.is_new():
             return None
@@ -77,7 +81,8 @@ class SensorFrame(BaseFeature[ColorImageInterface]):
         h, w, _ = color.frame.shape
 
         if friction and friction.friction_statement != "":
-            frictionStatements = friction.friction_statement.split("\n")
+            friction_text = extract_speakable_friction_text(friction.friction_statement)
+            frictionStatements = [line for line in friction_text.split("\n") if line.strip()]
             for index, fstate in enumerate(frictionStatements):
                 x, y = (50, 75 + (30 * index))
                 text = fstate

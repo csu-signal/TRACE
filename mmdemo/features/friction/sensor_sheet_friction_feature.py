@@ -15,7 +15,7 @@ from typing import Dict, List, Optional
 import threading
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import ColorImageInterface, DpipActionInterface, DpipCommonGroundTrackingInterface, SensorSheetFrictionOutputInterface, FrictionOutputInterface, PropositionInterface, TranscriptionInterface
-from mmdemo.features.friction.sensor_friction_helpers import run_inference_socket, load_local_model, get_sheets_service, poll_and_diff, build_intervention_prompt, run_inference, load_model
+from mmdemo.features.friction.sensor_friction_helpers import run_inference_socket, load_local_model, get_sheets_service, poll_and_diff, build_intervention_prompt, run_inference, load_model, update_recent_transcriptions
 import tkinter as tk
 from tkinter import Button, ttk
 from PIL import ImageGrab
@@ -27,7 +27,7 @@ GROUP_IDS = ["412", "413", "417"]
 CREDENTIALS_PATH = "credentials.json"
 TOKEN_PATH = "token.pickle"
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-SPREADSHEET_ID = "1P1lnXvxb3KXQym6qCtq2GdALJjaPPeCY8R9IsTcra9I"
+SPREADSHEET_ID = "11TzA0If5M0iOuUw-vk1NvmnFWbSRG_9K6Qi_YWv04SE"
 
 @final
 class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]):
@@ -41,6 +41,7 @@ class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]
         super().__init__(transcription)
         # self.init = False
         # self.useTabs = True
+        self.history_transcriptions = []
         self.latest_friction = ""
         self.spreadsheet_id = SPREADSHEET_ID
         self.group_ids = GROUP_IDS
@@ -54,17 +55,20 @@ class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]
         # Start the polling worker thread once, as a daemon
         self.t = threading.Thread(target=self.worker, daemon=True)
         self.t.start()
-        print("[SensorSheetFrictionFeature] Worker thread started")
 
 
     def get_output(self, transcription: TranscriptionInterface):
+        if transcription and transcription.is_new() and transcription.text.strip():
+            self.history_transcriptions = update_recent_transcriptions(
+                self.history_transcriptions,
+                transcription,
+            )
         # Always return the latest friction statement
         # The worker thread updates self.latest_friction continuously in the background
         return SensorSheetFrictionOutputInterface(friction_statement=self.latest_friction)
 
     def worker(self):
         try:
-            print("[SensorSheetFrictionFeature.worker] Started polling loop")
             while True:
                 deltas, current_state, current_rows = poll_and_diff(
                     self.sheets_service,
@@ -73,15 +77,21 @@ class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]
                     self.group_ids,
                 )
 
+                # Always advance baseline state so deletions/empty cells are tracked
+                # even when they do not create deltas.
+                self.previous_state = current_state
+
                 if deltas:
-                    print(f"[SensorSheetFrictionFeature.worker] Detected {len(deltas)} deltas, calling LLM...")
-                    prompt = build_intervention_prompt(deltas, current_state, current_rows, GROUP_IDS)
+                    print(f"[Sheet] Detected {len(deltas)} new change(s)")
+                    prompt = build_intervention_prompt(
+                        deltas,
+                        current_state,
+                        current_rows,
+                        GROUP_IDS,
+                        self.history_transcriptions,
+                    )
                     output = run_inference_socket(prompt)
-                    print(f"[SensorSheetFrictionFeature.worker] LLM response received: {output if output else 'None'}...")
                     self.latest_friction = output
-                    self.previous_state = current_state
-                else:
-                    print(f"[SensorSheetFrictionFeature.worker] No deltas at {time.time()}")
 
                 time.sleep(5)
 

@@ -11,6 +11,7 @@ warnings.filterwarnings(
 
 from mmdemo.features.friction.sensor_sheet_friction_feature import SensorSheetFrictionFeature
 from mmdemo.features.outputs.sensor_frame_feature import SensorFrame
+from mmdemo.features.speech_output.sensorSpeechoutput_feature import SensorSpeechOutput
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -58,12 +59,16 @@ if __name__ == "__main__":
     # transcriptions from microphone
 
     # Multiple microphones - laptop
-    audio1 = MicAudio(device_id=12, speaker_id="D1")
-    audio2 = MicAudio(device_id=14, speaker_id="D2")
-    audio3 = MicAudio(device_id=15, speaker_id="D3")
-    audio4 = MicAudio(device_id=3, speaker_id="Builder")
+    # audio1 = MicAudio(device_id=12, speaker_id="D1")
+    # audio2 = MicAudio(device_id=14, speaker_id="D2")
+    # audio3 = MicAudio(device_id=15, speaker_id="D3")
+    # audio4 = MicAudio(device_id=3, speaker_id="Builder")
+    audio4 = MicAudio(device_id=6, speaker_id="Test")
+    # utterance_audio = VADUtteranceBuilder(
+        # audio1, audio2, audio3, audio4, delete_input_files=False
+    # )
     utterance_audio = VADUtteranceBuilder(
-        audio1, audio2, audio3, audio4, delete_input_files=False
+        audio4, delete_input_files=False
     )
 
     #######################################################################################
@@ -78,9 +83,10 @@ if __name__ == "__main__":
     # TODO create feature to get data from sheet
     # TODO create feature to call into sensor activity friction LLM
     friction = SensorSheetFrictionFeature(transcriptions)
+    speech_output = SensorSpeechOutput(friction)
 
     # create output frame for video
-    output_frame = SensorFrame(color, friction)
+    output_frame = SensorFrame(speech_output, color, friction)
 
     # run demo and show output
     demo = Demo(
