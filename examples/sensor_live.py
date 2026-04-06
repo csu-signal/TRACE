@@ -49,6 +49,8 @@ from mmdemo.features.friction.friction_feature import Friction
 # from mmdemo.features.friction.friction_feature import Friction
 from mmdemo.features.speech_output.dpipSpeechoutput_feature import DpipSpeechOutput
 
+ENABLE_TTS = False
+
 if __name__ == "__main__":
     print(f"is cuda available? {torch.cuda.is_available()}")
     # azure kinect features from camera
@@ -83,10 +85,14 @@ if __name__ == "__main__":
     # TODO create feature to get data from sheet
     # TODO create feature to call into sensor activity friction LLM
     friction = SensorSheetFrictionFeature(transcriptions)
-    speech_output = SensorSpeechOutput(friction)
 
     # create output frame for video
-    output_frame = SensorFrame(speech_output, color, friction)
+    if ENABLE_TTS:
+        speech_output = SensorSpeechOutput(friction)
+        output_frame = SensorFrame(color, friction, speech_output)
+    else:
+        # Disable TTS from this file by setting ENABLE_TTS = False.
+        output_frame = SensorFrame(color, friction)
 
     # run demo and show output
     demo = Demo(

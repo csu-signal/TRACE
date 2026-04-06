@@ -58,21 +58,26 @@ class SensorFrame(BaseFeature[ColorImageInterface]):
 
     def __init__(
         self,
-        speechoutput: BaseFeature[SpeechOutputInterface],
         color: BaseFeature[ColorImageInterface],
         friction: BaseFeature[SensorSheetFrictionOutputInterface],
+        speechoutput: BaseFeature[SpeechOutputInterface] | None = None,
     ):
-        super().__init__(speechoutput, color, friction)
+        if speechoutput is None:
+            super().__init__(color, friction)
+        else:
+            super().__init__(speechoutput, color, friction)
 
     def initialize(self):
         self.last_plan = {"text": "", "color": (255, 255, 255)}
 
-    def get_output(
-        self,
-        speech: SpeechOutputInterface,
-        color: ColorImageInterface,
-        friction: SensorSheetFrictionOutputInterface,
-    ):
+    def get_output(self, *args):
+        if len(args) == 3:
+            _, color, friction = args
+        elif len(args) == 2:
+            color, friction = args
+        else:
+            return None
+
         if not color.is_new() or not friction.is_new():
             return None
 

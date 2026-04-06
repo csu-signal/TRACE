@@ -90,7 +90,13 @@ class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]
                         GROUP_IDS,
                         self.history_transcriptions,
                     )
-                    output = run_inference_socket(prompt)
+                    try:
+                        output = run_inference_socket(prompt)
+                        print("\n" + "=" * 24 + " LLM FULL RESPONSE " + "=" * 24)
+                        print(output)
+                    except Exception as e:
+                        print(f"[SensorSheetFrictionFeature.worker] ERROR: {e}")
+                    print("=" * 67 + "\n")
                     self.latest_friction = output
 
                 time.sleep(5)
