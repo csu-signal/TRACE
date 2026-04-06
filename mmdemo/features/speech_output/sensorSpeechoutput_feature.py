@@ -17,6 +17,8 @@ except ImportError:
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import SensorSheetFrictionOutputInterface, SpeechOutputInterface
 
+ENABLE_TTS = True
+
 
 def extract_speakable_friction_text(friction_statement: str) -> str:
     return friction_statement.strip()
@@ -56,6 +58,11 @@ class SensorSpeechOutput(BaseFeature[SpeechOutputInterface]):
 
         if not friction or friction == self.last_friction or self.length > -30:
             self.length -= 1
+            return SpeechOutputInterface(speech_output=self.speechoutput, length=self.length)
+
+        if not ENABLE_TTS:
+            self.last_friction = friction
+            self.speechoutput = False
             return SpeechOutputInterface(speech_output=self.speechoutput, length=self.length)
 
         play_notification_bell()
