@@ -253,7 +253,7 @@ class FrictionInference:
 
         out = raw_model.generate(
             input_ids,
-            max_new_tokens=400
+            max_new_tokens=900
         )
 
         new_tokens = out[0][input_ids.shape[-1]:]
