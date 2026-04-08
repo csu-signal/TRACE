@@ -3,6 +3,7 @@
 # conda activate frictionEnv
 # /home/traceteam/anaconda3/envs/frictionEnv/bin/python /home/traceteam/fact_server/sesnor_friction_server.py
 
+import json
 import os
 import sys
 import socket
@@ -264,7 +265,7 @@ class FrictionInference:
         base_dir = os.path.join(workspace_root, 'DELI_faaf')
         base_llama_path = os.path.join(workspace_root, 'llama3_8b_instruct')
 
-        faaf_checkpoint = os.path.join(base_dir, 'diplomacy_deli_weights/DELI_faaf_weights/checkpoint-2000') #updated to be a path that is on tarski
+        faaf_checkpoint = os.path.join(base_dir, 'diplomacy_deli_weights/DELI_faaf_weights/checkpoint-2000') #updated to be a path that is on tarski, outdated
         #print(f"Using base model path: {base_llama_path}")
         print(f"Using FAAF checkpoint path: {faaf_checkpoint}")
 
@@ -339,27 +340,34 @@ def start_server(friction_detector: FrictionInference):
 
 
 if __name__ == "__main__":
-    # I don't think these models have been loaded to tarski as far as I know...
-    # __file__ = os.getcwd()
-    # base = os.path.join(os.path.dirname(__file__), 'TRACE', 'DELI_all_weights')
-    # base_llama_path = os.path.join(os.path.dirname(__file__), 'TRACE', 'llama3_8b_instruct') 
-
-    # local_models = [
-    #     os.path.join(base, 'DELI_faaf_weights/checkpoint-2000'),
-    #     os.path.join(base, 'DELI_dpo_weights/checkpoint-2000'),
-    #     os.path.join(base, 'DELI_sft_weights/checkpoint-6000'),
-    #     os.path.join(base, 'DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800'),
-    # ]
-
     print("Initializing friction detector...")
 
-    #start server socket
+    #start server socket #######################
     #start_server(FrictionInference())
 
-    #local test
-    friction = FrictionInference() #LOAD FAAF by default
-    friction.run_inference(PROMPT_TEXT_TEST)
+    #local test #######################
+    __file__ = os.getcwd()
+    # /home/traceteam/DELI_all_weights
+    base = os.path.join(os.path.dirname(__file__), 'traceteam', 'DELI_all_weights')
+    base_llama_path = os.path.join(os.path.dirname(__file__), 'traceteam', 'llama3_8b_instruct') 
 
-    
+    local_models = [
+        os.path.join(base, 'DELI_faaf_weights/checkpoint-2000'),
+        os.path.join(base, 'DELI_dpo_weights/checkpoint-2000'),
+        os.path.join(base, 'DELI_sft_weights/checkpoint-6000'),
+        os.path.join(base, 'DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800'),
+    ]
 
-    
+    modelData = []
+    with open('/home/traceteam/fact_server/sensorBaseData.json', 'r') as file:
+        data = json.load(file)
+        
+    for path in local_models:
+      friction = FrictionInference(path, local=True)
+
+      for i in data:
+        output = friction.run_inference(i['prompt'])
+        modelData.append({"checkpoint": path, "prompt" : i['prompt'], "output": output})
+
+    with open('sensorOutputs.json', 'w') as f:
+      json.dump(modelData, f)
