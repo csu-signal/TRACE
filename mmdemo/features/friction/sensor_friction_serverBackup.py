@@ -262,10 +262,10 @@ class FrictionInference:
     def build_faaf_model(self):
         # notebook may not define __file__, so use cwd
         workspace_root = os.path.abspath(os.getcwd())
-        base_dir = os.path.join(workspace_root, 'DELI_faaf')
-        base_llama_path = os.path.join(workspace_root, 'llama3_8b_instruct')
+        base = os.path.join(os.path.dirname(__file__), 'traceteam', 'DELI_all_weights')
+        base_llama_path = os.path.join(os.path.dirname(__file__), 'traceteam', 'llama3_8b_instruct') 
 
-        faaf_checkpoint = os.path.join(base_dir, 'diplomacy_deli_weights/DELI_faaf_weights/checkpoint-2000') #updated to be a path that is on tarski, outdated
+        faaf_checkpoint = os.path.join(base, 'DELI_faaf_weights/checkpoint-2000') #updated to the latest FAAF model from testing - hannah
         #print(f"Using base model path: {base_llama_path}")
         print(f"Using FAAF checkpoint path: {faaf_checkpoint}")
 
@@ -363,7 +363,8 @@ if __name__ == "__main__":
         data = json.load(file)
         
     for path in local_models:
-      friction = FrictionInference(path, local=True)
+      #friction = FrictionInference(path, local=True)
+      friction = FrictionInference()
 
       for i in data:
         output = friction.run_inference(i['prompt'])
