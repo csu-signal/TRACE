@@ -51,10 +51,55 @@ class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]
     def initialize(self):
         self.sheets_service = get_sheets_service()
         self.previous_state = {}
+        repo_root = Path(__file__).resolve().parents[3]
+        log_dir = repo_root / "logging-output-sensor"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        self.llm_io_path = log_dir / "sensor_llm_io.json"
         
         # Start the polling worker thread once, as a daemon
         self.t = threading.Thread(target=self.worker, daemon=True)
         self.t.start()
+
+
+    def _write_llm_io_log(self):
+        if self.llm_io_path is None:
+            return
+
+        with self.llm_io_path.open("w", encoding="utf-8") as log_file:
+            json.dump(self.llm_io_records, log_file, indent=2)
+
+
+    def _record_llm_io(self, prompt: str, output: str, deltas, response_time_seconds=None):
+        self.llm_io_records.append(
+            {
+                "prompt": prompt,
+                "output": output,
+                "delta_count": len(deltas),
+                "len_prompt": len(prompt),
+                "response_time_seconds": response_time_seconds,
+            }
+        )
+        self._write_llm_io_log()
+
+    def _extract_group_friction_from_json(self, json_string: str) -> str:
+        """
+        Extract the group-level friction text from the LLM's JSON response.
+        Expected format: {"group": {"text": "...", "reasoning": "..."}, ...}
+        Returns the group's text field, or an empty string if parsing fails.
+        """
+        try:
+            data = json.loads(json_string)
+            if isinstance(data, dict) and "group" in data:
+                group_data = data["group"]
+                if isinstance(group_data, dict) and "text" in group_data:
+                    text = group_data["text"]
+                    if isinstance(text, str):
+                        return text.strip()
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"[SensorSheetFrictionFeature] Warning: Failed to parse JSON response: {e}")
+        
+        # Return empty string if extraction fails
+        return ""
 
 
     def get_output(self, transcription: TranscriptionInterface):
@@ -90,14 +135,20 @@ class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]
                         GROUP_IDS,
                         self.history_transcriptions,
                     )
+                    output = ""
+                    response_time_seconds = None
                     try:
+                        response_start = time.perf_counter()
                         output = run_inference_socket(prompt)
+                        response_time_seconds = time.perf_counter() - response_start
                         print("\n" + "=" * 24 + " LLM FULL RESPONSE " + "=" * 24)
                         print(output)
                     except Exception as e:
                         print(f"[SensorSheetFrictionFeature.worker] ERROR: {e}")
                     print("=" * 67 + "\n")
-                    self.latest_friction = output
+                    self._record_llm_io(prompt, output, deltas, response_time_seconds)
+                    # Extract group-level friction from JSON response
+                    self.latest_friction = self._extract_group_friction_from_json(output)
 
                 time.sleep(5)
 

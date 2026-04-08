@@ -13,7 +13,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 HOST = "129.82.138.15"  # The server's hostname or IP address (TARSKI)
-PORT = 65432  # The port used by the server 
+PORT = 65431  # The port used by the server 
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 CREDENTIALS_PATH = 'credentials.json'
