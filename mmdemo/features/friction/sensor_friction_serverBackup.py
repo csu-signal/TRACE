@@ -157,6 +157,55 @@ Output ONLY valid JSON, no explanation, no markdown and no python code needed. F
 
 --- End Prompt ---"""
 
+def clean_prompt(raw_prompt, group=['412', '413', '417']):
+    id1, id2, id3 = group
+
+    # ── 1. Split into sections using reliable markers ──
+    # header = everything before sheet state
+    # sheet  = sheet state content
+    # rest   = from "Based on the recent updates" onwards (discard)
+
+    header_end = raw_prompt.index("Current sheet state")
+    sheet_start = header_end + len("Current sheet state for this group:")
+    footer_start = raw_prompt.index("Based on the recent updates")
+
+    header = raw_prompt[:header_end].strip()
+    raw_sheet = raw_prompt[sheet_start:footer_start].strip()
+
+    # ── 2. Clean sheet state line by line ──
+    cleaned_lines = []
+    for line in raw_sheet.split('\n'):
+        # skip <...> with selected N — pure noise
+        if re.search(r'answer:\s*<\.\.\.>\s*\|\s*selected:\s*N', line):
+            continue
+        # skip empty answer with selected N
+        if re.search(r'answer:\s*\|\s*selected:\s*N', line):
+            continue
+        # skip lines that are ONLY <...> with no selected value
+        if re.search(r'answer:\s*<\.\.\.>\s*\|\s*selected:\s*$', line):
+            continue
+        # keep everything else (partial <...> with real selected, or real answers)
+        cleaned_lines.append(line)
+
+    # drop consecutive blank lines
+    cleaned_sheet = re.sub(r'\n{3,}', '\n\n', '\n'.join(cleaned_lines)).strip()
+
+    # ── 3. Rebuild format instruction with real IDs ──
+    new_format = f"""Based on the recent updates and current state, generate a friction intervention statement.
+For each participant and the group as a whole, provide:
+- A 1-2 sentence intervention (directive, question, or redirect style)
+- One sentence reasoning describing what was observed
+
+Do NOT write code. Do NOT explain outside the JSON. Output ONLY valid JSON. Format exactly:
+{{
+  "group": {{"text": "...", "reasoning": "..."}},
+  "{id1}": {{"text": "...", "reasoning": "..."}},
+  "{id2}": {{"text": "...", "reasoning": "..."}},
+  "{id3}": {{"text": "...", "reasoning": "..."}}
+}}"""
+
+    return f"{header}\n\nCurrent sheet state for this group:\n{cleaned_sheet}\n\n{new_format}"
+
 class FrictionInference:  
     def __init__(self, model_path: str = '', local: bool = False):
         if(local):
@@ -231,7 +280,7 @@ class FrictionInference:
                 base_model,
                 device_map="auto",
                 low_cpu_mem_usage=True,
-                torch_dtype=torch.float16,
+                torch_dtype=torch.bfloat16,
                 trust_remote_code=True,
             )
             
@@ -239,7 +288,7 @@ class FrictionInference:
             lora_model = PeftModel.from_pretrained(
                 base_model,
                 model_path,
-                torch_dtype=torch.float16,
+                torch_dtype=torch.bfloat16,
                 device_map="auto",
                 low_cpu_mem_usage=True,
                 trust_remote_code=True,
@@ -320,7 +369,7 @@ def start_server(friction_detector: FrictionInference):
                     # Send prompt directly to model and return raw generated text
                     print("Generating text from model...")
                     try:
-                        result_text = friction_detector.run_inference(prompt_text)
+                        result_text = friction_detector.run_inference(clean_prompt(prompt_text))
                         response_text = result_text if result_text else ""
                     except Exception as e:
                         tb = traceback.format_exc()
@@ -353,9 +402,9 @@ if __name__ == "__main__":
 
     local_models = [
         os.path.join(base, 'DELI_faaf_weights/checkpoint-2000'),
-        os.path.join(base, 'DELI_dpo_weights/checkpoint-2000'),
-        os.path.join(base, 'DELI_sft_weights/checkpoint-6000'),
-        os.path.join(base, 'DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800'),
+        # os.path.join(base, 'DELI_dpo_weights/checkpoint-2000'),
+        # os.path.join(base, 'DELI_sft_weights/checkpoint-6000'),
+        # os.path.join(base, 'DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800'),
     ]
 
     modelData = []
@@ -363,12 +412,13 @@ if __name__ == "__main__":
         data = json.load(file)
         
     for path in local_models:
-      #friction = FrictionInference(path, local=True)
-      friction = FrictionInference()
+      friction = FrictionInference(path, local=True)
+      #friction = FrictionInference()
 
       for i in data:
-        output = friction.run_inference(i['prompt'])
-        modelData.append({"checkpoint": path, "prompt" : i['prompt'], "output": output})
+        cleanPrompt = clean_prompt(i['prompt'])
+        output = friction.run_inference(cleanPrompt)
+        modelData.append({"checkpoint": path, "clean_prompt" : cleanPrompt, "output": output})
 
-    with open('sensorOutputs.json', 'w') as f:
+    with open('sensorOutputsClean.json', 'w') as f:
       json.dump(modelData, f)
