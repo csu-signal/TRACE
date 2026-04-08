@@ -164,7 +164,6 @@ def clean_prompt(raw_prompt, group=['412', '413', '417']):
     # header = everything before sheet state
     # sheet  = sheet state content
     # rest   = from "Based on the recent updates" onwards (discard)
-
     header_end = raw_prompt.index("Current sheet state")
     sheet_start = header_end + len("Current sheet state for this group:")
     footer_start = raw_prompt.index("Based on the recent updates")
@@ -311,8 +310,9 @@ class FrictionInference:
     def build_faaf_model(self):
         # notebook may not define __file__, so use cwd
         workspace_root = os.path.abspath(os.getcwd())
-        base = os.path.join(os.path.dirname(__file__), 'traceteam', 'DELI_all_weights')
-        base_llama_path = os.path.join(os.path.dirname(__file__), 'traceteam', 'llama3_8b_instruct') 
+        root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        base = os.path.join(root_dir, 'DELI_all_weights')
+        base_llama_path = os.path.join(root_dir, 'llama3_8b_instruct') 
 
         faaf_checkpoint = os.path.join(base, 'DELI_faaf_weights/checkpoint-2000') #updated to the latest FAAF model from testing - hannah
         #print(f"Using base model path: {base_llama_path}")
@@ -328,7 +328,7 @@ class FrictionInference:
 
 def start_server(friction_detector: FrictionInference):
     HOST = '129.82.138.15'  # external host where server is reachable
-    PORT = 65432
+    PORT = 65431
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -338,25 +338,34 @@ def start_server(friction_detector: FrictionInference):
 
         while True:
             conn, addr = s.accept()
+            conn.settimeout(None)
+
+            # TCP heartbeat logic to keep the socket up even if the model is taking a long time
+            # Apply these to the client socket after accept()
+            conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+
+            # Fine-tuning (Linux specific)
+            # Start probing after 10 minutes of inactivity
+            conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 600) 
+            # Probe every 60 seconds after that
+            conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 60) 
+            # Close connection only after 10 failed probes
+            conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
+
             with conn:
                 try:
                     print(f"Connection from {addr}")
 
                     # Read full request text from sender (supports message chunking)
                     data = bytearray()
-                    conn.settimeout(2.0)  # stop waiting once no new data arrives
-                    try:
-                        while True:
-                            chunk = conn.recv(4096)
-                            if not chunk:
-                                break
-                            data.extend(chunk)
-                            if len(chunk) < 4096:
-                                break
-                    except socket.timeout:
-                        pass
-                    finally:
-                        conn.settimeout(None)
+                    while True:
+                      try:
+                          chunk = conn.recv(4096)
+                      except socket.timeout:
+                          continue
+                      if not chunk:
+                          break
+                      data.extend(chunk)
 
                     if not data:
                         print("No data received; closing connection")
@@ -392,33 +401,33 @@ if __name__ == "__main__":
     print("Initializing friction detector...")
 
     #start server socket #######################
-    #start_server(FrictionInference())
+    start_server(FrictionInference())
 
     #local test #######################
-    __file__ = os.getcwd()
-    # /home/traceteam/DELI_all_weights
-    base = os.path.join(os.path.dirname(__file__), 'traceteam', 'DELI_all_weights')
-    base_llama_path = os.path.join(os.path.dirname(__file__), 'traceteam', 'llama3_8b_instruct') 
+    # __file__ = os.getcwd()
+    # # /home/traceteam/DELI_all_weights
+    # base = os.path.join(os.path.dirname(__file__), 'traceteam', 'DELI_all_weights')
+    # base_llama_path = os.path.join(os.path.dirname(__file__), 'traceteam', 'llama3_8b_instruct') 
 
-    local_models = [
-        os.path.join(base, 'DELI_faaf_weights/checkpoint-2000'),
-        # os.path.join(base, 'DELI_dpo_weights/checkpoint-2000'),
-        # os.path.join(base, 'DELI_sft_weights/checkpoint-6000'),
-        # os.path.join(base, 'DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800'),
-    ]
+    # local_models = [
+    #     os.path.join(base, 'DELI_faaf_weights/checkpoint-2000'),
+    #     # os.path.join(base, 'DELI_dpo_weights/checkpoint-2000'),
+    #     # os.path.join(base, 'DELI_sft_weights/checkpoint-6000'),
+    #     # os.path.join(base, 'DELI_ppo_weights/ppo_checkpoint_epoch_1_batch_800'),
+    # ]
 
-    modelData = []
-    with open('/home/traceteam/fact_server/sensorBaseData.json', 'r') as file:
-        data = json.load(file)
+    # modelData = []
+    # with open('/home/traceteam/fact_server/sensorBaseData.json', 'r') as file:
+    #     data = json.load(file)
         
-    for path in local_models:
-      friction = FrictionInference(path, local=True)
-      #friction = FrictionInference()
+    # for path in local_models:
+    #   friction = FrictionInference(path, local=True)
+    #   #friction = FrictionInference()
 
-      for i in data:
-        cleanPrompt = clean_prompt(i['prompt'])
-        output = friction.run_inference(cleanPrompt)
-        modelData.append({"checkpoint": path, "clean_prompt" : cleanPrompt, "output": output})
+    #   for i in data:
+    #     cleanPrompt = clean_prompt(i['prompt'])
+    #     output = friction.run_inference(cleanPrompt)
+    #     modelData.append({"checkpoint": path, "clean_prompt" : cleanPrompt, "output": output})
 
-    with open('sensorOutputsClean.json', 'w') as f:
-      json.dump(modelData, f)
+    # with open('sensorOutputsClean.json', 'w') as f:
+    #   json.dump(modelData, f)

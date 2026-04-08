@@ -364,20 +364,24 @@ def run_inference_socket(prompt):
     total_start_time = time.perf_counter()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
+        s.settimeout(None) 
         sendData = str.encode(prompt)
         send_start_time = time.perf_counter()
         s.sendall(sendData)
         # Signal end-of-transmit so server can exit recv loop immediately
         s.shutdown(socket.SHUT_WR)
         send_elapsed_ms = (time.perf_counter() - send_start_time) * 1000
-        print(f"[Tarski] Prompt sent: {len(sendData)} bytes in {send_elapsed_ms:.1f} ms")
+        print(f"[Tarski] Prompt sent: {len(sendData)} bytes, {len(prompt)} chars in {send_elapsed_ms:.1f} ms")
 
         data = bytearray()
         while True:
             try:
                 chunk = s.recv(4096)
             except ConnectionResetError:
+                print("[TARSKI] Connection lost.")
                 break
+            except socket.timeout:
+                continue
             if not chunk:
                 break
             data.extend(chunk)
