@@ -46,6 +46,8 @@ class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]
         self.spreadsheet_id = SPREADSHEET_ID
         self.group_ids = GROUP_IDS
         self.t = threading.Thread(target=self.worker)
+        self.llm_io_records = []
+        self.llm_io_path = None
 
 
     def initialize(self):
