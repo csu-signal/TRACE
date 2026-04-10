@@ -13,6 +13,7 @@ import torch
 import re
 from typing import Dict, List, Optional
 import threading
+import random
 from mmdemo.base_feature import BaseFeature
 from mmdemo.interfaces import ColorImageInterface, DpipActionInterface, DpipCommonGroundTrackingInterface, SensorSheetFrictionOutputInterface, FrictionOutputInterface, PropositionInterface, TranscriptionInterface
 from mmdemo.features.friction.sensor_friction_helpers import run_inference_socket, load_local_model, get_sheets_service, poll_and_diff, build_intervention_prompt, run_inference, load_model, update_recent_transcriptions
@@ -27,7 +28,20 @@ GROUP_IDS = ["412", "413", "417"]
 CREDENTIALS_PATH = "credentials.json"
 TOKEN_PATH = "token.pickle"
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-SPREADSHEET_ID = "11TzA0If5M0iOuUw-vk1NvmnFWbSRG_9K6Qi_YWv04SE"
+SPREADSHEET_ID = "1BNDcFWxU1O7JvLPxr89NWKbOp39oVC24104Jxm_mGIE"
+
+TEAMWORK_RESPONSES = [
+    "Great teamwork everyone — the way you coordinated your ideas really helped move the task forward.",
+    "Nice collaboration. I can see that you're listening to each other and building on each other's ideas.",
+    "Good job working together and keeping the discussion constructive.",
+    "I appreciate how the group is sharing responsibilities and supporting each other.",
+    "That was a great example of teamwork — everyone contributed something useful.",
+    "You're doing a great job coordinating your efforts as a group.",
+    "I like how you checked in with each other before making the decision.",
+    "The collaboration here is really effective — keep it up.",
+    "It's great to see everyone contributing and helping the group stay on track.",
+    "Excellent teamwork — the way you combined your ideas improved the solution."
+]
 
 @final
 class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]):
@@ -48,6 +62,8 @@ class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]
         self.t = threading.Thread(target=self.worker)
         self.llm_io_records = []
         self.llm_io_path = None
+        self.random_answer = False
+        self.first_run = True
 
 
     def initialize(self):
@@ -129,6 +145,13 @@ class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]
                 self.previous_state = current_state
 
                 if deltas:
+                    # Skip the first friction triggered by initial spreadsheet state
+                    if self.first_run:
+                        print("[SensorSheetFrictionFeature] Skipping first friction from initial spreadsheet state")
+                        self.first_run = False
+                        time.sleep(5)
+                        continue
+
                     print(f"[Sheet] Detected {len(deltas)} new change(s)")
                     prompt = build_intervention_prompt(
                         deltas,
@@ -150,7 +173,11 @@ class SensorSheetFrictionFeature(BaseFeature[SensorSheetFrictionOutputInterface]
                     print("=" * 67 + "\n")
                     self._record_llm_io(prompt, output, deltas, response_time_seconds)
                     # Extract group-level friction from JSON response
-                    self.latest_friction = self._extract_group_friction_from_json(output)
+                    if self.random_answer:
+                        self.latest_friction = random.choice(TEAMWORK_RESPONSES)
+                    else:
+                        self.latest_friction = self._extract_group_friction_from_json(output)
+
 
                 time.sleep(5)
 
