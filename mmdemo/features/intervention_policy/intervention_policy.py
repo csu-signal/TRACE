@@ -13,19 +13,19 @@ from mmdemo.interfaces import   TranscriptionInterface, InterventionInterface
 
 @final
 class InterventionPolicy(BaseFeature[InterventionInterface]):
-    """***here
-    Extract propositions from a transcription.
+    """
+    Determine whether to intervene based on server prompt.
 
     Input interface is `TranscriptionInterface`
 
-    Output interface is `DpipFrictionOutputInterface`
+    Output interface is `InterventionInterface`
 
     Keyword arguments:
-    `model_path` -- the path to the model (or None to use the default)
+    `model_path` -- the path to the model (or None to use the default) #na
     """
 
     HOST = "129.82.138.15"  # The server's hostname or IP address (TARSKI)
-    PORT = 65433  # The port used by the server 
+    PORT = 65435  # The port used by the server #should be changed?
 
     def __init__(
         self,
@@ -38,22 +38,23 @@ class InterventionPolicy(BaseFeature[InterventionInterface]):
         csvSupport: str | None = None
     ):
         super().__init__(transcription) 
-        self.transcriptionHistory = {}
+        self.transcriptionHistory = {} #keep
         self.transcriptionIndex = 0
         self.frictionSubset = {}
-        self.friction = ''
-        self.ranking = ''
-        self.cg = 'None'
+        # self.friction = '' 
+        # self.ranking = ''
+        # self.cg = 'None'
         self.subsetTranscriptions = ''
         self.t = threading.Thread(target=self.worker)
         self.minUtteranceValue = minUtteranceValue
-        self.solvability_history = 0
+        # self.solvability_history = 0
         self.csvSupport = csvSupport
         self.lastUtterance = 0
-        self.currentStructure = {}
+        # self.currentStructure = {}
         self.startingIndex = 0
         self.endingIndex = 0
         self.timestamp = 0
+        self.intervene = False
 
         if host:
             self.HOST = host
@@ -62,7 +63,7 @@ class InterventionPolicy(BaseFeature[InterventionInterface]):
         self.LOCAL = False #Run local or remote #TODO
 
     def initialize(self):
-        print("DPIP LLM Friction Init HOST: " + str(self.HOST) + " PORT: " + str(self.PORT))
+        print("DPIP LLM Intervention Init HOST: " + str(self.HOST) + " PORT: " + str(self.PORT))
 
     def get_output(self, transcription: TranscriptionInterface):
         if not transcription.is_new():
@@ -96,7 +97,7 @@ class InterventionPolicy(BaseFeature[InterventionInterface]):
                     
         #if not plan.solv and (self.solvability_history == self.minUtteranceValue or self.solvability_history == 1):
         if True:
-            self.solvability_history = 1
+            # self.solvability_history = 1
             if not self.t.is_alive():
                 # do this process on the main thread so the socket thread doesn't miss any values
                 # if there are less values in the friction subset the min utterance value pad the list with values from the history
@@ -125,34 +126,29 @@ class InterventionPolicy(BaseFeature[InterventionInterface]):
                 else:
                      print(f"A minimum of {self.minUtteranceValue} utterances are required to make a request.")
             else:
-                print("Friction request in progress...waiting for the thread to complete")
+                print("Intervention request in progress...waiting for the thread to complete")
 
-            return DpipFrictionOutputInterface(
-                    friction_statement=self.friction, ranking=self.ranking, cg_json=self.cg, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
+            return InterventionInterface(
+                    intervene = self.intervene, transciption_subset=self.subsetTranscriptions.replace("\n", " "))
     
     def worker(self):
-        print("New DPIP Friction Request Thread Started")
+        print("New DPIP Intervention Request Thread Started")
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((self.HOST, self.PORT))
-                my_object = {"transcripts": self.subsetTranscriptions, "start_structure": self.currentStructure[self.startingIndex],  "end_structure": self.currentStructure[self.endingIndex], "timestamp":self.timestamp}
+                my_object = {"transcripts": self.subsetTranscriptions, "timestamp":self.timestamp}
                 serialized_data = pickle.dumps(my_object)
                 print("Send Data Length:" + str(len(serialized_data))) 
                 s.sendall(serialized_data)
                 
-                print("Waiting for friction server response")
+                print("Waiting for intervention server response")
                 data = s.recv(2048)
             deserialized_object = pickle.loads(data)
-            cg = deserialized_object["commonGround"]
-            friction = deserialized_object["friction"]
-            ranking =  deserialized_object["ranking"]
-            if cg != '':
-                self.cg = cg
-            if friction != '':
-                self.friction = friction
-            if ranking != '':
-                self.ranking = ranking
+            intervene = deserialized_object["label"]
+            if intervene != '':
+                if intervene == "disagree":
+                    self.intervene = True
             print(f"Received from Server:{deserialized_object}")
         except Exception as e:
-            self.friction = ''
-            print(f"DPIP PROP FEATURE THREAD: An error occurred: {e}")
+            self.intervene = ''
+            print(f"DPIP INTERVENTION FEATURE THREAD: An error occurred: {e}")
