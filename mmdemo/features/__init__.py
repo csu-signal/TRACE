@@ -40,6 +40,7 @@ from mmdemo.features.pose_event.pose_event_decision_feature import PoseEvent
 from mmdemo.features.proposition.dpip_prop_feature import DpipProposition
 from mmdemo.features.proposition.prop_feature import Proposition
 from mmdemo.features.speech_output.dpipSpeechoutput_feature import DpipSpeechOutput
+from mmdemo.features.speech_output.sensorSpeechoutput_feature import SensorSpeechOutput
 
 # TODO work with Mariah to get them added and update the yaml
 from mmdemo.features.speech_output.speechoutput_feature import SpeechOutput
