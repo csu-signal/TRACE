@@ -122,7 +122,8 @@ class InterventionPolicy(BaseFeature[InterventionInterface]):
                     self.endingIndex = list(self.frictionSubset)[-1]
                     self.t = threading.Thread(target=self.worker)
                     self.t.start()
-                    self.frictionSubset = {}
+                    # self.frictionSubset = {}
+                    print("Intervention request sent to server...waiting for decision")
                 else:
                      print(f"A minimum of {self.minUtteranceValue} utterances are required to make a request.")
             else:
@@ -148,6 +149,8 @@ class InterventionPolicy(BaseFeature[InterventionInterface]):
             if intervene != '':
                 if intervene == "disagree":
                     self.intervene = True
+                    self.frictionSubset = {}
+                    print("Intervention Advised by Server, resetting transcription subset and sending request...")
             print(f"Received from Server:{deserialized_object}")
         except Exception as e:
             self.intervene = ''

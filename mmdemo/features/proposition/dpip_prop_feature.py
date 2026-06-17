@@ -8,7 +8,7 @@ import copy
 
 
 from mmdemo.base_feature import BaseFeature
-from mmdemo.interfaces import DpipActionInterface, DpipFrictionOutputInterface, DpipObjectInterface3D, TranscriptionInterface
+from mmdemo.interfaces import DpipActionInterface, DpipFrictionOutputInterface, DpipObjectInterface3D, TranscriptionInterface, InterventionInterface
 
 
 @final
@@ -32,6 +32,7 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
         transcription: BaseFeature[TranscriptionInterface],
         objects: BaseFeature[DpipObjectInterface3D],
         actions: BaseFeature[DpipActionInterface],
+        intervention_policy: BaseFeature[InterventionInterface],
         #plan: BaseFeature[PlannerInterface], commented out for now
         *,
         host: str | None = None,
@@ -120,14 +121,16 @@ class DpipProposition(BaseFeature[DpipFrictionOutputInterface]):
                     self.subsetTranscriptions += self.frictionSubset[utter] + "\n"
 
                 print("\nSubset of Transcriptions:\n" + self.subsetTranscriptions)
-                if len(self.frictionSubset) >= self.minUtteranceValue:
+                # policy check added here
+                if len(self.frictionSubset) >= self.minUtteranceValue and intervention_policy.intervene:
                     self.startingIndex = list(self.frictionSubset)[0]
                     self.endingIndex = list(self.frictionSubset)[-1]
                     self.t = threading.Thread(target=self.worker)
                     self.t.start()
                     self.frictionSubset = {}
                 else:
-                     print(f"A minimum of {self.minUtteranceValue} utterances are required to make a request.")
+                    #  print(f"A minimum of {self.minUtteranceValue} utterances are required to make a request.")
+                    print(f"No request sent to server. Utterance count: {len(self.frictionSubset)}. Intervention Policy: {intervention_policy.intervene}")
             else:
                 print("Friction request in progress...waiting for the thread to complete")
 

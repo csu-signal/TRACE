@@ -88,15 +88,15 @@ if __name__ == "__main__":
 
     actions = DpipActionFeature(objects)
 
-    intervene = InterventionPolicy(transcriptions)
-    props = DpipProposition(transcriptions, objects, actions, minUtteranceValue=7)
+    # check policy and intervene if true
+    intervene = InterventionPolicy(transcriptions, minUtteranceValue=7)
+    props = DpipProposition(transcriptions, objects, actions, minUtteranceValue=1,intervene=intervene)
 
     # common ground tracking
     cgt = DpipCommonGroundTracking(props, color, actions, saveCanvas=True)
 
-    if(intervene):
-        # speech output
-        speech_output = DpipSpeechOutput(props)
+     # speech output
+    speech_output = DpipSpeechOutput(props)
     user_frame = UserFrame(speech_output,props)
 
     # create output frame for video
